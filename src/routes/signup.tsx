@@ -1,0 +1,232 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { ArrowLeft, Check } from "lucide-react";
+import { SiteLayout } from "@/components/site/SiteLayout";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/signup")({
+  head: () => ({
+    meta: [
+      { title: "Become a Member — CommonGround" },
+      {
+        name: "description",
+        content: "Pick a monthly contribution and start making long-term impact.",
+      },
+    ],
+  }),
+  component: SignupPage,
+});
+
+const PRESETS = [350, 450, 900, 2500, 5000, 8000];
+const STEPS = ["Amount", "Details", "Payment", "Done"];
+
+function SignupPage() {
+  const [step, setStep] = useState(0);
+  const [amount, setAmount] = useState(900);
+  const [customAmount, setCustomAmount] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
+
+  const finalAmount = customAmount ? Number(customAmount) || 0 : amount;
+
+  const submitAccount = async () => {
+    setSubmitting(true);
+    const { error } = await signUp(email, password, {
+      full_name: fullName,
+      monthly_amount_mur: finalAmount,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Account created — check your inbox to confirm.");
+    setStep(2);
+  };
+
+  return (
+    <SiteLayout>
+      <section>
+        <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+          <button
+            onClick={() => (step === 0 ? navigate({ to: "/" }) : setStep((s) => s - 1))}
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back
+          </button>
+
+          <ol className="mt-8 grid grid-cols-4 gap-2 text-xs">
+            {STEPS.map((label, i) => (
+              <li
+                key={label}
+                className={`flex items-center gap-2 rounded-full px-3 py-2 ${
+                  i <= step ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
+                }`}
+              >
+                <span className="font-medium">{i + 1}</span>
+                <span>{label}</span>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-10 rounded-3xl border border-border/60 bg-card p-8">
+            {step === 0 && (
+              <div>
+                <span className="kicker">Become a Member</span>
+                <h1 className="mt-3 font-display text-4xl font-semibold text-primary sm:text-5xl">
+                  Make a monthly impact
+                </h1>
+                <p className="mt-3 text-muted-foreground">
+                  Support verified, long-term programs across Mauritius.
+                </p>
+
+                <div className="mt-8">
+                  <p className="text-sm font-medium">Choose your monthly contribution</p>
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {PRESETS.map((p) => {
+                      const active = !customAmount && p === amount;
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => {
+                            setAmount(p);
+                            setCustomAmount("");
+                          }}
+                          className={`rounded-2xl border px-4 py-4 text-sm font-medium transition ${
+                            active
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-background hover:border-primary/40"
+                          }`}
+                        >
+                          Rs {p.toLocaleString()}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <label className="mt-6 block">
+                    <span className="text-sm font-medium">Or enter custom amount (MUR)</span>
+                    <div className="mt-2 flex overflow-hidden rounded-xl border border-input bg-background">
+                      <span className="px-4 py-2.5 text-sm text-muted-foreground">Rs</span>
+                      <input
+                        inputMode="numeric"
+                        value={customAmount}
+                        onChange={(e) => setCustomAmount(e.target.value.replace(/\D/g, ""))}
+                        placeholder=""
+                        className="w-full bg-transparent px-2 py-2.5 text-sm outline-none"
+                      />
+                      <span className="px-4 py-2.5 text-sm text-muted-foreground">/ month</span>
+                    </div>
+                  </label>
+
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Flexible monthly contribution. Cancel anytime.
+                  </p>
+                </div>
+
+                <button
+                  disabled={finalAmount <= 0}
+                  onClick={() => setStep(1)}
+                  className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
+                >
+                  Start my monthly impact
+                </button>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div>
+                <h2 className="font-display text-3xl font-semibold text-primary">
+                  Your details
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Contributing Rs {finalAmount.toLocaleString()} / month.
+                </p>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    submitAccount();
+                  }}
+                  className="mt-6 space-y-4"
+                >
+                  <Field label="Full name">
+                    <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} />
+                  </Field>
+                  <Field label="Email">
+                    <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+                  </Field>
+                  <Field label="Password">
+                    <input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
+                  </Field>
+                  <button
+                    disabled={submitting}
+                    className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
+                  >
+                    {submitting ? "Creating account…" : "Create account"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div>
+                <h2 className="font-display text-3xl font-semibold text-primary">
+                  Payment
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Payment integration is coming soon. For now, your membership is
+                  registered and a CommonGround team member will reach out to set up
+                  recurring billing.
+                </p>
+                <button
+                  onClick={() => setStep(3)}
+                  className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Continue
+                </button>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="text-center">
+                <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground">
+                  <Check className="h-7 w-7" />
+                </div>
+                <h2 className="mt-5 font-display text-3xl font-semibold text-primary">
+                  You're in.
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Welcome to CommonGround. Check your email to confirm your account.
+                </p>
+                <button
+                  onClick={() => navigate({ to: "/dashboard" })}
+                  className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Go to dashboard
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    </SiteLayout>
+  );
+}
+
+const inputCls =
+  "w-full rounded-xl border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="text-sm font-medium text-foreground">{label}</span>
+      <div className="mt-2">{children}</div>
+    </label>
+  );
+}
