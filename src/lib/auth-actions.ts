@@ -28,14 +28,15 @@ export const toggleInitiativePreference = createServerFn({ method: "POST" })
   });
 
 export const createInitialSubscription = createServerFn({ method: "POST" })
-  .inputValidator((data: { userId: string; amount: number }) => data)
+  .inputValidator((data: { userId: string; amount: number; coversFees?: boolean }) => data)
   .handler(async ({ data }) => {
-    const { userId, amount } = data;
+    const { userId, amount, coversFees = false } = data;
 
     const { error } = await supabase.from("subscriptions").insert({
       user_id: userId,
       amount_mur: amount,
       status: "pending",
+      covers_fees: coversFees,
     });
 
     if (error) {
