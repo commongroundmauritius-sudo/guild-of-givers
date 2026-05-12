@@ -78,7 +78,17 @@ function AdminDashboard() {
     if (error) {
       toast.error("Failed to update vetting status");
     } else {
-      toast.success("NGO status updated");
+      toast.success("NGO vetting updated");
+      refetchNgos();
+    }
+  };
+
+  const toggleSuspension = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === "suspended" ? "active" : "suspended";
+    const { error } = await supabase.from("ngos").update({ status: newStatus }).eq("id", id);
+    if (error) toast.error("Failed to update suspension status");
+    else {
+      toast.success(`NGO ${newStatus === "suspended" ? "suspended" : "activated"}`);
       refetchNgos();
     }
   };
@@ -238,12 +248,22 @@ function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <button
-                            onClick={() => toggleVetting(ngo.id, ngo.is_verified)}
-                            className="text-xs font-medium text-primary hover:underline"
-                          >
-                            {ngo.is_verified ? "Revoke Vetting" : "Approve NGO"}
-                          </button>
+                          <div className="flex gap-4">
+                            <button
+                              onClick={() => toggleVetting(ngo.id, ngo.is_verified)}
+                              className="text-xs font-medium text-primary hover:underline"
+                            >
+                              {ngo.is_verified ? "Revoke Vetting" : "Approve NGO"}
+                            </button>
+                            <button
+                              onClick={() => toggleSuspension(ngo.id, ngo.status || "active")}
+                              className={`text-xs font-medium hover:underline ${
+                                ngo.status === "suspended" ? "text-forest-soft" : "text-red-500"
+                              }`}
+                            >
+                              {ngo.status === "suspended" ? "Activate" : "Suspend"}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

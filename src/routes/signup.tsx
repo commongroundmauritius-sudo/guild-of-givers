@@ -30,6 +30,7 @@ function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [coversFees, setCoversFees] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -63,6 +64,7 @@ function SignupPage() {
           data: {
             userId: user.id,
             amount: finalAmount,
+            coversFees: coversFees,
           },
         });
       } catch (err) {
@@ -172,6 +174,24 @@ function SignupPage() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   Contributing Rs {finalAmount.toLocaleString()} / month.
                 </p>
+                <div className="mt-6 space-y-6">
+                  <div className="rounded-2xl bg-primary/5 p-4 border border-primary/10">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={coversFees}
+                        onChange={(e) => setCoversFees(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-primary text-primary focus:ring-primary"
+                      />
+                      <div>
+                        <span className="text-sm font-semibold text-primary">I want to cover the processing fee</span>
+                        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                          This adds a small amount (approx. 3.5%) to your contribution so 100% of your Rs {finalAmount.toLocaleString()} goes to the initiatives.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -206,6 +226,7 @@ function SignupPage() {
                       className={inputCls}
                     />
                   </Field>
+                  </div>
                   <button
                     disabled={submitting}
                     className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
