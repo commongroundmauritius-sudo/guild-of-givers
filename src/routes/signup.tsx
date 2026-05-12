@@ -226,7 +226,6 @@ function SignupPage() {
                       className={inputCls}
                     />
                   </Field>
-                  </div>
                   <button
                     disabled={submitting}
                     className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
@@ -234,6 +233,7 @@ function SignupPage() {
                     {submitting ? "Creating account…" : "Create account"}
                   </button>
                 </form>
+                </div>
               </div>
             )}
 
