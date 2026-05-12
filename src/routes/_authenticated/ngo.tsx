@@ -3,6 +3,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { BadgeCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ngo")({
   component: NgoDashboard,
@@ -10,6 +11,17 @@ export const Route = createFileRoute("/_authenticated/ngo")({
 
 function NgoDashboard() {
   const { user, signOut } = useAuth();
+
+  const { data: ngoProfile } = useQuery({
+    queryKey: ["ngo-profile", user?.id],
+    queryFn: async () => {
+      // In a more complete system, we'd have a link table between users and ngos
+      // For now, we'll fetch the first NGO as a mock for this user context
+      const { data } = await supabase.from("ngos").select("*").limit(1).single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
 
   const { data: initiatives } = useQuery({
     queryKey: ["ngo-initiatives", user?.id],
@@ -32,9 +44,20 @@ function NgoDashboard() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <span className="kicker">Organization</span>
-              <h1 className="mt-3 font-display text-4xl font-semibold text-primary sm:text-5xl">
-                NGO Dashboard
-              </h1>
+              <div className="flex items-center gap-3 mt-3">
+                <h1 className="font-display text-4xl font-semibold text-primary sm:text-5xl">
+                  NGO Dashboard
+                </h1>
+                {ngoProfile?.is_verified && (
+                  <div
+                    className="mt-2 flex items-center gap-1.5 rounded-full bg-forest-soft/10 px-3 py-1 text-xs font-medium text-forest-soft"
+                    title="This organization has been verified by CommonGround Admins"
+                  >
+                    <BadgeCheck className="h-4 w-4" />
+                    Verified
+                  </div>
+                )}
+              </div>
               <p className="mt-2 text-muted-foreground">
                 Manage your initiatives, funding cycles, and member updates.
               </p>

@@ -1,3 +1,6 @@
+-- Add email to profiles for convenience and sync with trigger
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email TEXT;
+
 -- Add INSERT policies for core tables so users can initialize their own records
 
 -- Profiles: Allow users to insert their own profile

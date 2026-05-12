@@ -1,6 +1,4 @@
 -- Add email to profiles for convenience and sync with trigger
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email TEXT;
-
 -- Enhance NGOs table with missing fields from documentation
 ALTER TABLE public.ngos ADD COLUMN IF NOT EXISTS category TEXT;
 ALTER TABLE public.ngos ADD COLUMN IF NOT EXISTS contact_info TEXT;
@@ -44,23 +42,23 @@ ALTER TABLE public.initiative_updates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for new tables
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view NGO documents') THEN
         CREATE POLICY "Anyone can view NGO documents" ON public.ngo_documents FOR SELECT USING (true);
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view initiative updates') THEN
         CREATE POLICY "Anyone can view initiative updates" ON public.initiative_updates FOR SELECT USING (true);
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view reports') THEN
         CREATE POLICY "Anyone can view reports" ON public.reports FOR SELECT USING (true);
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- Update trigger to be more robust and handle the "Backend is source of truth" requirement
 CREATE OR REPLACE FUNCTION public.handle_new_user()

@@ -4,7 +4,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { initializeUser, createInitialSubscription } from "@/lib/auth-actions";
+import { createInitialSubscription } from "@/lib/auth-actions";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/signup")({
