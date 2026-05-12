@@ -7,8 +7,7 @@ export const Route = createFileRoute("/initiatives")({
       { title: "Initiatives — CommonGround" },
       {
         name: "description",
-        content:
-          "Browse long-term, vetted programs you can support with one monthly membership.",
+        content: "Browse long-term, vetted programs you can support with one monthly membership.",
       },
     ],
   }),
@@ -25,16 +24,16 @@ function InitiativesPage() {
             Long-term Programs You Can Support
           </h1>
           <p className="mt-4 max-w-2xl text-muted-foreground">
-            Starting with a vetted set of partners and expanding continuously. Each
-            program is a multi-year commitment — restoration, education, community
-            resilience — not a one-off project.
+            Starting with a vetted set of partners and expanding continuously. Each program is a
+            multi-year commitment — restoration, education, community resilience — not a one-off
+            project.
           </p>
 
           <div className="mt-12 rounded-3xl border border-dashed border-border bg-card p-16 text-center">
             <h2 className="font-display text-2xl text-primary">No initiatives available yet.</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Partner organizations are being onboarded. Become a member to be the first to
-              support new initiatives as they launch.
+              Partner organizations are being onboarded. Become a member to be the first to support
+              new initiatives as they launch.
             </p>
             <div className="mt-6">
               <Link

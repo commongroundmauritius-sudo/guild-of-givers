@@ -8,18 +8,36 @@ import {
 } from "@/components/ui/accordion";
 
 const FAQS = [
-  { q: "How does CommonGround membership work?", a: "Pick a monthly contribution, choose vetted initiatives, and we handle billing, allocation, receipts and impact reports." },
-  { q: "How are initiatives vetted?", a: "Every partner is reviewed for legal status, governance, financial transparency and demonstrated long-term impact." },
-  { q: "Can I change or cancel my membership?", a: "Yes — adjust your amount, switch allocations, pause or cancel from your dashboard anytime." },
-  { q: "Is my contribution tax-deductible?", a: "Where partner NGOs are eligible, you'll receive automated tax-deductible receipts." },
-  { q: "How do I know my impact is real?", a: "You receive unified audited reports and direct field updates from the organizations you support." },
+  {
+    q: "How does CommonGround membership work?",
+    a: "Pick a monthly contribution, choose vetted initiatives, and we handle billing, allocation, receipts and impact reports.",
+  },
+  {
+    q: "How are initiatives vetted?",
+    a: "Every partner is reviewed for legal status, governance, financial transparency and demonstrated long-term impact.",
+  },
+  {
+    q: "Can I change or cancel my membership?",
+    a: "Yes — adjust your amount, switch allocations, pause or cancel from your dashboard anytime.",
+  },
+  {
+    q: "Is my contribution tax-deductible?",
+    a: "Where partner NGOs are eligible, you'll receive automated tax-deductible receipts.",
+  },
+  {
+    q: "How do I know my impact is real?",
+    a: "You receive unified audited reports and direct field updates from the organizations you support.",
+  },
 ];
 
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
       { title: "FAQ — CommonGround" },
-      { name: "description", content: "Answers about CommonGround membership, vetting and impact." },
+      {
+        name: "description",
+        content: "Answers about CommonGround membership, vetting and impact.",
+      },
     ],
   }),
   component: FAQPage,

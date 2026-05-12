@@ -77,4 +77,4 @@ Use your 8 phases verbatim, but each one gets: scope, data tables touched, scree
 
 ## After approval
 
-I create the eight markdown files above in one batch and stop. You review, answer the open decisions, and only then we resume building against the locked spec.
+A pixel-feel-close marketing site with working auth, Google login, role-aware redirects, and three placeholder dashboards — ready to layer real data onto next.
