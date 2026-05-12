@@ -1,42 +1,38 @@
 import { Link } from "@tanstack/react-router";
+import { Logo } from "./Logo";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/60 bg-cream-deep/60">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4 lg:px-8">
+    <footer className="border-t border-border/60 bg-cream-deep/30">
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-4 lg:px-8">
         <div className="md:col-span-2">
-          <div className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground font-display">
-              ∞
-            </span>
-            <span className="font-display text-lg font-semibold text-primary">CommonGround</span>
-          </div>
-          <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-            One membership. Long-term impact. Predictable, transparent funding for the social work
-            that takes years, not weeks.
+          <Logo />
+          <p className="mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
+            Building the financial and governance infrastructure for long-term social impact.
+            One membership, a lifetime of change for verified NGOs in Mauritius.
           </p>
         </div>
 
         <div>
-          <h4 className="font-display text-sm font-semibold text-primary">Platform</h4>
-          <ul className="mt-4 space-y-2 text-sm">
+          <h4 className="font-display text-sm font-bold uppercase tracking-wider text-primary">Platform</h4>
+          <ul className="mt-6 space-y-3 text-sm">
             <li>
-              <Link to="/about" className="text-foreground/80 hover:text-primary">
-                About
+              <Link to="/about" className="text-foreground/70 transition-colors hover:text-primary">
+                About our mission
               </Link>
             </li>
             <li>
-              <Link to="/initiatives" className="text-foreground/80 hover:text-primary">
-                Initiatives
+              <Link to="/initiatives" className="text-foreground/70 transition-colors hover:text-primary">
+                Verified Initiatives
               </Link>
             </li>
             <li>
-              <Link to="/for-orgs" className="text-foreground/80 hover:text-primary">
-                For Orgs
+              <Link to="/for-orgs" className="text-foreground/70 transition-colors hover:text-primary">
+                For Organizations
               </Link>
             </li>
             <li>
-              <Link to="/partner" className="text-foreground/80 hover:text-primary">
+              <Link to="/partner" className="text-foreground/70 transition-colors hover:text-primary">
                 Partner With Us
               </Link>
             </li>
@@ -44,35 +40,42 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="font-display text-sm font-semibold text-primary">Resources</h4>
-          <ul className="mt-4 space-y-2 text-sm">
+          <h4 className="font-display text-sm font-bold uppercase tracking-wider text-primary">Resources</h4>
+          <ul className="mt-6 space-y-3 text-sm">
             <li>
-              <Link to="/faq" className="text-foreground/80 hover:text-primary">
-                FAQ
+              <Link to="/faq" className="text-foreground/70 transition-colors hover:text-primary">
+                Common Questions
               </Link>
             </li>
             <li>
-              <Link to="/legal" className="text-foreground/80 hover:text-primary">
-                Legal
+              <Link to="/legal" className="text-foreground/70 transition-colors hover:text-primary">
+                Legal & Compliance
               </Link>
             </li>
             <li>
-              <Link to="/login" className="text-foreground/80 hover:text-primary">
-                Log in
+              <Link to="/login" className="text-foreground/70 transition-colors hover:text-primary">
+                Member Login
               </Link>
             </li>
             <li>
-              <Link to="/signup" className="text-foreground/80 hover:text-primary">
+              <Link to="/signup" className="font-semibold text-primary hover:underline">
                 Become a member
               </Link>
             </li>
           </ul>
         </div>
       </div>
-      <div className="border-t border-border/60">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
-          <span>© {new Date().getFullYear()} CommonGround. All rights reserved.</span>
-          <span>Built for long-term impact.</span>
+      <div className="border-t border-border/40">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-1">
+            <span>© {new Date().getFullYear()} CommonGround Mauritius. All rights reserved.</span>
+            <span>Registered social infrastructure platform.</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link to="/legal" className="hover:text-primary">Privacy</Link>
+            <Link to="/legal" className="hover:text-primary">Terms</Link>
+            <span className="font-medium text-primary/40">Rooted in impact.</span>
+          </div>
         </div>
       </div>
     </footer>
