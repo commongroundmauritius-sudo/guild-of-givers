@@ -1,42 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { supabase, type AppRole } from "@/integrations/supabase/client";
 
-export const initializeUser = createServerFn({ method: "POST" })
-  .inputValidator((data: { userId: string; fullName: string; role?: AppRole }) => data)
-  .handler(async ({ data }) => {
-    const { userId, fullName, role = "member" } = data;
-
-    // Initialize profile
-    const { error: profileError } = await supabase.from("profiles").upsert(
-      {
-        id: userId,
-        full_name: fullName,
-      },
-      { onConflict: "id" },
-    );
-
-    if (profileError) {
-      console.error("Error initializing profile:", profileError);
-      throw new Error("Failed to initialize profile");
-    }
-
-    // Initialize role
-    const { error: roleError } = await supabase.from("user_roles").upsert(
-      {
-        user_id: userId,
-        role: role,
-      },
-      { onConflict: "user_id, role" },
-    );
-
-    if (roleError) {
-      console.error("Error initializing role:", roleError);
-      throw new Error("Failed to initialize role");
-    }
-
-    return { success: true };
-  });
-
 export const toggleInitiativePreference = createServerFn({ method: "POST" })
   .inputValidator((data: { userId: string; initiativeId: string; selected: boolean }) => data)
   .handler(async ({ data }) => {

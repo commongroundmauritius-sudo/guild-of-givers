@@ -3,6 +3,16 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminDashboard,
@@ -51,6 +61,28 @@ function AdminDashboard() {
     },
   });
 
+  const { data: ngos, refetch: refetchNgos } = useQuery({
+    queryKey: ["admin-ngos"],
+    queryFn: async () => {
+      const { data } = await supabase.from("ngos").select("*").order("name");
+      return data;
+    },
+  });
+
+  const toggleVetting = async (id: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from("ngos")
+      .update({ is_verified: !currentStatus })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to update vetting status");
+    } else {
+      toast.success("NGO status updated");
+      refetchNgos();
+    }
+  };
+
   return (
     <SiteLayout>
       <section>
@@ -73,7 +105,7 @@ function AdminDashboard() {
             </button>
           </div>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+          <div className="mt-12 grid gap-6 lg:grid-cols-3">
             {[
               { title: "Total Members", value: membersCount ?? 0 },
               { title: "Total Treasury", value: `Rs ${totalPayments?.toLocaleString()}` },
@@ -84,6 +116,60 @@ function AdminDashboard() {
                 <p className="mt-3 font-display text-3xl text-primary">{c.value}</p>
               </div>
             ))}
+
+            <div className="lg:col-span-3 rounded-3xl border border-border/40 bg-card p-6">
+              <h3 className="text-sm font-medium text-muted-foreground mb-6">Treasury Flow</h3>
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={
+                      recentPayments
+                        ?.map((p) => ({
+                          date: new Date(p.created_at).toLocaleDateString(),
+                          amount: Number(p.amount_mur),
+                        }))
+                        .reverse() || []
+                    }
+                  >
+                    <defs>
+                      <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--color-card)",
+                        borderColor: "var(--color-border)",
+                        borderRadius: "12px",
+                        fontSize: "12px",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="amount"
+                      stroke="var(--color-primary)"
+                      fillOpacity={1}
+                      fill="url(#colorAmount)"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
 
           <div className="mt-12">
@@ -118,6 +204,53 @@ function AdminDashboard() {
                 <div className="p-12 text-center text-muted-foreground">
                   No recent transactions found.
                 </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-12">
+            <h2 className="font-display text-2xl font-semibold text-primary">Vetting Management</h2>
+            <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
+              {ngos && ngos.length > 0 ? (
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-muted/50 text-muted-foreground">
+                    <tr>
+                      <th className="px-6 py-4 font-medium">Organization</th>
+                      <th className="px-6 py-4 font-medium">Category</th>
+                      <th className="px-6 py-4 font-medium">Status</th>
+                      <th className="px-6 py-4 font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {ngos.map((ngo) => (
+                      <tr key={ngo.id}>
+                        <td className="px-6 py-4 font-medium">{ngo.name}</td>
+                        <td className="px-6 py-4">{ngo.category}</td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs ${
+                              ngo.is_verified
+                                ? "bg-forest-soft/10 text-forest-soft"
+                                : "bg-amber-500/10 text-amber-500"
+                            }`}
+                          >
+                            {ngo.is_verified ? "Verified" : "Pending Vetting"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => toggleVetting(ngo.id, ngo.is_verified)}
+                            className="text-xs font-medium text-primary hover:underline"
+                          >
+                            {ngo.is_verified ? "Revoke Vetting" : "Approve NGO"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-12 text-center text-muted-foreground">No NGOs registered.</div>
               )}
             </div>
           </div>
