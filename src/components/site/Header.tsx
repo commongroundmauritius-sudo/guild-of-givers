@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import logo from "@/assets/logo.png";
 
 const NAV = [
   { label: "About", to: "/about" },
@@ -20,13 +21,7 @@ export function Header() {
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2">
-          <span
-            aria-hidden
-            className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground font-display text-base"
-          >
-            ∞
-          </span>
-          <span className="font-display text-lg font-semibold text-primary">CommonGround</span>
+          <img src={logo} alt="CommonGround" className="h-8 w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-7 lg:flex">

@@ -39,6 +39,18 @@ function AdminDashboard() {
     },
   });
 
+  const { data: recentEvents } = useQuery({
+    queryKey: ["admin-recent-events"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("payment_events")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      return data;
+    },
+  });
+
   return (
     <SiteLayout>
       <section>
@@ -106,6 +118,44 @@ function AdminDashboard() {
                 <div className="p-12 text-center text-muted-foreground">
                   No recent transactions found.
                 </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-12">
+            <h2 className="font-display text-2xl font-semibold text-primary">Payment Audit Log</h2>
+            <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
+              {recentEvents && recentEvents.length > 0 ? (
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-muted/50 text-muted-foreground">
+                    <tr>
+                      <th className="px-6 py-4 font-medium">Time</th>
+                      <th className="px-6 py-4 font-medium">Event Type</th>
+                      <th className="px-6 py-4 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40 font-mono text-[11px]">
+                    {recentEvents.map((e) => (
+                      <tr key={e.id}>
+                        <td className="px-6 py-3">{new Date(e.created_at).toLocaleString()}</td>
+                        <td className="px-6 py-3">{e.event_type}</td>
+                        <td className="px-6 py-3">
+                          <span
+                            className={`rounded-full px-2 py-0.5 ${
+                              e.processed
+                                ? "bg-forest-soft/10 text-forest-soft"
+                                : "bg-amber-500/10 text-amber-500"
+                            }`}
+                          >
+                            {e.processed ? "Processed" : "Pending"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-12 text-center text-muted-foreground">No recent events found.</div>
               )}
             </div>
           </div>

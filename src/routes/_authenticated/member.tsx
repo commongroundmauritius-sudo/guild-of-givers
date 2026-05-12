@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toggleInitiativePreference } from "@/lib/auth-actions";
+import { toast } from "sonner";
+import { Check, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/member")({
   component: MemberDashboard,
@@ -10,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/member")({
 
 function MemberDashboard() {
   const { user, signOut } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: subscription } = useQuery({
     queryKey: ["subscription", user?.id],
@@ -37,6 +41,45 @@ function MemberDashboard() {
       return data;
     },
     enabled: !!user?.id,
+  });
+
+  const { data: initiatives } = useQuery({
+    queryKey: ["all-initiatives"],
+    queryFn: async () => {
+      const { data } = await supabase.from("initiatives").select("*, ngos(name)");
+      return data;
+    },
+  });
+
+  const { data: preferences } = useQuery({
+    queryKey: ["member-preferences", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("member_preferences")
+        .select("initiative_id")
+        .eq("user_id", user?.id);
+      return data?.map((p) => p.initiative_id) || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ initiativeId, selected }: { initiativeId: string; selected: boolean }) => {
+      if (!user) return;
+      return toggleInitiativePreference({
+        data: {
+          userId: user.id,
+          initiativeId,
+          selected,
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["member-preferences", user?.id] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
   });
 
   const lifetimeImpact =
@@ -76,7 +119,7 @@ function MemberDashboard() {
                     ? "Verification pending"
                     : subscription?.status,
               },
-              { title: "Active allocations", value: "0" },
+              { title: "Active allocations", value: preferences?.length || 0 },
               { title: "Lifetime impact", value: `Rs ${lifetimeImpact.toLocaleString()}` },
             ].map((c) => (
               <div key={c.title} className="rounded-3xl border border-border/40 bg-card p-6">
@@ -89,7 +132,56 @@ function MemberDashboard() {
             ))}
           </div>
 
-          <div className="mt-12">
+          <div className="mt-16">
+            <h2 className="font-display text-2xl font-semibold text-primary">
+              Choose your initiatives
+            </h2>
+            <p className="mt-2 text-muted-foreground">
+              Select the programs where you want your monthly contribution to be allocated.
+            </p>
+
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {initiatives?.map((i) => {
+                const isSelected = preferences?.includes(i.id);
+                return (
+                  <div
+                    key={i.id}
+                    className={`relative overflow-hidden rounded-3xl border p-6 transition ${
+                      isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border/40 bg-card"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase">
+                          {(i.ngos as any)?.name}
+                        </span>
+                        <h3 className="mt-1 font-display text-lg font-semibold text-primary">
+                          {i.title}
+                        </h3>
+                      </div>
+                      <button
+                        onClick={() =>
+                          toggleMutation.mutate({ initiativeId: i.id, selected: !isSelected })
+                        }
+                        className={`grid h-8 w-8 place-items-center rounded-full transition ${
+                          isSelected
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-primary/20"
+                        }`}
+                      >
+                        {isSelected ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+                      {i.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-16">
             <h2 className="font-display text-2xl font-semibold text-primary">Payment History</h2>
             <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
               {payments && payments.length > 0 ? (
