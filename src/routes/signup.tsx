@@ -57,13 +57,8 @@ function SignupPage() {
 
     if (user) {
       try {
-        await initializeUser({
-          data: {
-            userId: user.id,
-            fullName: fullName,
-            role: "member",
-          },
-        });
+        // We still trigger initial subscription manually as it depends on user input
+        // Profiles and roles are now handled by database triggers for security.
         await createInitialSubscription({
           data: {
             userId: user.id,
