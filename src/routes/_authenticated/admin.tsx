@@ -427,12 +427,12 @@ function AdminDashboard() {
                         <td className="px-6 py-3">
                           <span
                             className={`rounded-full px-2 py-0.5 ${
-                              e.processed
+                              e.processing_status === 'processed'
                                 ? "bg-forest-soft/10 text-forest-soft"
                                 : "bg-amber-500/10 text-amber-500"
                             }`}
                           >
-                            {e.processed ? "Processed" : "Pending"}
+                            {e.processing_status === 'processed' ? "Processed" : "Pending"}
                           </span>
                         </td>
                       </tr>
