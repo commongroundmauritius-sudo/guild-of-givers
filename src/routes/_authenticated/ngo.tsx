@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, FileText, Send } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/ngo")({
   component: NgoDashboard,
@@ -11,6 +13,9 @@ export const Route = createFileRoute("/_authenticated/ngo")({
 
 function NgoDashboard() {
   const { user, signOut } = useAuth();
+  const queryClient = useQueryClient();
+  const [reportTitle, setReportTitle] = useState("");
+  const [reportInitiativeId, setReportInitiativeId] = useState("");
 
   const { data: ngoProfile } = useQuery({
     queryKey: ["ngo-profile", user?.id],
@@ -23,11 +28,9 @@ function NgoDashboard() {
     enabled: !!user?.id,
   });
 
-  const { data: initiatives } = useQuery({
+  const { data: initiatives, refetch: refetchInitiatives } = useQuery({
     queryKey: ["ngo-initiatives", user?.id],
     queryFn: async () => {
-      // In a real scenario, we'd first find the NGO linked to this user
-      // For now, we fetch initiatives (assuming this NGO has some)
       const { data } = await supabase
         .from("initiatives")
         .select("*, ngos(name)")
@@ -35,6 +38,26 @@ function NgoDashboard() {
       return data;
     },
     enabled: !!user?.id,
+  });
+
+  const submitReportMutation = useMutation({
+    mutationFn: async () => {
+      if (!ngoProfile?.id || !reportInitiativeId) throw new Error("Missing NGO or Initiative");
+      const { error } = await supabase.from("reports").insert({
+        ngo_id: ngoProfile.id,
+        initiative_id: reportInitiativeId,
+        title: reportTitle,
+        file_url: "#", // Placeholder
+        status: "pending_review"
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Report submitted for admin review");
+      setReportTitle("");
+      queryClient.invalidateQueries({ queryKey: ["ngo-reports"] });
+    },
+    onError: (err: any) => toast.error(err.message)
   });
 
   return (
@@ -45,7 +68,7 @@ function NgoDashboard() {
             <div>
               <span className="kicker">Organization</span>
               <div className="flex items-center gap-3 mt-3">
-                <h1 className="font-display text-4xl font-semibold text-primary sm:text-5xl">
+                <h1 className="font-display text-4xl font-semibold text-coral-500 sm:text-5xl">
                   NGO Dashboard
                 </h1>
                 {ngoProfile?.is_verified && (
@@ -76,17 +99,18 @@ function NgoDashboard() {
               { title: "Active Initiatives", value: initiatives?.length ?? 0 },
               { title: "Impact Score", value: "—" },
             ].map((c) => (
-              <div key={c.title} className="rounded-3xl border border-border/40 bg-card p-6">
-                <p className="text-sm text-muted-foreground">{c.title}</p>
-                <p className="mt-3 font-display text-3xl text-primary">{c.value}</p>
+              <div key={c.title} className="rounded-3xl border border-coral-500/20 bg-coral-500/5 p-6">
+                <p className="text-sm text-coral-500 font-medium">{c.title}</p>
+                <p className="mt-3 font-display text-3xl text-coral-500">{c.value}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-12">
+          <div className="mt-16 grid gap-12 lg:grid-cols-2">
+          <div>
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-2xl font-semibold text-primary">Your Initiatives</h2>
-              <button className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+              <h2 className="font-display text-2xl font-semibold text-coral-500">Your Initiatives</h2>
+              <button className="rounded-full bg-coral-500 px-4 py-2 text-sm font-medium text-white hover:bg-coral-600">
                 New Initiative
               </button>
             </div>
@@ -117,7 +141,7 @@ function NgoDashboard() {
                         </div>
                         <div className="mt-2 h-1.5 w-full rounded-full bg-muted">
                           <div
-                            className="h-full rounded-full bg-primary"
+                            className="h-full rounded-full bg-coral-500"
                             style={{
                               width: `${(Number(i.current_amount_mur) / Number(i.goal_amount_mur)) * 100}%`,
                             }}
@@ -133,6 +157,45 @@ function NgoDashboard() {
                 </div>
               )}
             </div>
+          </div>
+
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-coral-500">Submit Transparency Report</h2>
+            <div className="mt-6 rounded-3xl border border-coral-500/20 bg-coral-500/5 p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium uppercase text-coral-500/70">Report Title</label>
+                  <input
+                    value={reportTitle}
+                    onChange={e => setReportTitle(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
+                    placeholder="Q1 2024 Impact Report"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium uppercase text-coral-500/70">Related Initiative</label>
+                  <select
+                    value={reportInitiativeId}
+                    onChange={e => setReportInitiativeId(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
+                  >
+                    <option value="">Select an initiative</option>
+                    {initiatives?.map(i => (
+                      <option key={i.id} value={i.id}>{i.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  onClick={() => submitReportMutation.mutate()}
+                  disabled={submitReportMutation.isPending || !reportTitle || !reportInitiativeId}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-coral-500 py-3 text-sm font-medium text-white transition hover:bg-coral-600 disabled:opacity-50"
+                >
+                  <Send className="h-4 w-4" />
+                  Submit for Approval
+                </button>
+              </div>
+            </div>
+          </div>
           </div>
         </div>
       </section>

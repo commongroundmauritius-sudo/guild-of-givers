@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toggleInitiativePreference } from "@/lib/auth-actions";
 import { toast } from "sonner";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, FileText, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/member")({
   component: MemberDashboard,
@@ -46,9 +46,27 @@ function MemberDashboard() {
   const { data: initiatives } = useQuery({
     queryKey: ["all-initiatives"],
     queryFn: async () => {
-      const { data } = await supabase.from("initiatives").select("*, ngos(name)");
+      // Filter for approved initiatives from active (not suspended) NGOs
+      const { data } = await supabase
+        .from("initiatives")
+        .select("*, ngos!inner(name, status)")
+        .eq("is_approved", true)
+        .eq("ngos.status", "active");
       return data;
     },
+  });
+
+  const { data: approvedReports } = useQuery({
+    queryKey: ["member-approved-reports", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("reports")
+        .select("*, initiatives(title), ngos(name)")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+      return data;
+    },
+    enabled: !!user?.id,
   });
 
   const { data: preferences } = useQuery({
@@ -94,7 +112,7 @@ function MemberDashboard() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <span className="kicker">Member</span>
-              <h1 className="mt-3 font-display text-4xl font-semibold text-primary sm:text-5xl">
+              <h1 className="mt-3 font-display text-4xl font-semibold text-teal-600 sm:text-5xl">
                 Welcome, {user?.email?.split("@")[0]}
               </h1>
               <p className="mt-2 text-muted-foreground">Your monthly contribution overview.</p>
@@ -122,11 +140,11 @@ function MemberDashboard() {
               { title: "Active allocations", value: preferences?.length || 0 },
               { title: "Lifetime impact", value: `Rs ${lifetimeImpact.toLocaleString()}` },
             ].map((c) => (
-              <div key={c.title} className="rounded-3xl border border-border/40 bg-card p-6">
-                <p className="text-sm text-muted-foreground">{c.title}</p>
-                <p className="mt-3 font-display text-3xl text-primary">{c.value}</p>
+              <div key={c.title} className="rounded-3xl border border-teal-600/20 bg-teal-600/5 p-6">
+                <p className="text-sm text-teal-600 font-medium">{c.title}</p>
+                <p className="mt-3 font-display text-3xl text-teal-600">{c.value}</p>
                 {"sub" in c && c.sub && (
-                  <p className="mt-1 text-xs text-muted-foreground capitalize">{c.sub}</p>
+                  <p className="mt-1 text-xs text-teal-600/70 capitalize">{c.sub}</p>
                 )}
               </div>
             ))}
@@ -181,7 +199,34 @@ function MemberDashboard() {
             </div>
           </div>
 
-          <div className="mt-16">
+          <div className="mt-16 grid gap-12 lg:grid-cols-2">
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-teal-600">Transparency Updates</h2>
+            <div className="mt-6 space-y-4">
+              {approvedReports && approvedReports.length > 0 ? (
+                approvedReports.map(r => (
+                  <div key={r.id} className="flex items-center justify-between rounded-2xl border border-teal-600/20 bg-teal-600/5 p-4">
+                    <div className="flex gap-4">
+                      <div className="grid h-10 w-10 place-items-center rounded-full bg-teal-600/10 text-teal-600">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-teal-600">{r.title}</p>
+                        <p className="text-xs text-teal-600/70">{(r.initiatives as any)?.title} • {(r.ngos as any)?.name}</p>
+                      </div>
+                    </div>
+                    <a href={r.file_url} target="_blank" rel="noreferrer" className="text-teal-600 hover:text-teal-700">
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No transparency reports available yet.</p>
+              )}
+            </div>
+          </div>
+
+          <div>
             <h2 className="font-display text-2xl font-semibold text-primary">Payment History</h2>
             <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
               {payments && payments.length > 0 ? (
@@ -209,6 +254,7 @@ function MemberDashboard() {
                 </div>
               )}
             </div>
+          </div>
           </div>
         </div>
       </section>
