@@ -39,9 +39,7 @@ function Home() {
 }
 
 function Kicker({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="kicker block text-muted-foreground">{children}</span>
-  );
+  return <span className="kicker block text-muted-foreground">{children}</span>;
 }
 
 function Hero() {
@@ -51,13 +49,12 @@ function Hero() {
         <div className="flex flex-col justify-center">
           <Kicker>Impact, simplified</Kicker>
           <h1 className="mt-5 font-display text-5xl font-semibold text-primary sm:text-6xl lg:text-7xl">
-            One Membership.{" "}
-            <span className="text-forest-soft">Long-term Impact.</span>
+            One Membership. <span className="text-forest-soft">Long-term Impact.</span>
           </h1>
           <p className="mt-6 max-w-xl text-base text-muted-foreground sm:text-lg">
-            CommonGround turns recurring memberships into structured, predictable funding
-            for the long-haul work — coral restoration, reforestation, education —
-            programs that run for years, not weeks.
+            CommonGround turns recurring memberships into structured, predictable funding for the
+            long-haul work — coral restoration, reforestation, education — programs that run for
+            years, not weeks.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -76,7 +73,10 @@ function Hero() {
         </div>
 
         <div className="relative">
-          <div className="absolute inset-x-6 -top-2 bottom-6 rounded-3xl bg-primary/90" aria-hidden />
+          <div
+            className="absolute inset-x-6 -top-2 bottom-6 rounded-3xl bg-primary/90"
+            aria-hidden
+          />
           <div className="relative overflow-hidden rounded-3xl border-8 border-primary shadow-2xl">
             <img
               src={heroRoom}
@@ -93,10 +93,30 @@ function Hero() {
 }
 
 const STEPS = [
-  { n: "01", icon: UserPlus, title: "Join", desc: "Sign up for a single monthly membership that fits your budget and impact goals." },
-  { n: "02", icon: BookOpen, title: "Choose", desc: "Browse through our library of vetted, high-impact social initiatives." },
-  { n: "03", icon: Split, title: "Allocate", desc: "Decide how your contribution is split between your selected organizations." },
-  { n: "04", icon: LineChart, title: "Track", desc: "Receive unified impact reports detailing exactly how your money is used." },
+  {
+    n: "01",
+    icon: UserPlus,
+    title: "Join",
+    desc: "Sign up for a single monthly membership that fits your budget and impact goals.",
+  },
+  {
+    n: "02",
+    icon: BookOpen,
+    title: "Choose",
+    desc: "Browse through our library of vetted, high-impact social initiatives.",
+  },
+  {
+    n: "03",
+    icon: Split,
+    title: "Allocate",
+    desc: "Decide how your contribution is split between your selected organizations.",
+  },
+  {
+    n: "04",
+    icon: LineChart,
+    title: "Track",
+    desc: "Receive unified impact reports detailing exactly how your money is used.",
+  },
 ];
 
 function Process() {
@@ -121,9 +141,7 @@ function Process() {
               <div className="mt-6 font-display text-xs font-medium tracking-widest text-muted-foreground">
                 {s.n}
               </div>
-              <h3 className="mt-1 font-display text-2xl font-semibold text-primary">
-                {s.title}
-              </h3>
+              <h3 className="mt-1 font-display text-2xl font-semibold text-primary">{s.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
             </div>
           ))}
@@ -134,10 +152,26 @@ function Process() {
 }
 
 const REASONS = [
-  { icon: Sparkles, title: "Simplicity", desc: "Managing multiple donations is complex. We consolidate everything into one clean dashboard with a single monthly transaction." },
-  { icon: Eye, title: "Transparency", desc: "Every dollar is tracked. We provide audited reports and direct updates from the field." },
-  { icon: Target, title: "Real Impact", desc: "We focus on vetted, results-driven initiatives that solve systemic problems at the root." },
-  { icon: Repeat, title: "Consistency", desc: "Non-profits need predictable funding to grow. CommonGround ensures steady support through recurring monthly memberships." },
+  {
+    icon: Sparkles,
+    title: "Simplicity",
+    desc: "Managing multiple donations is complex. We consolidate everything into one clean dashboard with a single monthly transaction.",
+  },
+  {
+    icon: Eye,
+    title: "Transparency",
+    desc: "Every dollar is tracked. We provide audited reports and direct updates from the field.",
+  },
+  {
+    icon: Target,
+    title: "Real Impact",
+    desc: "We focus on vetted, results-driven initiatives that solve systemic problems at the root.",
+  },
+  {
+    icon: Repeat,
+    title: "Consistency",
+    desc: "Non-profits need predictable funding to grow. CommonGround ensures steady support through recurring monthly memberships.",
+  },
 ];
 
 function Why() {
@@ -175,9 +209,9 @@ function Initiatives() {
               Long-term Programs You Can Support
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Starting with a vetted set of partners and expanding continuously. Each
-              program is a multi-year commitment — restoration, education, community
-              resilience — not a one-off project.
+              Starting with a vetted set of partners and expanding continuously. Each program is a
+              multi-year commitment — restoration, education, community resilience — not a one-off
+              project.
             </p>
           </div>
           <Link
@@ -216,10 +250,9 @@ function ForOrgs() {
             Built for Organizations
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Spend less time chasing donors and more time on the work itself.
-            CommonGround delivers structured, recurring funding designed for long-horizon
-            programs — restoration, conservation, education — the kind of work that takes
-            years, not quarters.
+            Spend less time chasing donors and more time on the work itself. CommonGround delivers
+            structured, recurring funding designed for long-horizon programs — restoration,
+            conservation, education — the kind of work that takes years, not quarters.
           </p>
           <ul className="mt-6 space-y-3 text-sm">
             {[
@@ -280,8 +313,8 @@ function FAQ() {
             Questions, answered.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Everything you need to know about how CommonGround works, our vetting
-            process, and what your membership unlocks.
+            Everything you need to know about how CommonGround works, our vetting process, and what
+            your membership unlocks.
           </p>
         </div>
         <Accordion type="single" collapsible className="w-full">
@@ -290,9 +323,7 @@ function FAQ() {
               <AccordionTrigger className="text-left font-display text-lg text-primary hover:no-underline">
                 {f.q}
               </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {f.a}
-              </AccordionContent>
+              <AccordionContent className="text-muted-foreground">{f.a}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
@@ -309,8 +340,8 @@ function FinalCTA() {
           Start Supporting Today
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-muted-foreground">
-          Join thousands of members who are making a structured difference. Your
-          contribution, amplified by our community, creates lasting change.
+          Join thousands of members who are making a structured difference. Your contribution,
+          amplified by our community, creates lasting change.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link

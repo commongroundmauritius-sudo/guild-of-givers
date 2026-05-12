@@ -7,8 +7,7 @@ export const Route = createFileRoute("/for-orgs")({
       { title: "For Organizations — CommonGround" },
       {
         name: "description",
-        content:
-          "Predictable, recurring funding designed for long-horizon NGO programs.",
+        content: "Predictable, recurring funding designed for long-horizon NGO programs.",
       },
     ],
   }),
@@ -25,10 +24,9 @@ function ForOrgsPage() {
             Funding built for long-horizon work.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground">
-            Spend less time chasing donors and more time on the work itself. CommonGround
-            delivers structured, recurring funding designed for multi-year programs —
-            restoration, conservation, education — the kind of work that takes years, not
-            quarters.
+            Spend less time chasing donors and more time on the work itself. CommonGround delivers
+            structured, recurring funding designed for multi-year programs — restoration,
+            conservation, education — the kind of work that takes years, not quarters.
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-3">

@@ -25,10 +25,10 @@ function AboutPage() {
             Trust, transparency, and the long-haul.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground">
-            CommonGround was founded on a simple premise: high-impact social work needs
-            predictable, multi-year funding — not one-off campaigns. We are building the
-            governance, financial, and reporting infrastructure that lets members support
-            vetted programs with confidence, and lets NGOs focus on the work.
+            CommonGround was founded on a simple premise: high-impact social work needs predictable,
+            multi-year funding — not one-off campaigns. We are building the governance, financial,
+            and reporting infrastructure that lets members support vetted programs with confidence,
+            and lets NGOs focus on the work.
           </p>
         </div>
       </section>

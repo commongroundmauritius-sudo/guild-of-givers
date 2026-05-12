@@ -28,14 +28,20 @@ function PartnerPage() {
             Apply to join the CommonGround network
           </h1>
           <p className="mt-4 text-muted-foreground">
-            We partner with NGOs working on long-horizon causes — restoration,
-            conservation, education and social impact. Tell us about your work and our
-            team will get back to you.
+            We partner with NGOs working on long-horizon causes — restoration, conservation,
+            education and social impact. Tell us about your work and our team will get back to you.
           </p>
 
           <ul className="mt-6 grid gap-2 text-sm sm:grid-cols-3">
-            {["Recurring monthly funding", "Verified, transparent process", "Member visibility & reporting"].map((t) => (
-              <li key={t} className="rounded-full border border-border/60 bg-card px-4 py-2 text-center">
+            {[
+              "Recurring monthly funding",
+              "Verified, transparent process",
+              "Member visibility & reporting",
+            ].map((t) => (
+              <li
+                key={t}
+                className="rounded-full border border-border/60 bg-card px-4 py-2 text-center"
+              >
                 {t}
               </li>
             ))}
@@ -63,7 +69,14 @@ function PartnerPage() {
               <input required type="email" name="email" className={inputCls} />
             </Field>
             <Field label="Write to us" required>
-              <textarea required minLength={20} maxLength={2000} rows={6} name="message" className={inputCls} />
+              <textarea
+                required
+                minLength={20}
+                maxLength={2000}
+                rows={6}
+                name="message"
+                className={inputCls}
+              />
               <p className="mt-1 text-xs text-muted-foreground">
                 Minimum 20 characters — max 2000.
               </p>

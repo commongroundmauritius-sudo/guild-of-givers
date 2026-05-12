@@ -22,15 +22,15 @@ function LegalPage() {
             <div>
               <h2 className="font-display text-xl text-primary">Terms of service</h2>
               <p className="mt-2">
-                By becoming a member, you agree to recurring billing for your selected
-                contribution, cancellable at any time. Full terms are available upon request.
+                By becoming a member, you agree to recurring billing for your selected contribution,
+                cancellable at any time. Full terms are available upon request.
               </p>
             </div>
             <div>
               <h2 className="font-display text-xl text-primary">Privacy policy</h2>
               <p className="mt-2">
-                We collect only the information necessary to operate memberships,
-                allocate contributions and produce impact reports. We never sell your data.
+                We collect only the information necessary to operate memberships, allocate
+                contributions and produce impact reports. We never sell your data.
               </p>
             </div>
             <div>
