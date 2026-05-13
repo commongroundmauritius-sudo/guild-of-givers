@@ -4,8 +4,6 @@ import { ArrowLeft, Check } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { createInitialSubscription } from "@/lib/auth-actions";
-import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -41,35 +39,13 @@ function SignupPage() {
     setSubmitting(true);
     const { error } = await signUp(email, password, {
       full_name: fullName,
+      subscription_amount: finalAmount,
+      covers_fees: coversFees,
     });
-
     if (error) {
       toast.error(error.message);
       setSubmitting(false);
       return;
-    }
-
-    // Since we need the user ID to initialize the profile and role,
-    // and signUp might not return the session immediately (if email confirmation is on),
-    // we should try to get the user from supabase auth directly or wait for it.
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      try {
-        // We still trigger initial subscription manually as it depends on user input
-        // Profiles and roles are now handled by database triggers for security.
-        await createInitialSubscription({
-          data: {
-            userId: user.id,
-            amount: finalAmount,
-            coversFees: coversFees,
-          },
-        });
-      } catch (err) {
-        console.error("Initialization error:", err);
-      }
     }
 
     setSubmitting(false);
