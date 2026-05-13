@@ -12,23 +12,23 @@ ALTER TABLE public.member_preferences ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
 -- Using subqueries for auth.uid() as recommended for performance and to match manual adjustment
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can manage own preferences') THEN
         CREATE POLICY "Users can manage own preferences" ON public.member_preferences
         FOR ALL USING ((SELECT auth.uid()) = user_id);
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert their own preferences') THEN
         CREATE POLICY "Users can insert their own preferences" ON public.member_preferences
         FOR INSERT WITH CHECK ((SELECT auth.uid()) = user_id);
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins can view all preferences') THEN
         CREATE POLICY "Admins can view all preferences" ON public.member_preferences
         FOR SELECT USING (public.has_role('admin'));
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;

@@ -4,39 +4,39 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email TEXT;
 -- Add INSERT policies for core tables so users can initialize their own records
 -- Using idempotent blocks to prevent blocking migrations
 
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert their own profile') THEN
         CREATE POLICY "Users can insert their own profile"
           ON profiles FOR INSERT
           WITH CHECK (auth.uid() = id);
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert their own role') THEN
         CREATE POLICY "Users can insert their own role"
           ON user_roles FOR INSERT
           WITH CHECK (auth.uid() = user_id);
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert their own subscriptions') THEN
         CREATE POLICY "Users can insert their own subscriptions"
           ON subscriptions FOR INSERT
           WITH CHECK (auth.uid() = user_id);
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert their own preferences') THEN
         CREATE POLICY "Users can insert their own preferences"
           ON member_preferences FOR INSERT
           WITH CHECK (auth.uid() = user_id);
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO 9256 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins can manage initiatives') THEN
         CREATE POLICY "Admins can manage initiatives"
           ON initiatives FOR ALL
@@ -47,7 +47,7 @@ DO 9256 BEGIN
             )
           );
     END IF;
-EXCEPTION WHEN duplicate_object THEN null; END 9256;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- AUTH TRIGGER FOR AUTOMATIC PROFILE AND ROLE CREATION
 -- This ensures the "Backend is the source of truth" (Rule 1)
