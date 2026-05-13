@@ -81,3 +81,6 @@ The project followed an **Infrastructure-First** approach:
 
 ---
 *CommonGround: Building trust through infrastructure.*
+
+## Manual Operational Tasks
+For detailed instructions on setting up Storage Buckets, SMTP, and Peach Payments webhooks, refer to [MANUAL_WORK.md](./MANUAL_WORK.md).
