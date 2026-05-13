@@ -4,6 +4,8 @@ import { ArrowLeft, Check } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { createInitialSubscription } from "@/lib/auth-actions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -28,6 +30,7 @@ function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [coversFees, setCoversFees] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -38,13 +41,38 @@ function SignupPage() {
     setSubmitting(true);
     const { error } = await signUp(email, password, {
       full_name: fullName,
-      monthly_amount_mur: finalAmount,
     });
-    setSubmitting(false);
+
     if (error) {
       toast.error(error.message);
+      setSubmitting(false);
       return;
     }
+
+    // Since we need the user ID to initialize the profile and role,
+    // and signUp might not return the session immediately (if email confirmation is on),
+    // we should try to get the user from supabase auth directly or wait for it.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      try {
+        // We still trigger initial subscription manually as it depends on user input
+        // Profiles and roles are now handled by database triggers for security.
+        await createInitialSubscription({
+          data: {
+            userId: user.id,
+            amount: finalAmount,
+            coversFees: coversFees,
+          },
+        });
+      } catch (err) {
+        console.error("Initialization error:", err);
+      }
+    }
+
+    setSubmitting(false);
     toast.success("Account created — check your inbox to confirm.");
     setStep(2);
   };
@@ -142,12 +170,28 @@ function SignupPage() {
 
             {step === 1 && (
               <div>
-                <h2 className="font-display text-3xl font-semibold text-primary">
-                  Your details
-                </h2>
+                <h2 className="font-display text-3xl font-semibold text-primary">Your details</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Contributing Rs {finalAmount.toLocaleString()} / month.
                 </p>
+                <div className="mt-6 space-y-6">
+                  <div className="rounded-2xl bg-primary/5 p-4 border border-primary/10">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={coversFees}
+                        onChange={(e) => setCoversFees(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-primary text-primary focus:ring-primary"
+                      />
+                      <div>
+                        <span className="text-sm font-semibold text-primary">I want to cover the processing fee</span>
+                        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                          This adds a small amount (approx. 3.5%) to your contribution so 100% of your Rs {finalAmount.toLocaleString()} goes to the initiatives.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -156,13 +200,31 @@ function SignupPage() {
                   className="mt-6 space-y-4"
                 >
                   <Field label="Full name">
-                    <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} />
+                    <input
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="Email">
-                    <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+                    <input
+                      required
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="Password">
-                    <input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
+                    <input
+                      required
+                      minLength={6}
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={inputCls}
+                    />
                   </Field>
                   <button
                     disabled={submitting}
@@ -171,18 +233,16 @@ function SignupPage() {
                     {submitting ? "Creating account…" : "Create account"}
                   </button>
                 </form>
+                </div>
               </div>
             )}
 
             {step === 2 && (
               <div>
-                <h2 className="font-display text-3xl font-semibold text-primary">
-                  Payment
-                </h2>
+                <h2 className="font-display text-3xl font-semibold text-primary">Payment</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Payment integration is coming soon. For now, your membership is
-                  registered and a CommonGround team member will reach out to set up
-                  recurring billing.
+                  Payment integration is coming soon. For now, your membership is registered and a
+                  CommonGround team member will reach out to set up recurring billing.
                 </p>
                 <button
                   onClick={() => setStep(3)}
