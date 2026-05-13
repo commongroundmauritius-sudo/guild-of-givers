@@ -61,6 +61,7 @@ function SignupPage() {
     setSubmitting(true);
     const { error } = await signUp(email, password, {
       full_name: fullName,
+      phone: phone,
       subscription_amount: finalAmount,
       covers_fees: coversFees,
     });
