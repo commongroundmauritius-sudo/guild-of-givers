@@ -21,16 +21,22 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 async function fetchRole(userId: string): Promise<AppRole> {
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
       .limit(1)
       .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching role:", error);
+      return "member";
+    }
+
     const role = (data as { role?: string } | null)?.role;
     if (role === "admin" || role === "ngo" || role === "member") return role;
-  } catch {
-    // table may not exist yet
+  } catch (e) {
+    console.error("Exception fetching role:", e);
   }
   return "member";
 }

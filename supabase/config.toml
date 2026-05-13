@@ -1,0 +1,16 @@
+# Supabase configuration file
+project_id = "vzsifigcowusabfmnudk"
+
+[api]
+port = 54321
+schemas = ["public", "graphql_public"]
+
+[db]
+port = 54322
+shadow_port = 54323
+
+[auth]
+enabled = true
+
+[storage]
+enabled = true

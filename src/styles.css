@@ -49,6 +49,10 @@
   --color-forest-soft: var(--forest-soft);
   --color-ink: var(--ink);
 
+  --color-teal-600: oklch(0.55 0.1 190);
+  --color-coral-500: oklch(0.65 0.15 35);
+  --color-amber-500: oklch(0.75 0.15 75);
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -162,7 +166,10 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, .font-display {
+  h1,
+  h2,
+  h3,
+  .font-display {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }

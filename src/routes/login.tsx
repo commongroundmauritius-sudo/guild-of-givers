@@ -43,7 +43,10 @@ function LoginPage() {
           </h1>
           <p className="mt-2 text-muted-foreground">Log in to your CommonGround account.</p>
 
-          <form onSubmit={onSubmit} className="mt-8 space-y-4 rounded-3xl border border-border/60 bg-card p-6">
+          <form
+            onSubmit={onSubmit}
+            className="mt-8 space-y-4 rounded-3xl border border-border/60 bg-card p-6"
+          >
             <label className="block">
               <span className="text-sm font-medium">Email</span>
               <input
@@ -91,7 +94,10 @@ function LoginPage() {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             New here?{" "}
-            <Link to="/signup" className="font-medium text-primary underline-offset-4 hover:underline">
+            <Link
+              to="/signup"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
               Become a member
             </Link>
           </p>
