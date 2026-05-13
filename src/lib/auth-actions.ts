@@ -26,3 +26,24 @@ export const toggleInitiativePreference = createServerFn({ method: "POST" })
 
     return { success: true };
   });
+
+export const createLead = createServerFn({ method: "POST" })
+  .inputValidator((data: { email: string; fullName: string; phone?: string; amount: number; coversFees: boolean }) => data)
+  .handler(async ({ data }) => {
+    const { email, fullName, phone, amount, coversFees } = data;
+
+    const { error } = await supabase.from("leads").insert({
+      email,
+      full_name: fullName,
+      phone,
+      amount_mur: amount,
+      covers_fees: coversFees,
+    });
+
+    if (error) {
+      console.error("Error creating lead:", error);
+      throw new Error("Failed to capture details. Please try again.");
+    }
+
+    return { success: true };
+  });
