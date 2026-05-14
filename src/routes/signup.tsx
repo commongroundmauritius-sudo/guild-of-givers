@@ -3,9 +3,8 @@ import { useState } from "react";
 import { ArrowLeft, Check } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
+import { createLead, convertLead } from "@/lib/auth-actions";
 import { toast } from "sonner";
-import { createInitialSubscription } from "@/lib/auth-actions";
-import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -21,15 +20,16 @@ export const Route = createFileRoute("/signup")({
 });
 
 const PRESETS = [350, 450, 900, 2500, 5000, 8000];
-const STEPS = ["Amount", "Details", "Payment", "Done"];
+const STEPS = ["Amount", "Details", "Payment", "Account", "Done"];
 
 function SignupPage() {
   const [step, setStep] = useState(0);
-  const [amount, setAmount] = useState(900);
+  const [amount, setAmount] = useState(450);
   const [customAmount, setCustomAmount] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [coversFees, setCoversFees] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { signUp } = useAuth();
@@ -37,44 +37,50 @@ function SignupPage() {
 
   const finalAmount = customAmount ? Number(customAmount) || 0 : amount;
 
+  const submitDetails = async () => {
+    setSubmitting(true);
+    try {
+      await createLead({
+        data: {
+          email,
+          fullName,
+          phone,
+          amount: finalAmount,
+          coversFees,
+        },
+      });
+      setStep(2);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const submitAccount = async () => {
     setSubmitting(true);
     const { error } = await signUp(email, password, {
       full_name: fullName,
+      phone: phone,
+      subscription_amount: finalAmount,
+      covers_fees: coversFees,
     });
-
     if (error) {
       toast.error(error.message);
       setSubmitting(false);
       return;
     }
 
-    // Since we need the user ID to initialize the profile and role,
-    // and signUp might not return the session immediately (if email confirmation is on),
-    // we should try to get the user from supabase auth directly or wait for it.
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      try {
-        // We still trigger initial subscription manually as it depends on user input
-        // Profiles and roles are now handled by database triggers for security.
-        await createInitialSubscription({
-          data: {
-            userId: user.id,
-            amount: finalAmount,
-            coversFees: coversFees,
-          },
-        });
-      } catch (err) {
-        console.error("Initialization error:", err);
-      }
+    // Mark lead as converted
+    try {
+      await convertLead({ data: { email } });
+    } catch (e) {
+      console.error("Lead conversion failed", e);
     }
 
     setSubmitting(false);
     toast.success("Account created — check your inbox to confirm.");
-    setStep(2);
+    setStep(4);
   };
 
   return (
@@ -88,7 +94,7 @@ function SignupPage() {
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
 
-          <ol className="mt-8 grid grid-cols-4 gap-2 text-xs">
+          <ol className="mt-8 grid grid-cols-5 gap-2 text-xs">
             {STEPS.map((label, i) => (
               <li
                 key={label}
@@ -153,9 +159,26 @@ function SignupPage() {
                     </div>
                   </label>
 
-                  <p className="mt-3 text-xs text-muted-foreground">
+                                    <p className="mt-3 text-xs text-muted-foreground">
                     Flexible monthly contribution. Cancel anytime.
                   </p>
+                </div>
+
+                <div className="mt-8 rounded-2xl bg-primary/5 p-4 border border-primary/10">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={coversFees}
+                      onChange={(e) => setCoversFees(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-primary text-primary focus:ring-primary"
+                    />
+                    <div>
+                      <span className="text-sm font-semibold text-primary">I want to cover the processing fee</span>
+                      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                        This adds a small amount (approx. 3.5%) to your contribution so 100% of your Rs {finalAmount.toLocaleString()} goes to the initiatives.
+                      </p>
+                    </div>
+                  </label>
                 </div>
 
                 <button
@@ -174,30 +197,12 @@ function SignupPage() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   Contributing Rs {finalAmount.toLocaleString()} / month.
                 </p>
-                <div className="mt-6 space-y-6">
-                  <div className="rounded-2xl bg-primary/5 p-4 border border-primary/10">
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={coversFees}
-                        onChange={(e) => setCoversFees(e.target.checked)}
-                        className="mt-1 h-4 w-4 rounded border-primary text-primary focus:ring-primary"
-                      />
-                      <div>
-                        <span className="text-sm font-semibold text-primary">I want to cover the processing fee</span>
-                        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                          This adds a small amount (approx. 3.5%) to your contribution so 100% of your Rs {finalAmount.toLocaleString()} goes to the initiatives.
-                        </p>
-                      </div>
-                    </label>
-                  </div>
-
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    submitAccount();
+                    submitDetails();
                   }}
-                  className="mt-6 space-y-4"
+                  className="mt-8 space-y-4"
                 >
                   <Field label="Full name">
                     <input
@@ -216,24 +221,21 @@ function SignupPage() {
                       className={inputCls}
                     />
                   </Field>
-                  <Field label="Password">
+                  <Field label="Phone number (optional)">
                     <input
-                      required
-                      minLength={6}
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       className={inputCls}
                     />
                   </Field>
                   <button
                     disabled={submitting}
-                    className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
                   >
-                    {submitting ? "Creating account…" : "Create account"}
+                    {submitting ? "Saving details…" : "Continue to payment"}
                   </button>
                 </form>
-                </div>
               </div>
             )}
 
@@ -253,7 +255,47 @@ function SignupPage() {
               </div>
             )}
 
-            {step === 3 && (
+                        {step === 3 && (
+              <div>
+                <h2 className="font-display text-3xl font-semibold text-primary">Create your account</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Set a password to manage your membership and track your impact.
+                </p>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    submitAccount();
+                  }}
+                  className="mt-8 space-y-4"
+                >
+                  <Field label="Password">
+                    <input
+                      required
+                      minLength={6}
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <button
+                    disabled={submitting}
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
+                  >
+                    {submitting ? "Setting up…" : "Complete setup"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(4)}
+                    className="mt-4 block w-full text-center text-sm text-muted-foreground hover:text-primary"
+                  >
+                    I'll set it up later via email
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {step === 4 && (
               <div className="text-center">
                 <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground">
                   <Check className="h-7 w-7" />

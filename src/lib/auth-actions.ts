@@ -27,21 +27,41 @@ export const toggleInitiativePreference = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-export const createInitialSubscription = createServerFn({ method: "POST" })
-  .inputValidator((data: { userId: string; amount: number; coversFees?: boolean }) => data)
+export const createLead = createServerFn({ method: "POST" })
+  .inputValidator((data: { email: string; fullName: string; phone?: string; amount: number; coversFees: boolean }) => data)
   .handler(async ({ data }) => {
-    const { userId, amount, coversFees = false } = data;
+    const { email, fullName, phone, amount, coversFees } = data;
 
-    const { error } = await supabase.from("subscriptions").insert({
-      user_id: userId,
+    const { error } = await supabase.from("leads").insert({
+      email,
+      full_name: fullName,
+      phone,
       amount_mur: amount,
-      status: "pending",
       covers_fees: coversFees,
     });
 
     if (error) {
-      console.error("Error creating initial subscription:", error);
-      throw new Error("Failed to create subscription");
+      console.error("Error creating lead:", error);
+      throw new Error("Failed to capture details. Please try again.");
+    }
+
+    return { success: true };
+  });
+
+export const convertLead = createServerFn({ method: "POST" })
+  .inputValidator((data: { email: string }) => data)
+  .handler(async ({ data }) => {
+    const { email } = data;
+
+    const { error } = await supabase
+      .from("leads")
+      .update({ status: 'converted' })
+      .eq("email", email)
+      .eq("status", 'pending');
+
+    if (error) {
+      console.error("Error converting lead:", error);
+      // We don't throw here to avoid blocking the user setup if just the lead update fails
     }
 
     return { success: true };
