@@ -1,7 +1,6 @@
 -- Fix search_path security warnings for definer functions
 ALTER FUNCTION public.handle_new_user() SET search_path = public;
 ALTER FUNCTION public.has_role(public.app_role) SET search_path = public;
-ALTER FUNCTION public.handle_new_auth_user() SET search_path = public;
 
 -- Grant standard CRUD permissions to authenticated and anon roles
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
