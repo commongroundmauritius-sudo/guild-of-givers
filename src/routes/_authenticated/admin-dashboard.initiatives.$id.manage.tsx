@@ -4,9 +4,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, Globe, EyeOff, Image as ImageIcon, Plus, X } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  ArrowLeft,
+  Save,
+  Globe,
+  EyeOff,
+  Image as ImageIcon,
+  Plus,
+  X,
+  AlertCircle,
+  Loader2,
+  ShieldAlert,
+} from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin-initiatives/$id")({
+export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/$id/manage")({
   component: InitiativeEditPage,
 });
 
@@ -14,17 +26,33 @@ function InitiativeEditPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { role, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState<any>(null);
 
-  const { data: initiative, isLoading } = useQuery({
+  useEffect(() => {
+    if (!authLoading && role && role !== "admin") {
+      toast.error("Unauthorized access");
+      navigate({ to: "/dashboard" });
+    }
+  }, [role, authLoading, navigate]);
+
+  const {
+    data: initiative,
+    isLoading,
+    error: queryError,
+  } = useQuery({
     queryKey: ["initiative", id],
     queryFn: async () => {
+      if (!id) throw new Error("No initiative ID provided");
+
       const { data, error } = await supabase
         .from("initiatives")
         .select("*, ngos(name)")
         .eq("id", id)
-        .single();
+        .maybeSingle();
+
       if (error) throw error;
+      if (!data) throw new Error("Initiative not found");
       return data;
     },
   });
@@ -60,13 +88,63 @@ function InitiativeEditPage() {
     },
   });
 
-  if (isLoading || !formData) {
+  if (authLoading || isLoading) {
     return (
       <SiteLayout>
-        <div className="mx-auto max-w-7xl px-4 py-16 text-center">Loading initiative...</div>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+          <p className="animate-pulse text-muted-foreground">Loading initiative details...</p>
+        </div>
       </SiteLayout>
     );
   }
+
+  if (role !== "admin") {
+    return (
+      <SiteLayout>
+        <div className="mx-auto max-w-3xl px-4 py-32 text-center">
+          <ShieldAlert className="mx-auto h-12 w-12 text-red-500" />
+          <h1 className="mt-4 font-display text-2xl font-bold">Unauthorized</h1>
+          <p className="mt-2 text-muted-foreground">
+            You do not have administrative privileges to access this page.
+          </p>
+        </div>
+      </SiteLayout>
+    );
+  }
+
+  if (queryError || !initiative) {
+    return (
+      <SiteLayout>
+        <div className="mx-auto max-w-3xl px-4 py-32 text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="rounded-full bg-red-100 p-4 text-red-600">
+              <AlertCircle className="h-12 w-12" />
+            </div>
+          </div>
+          <h1 className="font-display text-3xl font-bold text-primary">
+            Failed to load initiative
+          </h1>
+          <p className="mt-4 text-muted-foreground">
+            {queryError instanceof Error
+              ? queryError.message
+              : "The initiative could not be found or you do not have permission to view it."}
+          </p>
+          <div className="mt-10">
+            <Link
+              to="/admin"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Return to Dashboard
+            </Link>
+          </div>
+        </div>
+      </SiteLayout>
+    );
+  }
+
+  if (!formData) return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -102,10 +180,10 @@ function InitiativeEditPage() {
 
   return (
     <SiteLayout>
-      <section className="min-h-screen bg-cream-soft/30">
+      <section className="min-h-screen bg-cream-soft/30 font-inter">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
           <button
-            onClick={() => navigate({ to: "/_authenticated/admin" })}
+            onClick={() => navigate({ to: "/admin" })}
             className="mb-8 flex items-center gap-2 text-sm text-muted-foreground transition hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -155,7 +233,6 @@ function InitiativeEditPage() {
 
           <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-3">
             <div className="space-y-8 lg:col-span-2">
-              {/* Basic Info */}
               <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
                 <h2 className="mb-6 font-display text-xl font-semibold text-primary">
                   General Information
@@ -199,7 +276,6 @@ function InitiativeEditPage() {
                 </div>
               </div>
 
-              {/* Detailed Content */}
               <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
                 <h2 className="mb-6 font-display text-xl font-semibold text-primary">
                   Campaign Details
@@ -235,7 +311,6 @@ function InitiativeEditPage() {
             </div>
 
             <div className="space-y-8">
-              {/* Media */}
               <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
                 <h2 className="mb-6 font-display text-xl font-semibold text-primary">Media</h2>
                 <div className="space-y-6">
@@ -291,7 +366,6 @@ function InitiativeEditPage() {
                 </div>
               </div>
 
-              {/* Funding */}
               <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
                 <h2 className="mb-6 font-display text-xl font-semibold text-primary">Goal</h2>
                 <div>
