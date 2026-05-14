@@ -23,6 +23,7 @@ import { Route as AuthenticatedNgoRouteImport } from './routes/_authenticated/ng
 import { Route as AuthenticatedMemberRouteImport } from './routes/_authenticated/member'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdminInitiativesIdRouteImport } from './routes/_authenticated/admin-initiatives.$id'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -93,6 +94,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminInitiativesIdRoute =
+  AuthenticatedAdminInitiativesIdRouteImport.update({
+    id: '/admin-initiatives/$id',
+    path: '/admin-initiatives/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRoute
   '/ngo': typeof AuthenticatedNgoRoute
+  '/admin-initiatives/$id': typeof AuthenticatedAdminInitiativesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -123,6 +131,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRoute
   '/ngo': typeof AuthenticatedNgoRoute
+  '/admin-initiatives/$id': typeof AuthenticatedAdminInitiativesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -140,6 +149,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/member': typeof AuthenticatedMemberRoute
   '/_authenticated/ngo': typeof AuthenticatedNgoRoute
+  '/_authenticated/admin-initiatives/$id': typeof AuthenticatedAdminInitiativesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/member'
     | '/ngo'
+    | '/admin-initiatives/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/member'
     | '/ngo'
+    | '/admin-initiatives/$id'
   id:
     | '__root__'
     | '/'
@@ -188,6 +200,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/member'
     | '/_authenticated/ngo'
+    | '/_authenticated/admin-initiatives/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -303,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-initiatives/$id': {
+      id: '/_authenticated/admin-initiatives/$id'
+      path: '/admin-initiatives/$id'
+      fullPath: '/admin-initiatives/$id'
+      preLoaderRoute: typeof AuthenticatedAdminInitiativesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -311,6 +331,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMemberRoute: typeof AuthenticatedMemberRoute
   AuthenticatedNgoRoute: typeof AuthenticatedNgoRoute
+  AuthenticatedAdminInitiativesIdRoute: typeof AuthenticatedAdminInitiativesIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -318,6 +339,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMemberRoute: AuthenticatedMemberRoute,
   AuthenticatedNgoRoute: AuthenticatedNgoRoute,
+  AuthenticatedAdminInitiativesIdRoute: AuthenticatedAdminInitiativesIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

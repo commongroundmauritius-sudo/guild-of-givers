@@ -24,6 +24,7 @@ function InitiativesPage() {
         .from("initiatives")
         .select("*, ngos!inner(name, status)")
         .eq("is_approved", true)
+        .eq("is_published", true)
         .eq("ngos.status", "active");
       return data;
     },
@@ -46,17 +47,32 @@ function InitiativesPage() {
           {initiatives && initiatives.length > 0 ? (
             <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {initiatives.map((i) => (
-                <div key={i.id} className="group overflow-hidden rounded-3xl border border-border/40 bg-card transition hover:border-primary/40">
+                <div
+                  key={i.id}
+                  className="group overflow-hidden rounded-3xl border border-border/40 bg-card transition hover:border-primary/40"
+                >
                   <div className="aspect-video bg-muted" />
                   <div className="p-8">
-                    <span className="text-xs font-medium uppercase text-muted-foreground">{(i.ngos as any)?.name}</span>
-                    <h2 className="mt-2 font-display text-2xl font-semibold text-primary">{i.title}</h2>
-                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{i.description}</p>
+                    <span className="text-xs font-medium uppercase text-muted-foreground">
+                      {(i.ngos as any)?.name}
+                    </span>
+                    <h2 className="mt-2 font-display text-2xl font-semibold text-primary">
+                      {i.title}
+                    </h2>
+                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                      {i.description}
+                    </p>
                     <div className="mt-8 flex items-center justify-between">
                       <div className="text-xs font-medium text-primary">
-                        Rs {Number(i.current_amount_mur).toLocaleString()} / Rs {Number(i.goal_amount_mur).toLocaleString()}
+                        Rs {Number(i.current_amount_mur).toLocaleString()} / Rs{" "}
+                        {Number(i.goal_amount_mur).toLocaleString()}
                       </div>
-                      <Link to="/signup" className="text-sm font-semibold text-primary hover:underline">Support →</Link>
+                      <Link
+                        to="/signup"
+                        className="text-sm font-semibold text-primary hover:underline"
+                      >
+                        Support →
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -66,8 +82,8 @@ function InitiativesPage() {
             <div className="mt-12 rounded-3xl border border-dashed border-border bg-card p-16 text-center">
               <h2 className="font-display text-2xl text-primary">No initiatives available yet.</h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Partner organizations are being onboarded. Become a member to be the first to support
-                new initiatives as they launch.
+                Partner organizations are being onboarded. Become a member to be the first to
+                support new initiatives as they launch.
               </p>
               <div className="mt-6">
                 <Link
