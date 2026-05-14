@@ -26,7 +26,7 @@ function InitiativeEditPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { role, loading: authLoading } = useAuth();
+  const { role, user, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState<any>(null);
 
   useEffect(() => {
@@ -77,11 +77,26 @@ function InitiativeEditPage() {
     mutationFn: async (updatedData: any) => {
       const { error } = await supabase.from("initiatives").update(updatedData).eq("id", id);
       if (error) throw error;
+
+      // Log the update
+      if (user?.id) {
+        await supabase.from("admin_actions").insert({
+          admin_id: user.id,
+          action_type: "update_initiative_content",
+          target_id: id,
+          target_type: "initiative",
+          details: {
+            is_published: updatedData.is_published,
+            fields_updated: Object.keys(updatedData),
+          },
+        });
+      }
     },
     onSuccess: () => {
       toast.success("Initiative updated successfully");
       queryClient.invalidateQueries({ queryKey: ["initiative", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-all-initiatives"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-actions"] });
     },
     onError: (error: any) => {
       toast.error("Failed to update: " + error.message);
