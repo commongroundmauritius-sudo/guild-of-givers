@@ -129,7 +129,7 @@ function AdminDashboard() {
       toast.success("Initiative approval updated");
       refetchInitiatives();
       if (!current) {
-        navigate({ to: "/_authenticated/admin-initiatives/$id", params: { id } });
+        navigate({ to: "/admin-dashboard/initiatives/$id/manage", params: { id } });
       }
     }
   };
@@ -185,13 +185,13 @@ function AdminDashboard() {
                 key={c.title}
                 className="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-6"
               >
-                <p className="text-sm text-amber-500 font-medium">{c.title}</p>
+                <p className="text-sm font-medium text-amber-500">{c.title}</p>
                 <p className="mt-3 font-display text-3xl text-amber-500">{c.value}</p>
               </div>
             ))}
 
-            <div className="lg:col-span-3 rounded-3xl border border-border/40 bg-card p-6">
-              <h3 className="text-sm font-medium text-muted-foreground mb-6">Treasury Flow</h3>
+            <div className="rounded-3xl border border-border/40 bg-card p-6 lg:col-span-3">
+              <h3 className="mb-6 text-sm font-medium text-muted-foreground">Treasury Flow</h3>
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
@@ -248,7 +248,7 @@ function AdminDashboard() {
                         <tr key={i.id}>
                           <td className="px-6 py-4 font-medium">
                             <Link
-                              to="/_authenticated/admin-initiatives/$id"
+                              to="/admin-dashboard/initiatives/$id/manage"
                               params={{ id: i.id }}
                               className="hover:underline"
                             >
@@ -281,7 +281,7 @@ function AdminDashboard() {
                                 {i.is_approved ? "Revoke" : "Approve"}
                               </button>
                               <Link
-                                to="/_authenticated/admin-initiatives/$id"
+                                to="/admin-dashboard/initiatives/$id/manage"
                                 params={{ id: i.id }}
                                 className="text-xs font-semibold text-primary hover:underline"
                               >
@@ -489,7 +489,7 @@ function AdminDashboard() {
                           <td className="px-6 py-4 text-xs">
                             Rs {Number(l.amount_mur).toLocaleString()}
                             {l.covers_fees && (
-                              <span className="ml-1 text-[10px] text-forest-soft font-bold uppercase">
+                              <span className="ml-1 uppercase font-bold text-[10px] text-forest-soft">
                                 + Fee
                               </span>
                             )}
