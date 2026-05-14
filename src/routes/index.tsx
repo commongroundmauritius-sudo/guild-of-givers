@@ -9,6 +9,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -48,43 +50,55 @@ function Hero() {
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-28">
         <div className="flex flex-col justify-center">
           <Kicker>Impact, simplified</Kicker>
-          <h1 className="mt-5 font-display text-5xl font-semibold text-primary sm:text-6xl lg:text-7xl">
-            One Membership. <span className="text-forest-soft">Long-term Impact.</span>
+          <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.1] text-primary sm:text-7xl">
+            One membership. <br />
+            <span className="text-teal-600">Long-term impact.</span>
           </h1>
-          <p className="mt-6 max-w-xl text-base text-muted-foreground sm:text-lg">
-            CommonGround turns recurring memberships into structured, predictable funding for the
-            long-haul work — coral restoration, reforestation, education — programs that run for
-            years, not weeks.
+          <p className="mt-8 max-w-lg text-lg leading-relaxed text-muted-foreground sm:text-xl">
+            Join the Guild of Givers. We turn monthly contributions into predictable funding for
+            Mauritius' most effective social initiatives.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-10 flex flex-wrap gap-4">
             <Link
               to="/signup"
-              className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90"
             >
               Become a Member
             </Link>
             <Link
               to="/initiatives"
-              className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-card px-6 py-3 text-sm font-medium text-primary transition-colors hover:bg-cream-deep"
+              className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-background px-8 py-4 text-sm font-semibold text-primary transition hover:bg-muted"
             >
               Explore Initiatives
             </Link>
           </div>
         </div>
-
         <div className="relative">
-          <div
-            className="absolute inset-x-6 -top-2 bottom-6 rounded-3xl bg-primary/90"
-            aria-hidden
-          />
-          <div className="relative overflow-hidden rounded-3xl border-8 border-primary shadow-2xl">
+          <div className="aspect-[4/5] overflow-hidden rounded-[3rem] border border-border/60 bg-muted sm:aspect-square lg:aspect-[4/5]">
             <img
               src={heroRoom}
-              alt="A bright, plant-filled meeting room representing collaborative impact"
+              alt="Community impact"
               width={1280}
-              height={896}
+              height={1600}
+              priority="true"
               className="h-full w-full object-cover"
             />
+          </div>
+          <div className="absolute -bottom-6 -left-6 rounded-3xl border border-border/40 bg-background p-6 shadow-xl sm:p-8">
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-10 w-10 rounded-full border-2 border-background bg-teal-100"
+                  />
+                ))}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-primary">Join 240+ members</p>
+                <p className="text-xs text-muted-foreground">Growing every day</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -97,7 +111,7 @@ const STEPS = [
     n: "01",
     icon: UserPlus,
     title: "Join",
-    desc: "Sign up for a single monthly membership that fits your budget and impact goals.",
+    desc: "Pick a monthly contribution amount that fits your budget.",
   },
   {
     n: "02",
@@ -199,6 +213,20 @@ function Why() {
 }
 
 function Initiatives() {
+  const { data: initiatives } = useQuery({
+    queryKey: ["homepage-initiatives"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("initiatives")
+        .select("*, ngos!inner(name, status)")
+        .eq("is_approved", true)
+        .eq("is_published", true)
+        .eq("ngos.status", "active")
+        .limit(3);
+      return data;
+    },
+  });
+
   return (
     <section id="initiatives" className="border-t border-border/60 bg-cream-deep/40">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
@@ -215,17 +243,64 @@ function Initiatives() {
             </p>
           </div>
           <Link
-            to="/signup"
+            to="/initiatives"
             className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Support All
+            Explore All
           </Link>
         </div>
-        <div className="mt-10 rounded-3xl border border-dashed border-border bg-card/60 p-12 text-center">
-          <p className="text-muted-foreground">
-            New initiatives are being onboarded — check back soon.
-          </p>
-        </div>
+
+        {initiatives && initiatives.length > 0 ? (
+          <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {initiatives.map((i) => (
+              <div
+                key={i.id}
+                className="group overflow-hidden rounded-3xl border border-border/40 bg-card transition hover:border-primary/40 shadow-sm"
+              >
+                <div className="aspect-video bg-muted overflow-hidden">
+                  {i.image_url ? (
+                    <img
+                      src={i.image_url}
+                      alt={i.title}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-muted/60" />
+                  )}
+                </div>
+                <div className="p-8">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">
+                    {(i.ngos as any)?.name}
+                  </span>
+                  <h3 className="mt-2 font-display text-2xl font-semibold text-primary">
+                    {i.title}
+                  </h3>
+                  <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                    {i.description}
+                  </p>
+                  <div className="mt-8 flex items-center justify-between">
+                    <div className="text-xs font-medium text-primary">
+                      Rs {Number(i.current_amount_mur).toLocaleString()} / Rs{" "}
+                      {Number(i.goal_amount_mur).toLocaleString()}
+                    </div>
+                    <Link
+                      to="/signup"
+                      className="text-sm font-semibold text-primary hover:underline"
+                    >
+                      Support →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-3xl border border-dashed border-border bg-card/60 p-12 text-center">
+            <p className="text-muted-foreground">
+              New initiatives are being onboarded — check back soon.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

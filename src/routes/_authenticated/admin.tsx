@@ -13,6 +13,7 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
+import { History, ShieldCheck, AlertTriangle, User, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminDashboard,
@@ -20,7 +21,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+
   const { data: leads } = useQuery({
     queryKey: ["admin-leads"],
     queryFn: async () => {
@@ -92,6 +94,35 @@ function AdminDashboard() {
     },
   });
 
+  const { data: adminActions, refetch: refetchActions } = useQuery({
+    queryKey: ["admin-actions"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("admin_actions")
+        .select("*, profiles:admin_id(full_name, email)")
+        .order("created_at", { ascending: false })
+        .limit(30);
+      return data;
+    },
+  });
+
+  const logAction = async (
+    type: string,
+    targetId: string,
+    targetType: string,
+    details: any = {},
+  ) => {
+    if (!user?.id) return;
+    await supabase.from("admin_actions").insert({
+      admin_id: user.id,
+      action_type: type,
+      target_id: targetId,
+      target_type: targetType,
+      details,
+    });
+    refetchActions();
+  };
+
   const toggleVetting = async (id: string, currentStatus: boolean) => {
     const { error } = await supabase
       .from("ngos")
@@ -102,6 +133,7 @@ function AdminDashboard() {
       toast.error("Failed to update vetting status");
     } else {
       toast.success("NGO vetting updated");
+      logAction(currentStatus ? "revoke_vetting" : "approve_ngo", id, "ngo");
       refetchNgos();
       refetchInitiatives();
     }
@@ -127,6 +159,7 @@ function AdminDashboard() {
     if (error) toast.error("Failed to update initiative approval");
     else {
       toast.success("Initiative approval updated");
+      logAction(current ? "revoke_initiative_approval" : "approve_initiative", id, "initiative");
       refetchInitiatives();
       if (!current) {
         navigate({ to: "/admin-dashboard/initiatives/$id/manage", params: { id } });
@@ -139,6 +172,7 @@ function AdminDashboard() {
     if (error) toast.error("Failed to update report");
     else {
       toast.success(`Report ${status}`);
+      logAction(`moderate_report_${status}`, id, "report");
       refetchReports();
     }
   };
@@ -149,6 +183,7 @@ function AdminDashboard() {
     if (error) toast.error("Failed to update suspension status");
     else {
       toast.success(`NGO ${newStatus === "suspended" ? "suspended" : "activated"}`);
+      logAction(newStatus === "suspended" ? "suspend_ngo" : "activate_ngo", id, "ngo");
       refetchNgos();
     }
   };
@@ -364,6 +399,53 @@ function AdminDashboard() {
           <div className="mt-12 grid gap-12 lg:grid-cols-2">
             <div>
               <h2 className="font-display text-2xl font-semibold text-amber-500">
+                Recent Admin Activity
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Audited history of administrative actions.
+              </p>
+              <div className="mt-6 overflow-hidden rounded-3xl border border-amber-500/20 bg-card">
+                {adminActions && adminActions.length > 0 ? (
+                  <div className="divide-y divide-border/40">
+                    {adminActions.map((action) => (
+                      <div key={action.id} className="p-6 transition hover:bg-amber-500/5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex gap-4">
+                            <div className="mt-1 grid h-8 w-8 place-items-center rounded-full bg-amber-500/10 text-amber-500">
+                              <History className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-primary capitalize">
+                                {action.action_type.replace(/_/g, " ")}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                By{" "}
+                                {action.profiles?.full_name ||
+                                  action.profiles?.email ||
+                                  "Unknown Admin"}
+                              </p>
+                              <p className="mt-1 text-[10px] font-mono text-muted-foreground uppercase">
+                                {new Date(action.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 uppercase">
+                            {action.target_type}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center text-muted-foreground">
+                    No activity logged yet.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-amber-500">
                 Report Moderation
               </h2>
               <div className="mt-6 overflow-hidden rounded-3xl border border-amber-500/20 bg-card">
@@ -413,7 +495,9 @@ function AdminDashboard() {
                 )}
               </div>
             </div>
+          </div>
 
+          <div className="mt-12 grid gap-12 lg:grid-cols-2">
             <div>
               <h2 className="font-display text-2xl font-semibold text-primary">
                 Payment Audit Log
@@ -456,7 +540,7 @@ function AdminDashboard() {
               </div>
             </div>
 
-            <div className="mt-12">
+            <div>
               <h2 className="font-display text-2xl font-semibold text-amber-500">
                 Membership Leads
               </h2>
