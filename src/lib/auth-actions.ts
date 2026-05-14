@@ -28,7 +28,15 @@ export const toggleInitiativePreference = createServerFn({ method: "POST" })
   });
 
 export const createLead = createServerFn({ method: "POST" })
-  .inputValidator((data: { email: string; fullName: string; phone?: string; amount: number; coversFees: boolean }) => data)
+  .inputValidator(
+    (data: {
+      email: string;
+      fullName: string;
+      phone?: string;
+      amount: number;
+      coversFees: boolean;
+    }) => data,
+  )
   .handler(async ({ data }) => {
     const { email, fullName, phone, amount, coversFees } = data;
 
@@ -55,9 +63,9 @@ export const convertLead = createServerFn({ method: "POST" })
 
     const { error } = await supabase
       .from("leads")
-      .update({ status: 'converted' })
+      .update({ status: "converted" })
       .eq("email", email)
-      .eq("status", 'pending');
+      .eq("status", "pending");
 
     if (error) {
       console.error("Error converting lead:", error);

@@ -159,7 +159,7 @@ function SignupPage() {
                     </div>
                   </label>
 
-                                    <p className="mt-3 text-xs text-muted-foreground">
+                  <p className="mt-3 text-xs text-muted-foreground">
                     Flexible monthly contribution. Cancel anytime.
                   </p>
                 </div>
@@ -173,9 +173,12 @@ function SignupPage() {
                       className="mt-1 h-4 w-4 rounded border-primary text-primary focus:ring-primary"
                     />
                     <div>
-                      <span className="text-sm font-semibold text-primary">I want to cover the processing fee</span>
+                      <span className="text-sm font-semibold text-primary">
+                        I want to cover the processing fee
+                      </span>
                       <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                        This adds a small amount (approx. 3.5%) to your contribution so 100% of your Rs {finalAmount.toLocaleString()} goes to the initiatives.
+                        This adds a small amount (approx. 3.5%) to your contribution so 100% of your
+                        Rs {finalAmount.toLocaleString()} goes to the initiatives.
                       </p>
                     </div>
                   </label>
@@ -255,9 +258,11 @@ function SignupPage() {
               </div>
             )}
 
-                        {step === 3 && (
+            {step === 3 && (
               <div>
-                <h2 className="font-display text-3xl font-semibold text-primary">Create your account</h2>
+                <h2 className="font-display text-3xl font-semibold text-primary">
+                  Create your account
+                </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Set a password to manage your membership and track your impact.
                 </p>
