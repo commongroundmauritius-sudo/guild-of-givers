@@ -20,6 +20,16 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 function AdminDashboard() {
   const { signOut } = useAuth();
+  const { data: leads } = useQuery({
+    queryKey: ["admin-leads"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
+      return data;
+    },
+  });
 
   const { data: membersCount } = useQuery({
     queryKey: ["admin-members-count"],
@@ -441,6 +451,51 @@ function AdminDashboard() {
                 </table>
               ) : (
                 <div className="p-12 text-center text-muted-foreground">No recent events found.</div>
+              )}
+            </div>
+          </div>
+
+
+
+          <div className="mt-12">
+            <h2 className="font-display text-2xl font-semibold text-amber-500">Membership Leads</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Potential members who started the flow but haven't necessarily converted.</p>
+            <div className="mt-6 overflow-hidden rounded-3xl border border-amber-500/20 bg-card">
+              {leads && leads.length > 0 ? (
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-amber-500/10 text-amber-500">
+                    <tr>
+                      <th className="px-6 py-4 font-medium">Date</th>
+                      <th className="px-6 py-4 font-medium">Details</th>
+                      <th className="px-6 py-4 font-medium">Amount</th>
+                      <th className="px-6 py-4 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {leads.map((l: any) => (
+                      <tr key={l.id}>
+                        <td className="px-6 py-4 text-xs">{new Date(l.created_at).toLocaleString()}</td>
+                        <td className="px-6 py-4">
+                          <p className="font-medium">{l.full_name}</p>
+                          <p className="text-xs text-muted-foreground">{l.email} • {l.phone || 'No phone'}</p>
+                        </td>
+                        <td className="px-6 py-4 text-xs">
+                          Rs {Number(l.amount_mur).toLocaleString()}
+                          {l.covers_fees && <span className="ml-1 text-[10px] text-forest-soft font-bold uppercase">+ Fee</span>}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                            l.status === 'converted' ? 'bg-forest-soft/10 text-forest-soft' : 'bg-amber-500/10 text-amber-500'
+                          }`}>
+                            {l.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-12 text-center text-muted-foreground">No leads captured yet.</div>
               )}
             </div>
           </div>

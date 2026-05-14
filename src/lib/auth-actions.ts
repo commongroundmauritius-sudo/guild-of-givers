@@ -47,3 +47,22 @@ export const createLead = createServerFn({ method: "POST" })
 
     return { success: true };
   });
+
+export const convertLead = createServerFn({ method: "POST" })
+  .inputValidator((data: { email: string }) => data)
+  .handler(async ({ data }) => {
+    const { email } = data;
+
+    const { error } = await supabase
+      .from("leads")
+      .update({ status: 'converted' })
+      .eq("email", email)
+      .eq("status", 'pending');
+
+    if (error) {
+      console.error("Error converting lead:", error);
+      // We don't throw here to avoid blocking the user setup if just the lead update fails
+    }
+
+    return { success: true };
+  });

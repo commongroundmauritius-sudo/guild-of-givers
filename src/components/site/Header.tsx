@@ -14,7 +14,7 @@ const NAV = [
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur">
@@ -43,12 +43,21 @@ export function Header() {
         </nav>
 
         <div className="hidden lg:block">
-          <Link
-            to="/signup"
-            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md active:scale-95"
-          >
-            Become a Member
-          </Link>
+          {user ? (
+            <button
+              onClick={() => signOut()}
+              className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-background px-6 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/5 active:scale-95"
+            >
+              Sign out
+            </button>
+          ) : (
+            <Link
+              to="/signup"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md active:scale-95"
+            >
+              Become a Member
+            </Link>
+          )}
         </div>
 
         <button
@@ -81,13 +90,25 @@ export function Header() {
               {user ? "Dashboard" : "Log in"}
             </Link>
             <div className="px-4 pt-4">
-              <Link
-                to="/signup"
-                onClick={() => setOpen(false)}
-                className="inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground"
-              >
-                Become a Member
-              </Link>
+              {user ? (
+                <button
+                  onClick={() => {
+                    signOut();
+                    setOpen(false);
+                  }}
+                  className="inline-flex w-full items-center justify-center rounded-full border border-primary/20 bg-background px-5 py-3.5 text-sm font-bold text-primary"
+                >
+                  Sign out
+                </button>
+              ) : (
+                <Link
+                  to="/signup"
+                  onClick={() => setOpen(false)}
+                  className="inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground"
+                >
+                  Become a Member
+                </Link>
+              )}
             </div>
           </div>
         </div>

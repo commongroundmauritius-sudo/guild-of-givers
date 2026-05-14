@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
-import { createLead } from "@/lib/auth-actions";
+import { createLead, convertLead } from "@/lib/auth-actions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/signup")({
@@ -69,6 +69,13 @@ function SignupPage() {
       toast.error(error.message);
       setSubmitting(false);
       return;
+    }
+
+    // Mark lead as converted
+    try {
+      await convertLead({ data: { email } });
+    } catch (e) {
+      console.error("Lead conversion failed", e);
     }
 
     setSubmitting(false);
