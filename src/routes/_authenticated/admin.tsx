@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 function AdminDashboard() {
+  const navigate = useNavigate();
   const { signOut } = useAuth();
   const { data: leads } = useQuery({
     queryKey: ["admin-leads"],
@@ -127,6 +128,9 @@ function AdminDashboard() {
     else {
       toast.success("Initiative approval updated");
       refetchInitiatives();
+      if (!current) {
+        navigate({ to: "/admin-dashboard/initiatives/$id/manage", params: { id } });
+      }
     }
   };
 
@@ -177,14 +181,17 @@ function AdminDashboard() {
               { title: "Total Treasury", value: `Rs ${totalPayments?.toLocaleString()}` },
               { title: "Platform Health", value: "Optimal" },
             ].map((c) => (
-              <div key={c.title} className="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-6">
-                <p className="text-sm text-amber-500 font-medium">{c.title}</p>
+              <div
+                key={c.title}
+                className="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-6"
+              >
+                <p className="text-sm font-medium text-amber-500">{c.title}</p>
                 <p className="mt-3 font-display text-3xl text-amber-500">{c.value}</p>
               </div>
             ))}
 
-            <div className="lg:col-span-3 rounded-3xl border border-border/40 bg-card p-6">
-              <h3 className="text-sm font-medium text-muted-foreground mb-6">Treasury Flow</h3>
+            <div className="rounded-3xl border border-border/40 bg-card p-6 lg:col-span-3">
+              <h3 className="mb-6 text-sm font-medium text-muted-foreground">Treasury Flow</h3>
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
@@ -199,38 +206,20 @@ function AdminDashboard() {
                   >
                     <defs>
                       <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.1} />
-                        <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#F2994A" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#F2994A" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
-                    <XAxis
-                      dataKey="date"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
-                      dy={10}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--color-card)",
-                        borderColor: "var(--color-border)",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                      }}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                    <XAxis dataKey="date" hide />
+                    <YAxis hide />
+                    <Tooltip />
                     <Area
                       type="monotone"
                       dataKey="amount"
-                      stroke="var(--color-primary)"
+                      stroke="#F2994A"
                       fillOpacity={1}
                       fill="url(#colorAmount)"
-                      strokeWidth={2}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -238,267 +227,295 @@ function AdminDashboard() {
             </div>
           </div>
 
-          <div className="mt-12">
-            <h2 className="font-display text-2xl font-semibold text-primary">
-              Recent Transactions
-            </h2>
-            <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
-              {recentPayments && recentPayments.length > 0 ? (
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-muted/50 text-muted-foreground">
-                    <tr>
-                      <th className="px-6 py-4 font-medium">Date</th>
-                      <th className="px-6 py-4 font-medium">Member</th>
-                      <th className="px-6 py-4 font-medium">Amount</th>
-                      <th className="px-6 py-4 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40">
-                    {recentPayments.map((p) => (
-                      <tr key={p.id}>
-                        <td className="px-6 py-4">{new Date(p.created_at).toLocaleDateString()}</td>
-                        <td className="px-6 py-4">
-                          {(p.profiles as unknown as { full_name: string })?.full_name || "Unknown"}
-                        </td>
-                        <td className="px-6 py-4">Rs {Number(p.amount_mur).toLocaleString()}</td>
-                        <td className="px-6 py-4 capitalize">{p.status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-12 text-center text-muted-foreground">
-                  No recent transactions found.
-                </div>
-              )}
-            </div>
-          </div>
-
           <div className="mt-12 grid gap-12 lg:grid-cols-2">
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-amber-500">Initiative Approvals</h2>
-            <div className="mt-6 overflow-hidden rounded-3xl border border-amber-500/20 bg-card">
-              {adminInitiatives && adminInitiatives.length > 0 ? (
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-amber-500/10 text-amber-500">
-                    <tr>
-                      <th className="px-6 py-4 font-medium">Initiative</th>
-                      <th className="px-6 py-4 font-medium">NGO</th>
-                      <th className="px-6 py-4 font-medium">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40">
-                    {adminInitiatives.map((i) => (
-                      <tr key={i.id}>
-                        <td className="px-6 py-4 font-medium">{i.title}</td>
-                        <td className="px-6 py-4">{(i.ngos as any)?.name}</td>
-                        <td className="px-6 py-4">
-                          <button
-                            onClick={() => toggleInitiativeApproval(i.id, i.is_approved)}
-                            className={`text-xs font-semibold hover:underline ${
-                              i.is_approved ? "text-amber-600" : "text-primary"
-                            }`}
-                          >
-                            {i.is_approved ? "Revoke Approval" : "Approve"}
-                          </button>
-                        </td>
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-amber-500">
+                Initiative Approvals
+              </h2>
+              <div className="mt-6 overflow-hidden rounded-3xl border border-amber-500/20 bg-card">
+                {adminInitiatives && adminInitiatives.length > 0 ? (
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-amber-500/10 text-amber-500">
+                      <tr>
+                        <th className="px-6 py-4 font-medium">Initiative</th>
+                        <th className="px-6 py-4 font-medium">NGO</th>
+                        <th className="px-6 py-4 font-medium">Status</th>
+                        <th className="px-6 py-4 font-medium">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-12 text-center text-muted-foreground">No initiatives found.</div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-primary">Vetting Management</h2>
-            <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
-              {ngos && ngos.length > 0 ? (
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-muted/50 text-muted-foreground">
-                    <tr>
-                      <th className="px-6 py-4 font-medium">Organization</th>
-                      <th className="px-6 py-4 font-medium">Category</th>
-                      <th className="px-6 py-4 font-medium">Status</th>
-                      <th className="px-6 py-4 font-medium">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40">
-                    {ngos.map((ngo) => (
-                      <tr key={ngo.id}>
-                        <td className="px-6 py-4 font-medium">{ngo.name}</td>
-                        <td className="px-6 py-4">{ngo.category}</td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-xs ${
-                              ngo.is_verified
-                                ? "bg-forest-soft/10 text-forest-soft"
-                                : "bg-amber-500/10 text-amber-500"
-                            }`}
-                          >
-                            {ngo.is_verified ? "Verified" : "Pending Vetting"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-4">
-                            <button
-                              onClick={() => toggleVetting(ngo.id, ngo.is_verified)}
-                              className="text-xs font-medium text-primary hover:underline"
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {adminInitiatives.map((i) => (
+                        <tr key={i.id}>
+                          <td className="px-6 py-4 font-medium">
+                            <Link
+                              to="/admin-dashboard/initiatives/$id/manage"
+                              params={{ id: i.id }}
+                              className="hover:underline"
                             >
-                              {ngo.is_verified ? "Revoke Vetting" : "Approve NGO"}
-                            </button>
-                            <button
-                              onClick={() => toggleSuspension(ngo.id, ngo.status || "active")}
-                              className={`text-xs font-medium hover:underline ${
-                                ngo.status === "suspended" ? "text-forest-soft" : "text-red-500"
+                              {i.title}
+                            </Link>
+                          </td>
+                          <td className="px-6 py-4">{(i.ngos as any)?.name}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col gap-1">
+                              <span
+                                className={`text-[10px] font-bold uppercase ${i.is_approved ? "text-forest-soft" : "text-amber-500"}`}
+                              >
+                                {i.is_approved ? "Approved" : "Pending"}
+                              </span>
+                              <span
+                                className={`text-[10px] font-bold uppercase ${i.is_published ? "text-forest-soft" : "text-muted-foreground"}`}
+                              >
+                                {i.is_published ? "Published" : "Hidden"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-4">
+                              <button
+                                onClick={() => toggleInitiativeApproval(i.id, i.is_approved)}
+                                className={`text-xs font-semibold hover:underline ${
+                                  i.is_approved ? "text-amber-600" : "text-primary"
+                                }`}
+                              >
+                                {i.is_approved ? "Revoke" : "Approve"}
+                              </button>
+                              <Link
+                                to="/admin-dashboard/initiatives/$id/manage"
+                                params={{ id: i.id }}
+                                className="text-xs font-semibold text-primary hover:underline"
+                              >
+                                Manage
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="p-12 text-center text-muted-foreground">
+                    No initiatives found.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-primary">
+                Vetting Management
+              </h2>
+              <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
+                {ngos && ngos.length > 0 ? (
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-muted/50 text-muted-foreground">
+                      <tr>
+                        <th className="px-6 py-4 font-medium">Organization</th>
+                        <th className="px-6 py-4 font-medium">Category</th>
+                        <th className="px-6 py-4 font-medium">Status</th>
+                        <th className="px-6 py-4 font-medium">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {ngos.map((ngo) => (
+                        <tr key={ngo.id}>
+                          <td className="px-6 py-4 font-medium">{ngo.name}</td>
+                          <td className="px-6 py-4">{ngo.category}</td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs ${
+                                ngo.is_verified
+                                  ? "bg-forest-soft/10 text-forest-soft"
+                                  : "bg-amber-500/10 text-amber-500"
                               }`}
                             >
-                              {ngo.status === "suspended" ? "Activate" : "Suspend"}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-12 text-center text-muted-foreground">No NGOs registered.</div>
-              )}
+                              {ngo.is_verified ? "Verified" : "Pending Vetting"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-4">
+                              <button
+                                onClick={() => toggleVetting(ngo.id, ngo.is_verified)}
+                                className="text-xs font-medium text-primary hover:underline"
+                              >
+                                {ngo.is_verified ? "Revoke Vetting" : "Approve NGO"}
+                              </button>
+                              <button
+                                onClick={() => toggleSuspension(ngo.id, ngo.status || "active")}
+                                className={`text-xs font-medium hover:underline ${
+                                  ngo.status === "suspended" ? "text-forest-soft" : "text-red-500"
+                                }`}
+                              >
+                                {ngo.status === "suspended" ? "Activate" : "Suspend"}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="p-12 text-center text-muted-foreground">No NGOs registered.</div>
+                )}
+              </div>
             </div>
-          </div>
           </div>
 
           <div className="mt-12 grid gap-12 lg:grid-cols-2">
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-amber-500">Report Moderation</h2>
-            <div className="mt-6 overflow-hidden rounded-3xl border border-amber-500/20 bg-card">
-              {pendingReports && pendingReports.length > 0 ? (
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-amber-500/10 text-amber-500">
-                    <tr>
-                      <th className="px-6 py-4 font-medium">NGO / Initiative</th>
-                      <th className="px-6 py-4 font-medium">Title</th>
-                      <th className="px-6 py-4 font-medium">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40">
-                    {pendingReports.map((r) => (
-                      <tr key={r.id}>
-                        <td className="px-6 py-4">
-                          <p className="font-medium">{(r.ngos as any)?.name}</p>
-                          <p className="text-xs text-muted-foreground">{(r.initiatives as any)?.title}</p>
-                        </td>
-                        <td className="px-6 py-4">{r.title}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => moderateReport(r.id, "approved")}
-                              className="text-xs font-semibold text-forest-soft hover:underline"
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-amber-500">
+                Report Moderation
+              </h2>
+              <div className="mt-6 overflow-hidden rounded-3xl border border-amber-500/20 bg-card">
+                {pendingReports && pendingReports.length > 0 ? (
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-amber-500/10 text-amber-500">
+                      <tr>
+                        <th className="px-6 py-4 font-medium">NGO / Initiative</th>
+                        <th className="px-6 py-4 font-medium">Title</th>
+                        <th className="px-6 py-4 font-medium">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {pendingReports.map((r) => (
+                        <tr key={r.id}>
+                          <td className="px-6 py-4">
+                            <p className="font-medium">{(r.ngos as any)?.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(r.initiatives as any)?.title}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4">{r.title}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => moderateReport(r.id, "approved")}
+                                className="text-xs font-semibold text-forest-soft hover:underline"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => moderateReport(r.id, "rejected")}
+                                className="text-xs font-semibold text-red-500 hover:underline"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="p-12 text-center text-muted-foreground">
+                    No pending reports to review.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-primary">
+                Payment Audit Log
+              </h2>
+              <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
+                {recentEvents && recentEvents.length > 0 ? (
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-muted/50 text-muted-foreground">
+                      <tr>
+                        <th className="px-6 py-4 font-medium">Time</th>
+                        <th className="px-6 py-4 font-medium">Event Type</th>
+                        <th className="px-6 py-4 font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40 font-mono text-[11px]">
+                      {recentEvents.map((e) => (
+                        <tr key={e.id}>
+                          <td className="px-6 py-3">{new Date(e.created_at).toLocaleString()}</td>
+                          <td className="px-6 py-3">{e.event_type}</td>
+                          <td className="px-6 py-3">
+                            <span
+                              className={`rounded-full px-2 py-0.5 ${
+                                e.processing_status === "processed"
+                                  ? "bg-forest-soft/10 text-forest-soft"
+                                  : "bg-amber-500/10 text-amber-500"
+                              }`}
                             >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => moderateReport(r.id, "rejected")}
-                              className="text-xs font-semibold text-red-500 hover:underline"
+                              {e.processing_status === "processed" ? "Processed" : "Pending"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="p-12 text-center text-muted-foreground">
+                    No recent events found.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-12">
+              <h2 className="font-display text-2xl font-semibold text-amber-500">
+                Membership Leads
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Potential members who started the flow but haven't necessarily converted.
+              </p>
+              <div className="mt-6 overflow-hidden rounded-3xl border border-amber-500/20 bg-card">
+                {leads && leads.length > 0 ? (
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-amber-500/10 text-amber-500">
+                      <tr>
+                        <th className="px-6 py-4 font-medium">Date</th>
+                        <th className="px-6 py-4 font-medium">Details</th>
+                        <th className="px-6 py-4 font-medium">Amount</th>
+                        <th className="px-6 py-4 font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {leads.map((l: any) => (
+                        <tr key={l.id}>
+                          <td className="px-6 py-4 text-xs">
+                            {new Date(l.created_at).toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="font-medium">{l.full_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {l.email} • {l.phone || "No phone"}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4 text-xs">
+                            Rs {Number(l.amount_mur).toLocaleString()}
+                            {l.covers_fees && (
+                              <span className="ml-1 uppercase font-bold text-[10px] text-forest-soft">
+                                + Fee
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                l.status === "converted"
+                                  ? "bg-forest-soft/10 text-forest-soft"
+                                  : "bg-amber-500/10 text-amber-500"
+                              }`}
                             >
-                              Reject
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-12 text-center text-muted-foreground">No pending reports to review.</div>
-              )}
+                              {l.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="p-12 text-center text-muted-foreground">
+                    No leads captured yet.
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-primary">Payment Audit Log</h2>
-            <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
-              {recentEvents && recentEvents.length > 0 ? (
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-muted/50 text-muted-foreground">
-                    <tr>
-                      <th className="px-6 py-4 font-medium">Time</th>
-                      <th className="px-6 py-4 font-medium">Event Type</th>
-                      <th className="px-6 py-4 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40 font-mono text-[11px]">
-                    {recentEvents.map((e) => (
-                      <tr key={e.id}>
-                        <td className="px-6 py-3">{new Date(e.created_at).toLocaleString()}</td>
-                        <td className="px-6 py-3">{e.event_type}</td>
-                        <td className="px-6 py-3">
-                          <span
-                            className={`rounded-full px-2 py-0.5 ${
-                              e.processing_status === 'processed'
-                                ? "bg-forest-soft/10 text-forest-soft"
-                                : "bg-amber-500/10 text-amber-500"
-                            }`}
-                          >
-                            {e.processing_status === 'processed' ? "Processed" : "Pending"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-12 text-center text-muted-foreground">No recent events found.</div>
-              )}
-            </div>
-          </div>
-
-
-
-          <div className="mt-12">
-            <h2 className="font-display text-2xl font-semibold text-amber-500">Membership Leads</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Potential members who started the flow but haven't necessarily converted.</p>
-            <div className="mt-6 overflow-hidden rounded-3xl border border-amber-500/20 bg-card">
-              {leads && leads.length > 0 ? (
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-amber-500/10 text-amber-500">
-                    <tr>
-                      <th className="px-6 py-4 font-medium">Date</th>
-                      <th className="px-6 py-4 font-medium">Details</th>
-                      <th className="px-6 py-4 font-medium">Amount</th>
-                      <th className="px-6 py-4 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40">
-                    {leads.map((l: any) => (
-                      <tr key={l.id}>
-                        <td className="px-6 py-4 text-xs">{new Date(l.created_at).toLocaleString()}</td>
-                        <td className="px-6 py-4">
-                          <p className="font-medium">{l.full_name}</p>
-                          <p className="text-xs text-muted-foreground">{l.email} • {l.phone || 'No phone'}</p>
-                        </td>
-                        <td className="px-6 py-4 text-xs">
-                          Rs {Number(l.amount_mur).toLocaleString()}
-                          {l.covers_fees && <span className="ml-1 text-[10px] text-forest-soft font-bold uppercase">+ Fee</span>}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                            l.status === 'converted' ? 'bg-forest-soft/10 text-forest-soft' : 'bg-amber-500/10 text-amber-500'
-                          }`}>
-                            {l.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-12 text-center text-muted-foreground">No leads captured yet.</div>
-              )}
-            </div>
-          </div>
           </div>
         </div>
       </section>

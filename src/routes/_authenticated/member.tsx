@@ -51,6 +51,7 @@ function MemberDashboard() {
         .from("initiatives")
         .select("*, ngos!inner(name, status)")
         .eq("is_approved", true)
+        .eq("is_published", true)
         .eq("ngos.status", "active");
       return data;
     },
@@ -140,7 +141,10 @@ function MemberDashboard() {
               { title: "Active allocations", value: preferences?.length || 0 },
               { title: "Lifetime impact", value: `Rs ${lifetimeImpact.toLocaleString()}` },
             ].map((c) => (
-              <div key={c.title} className="rounded-3xl border border-teal-600/20 bg-teal-600/5 p-6">
+              <div
+                key={c.title}
+                className="rounded-3xl border border-teal-600/20 bg-teal-600/5 p-6"
+              >
                 <p className="text-sm text-teal-600 font-medium">{c.title}</p>
                 <p className="mt-3 font-display text-3xl text-teal-600">{c.value}</p>
                 {"sub" in c && c.sub && (
@@ -165,7 +169,9 @@ function MemberDashboard() {
                   <div
                     key={i.id}
                     className={`relative overflow-hidden rounded-3xl border p-6 transition ${
-                      isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border/40 bg-card"
+                      isSelected
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border/40 bg-card"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -200,61 +206,77 @@ function MemberDashboard() {
           </div>
 
           <div className="mt-16 grid gap-12 lg:grid-cols-2">
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-teal-600">Transparency Updates</h2>
-            <div className="mt-6 space-y-4">
-              {approvedReports && approvedReports.length > 0 ? (
-                approvedReports.map(r => (
-                  <div key={r.id} className="flex items-center justify-between rounded-2xl border border-teal-600/20 bg-teal-600/5 p-4">
-                    <div className="flex gap-4">
-                      <div className="grid h-10 w-10 place-items-center rounded-full bg-teal-600/10 text-teal-600">
-                        <FileText className="h-5 w-5" />
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-teal-600">
+                Transparency Updates
+              </h2>
+              <div className="mt-6 space-y-4">
+                {approvedReports && approvedReports.length > 0 ? (
+                  approvedReports.map((r) => (
+                    <div
+                      key={r.id}
+                      className="flex items-center justify-between rounded-2xl border border-teal-600/20 bg-teal-600/5 p-4"
+                    >
+                      <div className="flex gap-4">
+                        <div className="grid h-10 w-10 place-items-center rounded-full bg-teal-600/10 text-teal-600">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-teal-600">{r.title}</p>
+                          <p className="text-xs text-teal-600/70">
+                            {(r.initiatives as any)?.title} • {(r.ngos as any)?.name}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-teal-600">{r.title}</p>
-                        <p className="text-xs text-teal-600/70">{(r.initiatives as any)?.title} • {(r.ngos as any)?.name}</p>
-                      </div>
+                      <a
+                        href={r.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-teal-600 hover:text-teal-700"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
                     </div>
-                    <a href={r.file_url} target="_blank" rel="noreferrer" className="text-teal-600 hover:text-teal-700">
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">No transparency reports available yet.</p>
-              )}
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No transparency reports available yet.
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-primary">Payment History</h2>
-            <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
-              {payments && payments.length > 0 ? (
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-muted/50 text-muted-foreground">
-                    <tr>
-                      <th className="px-6 py-4 font-medium">Date</th>
-                      <th className="px-6 py-4 font-medium">Amount</th>
-                      <th className="px-6 py-4 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40">
-                    {payments.map((p) => (
-                      <tr key={p.id}>
-                        <td className="px-6 py-4">{new Date(p.created_at).toLocaleDateString()}</td>
-                        <td className="px-6 py-4">Rs {Number(p.amount_mur).toLocaleString()}</td>
-                        <td className="px-6 py-4 capitalize">{p.status}</td>
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-primary">Payment History</h2>
+              <div className="mt-6 overflow-hidden rounded-3xl border border-border/40 bg-card">
+                {payments && payments.length > 0 ? (
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-muted/50 text-muted-foreground">
+                      <tr>
+                        <th className="px-6 py-4 font-medium">Date</th>
+                        <th className="px-6 py-4 font-medium">Amount</th>
+                        <th className="px-6 py-4 font-medium">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-12 text-center text-muted-foreground">
-                  No payment history found.
-                </div>
-              )}
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {payments.map((p) => (
+                        <tr key={p.id}>
+                          <td className="px-6 py-4">
+                            {new Date(p.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4">Rs {Number(p.amount_mur).toLocaleString()}</td>
+                          <td className="px-6 py-4 capitalize">{p.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="p-12 text-center text-muted-foreground">
+                    No payment history found.
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
           </div>
         </div>
       </section>
