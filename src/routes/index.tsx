@@ -238,7 +238,7 @@ function Initiatives() {
             </h2>
             <p className="mt-4 text-muted-foreground">
               Starting with a vetted set of partners and expanding continuously. Each program is a
-              multi-year commitment — restoration, education, community resilience — not a one-off
+              multi-year commitment restoration, education, community resilience not a one-off
               project.
             </p>
           </div>
@@ -326,8 +326,8 @@ function ForOrgs() {
           </h2>
           <p className="mt-4 text-muted-foreground">
             Spend less time chasing donors and more time on the work itself. CommonGround delivers
-            structured, recurring funding designed for long-horizon programs — restoration,
-            conservation, education — the kind of work that takes years, not quarters.
+            structured, recurring funding designed for long-horizon programs restoration,
+            conservation, education the kind of work that takes years, not quarters.
           </p>
           <ul className="mt-6 space-y-3 text-sm">
             {[
@@ -358,7 +358,7 @@ function ForOrgs() {
 const FAQS = [
   {
     q: "How does CommonGround membership work?",
-    a: "You pick a monthly contribution, choose one or more vetted initiatives, and we handle the rest — recurring billing, allocation, receipts, and impact updates.",
+    a: "You pick a monthly contribution, choose one or more vetted initiatives, and we handle the rest recurring billing, allocation, receipts, and impact updates.",
   },
   {
     q: "How are initiatives vetted?",
