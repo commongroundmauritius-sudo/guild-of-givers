@@ -13,12 +13,13 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LegalRouteImport } from './routes/legal'
-import { Route as InitiativesRouteImport } from './routes/initiatives'
 import { Route as ForOrgsRouteImport } from './routes/for-orgs'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InitiativesIndexRouteImport } from './routes/initiatives/index'
+import { Route as InitiativesIdRouteImport } from './routes/initiatives/$id'
 import { Route as AuthenticatedNgoRouteImport } from './routes/_authenticated/ngo'
 import { Route as AuthenticatedMemberRouteImport } from './routes/_authenticated/member'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -45,11 +46,6 @@ const LegalRoute = LegalRouteImport.update({
   path: '/legal',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InitiativesRoute = InitiativesRouteImport.update({
-  id: '/initiatives',
-  path: '/initiatives',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ForOrgsRoute = ForOrgsRouteImport.update({
   id: '/for-orgs',
   path: '/for-orgs',
@@ -72,6 +68,16 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InitiativesIndexRoute = InitiativesIndexRouteImport.update({
+  id: '/initiatives/',
+  path: '/initiatives/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InitiativesIdRoute = InitiativesIdRouteImport.update({
+  id: '/initiatives/$id',
+  path: '/initiatives/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedNgoRoute = AuthenticatedNgoRouteImport.update({
@@ -106,7 +112,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/faq': typeof FaqRoute
   '/for-orgs': typeof ForOrgsRoute
-  '/initiatives': typeof InitiativesRoute
   '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/partner': typeof PartnerRoute
@@ -115,6 +120,8 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRoute
   '/ngo': typeof AuthenticatedNgoRoute
+  '/initiatives/$id': typeof InitiativesIdRoute
+  '/initiatives/': typeof InitiativesIndexRoute
   '/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
 }
 export interface FileRoutesByTo {
@@ -122,7 +129,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/faq': typeof FaqRoute
   '/for-orgs': typeof ForOrgsRoute
-  '/initiatives': typeof InitiativesRoute
   '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/partner': typeof PartnerRoute
@@ -131,6 +137,8 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRoute
   '/ngo': typeof AuthenticatedNgoRoute
+  '/initiatives/$id': typeof InitiativesIdRoute
+  '/initiatives': typeof InitiativesIndexRoute
   '/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
 }
 export interface FileRoutesById {
@@ -140,7 +148,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/faq': typeof FaqRoute
   '/for-orgs': typeof ForOrgsRoute
-  '/initiatives': typeof InitiativesRoute
   '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/partner': typeof PartnerRoute
@@ -149,6 +156,8 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/member': typeof AuthenticatedMemberRoute
   '/_authenticated/ngo': typeof AuthenticatedNgoRoute
+  '/initiatives/$id': typeof InitiativesIdRoute
+  '/initiatives/': typeof InitiativesIndexRoute
   '/_authenticated/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
 }
 export interface FileRouteTypes {
@@ -158,7 +167,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/faq'
     | '/for-orgs'
-    | '/initiatives'
     | '/legal'
     | '/login'
     | '/partner'
@@ -167,6 +175,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/member'
     | '/ngo'
+    | '/initiatives/$id'
+    | '/initiatives/'
     | '/admin-dashboard/initiatives/$id/manage'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -174,7 +184,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/faq'
     | '/for-orgs'
-    | '/initiatives'
     | '/legal'
     | '/login'
     | '/partner'
@@ -183,6 +192,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/member'
     | '/ngo'
+    | '/initiatives/$id'
+    | '/initiatives'
     | '/admin-dashboard/initiatives/$id/manage'
   id:
     | '__root__'
@@ -191,7 +202,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/faq'
     | '/for-orgs'
-    | '/initiatives'
     | '/legal'
     | '/login'
     | '/partner'
@@ -200,6 +210,8 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/member'
     | '/_authenticated/ngo'
+    | '/initiatives/$id'
+    | '/initiatives/'
     | '/_authenticated/admin-dashboard/initiatives/$id/manage'
   fileRoutesById: FileRoutesById
 }
@@ -209,11 +221,12 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   FaqRoute: typeof FaqRoute
   ForOrgsRoute: typeof ForOrgsRoute
-  InitiativesRoute: typeof InitiativesRoute
   LegalRoute: typeof LegalRoute
   LoginRoute: typeof LoginRoute
   PartnerRoute: typeof PartnerRoute
   SignupRoute: typeof SignupRoute
+  InitiativesIdRoute: typeof InitiativesIdRoute
+  InitiativesIndexRoute: typeof InitiativesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -244,13 +257,6 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal'
       preLoaderRoute: typeof LegalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/initiatives': {
-      id: '/initiatives'
-      path: '/initiatives'
-      fullPath: '/initiatives'
-      preLoaderRoute: typeof InitiativesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/for-orgs': {
@@ -286,6 +292,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/initiatives/': {
+      id: '/initiatives/'
+      path: '/initiatives'
+      fullPath: '/initiatives/'
+      preLoaderRoute: typeof InitiativesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/initiatives/$id': {
+      id: '/initiatives/$id'
+      path: '/initiatives/$id'
+      fullPath: '/initiatives/$id'
+      preLoaderRoute: typeof InitiativesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/ngo': {
@@ -353,11 +373,12 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   FaqRoute: FaqRoute,
   ForOrgsRoute: ForOrgsRoute,
-  InitiativesRoute: InitiativesRoute,
   LegalRoute: LegalRoute,
   LoginRoute: LoginRoute,
   PartnerRoute: PartnerRoute,
   SignupRoute: SignupRoute,
+  InitiativesIdRoute: InitiativesIdRoute,
+  InitiativesIndexRoute: InitiativesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
