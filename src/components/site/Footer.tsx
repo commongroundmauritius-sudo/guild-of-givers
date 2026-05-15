@@ -8,13 +8,15 @@ export function Footer() {
         <div className="md:col-span-2">
           <Logo />
           <p className="mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Building the financial and governance infrastructure for long-term social impact.
-            One membership, a lifetime of change for verified NGOs in Mauritius.
+            Building the financial and governance infrastructure for long-term social impact. One
+            membership, a lifetime of change for verified NGOs in Mauritius.
           </p>
         </div>
 
         <div>
-          <h4 className="font-display text-sm font-bold uppercase tracking-wider text-primary">Platform</h4>
+          <h4 className="font-display text-sm font-bold uppercase tracking-wider text-primary">
+            Platform
+          </h4>
           <ul className="mt-6 space-y-3 text-sm">
             <li>
               <Link to="/about" className="text-foreground/70 transition-colors hover:text-primary">
@@ -22,17 +24,26 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/initiatives" className="text-foreground/70 transition-colors hover:text-primary">
+              <Link
+                to="/initiatives"
+                className="text-foreground/70 transition-colors hover:text-primary"
+              >
                 Verified Initiatives
               </Link>
             </li>
             <li>
-              <Link to="/for-orgs" className="text-foreground/70 transition-colors hover:text-primary">
+              <Link
+                to="/for-orgs"
+                className="text-foreground/70 transition-colors hover:text-primary"
+              >
                 For Organizations
               </Link>
             </li>
             <li>
-              <Link to="/partner" className="text-foreground/70 transition-colors hover:text-primary">
+              <Link
+                to="/partner"
+                className="text-foreground/70 transition-colors hover:text-primary"
+              >
                 Partner With Us
               </Link>
             </li>
@@ -40,7 +51,9 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="font-display text-sm font-bold uppercase tracking-wider text-primary">Resources</h4>
+          <h4 className="font-display text-sm font-bold uppercase tracking-wider text-primary">
+            Resources
+          </h4>
           <ul className="mt-6 space-y-3 text-sm">
             <li>
               <Link to="/faq" className="text-foreground/70 transition-colors hover:text-primary">
@@ -72,8 +85,12 @@ export function Footer() {
             <span>Registered social infrastructure platform.</span>
           </div>
           <div className="flex items-center gap-6">
-            <Link to="/legal" className="hover:text-primary">Privacy</Link>
-            <Link to="/legal" className="hover:text-primary">Terms</Link>
+            <Link to="/legal" className="hover:text-primary">
+              Privacy
+            </Link>
+            <Link to="/legal" className="hover:text-primary">
+              Terms
+            </Link>
             <span className="font-medium text-primary/40">Rooted in impact.</span>
           </div>
         </div>

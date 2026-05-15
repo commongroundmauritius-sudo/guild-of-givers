@@ -29,14 +29,6 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert their own preferences') THEN
-        CREATE POLICY "Users can insert their own preferences"
-          ON member_preferences FOR INSERT
-          WITH CHECK (auth.uid() = user_id);
-    END IF;
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins can manage initiatives') THEN
         CREATE POLICY "Admins can manage initiatives"
           ON initiatives FOR ALL
