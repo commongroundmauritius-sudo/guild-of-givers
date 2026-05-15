@@ -135,6 +135,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     signOut: async () => {
       await supabase.auth.signOut();
+      // Explicitly clear state for immediate UI update
+      setUser(null);
+      setSession(null);
+      setRole(null);
+      setProfile(null);
+      setIsSubscribed(false);
     },
     refreshAuth,
   };

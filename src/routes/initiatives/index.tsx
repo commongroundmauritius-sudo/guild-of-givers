@@ -3,7 +3,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Info } from "lucide-react";
+import { ArrowRight, Info, Heart } from "lucide-react";
 
 export const Route = createFileRoute("/initiatives/")({
   head: () => ({
@@ -37,10 +37,12 @@ function InitiativesPage() {
 
   return (
     <SiteLayout>
-      <section className="bg-background">
+      <section className="bg-background min-h-screen">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <span className="kicker">Our Impact</span>
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+              Our Impact
+            </span>
             <h1 className="mt-4 font-display text-5xl font-semibold tracking-tight text-primary sm:text-6xl">
               Vetted Initiatives You Can Support
             </h1>
@@ -62,7 +64,7 @@ function InitiativesPage() {
               ))}
             </div>
           ) : error ? (
-            <div className="mt-12 flex flex-col items-center justify-center rounded-3xl border border-red-100 bg-red-50/30 p-12 text-center">
+            <div className="mt-12 flex flex-col items-center justify-center rounded-[2.5rem] border border-red-100 bg-red-50/30 p-12 text-center">
               <div className="rounded-full bg-red-100 p-3 text-red-600">
                 <Info className="h-6 w-6" />
               </div>
@@ -77,94 +79,109 @@ function InitiativesPage() {
             </div>
           ) : initiatives && initiatives.length > 0 ? (
             <div className="mt-16 grid gap-10 md:grid-cols-2 lg:grid-cols-3">
-              {initiatives.map((i) => (
-                <Link
-                  key={i.id}
-                  to="/initiatives/$id"
-                  params={{ id: i.id }}
-                  className="group flex flex-col overflow-hidden rounded-3xl border border-border/40 bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5"
-                >
-                  <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-                    {i.image_url ? (
-                      <img
-                        src={i.image_url}
-                        alt={i.title}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=800";
-                        }}
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-                        <span className="text-xs font-medium uppercase tracking-widest text-primary/40">No Image Available</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                  </div>
+              {initiatives.map((i) => {
+                const goal = Number(i.goal_amount_mur) || 1;
+                const current = Number(i.current_amount_mur) || 0;
+                const progress = Math.min(100, Math.round((current / goal) * 100));
 
-                  <div className="flex flex-1 flex-col p-8">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary/60">
-                        {(i.ngos as any)?.name || "NGO Partner"}
-                      </span>
+                const ngoName = Array.isArray(i.ngos)
+                  ? i.ngos[0]?.name
+                  : (i.ngos as any)?.name;
+
+                return (
+                  <Link
+                    key={i.id}
+                    to="/initiatives/$id"
+                    params={{ id: i.id }}
+                    className="group flex flex-col overflow-hidden rounded-[2.5rem] border border-border/40 bg-card transition-all duration-300 hover:-translate-y-2 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5"
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+                      {i.image_url ? (
+                        <img
+                          src={i.image_url}
+                          alt={i.title}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=800";
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+                          <Heart className="h-12 w-12 text-primary/20" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                     </div>
 
-                    <h2 className="mt-3 font-display text-2xl font-semibold leading-tight text-primary group-hover:text-primary/80">
-                      {i.title}
-                    </h2>
-
-                    {i.caption && (
-                      <p className="mt-2 text-sm font-medium text-forest">
-                        {i.caption}
-                      </p>
-                    )}
-
-                    <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-                      {i.summary || i.description || "Learn more about how this initiative is creating sustainable impact in Mauritius."}
-                    </p>
-
-                    <div className="mt-auto pt-8">
-                      <div className="mb-4 space-y-2">
-                        <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                          <span>Funding Goal</span>
-                          <span>{Math.round(((i.current_amount_mur || 0) / (i.goal_amount_mur || 1)) * 100)}%</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full bg-primary transition-all duration-1000"
-                            style={{ width: `${Math.min(100, ((i.current_amount_mur || 0) / (i.goal_amount_mur || 1)) * 100)}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-primary">
-                          Rs {Number(i.current_amount_mur || 0).toLocaleString()} <span className="font-normal text-muted-foreground">of Rs {Number(i.goal_amount_mur || 0).toLocaleString()}</span>
+                    <div className="flex flex-1 flex-col p-8">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
+                          {ngoName || "NGO Partner"}
                         </span>
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/5 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
-                          <ArrowRight className="h-4 w-4" />
+                      </div>
+
+                      <h2 className="mt-3 font-display text-2xl font-bold leading-tight text-primary transition-colors group-hover:text-primary/80">
+                        {i.title}
+                      </h2>
+
+                      {i.caption && (
+                        <p className="mt-2 text-sm font-semibold text-teal-600">
+                          {i.caption}
+                        </p>
+                      )}
+
+                      <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                        {i.summary || i.description || "Join us in supporting this vital initiative for the community."}
+                      </p>
+
+                      <div className="mt-auto pt-8">
+                        <div className="mb-4 space-y-2">
+                          <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                            <span>Funding Progress</span>
+                            <span className="text-primary">{progress}%</span>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full bg-primary transition-all duration-1000 ease-out"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <span className="text-lg font-bold text-primary">
+                              Rs {current.toLocaleString()}
+                            </span>
+                            <span className="text-[10px] font-medium uppercase text-muted-foreground">
+                              raised of Rs {goal.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/5 text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary/20">
+                            <ArrowRight className="h-5 w-5" />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           ) : (
-            <div className="mt-16 rounded-[2rem] border border-dashed border-border/60 bg-muted/30 p-12 text-center sm:p-20">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/5 text-primary">
-                <Info className="h-8 w-8" />
+            <div className="mt-16 rounded-[3rem] border border-dashed border-border/60 bg-muted/30 p-12 text-center sm:p-20">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/5 text-primary">
+                <Heart className="h-10 w-10" />
               </div>
-              <h2 className="mt-6 font-display text-2xl font-semibold text-primary">No initiatives found</h2>
-              <p className="mx-auto mt-3 max-w-sm text-muted-foreground">
-                We're currently vetting new initiatives. Check back soon or join our community to be notified when we launch new programs.
+              <h2 className="mt-6 font-display text-2xl font-semibold text-primary">No active initiatives found</h2>
+              <p className="mx-auto mt-3 max-w-sm text-muted-foreground leading-relaxed">
+                We're currently vetting new high-impact programs. Join our community to be the first to know when they go live.
               </p>
               <div className="mt-10">
                 <Link
                   to="/signup"
-                  className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg active:scale-95"
+                  className="inline-flex items-center justify-center rounded-full bg-primary px-10 py-4 text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-xl active:scale-95"
                 >
-                  Join CommonGround
+                  Become a Member
                 </Link>
               </div>
             </div>

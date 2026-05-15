@@ -5,53 +5,73 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { History, LayoutDashboard, Heart, Shield, User, FileText } from "lucide-react";
+import { History, LayoutDashboard, Heart, Shield, User, FileText, Users } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin-dashboard/")({
   component: AdminDashboard,
 });
 
 function AdminDashboard() {
   const { user, profile, role, signOut } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: adminActions } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["admin-stats"],
+    queryFn: async () => {
+      const [init, ngos, members, reports] = await Promise.all([
+        supabase.from("initiatives").select("id", { count: "exact", head: true }),
+        supabase.from("ngos").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("user_roles").select("user_id", { count: "exact", head: true }).eq("role", "member"),
+        supabase.from("reports").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      ]);
+      return {
+        initiatives: init.count || 0,
+        pendingNgos: ngos.count || 0,
+        members: members.count || 0,
+        pendingReports: reports.count || 0,
+      };
+    }
+  });
+
+  const { data: adminActions, isLoading: actionsLoading } = useQuery({
     queryKey: ["admin-actions"],
     queryFn: async () => {
       const { data } = await supabase
         .from("admin_actions")
-        .select("*, profiles(full_name, email)")
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(5);
       return data;
     },
   });
 
-  const { data: pendingReports } = useQuery({
+  const { data: pendingReports, isLoading: reportsLoading } = useQuery({
     queryKey: ["pending-reports"],
     queryFn: async () => {
       const { data } = await supabase
         .from("reports")
-        .select("*, initiatives(title), ngos(name)")
-        .eq("status", "pending_review")
-        .order("created_at", { ascending: false });
+        .select("*, ngos(name)")
+        .eq("status", "pending")
+        .limit(5);
       return data;
     },
   });
 
-  const { data: recentEvents } = useQuery({
-    queryKey: ["payment-events"],
+  const { data: recentEvents, isLoading: eventsLoading } = useQuery({
+    queryKey: ["webhook-events"],
     queryFn: async () => {
       const { data } = await supabase
         .from("payment_events")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(5);
       return data;
     },
   });
 
-  const { data: leads } = useQuery({
+  const { data: leads, isLoading: leadsLoading } = useQuery({
     queryKey: ["membership-leads"],
     queryFn: async () => {
       const { data } = await supabase
@@ -73,6 +93,7 @@ function AdminDashboard() {
     else {
       toast.success(`Report ${status}`);
       queryClient.invalidateQueries({ queryKey: ["pending-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
     }
   };
 
@@ -95,10 +116,13 @@ function AdminDashboard() {
               <p className="mt-2 text-muted-foreground">Global platform overview and moderation.</p>
             </div>
             <div className="flex gap-3">
-               <Link to="/admin/profile" className="rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted transition-colors">
+               <Link to="/admin-dashboard/profile" className="rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted transition-colors">
                  View Profile
                </Link>
-               <button onClick={signOut} className="rounded-full bg-red-50 border border-red-100 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors">
+               <button
+                 onClick={() => signOut().then(() => navigate({ to: "/login" }))}
+                 className="rounded-full bg-red-50 border border-red-100 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors"
+               >
                  Sign out
                </button>
             </div>
@@ -106,17 +130,19 @@ function AdminDashboard() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
              {[
-               { label: "Active Initiatives", value: "24", icon: Heart, color: "text-amber-600", bg: "bg-amber-50" },
-               { label: "Pending NGOs", value: "3", icon: Shield, color: "text-blue-600", bg: "bg-blue-50" },
-               { label: "Total Members", value: "1,240", icon: User, color: "text-teal-600", bg: "bg-teal-50" },
-               { label: "System Status", value: "Healthy", icon: LayoutDashboard, color: "text-forest-soft", bg: "bg-green-50" },
+               { label: "Total Initiatives", value: stats?.initiatives ?? "0", icon: Heart, color: "text-amber-600", bg: "bg-amber-50" },
+               { label: "Pending NGOs", value: stats?.pendingNgos ?? "0", icon: Shield, color: "text-blue-600", bg: "bg-blue-50" },
+               { label: "Total Members", value: stats?.members ?? "0", icon: User, color: "text-teal-600", bg: "bg-teal-50" },
+               { label: "Pending Reports", value: stats?.pendingReports ?? "0", icon: FileText, color: "text-forest-soft", bg: "bg-green-50" },
              ].map((stat) => (
                <div key={stat.label} className="rounded-3xl border border-border/40 bg-card p-6 shadow-sm">
                  <div className={`grid h-10 w-10 place-items-center rounded-2xl ${stat.bg} ${stat.color}`}>
                    <stat.icon className="h-5 w-5" />
                  </div>
                  <p className="mt-4 text-sm font-medium text-muted-foreground">{stat.label}</p>
-                 <p className="mt-1 text-2xl font-bold text-primary">{stat.value}</p>
+                 <div className="mt-1">
+                   {statsLoading ? <Skeleton className="h-8 w-12" /> : <p className="text-2xl font-bold text-primary">{stat.value}</p>}
+                 </div>
                </div>
              ))}
           </div>
@@ -125,10 +151,14 @@ function AdminDashboard() {
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-2xl font-semibold text-primary">Recent Activity</h2>
-                <Link to="/admin/profile" className="text-xs font-bold text-amber-600 uppercase hover:underline">View All</Link>
+                <Link to="/admin-dashboard/profile" className="text-xs font-bold text-amber-600 uppercase hover:underline">View All</Link>
               </div>
               <div className="overflow-hidden rounded-3xl border border-border/40 bg-card">
-                {adminActions && adminActions.length > 0 ? (
+                {actionsLoading ? (
+                  <div className="p-6 space-y-4">
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}
+                  </div>
+                ) : adminActions && adminActions.length > 0 ? (
                   <div className="divide-y divide-border/40">
                     {adminActions.map((action) => (
                       <div key={action.id} className="p-6 transition hover:bg-muted/50">
@@ -142,7 +172,7 @@ function AdminDashboard() {
                                 {action.action_type.replace(/_/g, " ")}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                By {(action.profiles as any)?.full_name || "System"}
+                                {new Date(action.created_at).toLocaleString()}
                               </p>
                             </div>
                           </div>
@@ -162,7 +192,11 @@ function AdminDashboard() {
             <div>
               <h2 className="mb-6 font-display text-2xl font-semibold text-primary">Pending Moderation</h2>
               <div className="overflow-hidden rounded-3xl border border-border/40 bg-card">
-                {pendingReports && pendingReports.length > 0 ? (
+                {reportsLoading ? (
+                   <div className="p-6 space-y-4">
+                     {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}
+                   </div>
+                ) : pendingReports && pendingReports.length > 0 ? (
                   <table className="w-full text-left text-sm">
                     <thead className="bg-muted/50 text-muted-foreground">
                       <tr>
@@ -198,7 +232,11 @@ function AdminDashboard() {
             <div>
               <h2 className="mb-6 font-display text-2xl font-semibold text-primary">Payment Webhooks</h2>
               <div className="overflow-hidden rounded-3xl border border-border/40 bg-card">
-                {recentEvents && recentEvents.length > 0 ? (
+                {eventsLoading ? (
+                   <div className="p-6 space-y-4">
+                     {[1, 2, 3].map(i => <Skeleton key={i} className="h-8 w-full rounded-full" />)}
+                   </div>
+                ) : recentEvents && recentEvents.length > 0 ? (
                   <div className="divide-y divide-border/40 font-mono text-[11px]">
                     {recentEvents.map((e) => (
                       <div key={e.id} className="flex items-center justify-between p-4">
@@ -221,9 +259,16 @@ function AdminDashboard() {
             </div>
 
             <div>
-              <h2 className="mb-6 font-display text-2xl font-semibold text-primary">New Leads</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="font-display text-2xl font-semibold text-primary">New Leads</h2>
+                <Link to="/admin-dashboard/leads" className="text-xs font-bold text-amber-600 uppercase hover:underline">View All</Link>
+              </div>
               <div className="overflow-hidden rounded-3xl border border-border/40 bg-card">
-                {leads && leads.length > 0 ? (
+                {leadsLoading ? (
+                   <div className="p-6 space-y-4">
+                     {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}
+                   </div>
+                ) : leads && leads.length > 0 ? (
                    <div className="divide-y divide-border/40">
                      {leads.map((l: any) => (
                        <div key={l.id} className="p-4 flex items-center justify-between">

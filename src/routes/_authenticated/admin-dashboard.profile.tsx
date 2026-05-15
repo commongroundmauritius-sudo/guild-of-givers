@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { History, Heart, CheckCircle2, User, Mail, Calendar } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export const Route = createFileRoute("/_authenticated/admin/profile")({
+export const Route = createFileRoute("/_authenticated/admin-dashboard/profile")({
   component: AdminProfile,
 });
 
