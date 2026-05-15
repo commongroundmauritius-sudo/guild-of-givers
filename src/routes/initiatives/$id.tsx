@@ -5,12 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Share2, Heart, ShieldCheck, MapPin, Calendar, Users } from "lucide-react";
 import { toast } from "sonner";
+import { getJoinedData } from "@/lib/utils";
 
 export const Route = createFileRoute("/initiatives/$id")({
   head: () => ({
-    meta: [
-      { title: "Initiative Detail — CommonGround" },
-    ],
+    meta: [{ title: "Initiative Detail — CommonGround" }],
   }),
   component: InitiativeDetailPage,
 });
@@ -18,7 +17,11 @@ export const Route = createFileRoute("/initiatives/$id")({
 function InitiativeDetailPage() {
   const { id } = Route.useParams();
 
-  const { data: initiative, isLoading, error } = useQuery({
+  const {
+    data: initiative,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["initiative", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -33,7 +36,7 @@ function InitiativeDetailPage() {
   });
 
   const handleShare = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       navigator.clipboard.writeText(window.location.href);
       toast.success("Link copied to clipboard!");
     }
@@ -67,7 +70,9 @@ function InitiativeDetailPage() {
             <Heart className="h-8 w-8" />
           </div>
           <h1 className="font-display text-3xl font-bold text-primary">Initiative not found</h1>
-          <p className="mt-4 text-muted-foreground">The initiative you are looking for might have been removed or is currently under review.</p>
+          <p className="mt-4 text-muted-foreground">
+            The initiative you are looking for might have been removed or is currently under review.
+          </p>
           <Link
             to="/initiatives"
             className="mt-8 inline-flex items-center gap-2 font-semibold text-primary hover:underline"
@@ -79,9 +84,13 @@ function InitiativeDetailPage() {
     );
   }
 
-  const progress = Math.min(100, ((Number(initiative.current_amount_mur) || 0) / (Number(initiative.goal_amount_mur) || 1)) * 100);
+  const progress = Math.min(
+    100,
+    ((Number(initiative.current_amount_mur) || 0) / (Number(initiative.goal_amount_mur) || 1)) *
+      100,
+  );
   const gallery = Array.isArray(initiative.gallery_urls) ? initiative.gallery_urls : [];
-  const ngo = Array.isArray(initiative.ngos) ? initiative.ngos[0] : (initiative.ngos as any);
+  const ngo = getJoinedData(initiative.ngos);
 
   return (
     <SiteLayout>
@@ -96,7 +105,9 @@ function InitiativeDetailPage() {
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-              <span className="text-sm font-medium uppercase tracking-widest text-primary/40">No Image Available</span>
+              <span className="text-sm font-medium uppercase tracking-widest text-primary/40">
+                No Image Available
+              </span>
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -124,7 +135,11 @@ function InitiativeDetailPage() {
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-full bg-muted">
                     {ngo?.logo_url ? (
-                      <img src={ngo.logo_url} alt={ngo.name} className="h-full w-full object-cover" />
+                      <img
+                        src={ngo.logo_url}
+                        alt={ngo.name}
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold uppercase">
                         {ngo?.name?.charAt(0) || "N"}
@@ -132,8 +147,12 @@ function InitiativeDetailPage() {
                     )}
                   </div>
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Managed by</span>
-                    <span className="text-sm font-semibold text-primary">{ngo?.name || "NGO Partner"}</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Managed by
+                    </span>
+                    <span className="text-sm font-semibold text-primary">
+                      {ngo?.name || "NGO Partner"}
+                    </span>
                   </div>
                 </div>
 
@@ -144,7 +163,13 @@ function InitiativeDetailPage() {
 
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <Calendar className="h-4 w-4 text-primary/40" />
-                  <span>Launched {new Date(initiative.created_at).toLocaleDateString('en-MU', { month: 'long', year: 'numeric' })}</span>
+                  <span>
+                    Launched{" "}
+                    {new Date(initiative.created_at).toLocaleDateString("en-MU", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </span>
                 </div>
               </div>
 
@@ -157,10 +182,14 @@ function InitiativeDetailPage() {
                 </p>
 
                 <div className="mt-10 space-y-6 border-t border-border/40 pt-10 text-primary/90">
-                  <h3 className="font-display text-2xl font-semibold text-primary">The Challenge & Solution</h3>
+                  <h3 className="font-display text-2xl font-semibold text-primary">
+                    The Challenge & Solution
+                  </h3>
                   {initiative.content ? (
-                    initiative.content.split('\n').map((para: string, idx: number) => (
-                      <p key={idx} className="text-base leading-relaxed">{para}</p>
+                    initiative.content.split("\n").map((para: string, idx: number) => (
+                      <p key={idx} className="text-base leading-relaxed">
+                        {para}
+                      </p>
                     ))
                   ) : (
                     <p className="text-base leading-relaxed">{initiative.description}</p>
@@ -171,11 +200,20 @@ function InitiativeDetailPage() {
               {/* Gallery */}
               {gallery.length > 0 && (
                 <div className="mt-16">
-                  <h3 className="font-display text-2xl font-semibold text-primary">Project Gallery</h3>
+                  <h3 className="font-display text-2xl font-semibold text-primary">
+                    Project Gallery
+                  </h3>
                   <div className="mt-8 grid gap-4 sm:grid-cols-2">
                     {gallery.map((url: string, idx: number) => (
-                      <div key={idx} className="aspect-[4/3] overflow-hidden rounded-[2rem] bg-muted shadow-sm">
-                        <img src={url} alt={`${initiative.title} gallery ${idx + 1}`} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
+                      <div
+                        key={idx}
+                        className="aspect-[4/3] overflow-hidden rounded-[2rem] bg-muted shadow-sm"
+                      >
+                        <img
+                          src={url}
+                          alt={`${initiative.title} gallery ${idx + 1}`}
+                          className="h-full w-full object-cover transition duration-500 hover:scale-105"
+                        />
                       </div>
                     ))}
                   </div>
@@ -201,12 +239,20 @@ function InitiativeDetailPage() {
                 <div className="space-y-6">
                   <div className="flex items-end justify-between">
                     <div>
-                      <span className="block text-3xl font-bold tracking-tight text-primary">Rs {Number(initiative.current_amount_mur || 0).toLocaleString()}</span>
-                      <span className="mt-1 block text-xs font-medium text-muted-foreground">raised of Rs {Number(initiative.goal_amount_mur || 0).toLocaleString()} goal</span>
+                      <span className="block text-3xl font-bold tracking-tight text-primary">
+                        Rs {Number(initiative.current_amount_mur || 0).toLocaleString()}
+                      </span>
+                      <span className="mt-1 block text-xs font-medium text-muted-foreground">
+                        raised of Rs {Number(initiative.goal_amount_mur || 0).toLocaleString()} goal
+                      </span>
                     </div>
                     <div className="text-right">
-                      <span className="block text-2xl font-bold text-forest">{Math.round(progress)}%</span>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Funded</span>
+                      <span className="block text-2xl font-bold text-forest">
+                        {Math.round(progress)}%
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Funded
+                      </span>
                     </div>
                   </div>
 
@@ -221,12 +267,16 @@ function InitiativeDetailPage() {
                     <div className="rounded-2xl bg-muted/30 p-5 text-center">
                       <Users className="mx-auto mb-2 h-5 w-5 text-primary/40" />
                       <span className="block text-xl font-bold text-primary">24</span>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Backers</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Backers
+                      </span>
                     </div>
                     <div className="rounded-2xl bg-muted/30 p-5 text-center">
                       <Heart className="mx-auto mb-2 h-5 w-5 text-primary/40" />
                       <span className="block text-xl font-bold text-primary">12</span>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Days left</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Days left
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -239,7 +289,8 @@ function InitiativeDetailPage() {
                     Support this Initiative
                   </Link>
                   <p className="px-4 text-center text-[10px] leading-relaxed text-muted-foreground">
-                    100% of your contribution (minus transaction fees) goes directly to the initiative. We provide full transparency reports every quarter.
+                    100% of your contribution (minus transaction fees) goes directly to the
+                    initiative. We provide full transparency reports every quarter.
                   </p>
                 </div>
 
@@ -248,10 +299,13 @@ function InitiativeDetailPage() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                       <ShieldCheck className="h-5 w-5 text-primary" />
                     </div>
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">CommonGround Vetted</span>
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                      CommonGround Vetted
+                    </span>
                   </div>
                   <p className="mt-4 text-xs leading-relaxed text-primary/70">
-                    This NGO has passed our deep due-diligence process, including financial audit and site visits.
+                    This NGO has passed our deep due-diligence process, including financial audit
+                    and site visits.
                   </p>
                 </div>
               </div>

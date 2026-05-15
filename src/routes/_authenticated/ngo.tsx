@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/ngo")({
 function NgoDashboard() {
   const { user, signOut } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [reportTitle, setReportTitle] = useState("");
   const [reportInitiativeId, setReportInitiativeId] = useState("");
   const [showInitiativeForm, setShowInitiativeForm] = useState(false);
@@ -52,6 +53,21 @@ function NgoDashboard() {
     enabled: !!ngoProfile?.id,
   });
 
+  const { data: totalFunding } = useQuery({
+    queryKey: ["ngo-total-funding", ngoProfile?.id],
+    queryFn: async () => {
+      if (!ngoProfile?.id) return 0;
+      const { data, error } = await supabase
+        .from("allocations")
+        .select("amount_mur, initiatives!inner(ngo_id)")
+        .eq("initiatives.ngo_id", ngoProfile.id);
+
+      if (error) throw error;
+      return data.reduce((sum, item) => sum + Number(item.amount_mur), 0);
+    },
+    enabled: !!ngoProfile?.id,
+  });
+
   const submitReportMutation = useMutation({
     mutationFn: async () => {
       if (!ngoProfile?.id || !reportInitiativeId) throw new Error("Missing NGO or Initiative");
@@ -69,7 +85,7 @@ function NgoDashboard() {
       setReportTitle("");
       queryClient.invalidateQueries({ queryKey: ["ngo-reports"] });
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const submitInitiativeMutation = useMutation({
@@ -91,7 +107,7 @@ function NgoDashboard() {
       setShowInitiativeForm(false);
       refetchInitiatives();
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   return (
@@ -120,7 +136,7 @@ function NgoDashboard() {
               </p>
             </div>
             <button
-              onClick={signOut}
+              onClick={() => signOut().then(() => navigate({ to: "/login" }))}
               className="rounded-full border border-input bg-background px-5 py-2.5 text-sm hover:bg-muted"
             >
               Sign out
@@ -129,7 +145,10 @@ function NgoDashboard() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
-              { title: "Total Funding", value: "Rs 0" },
+              {
+                title: "Total Funding",
+                value: `Rs ${(totalFunding || 0).toLocaleString()}`,
+              },
               { title: "Active Initiatives", value: initiatives?.length ?? 0 },
               { title: "Impact Score", value: "—" },
             ].map((c) => (

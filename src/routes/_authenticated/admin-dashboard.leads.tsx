@@ -30,10 +30,7 @@ function AdminLeadsPage() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from("leads")
-        .update({ status })
-        .eq("id", id);
+      const { error } = await supabase.from("leads").update({ status }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -45,9 +42,10 @@ function AdminLeadsPage() {
     },
   });
 
-  const filteredLeads = leads?.filter((lead) =>
-    (lead.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-    (lead.email?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+  const filteredLeads = leads?.filter(
+    (lead) =>
+      (lead.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (lead.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -93,12 +91,24 @@ function AdminLeadsPage() {
                 <table className="w-full text-left text-sm">
                   <thead className="bg-muted/50 text-muted-foreground">
                     <tr>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Lead Name</th>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Contact</th>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Amount (MUR)</th>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Joined</th>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Status</th>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Actions</th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Lead Name
+                      </th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Contact
+                      </th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Amount (MUR)
+                      </th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Joined
+                      </th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Status
+                      </th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
@@ -106,8 +116,12 @@ function AdminLeadsPage() {
                       <tr key={lead.id} className="transition hover:bg-muted/30">
                         <td className="px-8 py-5">
                           <div>
-                            <p className="font-semibold text-primary">{lead.full_name || "Unnamed Lead"}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase font-mono">{lead.id.substring(0, 8)}</p>
+                            <p className="font-semibold text-primary">
+                              {lead.full_name || "Unnamed Lead"}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground uppercase font-mono">
+                              {lead.id.substring(0, 8)}
+                            </p>
                           </div>
                         </td>
                         <td className="px-8 py-5">
@@ -127,44 +141,58 @@ function AdminLeadsPage() {
                         <td className="px-8 py-5">
                           <p className="font-bold text-teal-600">
                             Rs {Number(lead.amount_mur || 0).toLocaleString()}
-                            {lead.covers_fees && <span className="ml-1 text-[9px] text-muted-foreground underline">+ Fee</span>}
+                            {lead.covers_fees && (
+                              <span className="ml-1 text-[9px] text-muted-foreground underline">
+                                + Fee
+                              </span>
+                            )}
                           </p>
                         </td>
                         <td className="px-8 py-5">
                           <div className="flex items-center gap-1.5 text-muted-foreground">
                             <Calendar className="h-3 w-3" />
-                            <span className="text-xs">{lead.created_at ? new Date(lead.created_at).toLocaleDateString() : "N/A"}</span>
+                            <span className="text-xs">
+                              {lead.created_at
+                                ? new Date(lead.created_at).toLocaleDateString()
+                                : "N/A"}
+                            </span>
                           </div>
                         </td>
                         <td className="px-8 py-5">
-                          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
-                            lead.status === "converted"
-                              ? "bg-green-100 text-green-700"
-                              : lead.status === "archived"
-                              ? "bg-gray-100 text-gray-700"
-                              : "bg-amber-100 text-amber-700"
-                          }`}>
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
+                              lead.status === "converted"
+                                ? "bg-green-100 text-green-700"
+                                : lead.status === "archived"
+                                  ? "bg-gray-100 text-gray-700"
+                                  : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
                             {lead.status || "pending"}
                           </span>
                         </td>
                         <td className="px-8 py-5">
                           <div className="flex gap-2">
-                             {lead.status !== "converted" && (
-                               <button
-                                 onClick={() => updateStatusMutation.mutate({ id: lead.id, status: "converted" })}
-                                 className="p-1.5 rounded-full bg-green-50 text-green-600 hover:bg-green-100"
-                               >
-                                 <CheckCircle2 className="h-4 w-4" />
-                               </button>
-                             )}
-                             {lead.status !== "archived" && (
-                               <button
-                                 onClick={() => updateStatusMutation.mutate({ id: lead.id, status: "archived" })}
-                                 className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100"
-                               >
-                                 <XCircle className="h-4 w-4" />
-                               </button>
-                             )}
+                            {lead.status !== "converted" && (
+                              <button
+                                onClick={() =>
+                                  updateStatusMutation.mutate({ id: lead.id, status: "converted" })
+                                }
+                                className="p-1.5 rounded-full bg-green-50 text-green-600 hover:bg-green-100"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </button>
+                            )}
+                            {lead.status !== "archived" && (
+                              <button
+                                onClick={() =>
+                                  updateStatusMutation.mutate({ id: lead.id, status: "archived" })
+                                }
+                                className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -177,8 +205,12 @@ function AdminLeadsPage() {
                 <div className="rounded-full bg-muted p-4">
                   <Info className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h2 className="mt-6 font-display text-2xl font-semibold text-primary">No leads found</h2>
-                <p className="mt-2 text-muted-foreground">No membership leads match your current criteria.</p>
+                <h2 className="mt-6 font-display text-2xl font-semibold text-primary">
+                  No leads found
+                </h2>
+                <p className="mt-2 text-muted-foreground">
+                  No membership leads match your current criteria.
+                </p>
               </div>
             )}
           </div>

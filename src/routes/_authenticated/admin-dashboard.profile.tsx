@@ -1,3 +1,4 @@
+import { getJoinedField } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -30,10 +31,7 @@ function AdminProfile() {
   const { data: managedInitiatives } = useQuery({
     queryKey: ["managed-initiatives"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("initiatives")
-        .select("*, ngos(name)")
-        .limit(5);
+      const { data } = await supabase.from("initiatives").select("*, ngos(name)").limit(5);
       return data;
     },
     enabled: !!user?.id,
@@ -61,7 +59,9 @@ function AdminProfile() {
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-3">
-                      <h1 className="font-display text-3xl font-bold text-primary">{displayName}</h1>
+                      <h1 className="font-display text-3xl font-bold text-primary">
+                        {displayName}
+                      </h1>
                       <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase text-amber-700">
                         Admin Role
                       </span>
@@ -73,7 +73,10 @@ function AdminProfile() {
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-4 w-4" />
-                        Joined {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "Recently"}
+                        Joined{" "}
+                        {profile?.created_at
+                          ? new Date(profile.created_at).toLocaleDateString()
+                          : "Recently"}
                       </div>
                     </div>
                   </div>
@@ -81,8 +84,12 @@ function AdminProfile() {
 
                 {profile?.bio && (
                   <div className="mt-8">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">About</h2>
-                    <p className="mt-2 max-w-2xl text-foreground/80 leading-relaxed">{profile.bio}</p>
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                      About
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-foreground/80 leading-relaxed">
+                      {profile.bio}
+                    </p>
                   </div>
                 )}
               </div>
@@ -94,7 +101,9 @@ function AdminProfile() {
               <div>
                 <div className="flex items-center gap-2 mb-6">
                   <History className="h-5 w-5 text-amber-500" />
-                  <h2 className="font-display text-2xl font-semibold text-primary">Recent Actions</h2>
+                  <h2 className="font-display text-2xl font-semibold text-primary">
+                    Recent Actions
+                  </h2>
                 </div>
                 <div className="overflow-hidden rounded-3xl border border-border/40 bg-card">
                   {adminActions && adminActions.length > 0 ? (
@@ -130,16 +139,25 @@ function AdminProfile() {
               <div>
                 <div className="flex items-center gap-2 mb-6">
                   <Heart className="h-5 w-5 text-amber-500" />
-                  <h2 className="font-display text-2xl font-semibold text-primary">Managed Initiatives</h2>
+                  <h2 className="font-display text-2xl font-semibold text-primary">
+                    Managed Initiatives
+                  </h2>
                 </div>
                 <div className="space-y-4">
                   {managedInitiatives?.map((i) => (
-                    <div key={i.id} className="rounded-2xl border border-border/40 bg-card p-4 transition hover:shadow-md">
-                      <p className="text-xs font-bold text-amber-600 uppercase">{(i.ngos as any)?.name}</p>
+                    <div
+                      key={i.id}
+                      className="rounded-2xl border border-border/40 bg-card p-4 transition hover:shadow-md"
+                    >
+                      <p className="text-xs font-bold text-amber-600 uppercase">
+                        {getJoinedField(i.ngos, "name")}
+                      </p>
                       <h3 className="mt-1 font-semibold text-primary">{i.title}</h3>
                       <div className="mt-3 flex items-center gap-2">
-                         <span className="h-1.5 w-1.5 rounded-full bg-forest-soft" />
-                         <span className="text-[10px] font-bold uppercase text-muted-foreground">{i.status}</span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-forest-soft" />
+                        <span className="text-[10px] font-bold uppercase text-muted-foreground">
+                          {i.status}
+                        </span>
                       </div>
                     </div>
                   ))}

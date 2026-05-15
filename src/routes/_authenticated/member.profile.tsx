@@ -61,7 +61,9 @@ function MemberProfile() {
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-3">
-                      <h1 className="font-display text-3xl font-bold text-primary">{displayName}</h1>
+                      <h1 className="font-display text-3xl font-bold text-primary">
+                        {displayName}
+                      </h1>
                       {isSubscribed ? (
                         <span className="rounded-full bg-teal-100 px-3 py-1 text-xs font-bold uppercase text-teal-700">
                           Active Member
@@ -107,15 +109,24 @@ function MemberProfile() {
               <div>
                 <div className="flex items-center gap-2 mb-6">
                   <Heart className="h-5 w-5 text-teal-600" />
-                  <h2 className="font-display text-2xl font-semibold text-primary">Supported Initiatives</h2>
+                  <h2 className="font-display text-2xl font-semibold text-primary">
+                    Supported Initiatives
+                  </h2>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {preferences && preferences.length > 0 ? (
-                    preferences.map((p: any) => (
-                      <div key={p.id} className="rounded-2xl border border-border/40 bg-card p-5 transition hover:shadow-md">
-                        <p className="text-[10px] font-bold text-teal-600 uppercase">{p.initiatives?.ngos?.name}</p>
+                    preferences.map((p: unknown) => (
+                      <div
+                        key={p.id}
+                        className="rounded-2xl border border-border/40 bg-card p-5 transition hover:shadow-md"
+                      >
+                        <p className="text-[10px] font-bold text-teal-600 uppercase">
+                          {p.initiatives?.ngos?.name}
+                        </p>
                         <h3 className="mt-1 font-semibold text-primary">{p.initiatives?.title}</h3>
-                        <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{p.initiatives?.description}</p>
+                        <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                          {p.initiatives?.description}
+                        </p>
                       </div>
                     ))
                   ) : (
@@ -135,16 +146,26 @@ function MemberProfile() {
                 </div>
                 {subscription ? (
                   <div className="rounded-3xl border border-teal-600/20 bg-teal-600/5 p-6">
-                    <p className="text-sm font-medium text-teal-600 uppercase tracking-wider">Monthly Plan</p>
-                    <p className="mt-2 font-display text-3xl font-bold text-teal-700">Rs {Number(subscription.amount_mur).toLocaleString()}</p>
+                    <p className="text-sm font-medium text-teal-600 uppercase tracking-wider">
+                      Monthly Plan
+                    </p>
+                    <p className="mt-2 font-display text-3xl font-bold text-teal-700">
+                      Rs {Number(subscription.amount_mur).toLocaleString()}
+                    </p>
                     <div className="mt-6 space-y-3">
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Status</span>
-                        <span className="font-bold text-teal-600 uppercase">{subscription.status}</span>
+                        <span className="font-bold text-teal-600 uppercase">
+                          {subscription.status}
+                        </span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Next Billing</span>
-                        <span className="font-bold">{subscription.next_billing_date ? new Date(subscription.next_billing_date).toLocaleDateString() : "TBD"}</span>
+                        <span className="font-bold">
+                          {subscription.next_billing_date
+                            ? new Date(subscription.next_billing_date).toLocaleDateString()
+                            : "TBD"}
+                        </span>
                       </div>
                     </div>
                   </div>

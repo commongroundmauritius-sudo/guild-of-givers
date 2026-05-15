@@ -58,7 +58,9 @@ function AdminSettings() {
           <div className="space-y-8 rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
             <div className="space-y-6">
               <div className="grid gap-2">
-                <Label htmlFor="fullName" className="text-sm font-semibold">Full Name</Label>
+                <Label htmlFor="fullName" className="text-sm font-semibold">
+                  Full Name
+                </Label>
                 <Input
                   id="fullName"
                   value={fullName}
@@ -69,7 +71,9 @@ function AdminSettings() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="avatarUrl" className="text-sm font-semibold">Avatar URL</Label>
+                <Label htmlFor="avatarUrl" className="text-sm font-semibold">
+                  Avatar URL
+                </Label>
                 <Input
                   id="avatarUrl"
                   value={avatarUrl}
@@ -80,7 +84,9 @@ function AdminSettings() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="bio" className="text-sm font-semibold">Bio / About</Label>
+                <Label htmlFor="bio" className="text-sm font-semibold">
+                  Bio / About
+                </Label>
                 <textarea
                   id="bio"
                   value={bio}

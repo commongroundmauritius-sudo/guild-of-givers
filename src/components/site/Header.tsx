@@ -1,6 +1,18 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu, X, User, LogOut, LayoutDashboard, Settings, Heart, FileText, Shield, Users, ChevronDown } from "lucide-react";
+import {
+  Menu,
+  X,
+  User,
+  LogOut,
+  LayoutDashboard,
+  Settings,
+  Heart,
+  FileText,
+  Shield,
+  Users,
+  ChevronDown,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "./Logo";
 import {
@@ -102,10 +114,19 @@ export function Header() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative flex h-10 items-center gap-2 rounded-full px-1 py-1 hover:bg-muted">
+                  <Button
+                    variant="ghost"
+                    className="relative flex h-10 items-center gap-2 rounded-full px-1 py-1 hover:bg-muted"
+                  >
                     <Avatar className="h-8 w-8 border border-border/60">
                       <AvatarImage src={profile?.avatar_url || ""} alt={displayName} />
-                      <AvatarFallback className={role === "admin" ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-700"}>
+                      <AvatarFallback
+                        className={
+                          role === "admin"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-teal-100 text-teal-700"
+                        }
+                      >
                         {initials}
                       </AvatarFallback>
                     </Avatar>
@@ -116,13 +137,15 @@ export function Header() {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">{displayName}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user?.email}
-                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                       {role && (
-                        <span className={`mt-1 inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                          role === "admin" ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-700"
-                        }`}>
+                        <span
+                          className={`mt-1 inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                            role === "admin"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-teal-100 text-teal-700"
+                          }`}
+                        >
                           {role}
                         </span>
                       )}
@@ -148,7 +171,10 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => signOut().then(() => navigate({ to: "/login" }))} className="text-red-600 focus:text-red-600">
+                  <DropdownMenuItem
+                    onClick={() => signOut().then(() => navigate({ to: "/login" }))}
+                    className="text-red-600 focus:text-red-600"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>

@@ -1,9 +1,12 @@
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Info, Heart } from "lucide-react";
+import { getJoinedField } from "@/lib/utils";
 
 export const Route = createFileRoute("/initiatives/")({
   head: () => ({
@@ -19,7 +22,12 @@ export const Route = createFileRoute("/initiatives/")({
 });
 
 function InitiativesPage() {
-  const { data: initiatives, isLoading, error } = useQuery({
+  useRealtimeSync("initiatives", [["public-initiatives"]]);
+  const {
+    data: initiatives,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["public-initiatives"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -47,8 +55,8 @@ function InitiativesPage() {
               Vetted Initiatives You Can Support
             </h1>
             <p className="mt-6 text-xl leading-relaxed text-muted-foreground">
-              CommonGround members fund a curated selection of high-impact programs. Each initiative is a
-              multi-year commitment to systemic change, not a one-off project.
+              CommonGround members fund a curated selection of high-impact programs. Each initiative
+              is a multi-year commitment to systemic change, not a one-off project.
             </p>
           </div>
 
@@ -68,8 +76,12 @@ function InitiativesPage() {
               <div className="rounded-full bg-red-100 p-3 text-red-600">
                 <Info className="h-6 w-6" />
               </div>
-              <h2 className="mt-4 font-display text-xl font-semibold text-red-900">Failed to load initiatives</h2>
-              <p className="mt-2 text-red-700/80">There was an error connecting to the database. Please try again later.</p>
+              <h2 className="mt-4 font-display text-xl font-semibold text-red-900">
+                Failed to load initiatives
+              </h2>
+              <p className="mt-2 text-red-700/80">
+                There was an error connecting to the database. Please try again later.
+              </p>
               <button
                 onClick={() => window.location.reload()}
                 className="mt-6 rounded-full bg-red-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
@@ -84,9 +96,7 @@ function InitiativesPage() {
                 const current = Number(i.current_amount_mur) || 0;
                 const progress = Math.min(100, Math.round((current / goal) * 100));
 
-                const ngoName = Array.isArray(i.ngos)
-                  ? i.ngos[0]?.name
-                  : (i.ngos as any)?.name;
+                const ngoName = getJoinedField(i.ngos, "name");
 
                 return (
                   <Link
@@ -102,7 +112,8 @@ function InitiativesPage() {
                           alt={i.title}
                           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=800";
+                            (e.target as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=800";
                           }}
                         />
                       ) : (
@@ -125,13 +136,13 @@ function InitiativesPage() {
                       </h2>
 
                       {i.caption && (
-                        <p className="mt-2 text-sm font-semibold text-teal-600">
-                          {i.caption}
-                        </p>
+                        <p className="mt-2 text-sm font-semibold text-teal-600">{i.caption}</p>
                       )}
 
                       <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-                        {i.summary || i.description || "Join us in supporting this vital initiative for the community."}
+                        {i.summary ||
+                          i.description ||
+                          "Join us in supporting this vital initiative for the community."}
                       </p>
 
                       <div className="mt-auto pt-8">
@@ -172,9 +183,12 @@ function InitiativesPage() {
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/5 text-primary">
                 <Heart className="h-10 w-10" />
               </div>
-              <h2 className="mt-6 font-display text-2xl font-semibold text-primary">No active initiatives found</h2>
+              <h2 className="mt-6 font-display text-2xl font-semibold text-primary">
+                No active initiatives found
+              </h2>
               <p className="mx-auto mt-3 max-w-sm text-muted-foreground leading-relaxed">
-                We're currently vetting new high-impact programs. Join our community to be the first to know when they go live.
+                We're currently vetting new high-impact programs. Join our community to be the first
+                to know when they go live.
               </p>
               <div className="mt-10">
                 <Link

@@ -49,7 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const [roleRes, profileRes, subRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
         supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-        supabase.from("subscriptions").select("status").eq("user_id", userId).eq("status", "active").maybeSingle(),
+        supabase
+          .from("subscriptions")
+          .select("status")
+          .eq("user_id", userId)
+          .eq("status", "active")
+          .maybeSingle(),
       ]);
 
       if (roleRes.data) setRole(roleRes.data.role as AppRole);
@@ -64,7 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const refreshAuth = async () => {
-    const { data: { session: s } } = await supabase.auth.getSession();
+    const {
+      data: { session: s },
+    } = await supabase.auth.getSession();
     if (s?.user) {
       await fetchAuthData(s.user.id);
     } else {

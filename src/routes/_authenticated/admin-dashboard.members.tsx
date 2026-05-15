@@ -23,7 +23,7 @@ function AdminMembersPage() {
         .select("user_id")
         .eq("role", "member");
 
-      const memberIds = memberRoles?.map(r => r.user_id) || [];
+      const memberIds = memberRoles?.map((r) => r.user_id) || [];
 
       if (memberIds.length === 0) return [];
 
@@ -38,9 +38,10 @@ function AdminMembersPage() {
     },
   });
 
-  const filteredMembers = members?.filter((member) =>
-    (member.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-    (member.email?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+  const filteredMembers = members?.filter(
+    (member) =>
+      (member.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (member.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -86,11 +87,21 @@ function AdminMembersPage() {
                 <table className="w-full text-left text-sm">
                   <thead className="bg-muted/50 text-muted-foreground">
                     <tr>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Member</th>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Contact</th>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Location</th>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Joined</th>
-                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">Status</th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Member
+                      </th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Contact
+                      </th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Location
+                      </th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Joined
+                      </th>
+                      <th className="px-8 py-5 font-medium uppercase tracking-wider text-[10px]">
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
@@ -105,8 +116,12 @@ function AdminMembersPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-semibold text-primary">{member.full_name || "Unnamed Member"}</p>
-                              <p className="text-[11px] text-muted-foreground uppercase font-mono">{member.id.substring(0, 8)}</p>
+                              <p className="font-semibold text-primary">
+                                {member.full_name || "Unnamed Member"}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground uppercase font-mono">
+                                {member.id.substring(0, 8)}
+                              </p>
                             </div>
                           </div>
                         </td>
@@ -127,13 +142,21 @@ function AdminMembersPage() {
                         <td className="px-8 py-5">
                           <div className="flex items-center gap-1.5 text-muted-foreground">
                             <Calendar className="h-3 w-3" />
-                            <span>{member.created_at ? new Date(member.created_at).toLocaleDateString() : "N/A"}</span>
+                            <span>
+                              {member.created_at
+                                ? new Date(member.created_at).toLocaleDateString()
+                                : "N/A"}
+                            </span>
                           </div>
                         </td>
                         <td className="px-8 py-5">
-                          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
-                            member.status === "active" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-                          }`}>
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
+                              member.status === "active"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
                             {member.status || "active"}
                           </span>
                         </td>
@@ -147,8 +170,12 @@ function AdminMembersPage() {
                 <div className="rounded-full bg-muted p-4">
                   <Info className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h2 className="mt-6 font-display text-2xl font-semibold text-primary">No members found</h2>
-                <p className="mt-2 text-muted-foreground">No platform members match your current criteria.</p>
+                <h2 className="mt-6 font-display text-2xl font-semibold text-primary">
+                  No members found
+                </h2>
+                <p className="mt-2 text-muted-foreground">
+                  No platform members match your current criteria.
+                </p>
               </div>
             )}
           </div>

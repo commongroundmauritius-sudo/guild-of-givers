@@ -15,7 +15,11 @@ function AdminNGOsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: ngos, isLoading, error } = useQuery({
+  const {
+    data: ngos,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["admin-ngos"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,10 +33,7 @@ function AdminNGOsPage() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from("ngos")
-        .update({ status })
-        .eq("id", id);
+      const { error } = await supabase.from("ngos").update({ status }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -44,9 +45,10 @@ function AdminNGOsPage() {
     },
   });
 
-  const filteredNGOs = ngos?.filter((ngo) =>
-    (ngo.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (ngo.category || "").toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredNGOs = ngos?.filter(
+    (ngo) =>
+      (ngo.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ngo.category || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -91,7 +93,9 @@ function AdminNGOsPage() {
               <div className="rounded-full bg-red-100 p-3 text-red-600">
                 <Info className="h-6 w-6" />
               </div>
-              <h2 className="mt-4 font-display text-xl font-semibold text-red-900">Failed to load NGOs</h2>
+              <h2 className="mt-4 font-display text-xl font-semibold text-red-900">
+                Failed to load NGOs
+              </h2>
               <p className="mt-2 text-red-700/80">There was an error connecting to the database.</p>
               <button
                 onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-ngos"] })}
@@ -110,7 +114,11 @@ function AdminNGOsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
                       {ngo.logo_url ? (
-                        <img src={ngo.logo_url} alt={ngo.name || "NGO"} className="h-full w-full rounded-2xl object-cover" />
+                        <img
+                          src={ngo.logo_url}
+                          alt={ngo.name || "NGO"}
+                          className="h-full w-full rounded-2xl object-cover"
+                        />
                       ) : (
                         <Shield className="h-6 w-6" />
                       )}
@@ -120,8 +128,8 @@ function AdminNGOsPage() {
                         ngo.status === "active"
                           ? "bg-green-100 text-green-700"
                           : ngo.status === "suspended"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-amber-100 text-amber-700"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-amber-100 text-amber-700"
                       }`}
                     >
                       {ngo.status || "pending"}
@@ -129,7 +137,9 @@ function AdminNGOsPage() {
                   </div>
 
                   <div className="mt-4">
-                    <h3 className="font-display text-xl font-bold text-primary">{ngo.name || "Unnamed NGO"}</h3>
+                    <h3 className="font-display text-xl font-bold text-primary">
+                      {ngo.name || "Unnamed NGO"}
+                    </h3>
                     <p className="mt-1 text-xs font-medium text-amber-600 uppercase tracking-wider">
                       {ngo.category || "General"}
                     </p>
@@ -142,7 +152,9 @@ function AdminNGOsPage() {
                     <div className="flex gap-2">
                       {ngo.status !== "active" && (
                         <button
-                          onClick={() => updateStatusMutation.mutate({ id: ngo.id, status: "active" })}
+                          onClick={() =>
+                            updateStatusMutation.mutate({ id: ngo.id, status: "active" })
+                          }
                           className="flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-green-600 hover:bg-green-100"
                           title="Approve / Activate"
                         >
@@ -151,7 +163,9 @@ function AdminNGOsPage() {
                       )}
                       {ngo.status !== "suspended" && (
                         <button
-                          onClick={() => updateStatusMutation.mutate({ id: ngo.id, status: "suspended" })}
+                          onClick={() =>
+                            updateStatusMutation.mutate({ id: ngo.id, status: "suspended" })
+                          }
                           className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"
                           title="Suspend"
                         >
@@ -178,7 +192,9 @@ function AdminNGOsPage() {
               <div className="rounded-full bg-muted p-4">
                 <Info className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h2 className="mt-6 font-display text-2xl font-semibold text-primary">No NGOs found</h2>
+              <h2 className="mt-6 font-display text-2xl font-semibold text-primary">
+                No NGOs found
+              </h2>
               <p className="mt-2 text-muted-foreground">Try adjusting your search term.</p>
             </div>
           )}
