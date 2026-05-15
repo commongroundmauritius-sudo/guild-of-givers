@@ -1,3 +1,5 @@
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import heroRoom from "@/assets/hero-room.jpg";
@@ -11,6 +13,7 @@ import {
 } from "@/components/ui/accordion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getJoinedField } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,6 +30,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+  useRealtimeSync("initiatives", [["homepage-initiatives"]]);
   return (
     <SiteLayout>
       <Hero />
@@ -270,7 +274,7 @@ function Initiatives() {
                 </div>
                 <div className="p-8">
                   <span className="text-xs font-medium uppercase text-muted-foreground">
-                    {(i.ngos as any)?.name}
+                    {getJoinedField(i.ngos, "name")}
                   </span>
                   <h3 className="mt-2 font-display text-2xl font-semibold text-primary">
                     {i.title}

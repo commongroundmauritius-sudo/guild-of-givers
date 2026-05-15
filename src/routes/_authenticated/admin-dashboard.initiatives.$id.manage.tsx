@@ -1,3 +1,4 @@
+import { getJoinedField, getJoinedData } from "@/lib/utils";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -27,7 +28,7 @@ function InitiativeEditPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { role, user, loading: authLoading } = useAuth();
-  const [formData, setFormData] = useState<any>(null);
+  const [formData, setFormData] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     if (!authLoading && role && role !== "admin") {
@@ -74,7 +75,7 @@ function InitiativeEditPage() {
   }, [initiative]);
 
   const updateMutation = useMutation({
-    mutationFn: async (updatedData: any) => {
+    mutationFn: async (updatedData: Record<string, unknown>) => {
       const { error } = await supabase.from("initiatives").update(updatedData).eq("id", id);
       if (error) throw error;
 
@@ -98,8 +99,8 @@ function InitiativeEditPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-all-initiatives"] });
       queryClient.invalidateQueries({ queryKey: ["admin-actions"] });
     },
-    onError: (error: any) => {
-      toast.error("Failed to update: " + error.message);
+    onError: (error: Error) => {
+      toast.error("Failed to update: " + (error as Error).message);
     },
   });
 
@@ -163,15 +164,15 @@ function InitiativeEditPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
+    setFormData((prev: Record<string, unknown>) => ({ ...prev, [name]: value }));
   };
 
   const handleTogglePublished = () => {
-    setFormData((prev: any) => ({ ...prev, is_published: !prev.is_published }));
+    setFormData((prev: Record<string, unknown>) => ({ ...prev, is_published: !prev.is_published }));
   };
 
   const handleAddGalleryUrl = () => {
-    setFormData((prev: any) => ({
+    setFormData((prev: Record<string, unknown>) => ({
       ...prev,
       gallery_urls: [...prev.gallery_urls, ""],
     }));
@@ -180,12 +181,12 @@ function InitiativeEditPage() {
   const handleGalleryUrlChange = (index: number, value: string) => {
     const newUrls = [...formData.gallery_urls];
     newUrls[index] = value;
-    setFormData((prev: any) => ({ ...prev, gallery_urls: newUrls }));
+    setFormData((prev: Record<string, unknown>) => ({ ...prev, gallery_urls: newUrls }));
   };
 
   const handleRemoveGalleryUrl = (index: number) => {
-    const newUrls = formData.gallery_urls.filter((_: any, i: number) => i !== index);
-    setFormData((prev: any) => ({ ...prev, gallery_urls: newUrls }));
+    const newUrls = formData.gallery_urls.filter((_: unknown, i: number) => i !== index);
+    setFormData((prev: Record<string, unknown>) => ({ ...prev, gallery_urls: newUrls }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -213,7 +214,9 @@ function InitiativeEditPage() {
               </h1>
               <p className="mt-2 text-muted-foreground">
                 Organization:{" "}
-                <span className="font-medium text-primary">{(initiative.ngos as any)?.name}</span>
+                <span className="font-medium text-primary">
+                  {getJoinedField(initiative.ngos, "name")}
+                </span>
               </p>
             </div>
             <div className="flex items-center gap-4">

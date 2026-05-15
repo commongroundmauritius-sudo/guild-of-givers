@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Heart, Search, Eye, Globe, EyeOff, Edit3, ArrowRight, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { getJoinedField } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/")({
   component: AdminInitiativesPage,
@@ -13,7 +14,11 @@ export const Route = createFileRoute("/_authenticated/admin-dashboard/initiative
 function AdminInitiativesPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: initiatives, isLoading, error } = useQuery({
+  const {
+    data: initiatives,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["admin-all-initiatives"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -25,12 +30,10 @@ function AdminInitiativesPage() {
     },
   });
 
-  const filteredInitiatives = initiatives?.filter((i) =>
-    (i.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (Array.isArray(i.ngos)
-      ? i.ngos[0]?.name
-      : (i.ngos as any)?.name
-    )?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredInitiatives = initiatives?.filter(
+    (i) =>
+      (i.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (getJoinedField(i.ngos, "name") || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -75,8 +78,12 @@ function AdminInitiativesPage() {
               <div className="rounded-full bg-red-100 p-3 text-red-600">
                 <Info className="h-6 w-6" />
               </div>
-              <h2 className="mt-4 font-display text-xl font-semibold text-red-900">Failed to load initiatives</h2>
-              <p className="mt-2 text-red-700/80">There was an error fetching data from the server.</p>
+              <h2 className="mt-4 font-display text-xl font-semibold text-red-900">
+                Failed to load initiatives
+              </h2>
+              <p className="mt-2 text-red-700/80">
+                There was an error fetching data from the server.
+              </p>
               <button
                 onClick={() => window.location.reload()}
                 className="mt-6 rounded-full bg-red-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
@@ -87,9 +94,7 @@ function AdminInitiativesPage() {
           ) : filteredInitiatives && filteredInitiatives.length > 0 ? (
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {filteredInitiatives.map((i) => {
-                const ngoName = Array.isArray(i.ngos)
-                  ? i.ngos[0]?.name
-                  : (i.ngos as any)?.name;
+                const ngoName = getJoinedField(i.ngos, "name");
 
                 return (
                   <div
@@ -103,7 +108,8 @@ function AdminInitiativesPage() {
                           alt={i.title}
                           className="h-full w-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=800";
+                            (e.target as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=800";
                           }}
                         />
                       ) : (
@@ -112,16 +118,20 @@ function AdminInitiativesPage() {
                         </div>
                       )}
                       <div className="absolute top-4 right-4 flex gap-2">
-                         <span className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase shadow-sm ${
-                           i.is_approved ? "bg-green-500 text-white" : "bg-amber-500 text-white"
-                         }`}>
-                           {i.is_approved ? "Approved" : "Pending Approval"}
-                         </span>
-                         <span className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase shadow-sm ${
-                           i.is_published ? "bg-blue-500 text-white" : "bg-gray-500 text-white"
-                         }`}>
-                           {i.is_published ? "Published" : "Hidden"}
-                         </span>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase shadow-sm ${
+                            i.is_approved ? "bg-green-500 text-white" : "bg-amber-500 text-white"
+                          }`}
+                        >
+                          {i.is_approved ? "Approved" : "Pending Approval"}
+                        </span>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase shadow-sm ${
+                            i.is_published ? "bg-blue-500 text-white" : "bg-gray-500 text-white"
+                          }`}
+                        >
+                          {i.is_published ? "Published" : "Hidden"}
+                        </span>
                       </div>
                     </div>
 
@@ -137,23 +147,25 @@ function AdminInitiativesPage() {
                       </p>
 
                       <div className="mt-auto pt-6 flex items-center justify-between border-t border-border/40">
-                         <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                               <Globe className={`h-3.5 w-3.5 ${i.is_published ? "text-forest-soft" : "text-gray-300"}`} />
-                               {i.is_published ? "Live" : "Draft"}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                               <Edit3 className="h-3.5 w-3.5 text-amber-500" />
-                               Manage
-                            </div>
-                         </div>
-                         <Link
-                           to="/admin-dashboard/initiatives/$id/manage"
-                           params={{ id: i.id }}
-                           className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-white transition hover:bg-amber-600"
-                         >
-                           <ArrowRight className="h-4 w-4" />
-                         </Link>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <Globe
+                              className={`h-3.5 w-3.5 ${i.is_published ? "text-forest-soft" : "text-gray-300"}`}
+                            />
+                            {i.is_published ? "Live" : "Draft"}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <Edit3 className="h-3.5 w-3.5 text-amber-500" />
+                            Manage
+                          </div>
+                        </div>
+                        <Link
+                          to="/admin-dashboard/initiatives/$id/manage"
+                          params={{ id: i.id }}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-white transition hover:bg-amber-600"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -165,8 +177,12 @@ function AdminInitiativesPage() {
               <div className="rounded-full bg-muted p-4">
                 <Info className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h2 className="mt-6 font-display text-2xl font-semibold text-primary">No initiatives found</h2>
-              <p className="mt-2 text-muted-foreground">Adjust your search or wait for new submissions.</p>
+              <h2 className="mt-6 font-display text-2xl font-semibold text-primary">
+                No initiatives found
+              </h2>
+              <p className="mt-2 text-muted-foreground">
+                Adjust your search or wait for new submissions.
+              </p>
             </div>
           )}
         </div>

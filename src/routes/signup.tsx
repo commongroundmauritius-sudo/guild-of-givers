@@ -50,7 +50,7 @@ function SignupPage() {
         },
       });
       setStep(2);
-    } catch (err: any) {
+    } catch (err: Error) {
       toast.error(err.message);
     } finally {
       setSubmitting(false);
@@ -66,7 +66,7 @@ function SignupPage() {
       covers_fees: coversFees,
     });
     if (error) {
-      toast.error(error.message);
+      toast.error((error as Error).message);
       setSubmitting(false);
       return;
     }
