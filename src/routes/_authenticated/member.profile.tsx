@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, User, Mail, MapPin, Phone, CreditCard, ExternalLink } from "lucide-react";
+import { Heart, User, Mail, MapPin, Phone, CreditCard, ExternalLink, Calendar } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const Route = createFileRoute("/_authenticated/member/profile")({
@@ -81,6 +81,12 @@ function MemberProfile() {
                         <div className="flex items-center gap-1.5">
                           <Phone className="h-4 w-4" />
                           {profile.phone}
+                        </div>
+                      )}
+                      {profile?.age && (
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4" />
+                          {profile.age} years old
                         </div>
                       )}
                       {profile?.address && (
