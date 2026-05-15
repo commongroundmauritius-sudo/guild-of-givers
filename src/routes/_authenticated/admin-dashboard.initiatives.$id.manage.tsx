@@ -147,7 +147,7 @@ function InitiativeEditPage() {
           </p>
           <div className="mt-10">
             <Link
-              to="/admin"
+              to="/admin-dashboard"
               className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -198,7 +198,7 @@ function InitiativeEditPage() {
       <section className="min-h-screen bg-cream-soft/30 font-inter">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
           <button
-            onClick={() => navigate({ to: "/admin" })}
+            onClick={() => navigate({ to: "/admin-dashboard" })}
             className="mb-8 flex items-center gap-2 text-sm text-muted-foreground transition hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />

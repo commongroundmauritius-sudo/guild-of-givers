@@ -23,10 +23,10 @@ const GUEST_NAV = [
 ] as const;
 
 const ADMIN_NAV = [
-  { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
-  { label: "Initiatives", to: "/initiatives", icon: Heart },
-  { label: "NGOs", to: "/admin", icon: Shield },
-  { label: "Members", to: "/admin", icon: User },
+  { label: "Dashboard", to: "/admin-dashboard", icon: LayoutDashboard },
+  { label: "Initiatives", to: "/admin-dashboard/initiatives", icon: Heart },
+  { label: "NGOs", to: "/admin-dashboard/ngos", icon: Shield },
+  { label: "Members", to: "/admin-dashboard/members", icon: User },
 ] as const;
 
 const MEMBER_NAV = [
@@ -127,19 +127,19 @@ export function Header() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to={role === "admin" ? "/admin" : "/member"}>
+                    <Link to={role === "admin" ? "/admin-dashboard" : "/member"}>
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to={role === "admin" ? "/admin/profile" : "/member/profile"}>
+                    <Link to={role === "admin" ? "/admin-dashboard/profile" : "/member/profile"}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to={role === "admin" ? "/admin/settings" : "/member/settings"}>
+                    <Link to={role === "admin" ? "/admin-dashboard/settings" : "/member/settings"}>
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Settings</span>
                     </Link>
@@ -182,7 +182,7 @@ export function Header() {
               <>
                 <div className="my-2 h-px bg-border/60" />
                 <Link
-                  to={role === "admin" ? "/admin/profile" : "/member/profile"}
+                  to={role === "admin" ? "/admin-dashboard/profile" : "/member/profile"}
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-foreground/80 hover:bg-muted"
                 >
@@ -190,7 +190,7 @@ export function Header() {
                   Profile
                 </Link>
                 <Link
-                  to={role === "admin" ? "/admin/settings" : "/member/settings"}
+                  to={role === "admin" ? "/admin-dashboard/settings" : "/member/settings"}
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-foreground/80 hover:bg-muted"
                 >

@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { History, LayoutDashboard, Heart, Shield, User, FileText } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin-dashboard/")({
   component: AdminDashboard,
 });
 
@@ -95,7 +95,7 @@ function AdminDashboard() {
               <p className="mt-2 text-muted-foreground">Global platform overview and moderation.</p>
             </div>
             <div className="flex gap-3">
-               <Link to="/admin/profile" className="rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted transition-colors">
+               <Link to="/admin-dashboard/profile" className="rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted transition-colors">
                  View Profile
                </Link>
                <button onClick={signOut} className="rounded-full bg-red-50 border border-red-100 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors">
@@ -125,7 +125,7 @@ function AdminDashboard() {
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-2xl font-semibold text-primary">Recent Activity</h2>
-                <Link to="/admin/profile" className="text-xs font-bold text-amber-600 uppercase hover:underline">View All</Link>
+                <Link to="/admin-dashboard/profile" className="text-xs font-bold text-amber-600 uppercase hover:underline">View All</Link>
               </div>
               <div className="overflow-hidden rounded-3xl border border-border/40 bg-card">
                 {adminActions && adminActions.length > 0 ? (
