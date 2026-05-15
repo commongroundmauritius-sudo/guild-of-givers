@@ -1,0 +1,20 @@
+I have rebranded and restructured the top navigation and user account experience for admins and members.
+
+Summary of changes:
+1. Updated `useAuth` hook and `AuthProvider` to fetch and provide profile and subscription data.
+2. Refactored `Header.tsx` to be role-aware, showing different links and a profile dropdown based on the user's role and subscription status.
+3. Implemented new authenticated routes for Admin and Member:
+   - `/admin/profile`: Detailed admin info, activity history, and managed initiatives.
+   - `/admin/settings`: Form to update admin profile details.
+   - `/member/profile`: Member contact info, contribution summary, and supported initiatives.
+   - `/member/settings`: Form to update member profile details.
+4. Updated existing `/admin` and `/member` dashboards for a consistent role-based UX.
+5. Added `updateProfile` server function to handle profile updates.
+6. Added `bio` and `address` columns to the `profiles` table via migration.
+7. Created common UI components `Avatar` and `DropdownMenu`.
+8. Fixed the logic to hide "Become a Member" and show "Member Dashboard" for subscribed users.
+
+Verification:
+- Build passes (`npm run build`).
+- Frontend verification script confirmed header rendering for guest users.
+- Route verification script confirmed proper redirection for protected routes.

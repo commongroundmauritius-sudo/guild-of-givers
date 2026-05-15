@@ -24,6 +24,10 @@ import { Route as AuthenticatedNgoRouteImport } from './routes/_authenticated/ng
 import { Route as AuthenticatedMemberRouteImport } from './routes/_authenticated/member'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedMemberSettingsRouteImport } from './routes/_authenticated/member.settings'
+import { Route as AuthenticatedMemberProfileRouteImport } from './routes/_authenticated/member.profile'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminProfileRouteImport } from './routes/_authenticated/admin.profile'
 import { Route as AuthenticatedAdminDashboardInitiativesIdManageRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.$id.manage'
 
 const SignupRoute = SignupRouteImport.update({
@@ -100,6 +104,30 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMemberSettingsRoute =
+  AuthenticatedMemberSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedMemberRoute,
+  } as any)
+const AuthenticatedMemberProfileRoute =
+  AuthenticatedMemberProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedMemberRoute,
+  } as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminProfileRoute =
+  AuthenticatedAdminProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminDashboardInitiativesIdManageRoute =
   AuthenticatedAdminDashboardInitiativesIdManageRouteImport.update({
     id: '/admin-dashboard/initiatives/$id/manage',
@@ -116,12 +144,16 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/partner': typeof PartnerRoute
   '/signup': typeof SignupRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/member': typeof AuthenticatedMemberRoute
+  '/member': typeof AuthenticatedMemberRouteWithChildren
   '/ngo': typeof AuthenticatedNgoRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/': typeof InitiativesIndexRoute
+  '/admin/profile': typeof AuthenticatedAdminProfileRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/member/profile': typeof AuthenticatedMemberProfileRoute
+  '/member/settings': typeof AuthenticatedMemberSettingsRoute
   '/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
 }
 export interface FileRoutesByTo {
@@ -133,12 +165,16 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/partner': typeof PartnerRoute
   '/signup': typeof SignupRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/member': typeof AuthenticatedMemberRoute
+  '/member': typeof AuthenticatedMemberRouteWithChildren
   '/ngo': typeof AuthenticatedNgoRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives': typeof InitiativesIndexRoute
+  '/admin/profile': typeof AuthenticatedAdminProfileRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/member/profile': typeof AuthenticatedMemberProfileRoute
+  '/member/settings': typeof AuthenticatedMemberSettingsRoute
   '/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
 }
 export interface FileRoutesById {
@@ -152,12 +188,16 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/partner': typeof PartnerRoute
   '/signup': typeof SignupRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/member': typeof AuthenticatedMemberRoute
+  '/_authenticated/member': typeof AuthenticatedMemberRouteWithChildren
   '/_authenticated/ngo': typeof AuthenticatedNgoRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/': typeof InitiativesIndexRoute
+  '/_authenticated/admin/profile': typeof AuthenticatedAdminProfileRoute
+  '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/member/profile': typeof AuthenticatedMemberProfileRoute
+  '/_authenticated/member/settings': typeof AuthenticatedMemberSettingsRoute
   '/_authenticated/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
 }
 export interface FileRouteTypes {
@@ -177,6 +217,10 @@ export interface FileRouteTypes {
     | '/ngo'
     | '/initiatives/$id'
     | '/initiatives/'
+    | '/admin/profile'
+    | '/admin/settings'
+    | '/member/profile'
+    | '/member/settings'
     | '/admin-dashboard/initiatives/$id/manage'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -194,6 +238,10 @@ export interface FileRouteTypes {
     | '/ngo'
     | '/initiatives/$id'
     | '/initiatives'
+    | '/admin/profile'
+    | '/admin/settings'
+    | '/member/profile'
+    | '/member/settings'
     | '/admin-dashboard/initiatives/$id/manage'
   id:
     | '__root__'
@@ -212,6 +260,10 @@ export interface FileRouteTypes {
     | '/_authenticated/ngo'
     | '/initiatives/$id'
     | '/initiatives/'
+    | '/_authenticated/admin/profile'
+    | '/_authenticated/admin/settings'
+    | '/_authenticated/member/profile'
+    | '/_authenticated/member/settings'
     | '/_authenticated/admin-dashboard/initiatives/$id/manage'
   fileRoutesById: FileRoutesById
 }
@@ -336,6 +388,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/member/settings': {
+      id: '/_authenticated/member/settings'
+      path: '/settings'
+      fullPath: '/member/settings'
+      preLoaderRoute: typeof AuthenticatedMemberSettingsRouteImport
+      parentRoute: typeof AuthenticatedMemberRoute
+    }
+    '/_authenticated/member/profile': {
+      id: '/_authenticated/member/profile'
+      path: '/profile'
+      fullPath: '/member/profile'
+      preLoaderRoute: typeof AuthenticatedMemberProfileRouteImport
+      parentRoute: typeof AuthenticatedMemberRoute
+    }
+    '/_authenticated/admin/settings': {
+      id: '/_authenticated/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/profile': {
+      id: '/_authenticated/admin/profile'
+      path: '/profile'
+      fullPath: '/admin/profile'
+      preLoaderRoute: typeof AuthenticatedAdminProfileRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin-dashboard/initiatives/$id/manage': {
       id: '/_authenticated/admin-dashboard/initiatives/$id/manage'
       path: '/admin-dashboard/initiatives/$id/manage'
@@ -346,18 +426,44 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminProfileRoute: typeof AuthenticatedAdminProfileRoute
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminProfileRoute: AuthenticatedAdminProfileRoute,
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
+interface AuthenticatedMemberRouteChildren {
+  AuthenticatedMemberProfileRoute: typeof AuthenticatedMemberProfileRoute
+  AuthenticatedMemberSettingsRoute: typeof AuthenticatedMemberSettingsRoute
+}
+
+const AuthenticatedMemberRouteChildren: AuthenticatedMemberRouteChildren = {
+  AuthenticatedMemberProfileRoute: AuthenticatedMemberProfileRoute,
+  AuthenticatedMemberSettingsRoute: AuthenticatedMemberSettingsRoute,
+}
+
+const AuthenticatedMemberRouteWithChildren =
+  AuthenticatedMemberRoute._addFileChildren(AuthenticatedMemberRouteChildren)
+
 interface AuthenticatedRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedMemberRoute: typeof AuthenticatedMemberRoute
+  AuthenticatedMemberRoute: typeof AuthenticatedMemberRouteWithChildren
   AuthenticatedNgoRoute: typeof AuthenticatedNgoRoute
   AuthenticatedAdminDashboardInitiativesIdManageRoute: typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedMemberRoute: AuthenticatedMemberRoute,
+  AuthenticatedMemberRoute: AuthenticatedMemberRouteWithChildren,
   AuthenticatedNgoRoute: AuthenticatedNgoRoute,
   AuthenticatedAdminDashboardInitiativesIdManageRoute:
     AuthenticatedAdminDashboardInitiativesIdManageRoute,
