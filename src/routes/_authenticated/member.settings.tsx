@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { updateProfile } from "@/lib/auth-actions";
 import { toast } from "sonner";
-import { Settings as SettingsIcon, Save, User, Phone, MapPin } from "lucide-react";
+import { Settings as SettingsIcon, Save, User, Phone, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ function MemberSettings() {
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [address, setAddress] = useState(profile?.address || "");
+  const [age, setAge] = useState(profile?.age?.toString() || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
 
   const mutation = useMutation({
@@ -30,6 +31,7 @@ function MemberSettings() {
           full_name: fullName,
           phone,
           address,
+          age: age ? parseInt(age) : undefined,
           avatar_url: avatarUrl,
         },
       });
@@ -82,6 +84,21 @@ function MemberSettings() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+230 ..."
+                    className="pl-10 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="age" className="text-sm font-semibold">Age</Label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="age"
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    placeholder="Age"
                     className="pl-10 rounded-xl"
                   />
                 </div>

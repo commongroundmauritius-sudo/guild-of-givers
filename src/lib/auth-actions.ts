@@ -82,6 +82,7 @@ export const updateProfile = createServerFn({ method: "POST" })
     phone?: string;
     address?: string;
     bio?: string;
+    age?: number;
     avatar_url?: string;
   }) => data)
   .handler(async ({ data }) => {

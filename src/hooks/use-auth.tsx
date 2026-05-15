@@ -11,6 +11,7 @@ interface Profile {
   country: string | null;
   address: string | null;
   bio: string | null;
+  age: number | null;
   status: string | null;
   ngo_id: string | null;
 }
