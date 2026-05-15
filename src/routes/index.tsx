@@ -217,16 +217,24 @@ function Why() {
 }
 
 function Initiatives() {
-  const { data: initiatives } = useQuery({
+  useRealtimeSync("initiatives", [["homepage-initiatives"]]);
+
+  const {
+    data: initiatives,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["homepage-initiatives"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("initiatives")
         .select("*, ngos!inner(name, status)")
         .eq("is_approved", true)
         .eq("is_published", true)
         .eq("ngos.status", "active")
         .limit(3);
+
+      if (error) throw error;
       return data;
     },
   });
@@ -254,7 +262,22 @@ function Initiatives() {
           </Link>
         </div>
 
-        {initiatives && initiatives.length > 0 ? (
+        {isLoading ? (
+          <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="space-y-4">
+                <div className="aspect-video w-full animate-pulse rounded-3xl bg-muted" />
+                <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+                <div className="h-8 w-full animate-pulse rounded bg-muted" />
+                <div className="h-12 w-full animate-pulse rounded bg-muted" />
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="mt-10 rounded-3xl border border-dashed border-red-200 bg-red-50/30 p-12 text-center">
+            <p className="text-red-600 font-medium">Failed to load initiatives. Please try again later.</p>
+          </div>
+        ) : initiatives && initiatives.length > 0 ? (
           <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {initiatives.map((i) => (
               <div
@@ -269,7 +292,9 @@ function Initiatives() {
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="h-full w-full bg-muted/60" />
+                    <div className="h-full w-full bg-muted/60 flex items-center justify-center">
+                       <Sparkles className="h-8 w-8 text-primary/20" />
+                    </div>
                   )}
                 </div>
                 <div className="p-8">
@@ -280,12 +305,12 @@ function Initiatives() {
                     {i.title}
                   </h3>
                   <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                    {i.description}
+                    {i.summary || i.description}
                   </p>
                   <div className="mt-8 flex items-center justify-between">
                     <div className="text-xs font-medium text-primary">
-                      Rs {Number(i.current_amount_mur).toLocaleString()} / Rs{" "}
-                      {Number(i.goal_amount_mur).toLocaleString()}
+                      Rs {Number(i.current_amount_mur || 0).toLocaleString()} / Rs{" "}
+                      {Number(i.goal_amount_mur || 0).toLocaleString()}
                     </div>
                     <Link
                       to="/signup"

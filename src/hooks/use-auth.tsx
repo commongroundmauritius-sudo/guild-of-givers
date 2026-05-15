@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, type AppRole } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Profile {
   id: string;
@@ -37,6 +38,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
@@ -141,13 +143,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     signOut: async () => {
-      await supabase.auth.signOut();
-      // Explicitly clear state for immediate UI update
-      setUser(null);
-      setSession(null);
-      setRole(null);
-      setProfile(null);
-      setIsSubscribed(false);
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.error("Supabase signOut error:", error);
+      } finally {
+        // Purge all cached data
+        queryClient.clear();
+        // Explicitly clear state for immediate UI update
+        setUser(null);
+        setSession(null);
+        setRole(null);
+        setProfile(null);
+        setIsSubscribed(false);
+      }
     },
     refreshAuth,
   };
