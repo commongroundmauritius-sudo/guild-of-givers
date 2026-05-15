@@ -1,3 +1,4 @@
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/initiatives/$id")({
 
 function InitiativeDetailPage() {
   const { id } = Route.useParams();
+  useRealtimeSync("initiatives", [["initiative", id], ["public-initiatives"]]);
 
   const {
     data: initiative,
@@ -28,7 +30,10 @@ function InitiativeDetailPage() {
         .from("initiatives")
         .select("*, ngos!inner(*)")
         .eq("id", id)
-        .single();
+        .eq("is_approved", true)
+        .eq("is_published", true)
+        .eq("ngos.status", "active")
+        .maybeSingle();
 
       if (error) throw error;
       return data;
