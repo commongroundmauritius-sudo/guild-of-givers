@@ -1,6 +1,6 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu, X, User, LogOut, LayoutDashboard, Settings, Heart, FileText, Shield, ChevronDown } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutDashboard, Settings, Heart, FileText, Shield, Users, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "./Logo";
 import {
@@ -27,6 +27,7 @@ const ADMIN_NAV = [
   { label: "Initiatives", to: "/admin-dashboard/initiatives", icon: Heart },
   { label: "NGOs", to: "/admin-dashboard/ngos", icon: Shield },
   { label: "Members", to: "/admin-dashboard/members", icon: User },
+  { label: "Leads", to: "/admin-dashboard/leads", icon: Users },
 ] as const;
 
 const MEMBER_NAV = [
@@ -39,6 +40,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const { user, role, profile, isSubscribed, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = role === "admin" ? ADMIN_NAV : role === "member" ? MEMBER_NAV : GUEST_NAV;
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "User";
@@ -58,6 +60,7 @@ export function Header() {
                 key={item.to + item.label}
                 to={item.to}
                 className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
+                activeOptions={item.to === "/admin-dashboard" ? { exact: true } : {}}
                 activeProps={{ className: "text-primary font-bold" }}
               >
                 {item.label}
@@ -145,7 +148,7 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => signOut()} className="text-red-600 focus:text-red-600">
+                  <DropdownMenuItem onClick={() => signOut().then(() => navigate({ to: "/login" }))} className="text-red-600 focus:text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
@@ -204,7 +207,7 @@ export function Header() {
               {user ? (
                 <button
                   onClick={() => {
-                    signOut();
+                    signOut().then(() => navigate({ to: "/login" }));
                     setOpen(false);
                   }}
                   className="flex w-full items-center justify-center gap-2 rounded-full border border-red-200 bg-red-50 px-5 py-3.5 text-sm font-bold text-red-600"

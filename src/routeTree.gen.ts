@@ -31,6 +31,7 @@ import { Route as AuthenticatedAdminDashboardSettingsRouteImport } from './route
 import { Route as AuthenticatedAdminDashboardProfileRouteImport } from './routes/_authenticated/admin-dashboard.profile'
 import { Route as AuthenticatedAdminDashboardNgosRouteImport } from './routes/_authenticated/admin-dashboard.ngos'
 import { Route as AuthenticatedAdminDashboardMembersRouteImport } from './routes/_authenticated/admin-dashboard.members'
+import { Route as AuthenticatedAdminDashboardLeadsRouteImport } from './routes/_authenticated/admin-dashboard.leads'
 import { Route as AuthenticatedAdminDashboardInitiativesIndexRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.index'
 import { Route as AuthenticatedAdminDashboardInitiativesIdManageRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.$id.manage'
 
@@ -151,6 +152,12 @@ const AuthenticatedAdminDashboardMembersRoute =
     path: '/members',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+const AuthenticatedAdminDashboardLeadsRoute =
+  AuthenticatedAdminDashboardLeadsRouteImport.update({
+    id: '/leads',
+    path: '/leads',
+    getParentRoute: () => AuthenticatedAdminDashboardRoute,
+  } as any)
 const AuthenticatedAdminDashboardInitiativesIndexRoute =
   AuthenticatedAdminDashboardInitiativesIndexRouteImport.update({
     id: '/initiatives/',
@@ -179,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/ngo': typeof AuthenticatedNgoRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/': typeof InitiativesIndexRoute
+  '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
   '/admin-dashboard/ngos': typeof AuthenticatedAdminDashboardNgosRoute
   '/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
@@ -203,6 +211,7 @@ export interface FileRoutesByTo {
   '/ngo': typeof AuthenticatedNgoRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives': typeof InitiativesIndexRoute
+  '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
   '/admin-dashboard/ngos': typeof AuthenticatedAdminDashboardNgosRoute
   '/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
@@ -230,6 +239,7 @@ export interface FileRoutesById {
   '/_authenticated/ngo': typeof AuthenticatedNgoRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/': typeof InitiativesIndexRoute
+  '/_authenticated/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/_authenticated/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
   '/_authenticated/admin-dashboard/ngos': typeof AuthenticatedAdminDashboardNgosRoute
   '/_authenticated/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/ngo'
     | '/initiatives/$id'
     | '/initiatives/'
+    | '/admin-dashboard/leads'
     | '/admin-dashboard/members'
     | '/admin-dashboard/ngos'
     | '/admin-dashboard/profile'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/ngo'
     | '/initiatives/$id'
     | '/initiatives'
+    | '/admin-dashboard/leads'
     | '/admin-dashboard/members'
     | '/admin-dashboard/ngos'
     | '/admin-dashboard/profile'
@@ -307,6 +319,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ngo'
     | '/initiatives/$id'
     | '/initiatives/'
+    | '/_authenticated/admin-dashboard/leads'
     | '/_authenticated/admin-dashboard/members'
     | '/_authenticated/admin-dashboard/ngos'
     | '/_authenticated/admin-dashboard/profile'
@@ -488,6 +501,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardMembersRouteImport
       parentRoute: typeof AuthenticatedAdminDashboardRoute
     }
+    '/_authenticated/admin-dashboard/leads': {
+      id: '/_authenticated/admin-dashboard/leads'
+      path: '/leads'
+      fullPath: '/admin-dashboard/leads'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardLeadsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRoute
+    }
     '/_authenticated/admin-dashboard/initiatives/': {
       id: '/_authenticated/admin-dashboard/initiatives/'
       path: '/initiatives'
@@ -506,6 +526,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminDashboardRouteChildren {
+  AuthenticatedAdminDashboardLeadsRoute: typeof AuthenticatedAdminDashboardLeadsRoute
   AuthenticatedAdminDashboardMembersRoute: typeof AuthenticatedAdminDashboardMembersRoute
   AuthenticatedAdminDashboardNgosRoute: typeof AuthenticatedAdminDashboardNgosRoute
   AuthenticatedAdminDashboardProfileRoute: typeof AuthenticatedAdminDashboardProfileRoute
@@ -517,6 +538,8 @@ interface AuthenticatedAdminDashboardRouteChildren {
 
 const AuthenticatedAdminDashboardRouteChildren: AuthenticatedAdminDashboardRouteChildren =
   {
+    AuthenticatedAdminDashboardLeadsRoute:
+      AuthenticatedAdminDashboardLeadsRoute,
     AuthenticatedAdminDashboardMembersRoute:
       AuthenticatedAdminDashboardMembersRoute,
     AuthenticatedAdminDashboardNgosRoute: AuthenticatedAdminDashboardNgosRoute,

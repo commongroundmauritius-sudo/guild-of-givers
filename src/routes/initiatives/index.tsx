@@ -84,6 +84,10 @@ function InitiativesPage() {
                 const current = Number(i.current_amount_mur) || 0;
                 const progress = Math.min(100, Math.round((current / goal) * 100));
 
+                const ngoName = Array.isArray(i.ngos)
+                  ? i.ngos[0]?.name
+                  : (i.ngos as any)?.name;
+
                 return (
                   <Link
                     key={i.id}
@@ -112,7 +116,7 @@ function InitiativesPage() {
                     <div className="flex flex-1 flex-col p-8">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
-                          {(i.ngos as any)?.name || "NGO Partner"}
+                          {ngoName || "NGO Partner"}
                         </span>
                       </div>
 

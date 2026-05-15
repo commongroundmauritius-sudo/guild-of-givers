@@ -42,16 +42,16 @@ function InitiativeDetailPage() {
   if (isLoading) {
     return (
       <SiteLayout>
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <Skeleton className="h-8 w-32 rounded-full" />
-          <div className="mt-8 grid gap-12 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-6">
-              <Skeleton className="aspect-video w-full rounded-[2rem]" />
-              <Skeleton className="h-12 w-3/4" />
-              <Skeleton className="h-32 w-full" />
-            </div>
-            <div className="space-y-6">
-              <Skeleton className="h-[400px] w-full rounded-[2rem]" />
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="space-y-8">
+            <Skeleton className="h-[40vh] w-full rounded-[3rem]" />
+            <div className="grid gap-12 lg:grid-cols-3">
+              <div className="space-y-6 lg:col-span-2">
+                <Skeleton className="h-12 w-2/3" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+              <Skeleton className="h-[500px] w-full rounded-[2.5rem]" />
             </div>
           </div>
         </div>
@@ -62,12 +62,12 @@ function InitiativeDetailPage() {
   if (error || !initiative) {
     return (
       <SiteLayout>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
-          <div className="rounded-full bg-red-50/50 p-4 text-red-500">
-            <ShieldCheck className="h-10 w-10" />
+        <div className="mx-auto max-w-3xl px-4 py-32 text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
+            <Heart className="h-8 w-8" />
           </div>
-          <h1 className="mt-6 font-display text-3xl font-semibold text-primary">Initiative not found</h1>
-          <p className="mt-2 text-muted-foreground">The initiative you're looking for might have been moved or is no longer public.</p>
+          <h1 className="font-display text-3xl font-bold text-primary">Initiative not found</h1>
+          <p className="mt-4 text-muted-foreground">The initiative you are looking for might have been removed or is currently under review.</p>
           <Link
             to="/initiatives"
             className="mt-8 inline-flex items-center gap-2 font-semibold text-primary hover:underline"
@@ -81,6 +81,7 @@ function InitiativeDetailPage() {
 
   const progress = Math.min(100, ((Number(initiative.current_amount_mur) || 0) / (Number(initiative.goal_amount_mur) || 1)) * 100);
   const gallery = Array.isArray(initiative.gallery_urls) ? initiative.gallery_urls : [];
+  const ngo = Array.isArray(initiative.ngos) ? initiative.ngos[0] : (initiative.ngos as any);
 
   return (
     <SiteLayout>
@@ -122,17 +123,17 @@ function InitiativeDetailPage() {
               <div className="flex flex-wrap items-center gap-6 border-b border-border/60 pb-8">
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-full bg-muted">
-                    {(initiative.ngos as any)?.logo_url ? (
-                      <img src={(initiative.ngos as any).logo_url} alt={(initiative.ngos as any).name} className="h-full w-full object-cover" />
+                    {ngo?.logo_url ? (
+                      <img src={ngo.logo_url} alt={ngo.name} className="h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold uppercase">
-                        {(initiative.ngos as any)?.name?.charAt(0) || "N"}
+                        {ngo?.name?.charAt(0) || "N"}
                       </div>
                     )}
                   </div>
                   <div>
                     <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Managed by</span>
-                    <span className="text-sm font-semibold text-primary">{(initiative.ngos as any)?.name}</span>
+                    <span className="text-sm font-semibold text-primary">{ngo?.name || "NGO Partner"}</span>
                   </div>
                 </div>
 
@@ -158,7 +159,7 @@ function InitiativeDetailPage() {
                 <div className="mt-10 space-y-6 border-t border-border/40 pt-10 text-primary/90">
                   <h3 className="font-display text-2xl font-semibold text-primary">The Challenge & Solution</h3>
                   {initiative.content ? (
-                    initiative.content.split('\n').map((para, idx) => (
+                    initiative.content.split('\n').map((para: string, idx: number) => (
                       <p key={idx} className="text-base leading-relaxed">{para}</p>
                     ))
                   ) : (
