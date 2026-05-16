@@ -1,20 +1,134 @@
-I have rebranded and restructured the top navigation and user account experience for admins and members.
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import fs from "node:fs";
+import path from "node:path";
 
-Summary of changes:
-1. Updated `useAuth` hook and `AuthProvider` to fetch and provide profile and subscription data.
-2. Refactored `Header.tsx` to be role-aware, showing different links and a profile dropdown based on the user's role and subscription status.
-3. Implemented new authenticated routes for Admin and Member:
-   - `/admin/profile`: Detailed admin info, activity history, and managed initiatives.
-   - `/admin/settings`: Form to update admin profile details.
-   - `/member/profile`: Member contact info, contribution summary, and supported initiatives.
-   - `/member/settings`: Form to update member profile details.
-4. Updated existing `/admin` and `/member` dashboards for a consistent role-based UX.
-5. Added `updateProfile` server function to handle profile updates.
-6. Added `bio` and `address` columns to the `profiles` table via migration.
-7. Created common UI components `Avatar` and `DropdownMenu`.
-8. Fixed the logic to hide "Become a Member" and show "Member Dashboard" for subscribed users.
+export default defineConfig({
+  tanstackStart: {
+    server: { entry: "server" },
+  },
+  plugins: [
+    {
+      name: "copy-worker-to-client",
+      apply: "build",
+      async closeBundle() {
+        const serverDist = path.resolve(process.cwd(), "dist/server");
+        const clientDist = path.resolve(process.cwd(), "dist/client");
+        const serverFile = path.resolve(serverDist, "server.js");
+        const targetFile = path.resolve(clientDist, "_worker.js");
 
-Verification:
-- Build passes (`npm run build`).
-- Frontend verification script confirmed header rendering for guest users.
-- Route verification script confirmed proper redirection for protected routes.
+        if (fs.existsSync(serverFile)) {
+          console.log(`Copying ${serverFile} to ${targetFile}`);
+          fs.copyFileSync(serverFile, targetFile);
+
+          const bundleJson = path.resolve(clientDist, "_worker_bundle.json");
+          fs.writeFileSync(bundleJson, JSON.stringify({
+            version: 1,
+            main: "_worker.js",
+            compatibility_date: "2026-05-15"
+          }));
+
+          // Also update wrangler.json to point to the artifacts
+          const wranglerJson = path.resolve(clientDist, "wrangler.json");
+          if (fs.existsSync(wranglerJson)) {
+            const config = JSON.parse(fs.readFileSync(wranglerJson, "utf-8"));
+            config.main = "_worker.js";
+            config.artifacts = [
+              {
+                name: "main",
+                path: "_worker.js"
+              },
+              {
+                name: "bundle",
+                path: "_worker_bundle.json"
+              }
+            ];
+            fs.writeFileSync(wranglerJson, JSON.stringify(config, null, 2));
+          }
+        }
+      }
+    }
+  ]
+});
+\n--- BUILD ARTIFACTS ---\n
+-rw-rw-r-- 1 jules jules 3862 May 16 22:13 dist/client/_worker.js
+-rw-rw-r-- 1 jules jules   67 May 16 22:13 dist/client/_worker_bundle.json
+-rw-rw-r-- 1 jules jules 1510 May 16 22:13 dist/client/wrangler.json
+\n--- WRANGLER JSON ---\n
+{
+  "topLevelName": "tanstack-start-ts",
+  "dev": {
+    "ip": "localhost",
+    "local_protocol": "http",
+    "upstream_protocol": "http",
+    "enable_containers": true,
+    "generate_types": false
+  },
+  "name": "tanstack-start-ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": [],
+  "vars": {},
+  "durable_objects": {
+    "bindings": []
+  },
+  "kv_namespaces": [],
+  "queues": {
+    "producers": [],
+    "consumers": []
+  },
+  "r2_buckets": [],
+  "d1_databases": [],
+  "vectorize": [],
+  "ai_search_namespaces": [],
+  "ai_search": [],
+  "hyperdrive": [],
+  "workflows": [],
+  "secrets_store_secrets": [],
+  "artifacts": [
+    {
+      "name": "main",
+      "path": "_worker.js"
+    },
+    {
+      "name": "bundle",
+      "path": "_worker_bundle.json"
+    }
+  ],
+  "services": [],
+  "analytics_engine_datasets": [],
+  "unsafe_hello_world": [],
+  "flagship": [],
+  "ratelimits": [],
+  "worker_loaders": [],
+  "legacy_env": true,
+  "jsx_factory": "React.createElement",
+  "jsx_fragment": "React.Fragment",
+  "migrations": [],
+  "triggers": {},
+  "rules": [],
+  "build": {
+    "watch_dir": "./src"
+  },
+  "dispatch_namespaces": [],
+  "logfwdr": {
+    "bindings": []
+  },
+  "assets": {
+    "directory": "."
+  },
+  "observability": {
+    "enabled": true
+  },
+  "python_modules": {
+    "exclude": [
+      "**/*.pyc"
+    ]
+  },
+  "define": {},
+  "cloudchamber": {},
+  "send_email": [],
+  "mtls_certificates": [],
+  "pipelines": [],
+  "vpc_services": [],
+  "vpc_networks": [],
+  "main": "_worker.js"
+}
