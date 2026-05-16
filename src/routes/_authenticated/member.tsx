@@ -1,4 +1,5 @@
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { useMemo } from "react";
 
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -24,10 +25,18 @@ export const Route = createFileRoute("/_authenticated/member")({
 });
 
 function MemberDashboard() {
-  useRealtimeSync("initiatives", [["all-initiatives"]]);
+  const queryKeys = useMemo(() => [[ "all-initiatives" ]], []);
+  useRealtimeSync("initiatives", queryKeys);
   const { user, profile, isSubscribed, signOut } = useAuth();
+  const { role, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  useEffect(() => {
+    if (!authLoading && role && role !== "member") {
+      toast.error("Unauthorized: Member access required");
+      navigate({ to: "/dashboard" });
+    }
+  }, [role, authLoading, navigate]);
 
   const { data: subscription } = useQuery({
     queryKey: ["subscription", user?.id],

@@ -23,8 +23,9 @@ function LoginPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setSubmitting(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email.trim().toLowerCase(), password);
     setSubmitting(false);
     if (error) {
       toast.error(error.message);

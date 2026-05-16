@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/admin-dashboard/leads")({
 
 function AdminLeadsPage() {
   const queryClient = useQueryClient();
+  const { role } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data: leads, isLoading } = useQuery({
@@ -30,6 +31,7 @@ function AdminLeadsPage() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      if (role !== "admin") throw new Error("Unauthorized");
       const { error } = await supabase.from("leads").update({ status }).eq("id", id);
       if (error) throw error;
     },

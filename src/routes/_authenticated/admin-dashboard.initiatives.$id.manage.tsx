@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Loader2,
   ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/$id/manage")({
@@ -69,6 +70,7 @@ function InitiativeEditPage() {
         goal_amount_mur: initiative.goal_amount_mur || 0,
         image_url: initiative.image_url || "",
         gallery_urls: initiative.gallery_urls || [],
+        is_approved: initiative.is_approved || false,
         is_published: initiative.is_published || false,
       });
     }
@@ -171,6 +173,10 @@ function InitiativeEditPage() {
     setFormData((prev: Record<string, unknown>) => ({ ...prev, is_published: !prev.is_published }));
   };
 
+  const handleToggleApproved = () => {
+    setFormData((prev: Record<string, unknown>) => ({ ...prev, is_approved: !prev.is_approved }));
+  };
+
   const handleAddGalleryUrl = () => {
     setFormData((prev: Record<string, unknown>) => ({
       ...prev,
@@ -220,6 +226,24 @@ function InitiativeEditPage() {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              <button
+                onClick={handleToggleApproved}
+                className={`flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium transition ${
+                  formData.is_approved
+                    ? "border border-amber-500/20 bg-amber-500/10 text-amber-600"
+                    : "border border-border bg-muted text-muted-foreground"
+                }`}
+              >
+                {formData.is_approved ? (
+                  <>
+                    <ShieldCheck className="h-4 w-4" /> Approved
+                  </>
+                ) : (
+                  <>
+                    <ShieldAlert className="h-4 w-4" /> Pending
+                  </>
+                )}
+              </button>
               <button
                 onClick={handleTogglePublished}
                 className={`flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium transition ${
