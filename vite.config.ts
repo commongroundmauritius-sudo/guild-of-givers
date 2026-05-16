@@ -1,15 +1,51 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, cloudflare (build-only),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import fs from "node:fs";
+import path from "node:path";
 
-// Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-// @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
 export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  plugins: [
+    {
+      name: "copy-worker-to-client",
+      apply: "build",
+      async closeBundle() {
+        const serverDist = path.resolve(process.cwd(), "dist/server");
+        const clientDist = path.resolve(process.cwd(), "dist/client");
+        const serverFile = path.resolve(serverDist, "server.js");
+        const targetFile = path.resolve(clientDist, "_worker.js");
+
+        if (fs.existsSync(serverFile)) {
+          console.log(`Copying ${serverFile} to ${targetFile}`);
+          fs.copyFileSync(serverFile, targetFile);
+
+          const bundleJson = path.resolve(clientDist, "_worker_bundle.json");
+          fs.writeFileSync(bundleJson, JSON.stringify({
+            version: 1,
+            main: "_worker.js",
+            compatibility_date: "2026-05-15"
+          }));
+
+          // Also update wrangler.json to point to the artifacts
+          const wranglerJson = path.resolve(clientDist, "wrangler.json");
+          if (fs.existsSync(wranglerJson)) {
+            const config = JSON.parse(fs.readFileSync(wranglerJson, "utf-8"));
+            config.main = "_worker.js";
+            config.artifacts = [
+              {
+                name: "main",
+                path: "_worker.js"
+              },
+              {
+                name: "bundle",
+                path: "_worker_bundle.json"
+              }
+            ];
+            fs.writeFileSync(wranglerJson, JSON.stringify(config, null, 2));
+          }
+        }
+      }
+    }
+  ]
 });
