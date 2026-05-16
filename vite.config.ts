@@ -6,6 +6,16 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  vite: {
+    ssr: {
+      noExternal: true,
+    },
+    build: {
+      rollupOptions: {
+        external: ["node:async_hooks", "node:events", "node:http", "node:https", "node:stream", "node:util", "node:zlib"],
+      },
+    },
+  },
   plugins: [
     {
       name: "copy-worker-to-client",
@@ -17,6 +27,16 @@ export default defineConfig({
         const targetFile = path.resolve(clientDist, "_worker.js");
 
         if (fs.existsSync(serverFile)) {
+          // Copy all server assets to client assets to ensure relative imports work
+          const serverAssets = path.resolve(serverDist, "assets");
+          const clientAssets = path.resolve(clientDist, "assets");
+          if (fs.existsSync(serverAssets)) {
+            const files = fs.readdirSync(serverAssets);
+            for (const file of files) {
+              fs.copyFileSync(path.resolve(serverAssets, file), path.resolve(clientAssets, file));
+            }
+          }
+
           console.log(`Copying ${serverFile} to ${targetFile}`);
           fs.copyFileSync(serverFile, targetFile);
 
@@ -27,20 +47,13 @@ export default defineConfig({
             compatibility_date: "2026-05-15"
           }));
 
-          // Also update wrangler.json to point to the artifacts
           const wranglerJson = path.resolve(clientDist, "wrangler.json");
           if (fs.existsSync(wranglerJson)) {
             const config = JSON.parse(fs.readFileSync(wranglerJson, "utf-8"));
             config.main = "_worker.js";
             config.artifacts = [
-              {
-                name: "main",
-                path: "_worker.js"
-              },
-              {
-                name: "bundle",
-                path: "_worker_bundle.json"
-              }
+              { name: "main", path: "_worker.js" },
+              { name: "bundle", path: "_worker_bundle.json" }
             ];
             fs.writeFileSync(wranglerJson, JSON.stringify(config, null, 2));
           }
