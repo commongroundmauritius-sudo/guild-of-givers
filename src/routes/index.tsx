@@ -1,4 +1,5 @@
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { useMemo } from "react";
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -30,7 +31,8 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  useRealtimeSync("initiatives", [["homepage-initiatives"]]);
+  const queryKeys = useMemo(() => [[ "homepage-initiatives" ]], []);
+  useRealtimeSync("initiatives", queryKeys);
   return (
     <SiteLayout>
       <Hero />
@@ -217,7 +219,8 @@ function Why() {
 }
 
 function Initiatives() {
-  useRealtimeSync("initiatives", [["homepage-initiatives"]]);
+  const queryKeys = useMemo(() => [[ "homepage-initiatives" ]], []);
+  useRealtimeSync("initiatives", queryKeys);
 
   const {
     data: initiatives,
@@ -275,7 +278,9 @@ function Initiatives() {
           </div>
         ) : error ? (
           <div className="mt-10 rounded-3xl border border-dashed border-red-200 bg-red-50/30 p-12 text-center">
-            <p className="text-red-600 font-medium">Failed to load initiatives. Please try again later.</p>
+            <p className="text-red-600 font-medium">
+              Failed to load initiatives. Please try again later.
+            </p>
           </div>
         ) : initiatives && initiatives.length > 0 ? (
           <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -293,7 +298,7 @@ function Initiatives() {
                     />
                   ) : (
                     <div className="h-full w-full bg-muted/60 flex items-center justify-center">
-                       <Sparkles className="h-8 w-8 text-primary/20" />
+                      <Sparkles className="h-8 w-8 text-primary/20" />
                     </div>
                   )}
                 </div>
@@ -309,7 +314,7 @@ function Initiatives() {
                   </p>
                   <div className="mt-8 flex items-center justify-between">
                     <div className="text-xs font-medium text-primary">
-                      Rs {Number(i.current_amount_mur || 0).toLocaleString()} / Rs{" "}
+                      Rs {Number(i.current_amount_mur || 0).toLocaleString()} / Rs
                       {Number(i.goal_amount_mur || 0).toLocaleString()}
                     </div>
                     <Link

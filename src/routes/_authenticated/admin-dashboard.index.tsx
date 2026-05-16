@@ -21,9 +21,9 @@ function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const [init, ngos, members, reports] = await Promise.all([
-        supabase.from("initiatives").select("id", { count: "exact", head: true }),
-        supabase.from("ngos").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      const [init, initPending, ngos, members, reports] = await Promise.all([
+        supabase.from("initiatives").select("id", { count: "exact", head: true }), supabase.from("initiatives").select("id", { count: "exact", head: true }).eq("is_approved", false),
+        supabase.from("ngos").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
         supabase
           .from("user_roles")
           .select("user_id", { count: "exact", head: true })
@@ -31,13 +31,13 @@ function AdminDashboard() {
         supabase
           .from("reports")
           .select("id", { count: "exact", head: true })
-          .eq("status", "pending"),
+          .eq("status", "pending_review"),
       ]);
       return {
         initiatives: init.count || 0,
         pendingNgos: ngos.count || 0,
         members: members.count || 0,
-        pendingReports: reports.count || 0,
+        pendingReports: reports.count || 0, pendingInitiatives: initPending.count || 0,
       };
     },
   });
@@ -54,13 +54,13 @@ function AdminDashboard() {
     },
   });
 
-  const { data: pendingReports, isLoading: reportsLoading } = useQuery({
+  const { data: pendingReports,  isLoading: reportsLoading } = useQuery({
     queryKey: ["pending-reports"],
     queryFn: async () => {
       const { data } = await supabase
         .from("reports")
         .select("*, ngos(name)")
-        .eq("status", "pending")
+        .eq("status", "pending_review")
         .limit(5);
       return data;
     },
@@ -91,6 +91,10 @@ function AdminDashboard() {
   });
 
   const moderateReport = async (reportId: string, status: "approved" | "rejected") => {
+    if (role !== "admin") {
+      toast.error("Unauthorized action");
+      return;
+    }
     const { error } = await supabase.from("reports").update({ status }).eq("id", reportId);
 
     if (error) toast.error("Failed to update report");
@@ -135,7 +139,7 @@ function AdminDashboard() {
             </div>
           </div>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-5">
             {[
               {
                 label: "Total Initiatives",
@@ -164,6 +168,13 @@ function AdminDashboard() {
                 icon: FileText,
                 color: "text-forest-soft",
                 bg: "bg-green-50",
+              },
+              {
+                label: "Pending Initiatives",
+                value: stats?.pendingInitiatives ?? "0",
+                icon: Heart,
+                color: "text-red-600",
+                bg: "bg-red-50",
               },
             ].map((stat) => (
               <div
@@ -366,7 +377,7 @@ function AdminDashboard() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-bold text-teal-600">
-                            Rs {Number(l.amount_mur).toLocaleString()}
+                            Rs {Number(l.amount_mur || 0).toLocaleString()}
                           </p>
                           <span className="text-[9px] font-bold uppercase text-muted-foreground">
                             {l.status}

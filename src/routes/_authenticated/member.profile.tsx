@@ -1,3 +1,4 @@
+import { getJoinedField } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -121,11 +122,11 @@ function MemberProfile() {
                         className="rounded-2xl border border-border/40 bg-card p-5 transition hover:shadow-md"
                       >
                         <p className="text-[10px] font-bold text-teal-600 uppercase">
-                          {p.initiatives?.ngos?.name}
+                          {getJoinedField(p.initiatives, "ngos")?.name || "NGO Partner"}
                         </p>
-                        <h3 className="mt-1 font-semibold text-primary">{p.initiatives?.title}</h3>
+                        <h3 className="mt-1 font-semibold text-primary">{getJoinedField(p.initiatives, "title") || "Initiative Title"}</h3>
                         <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
-                          {p.initiatives?.description}
+                          {getJoinedField(p.initiatives, "description") || ""}
                         </p>
                       </div>
                     ))

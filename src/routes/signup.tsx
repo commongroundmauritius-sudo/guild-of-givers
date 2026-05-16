@@ -38,13 +38,14 @@ function SignupPage() {
   const finalAmount = customAmount ? Number(customAmount) || 0 : amount;
 
   const submitDetails = async () => {
+    if (submitting) return;
     setSubmitting(true);
     try {
       await createLead({
         data: {
-          email,
-          fullName,
-          phone,
+          email: email.trim().toLowerCase(),
+          fullName: fullName.trim(),
+          phone: phone.trim(),
           amount: finalAmount,
           coversFees,
         },
@@ -58,8 +59,9 @@ function SignupPage() {
   };
 
   const submitAccount = async () => {
+    if (submitting) return;
     setSubmitting(true);
-    const { error } = await signUp(email, password, {
+    const { error } = await signUp(email.trim().toLowerCase(), password, {
       full_name: fullName,
       phone: phone,
       subscription_amount: finalAmount,
@@ -73,7 +75,7 @@ function SignupPage() {
 
     // Mark lead as converted
     try {
-      await convertLead({ data: { email } });
+      await convertLead({ data: { email: email.trim().toLowerCase() } });
     } catch (e) {
       console.error("Lead conversion failed", e);
     }

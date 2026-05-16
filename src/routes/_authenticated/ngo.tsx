@@ -13,8 +13,15 @@ export const Route = createFileRoute("/_authenticated/ngo")({
 
 function NgoDashboard() {
   const { user, signOut } = useAuth();
+  const { role, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  useEffect(() => {
+    if (!authLoading && role && role !== "ngo") {
+      toast.error("Unauthorized: NGO access required");
+      navigate({ to: "/dashboard" });
+    }
+  }, [role, authLoading, navigate]);
   const [reportTitle, setReportTitle] = useState("");
   const [reportInitiativeId, setReportInitiativeId] = useState("");
   const [showInitiativeForm, setShowInitiativeForm] = useState(false);
@@ -70,7 +77,7 @@ function NgoDashboard() {
 
   const submitReportMutation = useMutation({
     mutationFn: async () => {
-      if (!ngoProfile?.id || !reportInitiativeId) throw new Error("Missing NGO or Initiative");
+      if (role !== "ngo" || !ngoProfile?.id || !reportInitiativeId) throw new Error("Unauthorized or Missing NGO/Initiative");
       const { error } = await supabase.from("reports").insert({
         ngo_id: ngoProfile.id,
         initiative_id: reportInitiativeId,
@@ -90,7 +97,7 @@ function NgoDashboard() {
 
   const submitInitiativeMutation = useMutation({
     mutationFn: async () => {
-      if (!ngoProfile?.id) throw new Error("Missing NGO context");
+      if (role !== "ngo" || !ngoProfile?.id) throw new Error("Unauthorized or Missing NGO context");
       const { error } = await supabase.from("initiatives").insert({
         ngo_id: ngoProfile.id,
         title: newInitiative.title,
@@ -206,7 +213,7 @@ function NgoDashboard() {
                       className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
                     />
                     <button
-                      onClick={() => submitInitiativeMutation.mutate()}
+                      onClick={() => { if (!newInitiative.title || !newInitiative.goal) { toast.error("Title and goal are required"); return; } submitInitiativeMutation.mutate(); }}
                       disabled={
                         submitInitiativeMutation.isPending ||
                         !newInitiative.title ||
@@ -247,7 +254,7 @@ function NgoDashboard() {
                             <span>Progress</span>
                             <span>
                               {(
-                                (Number(i.current_amount_mur) / Number(i.goal_amount_mur)) *
+                                ((Number(i.current_amount_mur) || 0) / Math.max(1, Number(i.goal_amount_mur) || 0)) *
                                 100
                               ).toFixed(0)}
                               %
@@ -257,7 +264,7 @@ function NgoDashboard() {
                             <div
                               className="h-full rounded-full bg-coral-500"
                               style={{
-                                width: `${(Number(i.current_amount_mur) / Number(i.goal_amount_mur)) * 100}%`,
+                                width: `${((Number(i.current_amount_mur) || 0) / Math.max(1, Number(i.goal_amount_mur) || 0)) * 100}%`,
                               }}
                             />
                           </div>

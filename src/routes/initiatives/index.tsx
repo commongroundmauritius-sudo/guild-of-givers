@@ -1,4 +1,5 @@
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { useMemo } from "react";
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -22,7 +23,8 @@ export const Route = createFileRoute("/initiatives/")({
 });
 
 function InitiativesPage() {
-  useRealtimeSync("initiatives", [["public-initiatives"]]);
+  const queryKeys = useMemo(() => [[ "public-initiatives" ]], []);
+  useRealtimeSync("initiatives", queryKeys);
   const {
     data: initiatives,
     isLoading,
@@ -92,7 +94,7 @@ function InitiativesPage() {
           ) : initiatives && initiatives.length > 0 ? (
             <div className="mt-16 grid gap-10 md:grid-cols-2 lg:grid-cols-3">
               {initiatives.map((i) => {
-                const goal = Number(i.goal_amount_mur) || 1;
+                const goal = Math.max(1, Number(i.goal_amount_mur) || 0);
                 const current = Number(i.current_amount_mur) || 0;
                 const progress = Math.min(100, Math.round((current / goal) * 100));
 

@@ -8,16 +8,16 @@ export const Route = createFileRoute("/_authenticated/admin-dashboard")({
 });
 
 function AdminDashboardLayout() {
-  const { user, role, loading } = useAuth();
+  const { user, role, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && (!user || role !== "admin")) {
+    if (!authLoading && (!user || role !== "admin")) {
       navigate({ to: "/dashboard" });
     }
-  }, [user, role, loading, navigate]);
+  }, [user, role, authLoading, navigate]);
 
-  if (loading) {
+  if (authLoading) {
     return (
       <SiteLayout>
         <div className="mx-auto max-w-7xl px-4 py-32 text-center text-muted-foreground">
@@ -27,7 +27,7 @@ function AdminDashboardLayout() {
     );
   }
 
-  if (role !== "admin") return null;
+  if (!authLoading && role !== "admin") return null;
 
   return <Outlet />;
 }

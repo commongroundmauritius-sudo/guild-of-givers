@@ -48,13 +48,19 @@ const MEMBER_NAV = [
   { label: "Supported", to: "/member", icon: FileText },
 ] as const;
 
+const NGO_NAV = [
+  { label: "Dashboard", to: "/ngo", icon: LayoutDashboard },
+  { label: "Initiatives", to: "/ngo", icon: Heart },
+  { label: "Reports", to: "/ngo", icon: FileText },
+] as const;
+
 export function Header() {
   const [open, setOpen] = useState(false);
   const { user, role, profile, isSubscribed, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const navItems = role === "admin" ? ADMIN_NAV : role === "member" ? MEMBER_NAV : GUEST_NAV;
+  const navItems = role === "admin" ? ADMIN_NAV : role === "ngo" ? NGO_NAV : role === "member" ? MEMBER_NAV : GUEST_NAV;
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "User";
   const initials = displayName.substring(0, 2).toUpperCase();
 
@@ -153,7 +159,7 @@ export function Header() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to={role === "admin" ? "/admin-dashboard" : "/member"}>
+                    <Link to={role === "admin" ? "/admin-dashboard" : role === "ngo" ? "/ngo" : "/member"}>
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </Link>

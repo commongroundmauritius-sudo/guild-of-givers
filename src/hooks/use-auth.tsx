@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, type AppRole } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  async function fetchAuthData(userId: string) {
+  const fetchAuthData = useCallback(async (userId: string) => {
     try {
       const [roleRes, profileRes, subRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
@@ -63,52 +63,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       else setRole("member");
 
       if (profileRes.data) setProfile(profileRes.data as Profile);
+      else setProfile(null);
 
       setIsSubscribed(!!subRes.data);
     } catch (error) {
       console.error("Error fetching auth data:", error);
     }
-  }
+  }, []);
 
-  const refreshAuth = async () => {
-    const {
-      data: { session: s },
-    } = await supabase.auth.getSession();
-    if (s?.user) {
-      await fetchAuthData(s.user.id);
-    } else {
-      setRole(null);
-      setProfile(null);
-      setIsSubscribed(false);
-    }
-  };
+  const refreshAuth = useCallback(async () => {
+    try {
+      setLoading(true);
+      const {
+        data: { session: s },
+      } = await supabase.auth.getSession();
 
-  useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        await fetchAuthData(newSession.user.id);
+      setSession(s);
+      setUser(s?.user ?? null);
+
+      if (s?.user) {
+        await fetchAuthData(s.user.id);
       } else {
         setRole(null);
         setProfile(null);
         setIsSubscribed(false);
       }
+    } catch (error) {
+      console.error("refreshAuth error:", error);
+    } finally {
       setLoading(false);
-    });
+    }
+  }, [fetchAuthData]);
 
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) {
-        fetchAuthData(s.user.id).then(() => setLoading(false));
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+
+      if (newSession?.user) {
+        setLoading(true);
+        try {
+          await fetchAuthData(newSession.user.id);
+        } finally {
+          setLoading(false);
+        }
       } else {
+        setRole(null);
+        setProfile(null);
+        setIsSubscribed(false);
         setLoading(false);
       }
     });
 
+    refreshAuth();
+
     return () => sub.subscription.unsubscribe();
-  }, []);
+  }, [fetchAuthData, refreshAuth]);
 
   const value: AuthContextValue = {
     user,
@@ -156,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(null);
         setProfile(null);
         setIsSubscribed(false);
+        setLoading(false);
       }
     },
     refreshAuth,
