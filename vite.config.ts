@@ -39,10 +39,10 @@ export default defineConfig({
 
           console.log(`Copying ${serverFile} to ${targetFile}`);
           fs.copyFileSync(serverFile, targetFile);
-
+          
           const bundleJson = path.resolve(clientDist, "_worker_bundle.json");
-          fs.writeFileSync(bundleJson, JSON.stringify({
-            version: 1,
+          fs.writeFileSync(bundleJson, JSON.stringify({ 
+            version: 1, 
             main: "_worker.js",
             compatibility_date: "2026-05-15"
           }));
