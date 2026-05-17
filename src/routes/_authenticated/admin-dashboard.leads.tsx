@@ -6,6 +6,7 @@ import { Users, Search, Mail, Phone, Calendar, Info, CheckCircle2, XCircle } fro
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/leads")({
   component: AdminLeadsPage,
