@@ -2,29 +2,13 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import fs from "node:fs";
 import path from "node:path";
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
   tanstackStart: {
     server: { entry: "server" },
   },
-  vite: {
-    ssr: {
-      noExternal: true,
-    },
-    build: {
-      rollupOptions: {
-        external: [
-          "node:async_hooks", 
-          "node:events", 
-          "node:http", 
-          "node:https", 
-          "node:stream", 
-          "node:util", 
-          "node:zlib", 
-          "node:crypto"
-        ],
-      },
-    },
-  },
+  ssr: isSsrBuild ? {
+    noExternal: true,
+  } : undefined,
   plugins: [
     {
       name: "cloudflare-pages-artifacts",
@@ -36,7 +20,7 @@ export default defineConfig({
         const targetFile = path.resolve(clientDist, "_worker.js");
 
         if (fs.existsSync(serverFile)) {
-          console.log(`Finalizing Cloudflare Pages artifacts...`);
+          console.log("Finalizing Cloudflare Pages SSR artifacts...");
           fs.copyFileSync(serverFile, targetFile);
           
           const bundleJson = path.resolve(clientDist, "_worker_bundle.json");
@@ -60,5 +44,5 @@ export default defineConfig({
       }
     }
   ]
-});
+}));
 
