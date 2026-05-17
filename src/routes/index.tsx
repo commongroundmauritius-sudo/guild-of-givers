@@ -314,7 +314,16 @@ function Initiatives() {
                   </p>
                   <div className="mt-8 flex items-center justify-between">
                     <div className="text-xs font-medium text-primary">
-                      Rs {Number(i.current_amount_mur || 0).toLocaleString()} / Rs
+                      Rs{" "}
+                      {Math.round(
+                        Math.min(
+                          100,
+                          (Number(i.current_amount_mur || 0) /
+                            Math.max(1, Number(i.goal_amount_mur || 0))) *
+                            100,
+                        ),
+                      )}
+                      % Funded • Rs
                       {Number(i.goal_amount_mur || 0).toLocaleString()}
                     </div>
                     <Link
