@@ -3,29 +3,38 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BadgeCheck, FileText, Send } from "lucide-react";
-import { useState, useEffect } from "react";
+import { BadgeCheck, Send, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated/ngo")({
-  component: NgoDashboard,
+  component: NGODashboard,
 });
 
-function NgoDashboard() {
-  const { user, signOut } = useAuth();
-  const { role, loading: authLoading } = useAuth();
-  const queryClient = useQueryClient();
+function NGODashboard() {
+  const { user, role, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [showInitiativeForm, setShowInitiativeForm] = useState(false);
+  const [newInitiative, setNewInitiative] = useState({
+    title: "",
+    description: "",
+    goal: "",
+    short_term_goals: "",
+    long_term_goals: "",
+    target_milestones: "",
+    expected_outcomes: "",
+    impact_pool_target: "0",
+  });
+  const [reportTitle, setReportTitle] = useState("");
+  const [reportInitiativeId, setReportInitiativeId] = useState("");
+
   useEffect(() => {
     if (!authLoading && role && role !== "ngo") {
-      toast.error("Unauthorized: NGO access required");
+      toast.error("Unauthorized access");
       navigate({ to: "/dashboard" });
     }
   }, [role, authLoading, navigate]);
-  const [reportTitle, setReportTitle] = useState("");
-  const [reportInitiativeId, setReportInitiativeId] = useState("");
-  const [showInitiativeForm, setShowInitiativeForm] = useState(false);
-  const [newInitiative, setNewInitiative] = useState({ title: "", description: "", goal: "" });
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -50,27 +59,28 @@ function NgoDashboard() {
     queryKey: ["ngo-initiatives", ngoProfile?.id],
     queryFn: async () => {
       if (!ngoProfile?.id) return [];
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("initiatives")
-        .select("*, ngos(name)")
+        .select("*")
         .eq("ngo_id", ngoProfile.id)
         .order("created_at", { ascending: false });
+      if (error) throw error;
       return data;
     },
     enabled: !!ngoProfile?.id,
   });
 
-  const { data: totalFunding } = useQuery({
-    queryKey: ["ngo-total-funding", ngoProfile?.id],
+  const { data: reports } = useQuery({
+    queryKey: ["ngo-reports", ngoProfile?.id],
     queryFn: async () => {
-      if (!ngoProfile?.id) return 0;
+      if (!ngoProfile?.id) return [];
       const { data, error } = await supabase
-        .from("allocations")
-        .select("amount_mur, initiatives!inner(ngo_id)")
-        .eq("initiatives.ngo_id", ngoProfile.id);
-
+        .from("reports")
+        .select("*, initiatives(title)")
+        .eq("ngo_id", ngoProfile.id)
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return data.reduce((sum, item) => sum + Number(item.amount_mur), 0);
+      return data;
     },
     enabled: !!ngoProfile?.id,
   });
@@ -104,6 +114,11 @@ function NgoDashboard() {
         title: newInitiative.title,
         description: newInitiative.description,
         goal_amount_mur: Number(newInitiative.goal),
+        short_term_goals: newInitiative.short_term_goals,
+        long_term_goals: newInitiative.long_term_goals,
+        target_milestones: newInitiative.target_milestones,
+        expected_outcomes: newInitiative.expected_outcomes,
+        impact_pool_target: Number(newInitiative.impact_pool_target),
         status: "active",
         is_approved: false,
       });
@@ -111,27 +126,50 @@ function NgoDashboard() {
     },
     onSuccess: () => {
       toast.success("Initiative submitted for approval");
-      setNewInitiative({ title: "", description: "", goal: "" });
+      setNewInitiative({
+        title: "",
+        description: "",
+        goal: "",
+        short_term_goals: "",
+        long_term_goals: "",
+        target_milestones: "",
+        expected_outcomes: "",
+        impact_pool_target: "0",
+      });
       setShowInitiativeForm(false);
       refetchInitiatives();
     },
     onError: (err: Error) => toast.error(err.message),
   });
 
+  if (authLoading) {
+    return (
+      <SiteLayout>
+        <div className="flex h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-coral-500" />
+        </div>
+      </SiteLayout>
+    );
+  }
+
+  const totalFunding = initiatives?.reduce(
+    (acc, i) => acc + (Number(i.current_amount_mur) || 0),
+    0,
+  );
+
   return (
     <SiteLayout>
-      <section>
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+      <section className="min-h-screen bg-muted/30 py-20 font-inter">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-6">
             <div>
-              <span className="kicker">Organization</span>
-              <div className="flex items-center gap-3 mt-3">
-                <h1 className="font-display text-4xl font-semibold text-coral-500 sm:text-5xl">
-                  NGO Dashboard
+              <div className="flex items-center gap-3">
+                <h1 className="font-display text-4xl font-semibold text-primary">
+                  {ngoProfile?.name || "NGO Dashboard"}
                 </h1>
                 {ngoProfile?.is_verified && (
                   <div
-                    className="mt-2 flex items-center gap-1.5 rounded-full bg-forest-soft/10 px-3 py-1 text-xs font-medium text-forest-soft"
+                    className="flex items-center gap-1 rounded-full bg-forest-soft/10 px-3 py-1 text-xs font-medium text-forest-soft"
                     title="This organization has been verified by CommonGround Admins"
                   >
                     <BadgeCheck className="h-4 w-4" />
@@ -213,6 +251,52 @@ function NgoDashboard() {
                       onChange={(e) => setNewInitiative({ ...newInitiative, goal: e.target.value })}
                       className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
                     />
+                    <textarea
+                      placeholder="Short-term Goals"
+                      value={newInitiative.short_term_goals}
+                      onChange={(e) =>
+                        setNewInitiative({ ...newInitiative, short_term_goals: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20 h-24"
+                    />
+                    <textarea
+                      placeholder="Long-term Goals"
+                      value={newInitiative.long_term_goals}
+                      onChange={(e) =>
+                        setNewInitiative({ ...newInitiative, long_term_goals: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20 h-24"
+                    />
+                    <textarea
+                      placeholder="Target Milestones"
+                      value={newInitiative.target_milestones}
+                      onChange={(e) =>
+                        setNewInitiative({ ...newInitiative, target_milestones: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20 h-24"
+                    />
+                    <textarea
+                      placeholder="Expected Outcomes"
+                      value={newInitiative.expected_outcomes}
+                      onChange={(e) =>
+                        setNewInitiative({ ...newInitiative, expected_outcomes: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20 h-24"
+                    />
+                    <div>
+                      <label className="text-xs font-medium text-coral-500 uppercase">
+                        Impact Pool Target (MUR)
+                      </label>
+                      <input
+                        placeholder="Impact Pool Target"
+                        type="number"
+                        value={newInitiative.impact_pool_target}
+                        onChange={(e) =>
+                          setNewInitiative({ ...newInitiative, impact_pool_target: e.target.value })
+                        }
+                        className="mt-1 w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
+                      />
+                    </div>
                     <button
                       onClick={() => {
                         if (!newInitiative.title || !newInitiative.goal) {

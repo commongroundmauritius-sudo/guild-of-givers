@@ -20,6 +20,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InitiativesIndexRouteImport } from './routes/initiatives/index'
 import { Route as InitiativesIdRouteImport } from './routes/initiatives/$id'
+import { Route as EntitiesIdRouteImport } from './routes/entities.$id'
 import { Route as AuthenticatedNgoRouteImport } from './routes/_authenticated/ngo'
 import { Route as AuthenticatedMemberRouteImport } from './routes/_authenticated/member'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -87,6 +88,11 @@ const InitiativesIndexRoute = InitiativesIndexRouteImport.update({
 const InitiativesIdRoute = InitiativesIdRouteImport.update({
   id: '/initiatives/$id',
   path: '/initiatives/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntitiesIdRoute = EntitiesIdRouteImport.update({
+  id: '/entities/$id',
+  path: '/entities/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedNgoRoute = AuthenticatedNgoRouteImport.update({
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRouteWithChildren
   '/ngo': typeof AuthenticatedNgoRoute
+  '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/': typeof InitiativesIndexRoute
   '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRouteWithChildren
   '/ngo': typeof AuthenticatedNgoRoute
+  '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives': typeof InitiativesIndexRoute
   '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/member': typeof AuthenticatedMemberRouteWithChildren
   '/_authenticated/ngo': typeof AuthenticatedNgoRoute
+  '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/': typeof InitiativesIndexRoute
   '/_authenticated/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/member'
     | '/ngo'
+    | '/entities/$id'
     | '/initiatives/$id'
     | '/initiatives/'
     | '/admin-dashboard/leads'
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/member'
     | '/ngo'
+    | '/entities/$id'
     | '/initiatives/$id'
     | '/initiatives'
     | '/admin-dashboard/leads'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/member'
     | '/_authenticated/ngo'
+    | '/entities/$id'
     | '/initiatives/$id'
     | '/initiatives/'
     | '/_authenticated/admin-dashboard/leads'
@@ -341,6 +353,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PartnerRoute: typeof PartnerRoute
   SignupRoute: typeof SignupRoute
+  EntitiesIdRoute: typeof EntitiesIdRoute
   InitiativesIdRoute: typeof InitiativesIdRoute
   InitiativesIndexRoute: typeof InitiativesIndexRoute
 }
@@ -422,6 +435,13 @@ declare module '@tanstack/react-router' {
       path: '/initiatives/$id'
       fullPath: '/initiatives/$id'
       preLoaderRoute: typeof InitiativesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entities/$id': {
+      id: '/entities/$id'
+      path: '/entities/$id'
+      fullPath: '/entities/$id'
+      preLoaderRoute: typeof EntitiesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/ngo': {
@@ -602,6 +622,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PartnerRoute: PartnerRoute,
   SignupRoute: SignupRoute,
+  EntitiesIdRoute: EntitiesIdRoute,
   InitiativesIdRoute: InitiativesIdRoute,
   InitiativesIndexRoute: InitiativesIndexRoute,
 }
