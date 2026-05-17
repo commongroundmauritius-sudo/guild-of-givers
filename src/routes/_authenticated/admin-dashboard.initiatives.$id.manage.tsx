@@ -29,7 +29,7 @@ function InitiativeEditPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { role, user, loading: authLoading } = useAuth();
-  const [formData, setFormData] = useState<Record<string, unknown> | null>(null);
+  const [formData, setFormData] = useState<any>(null);
 
   useEffect(() => {
     if (!authLoading && role && role !== "admin") {
