@@ -1,8 +1,15 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig(({ isSsrBuild }) => ({
+export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  ssr: isSsrBuild ? { noExternal: true } : undefined,
-}));
+  vite: {
+    ssr: { noExternal: true },
+    environments: {
+      ssr: {
+        resolve: { noExternal: true },
+      },
+    },
+  },
+});
