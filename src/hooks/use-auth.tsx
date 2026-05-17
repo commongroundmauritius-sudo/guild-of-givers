@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, type AppRole } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 interface Profile {
   id: string;
@@ -41,91 +41,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [role, setRole] = useState<AppRole | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchAuthData = useCallback(async (userId: string) => {
-    try {
+  // Use React Query for auth data to get better caching and stale-while-revalidate behavior
+  const { data: authData } = useQuery({
+    queryKey: ["auth-data", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+
       const [roleRes, profileRes, subRes] = await Promise.all([
-        supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
         supabase
           .from("subscriptions")
           .select("status")
-          .eq("user_id", userId)
+          .eq("user_id", user.id)
           .eq("status", "active")
           .maybeSingle(),
       ]);
 
-      if (roleRes.data) setRole(roleRes.data.role as AppRole);
-      else setRole("member");
-
-      if (profileRes.data) setProfile(profileRes.data as Profile);
-      else setProfile(null);
-
-      setIsSubscribed(!!subRes.data);
-    } catch (error) {
-      console.error("Error fetching auth data:", error);
-    }
-  }, []);
+      return {
+        role: (roleRes.data?.role as AppRole) ?? "member",
+        profile: profileRes.data as Profile | null,
+        isSubscribed: !!subRes.data,
+      };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false, // Prevent focus-triggered full reloads
+  });
 
   const refreshAuth = useCallback(async () => {
     try {
-      setLoading(true);
       const {
         data: { session: s },
       } = await supabase.auth.getSession();
 
       setSession(s);
       setUser(s?.user ?? null);
-
-      if (s?.user) {
-        await fetchAuthData(s.user.id);
-      } else {
-        setRole(null);
-        setProfile(null);
-        setIsSubscribed(false);
-      }
     } catch (error) {
       console.error("refreshAuth error:", error);
     } finally {
       setLoading(false);
     }
-  }, [fetchAuthData]);
+  }, []);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    // Initial session fetch
+    refreshAuth();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      setLoading(false);
 
-      if (newSession?.user) {
-        setLoading(true);
-        try {
-          await fetchAuthData(newSession.user.id);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setRole(null);
-        setProfile(null);
-        setIsSubscribed(false);
-        setLoading(false);
+      if (_event === "SIGNED_OUT") {
+        queryClient.clear();
       }
     });
 
-    refreshAuth();
-
-    return () => sub.subscription.unsubscribe();
-  }, [fetchAuthData, refreshAuth]);
+    return () => subscription.unsubscribe();
+  }, [refreshAuth, queryClient]);
 
   const value: AuthContextValue = {
     user,
     session,
-    role,
-    profile,
-    isSubscribed,
+    role: authData?.role ?? null,
+    profile: authData?.profile ?? null,
+    isSubscribed: authData?.isSubscribed ?? false,
     loading,
     signIn: async (email, password) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -158,14 +144,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error("Supabase signOut error:", error);
       } finally {
-        // Purge all cached data
-        queryClient.clear();
-        // Explicitly clear state for immediate UI update
+        // queryClient.clear() is handled in onAuthStateChange SIGNED_OUT
         setUser(null);
         setSession(null);
-        setRole(null);
-        setProfile(null);
-        setIsSubscribed(false);
         setLoading(false);
       }
     },
