@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/member")({
 });
 
 function MemberDashboard() {
-  const queryKeys = useMemo(() => [[ "all-initiatives" ]], []);
+  const queryKeys = useMemo(() => [["all-initiatives"]], []);
   useRealtimeSync("initiatives", queryKeys);
   const { user, profile, isSubscribed, signOut } = useAuth();
   const { role, loading: authLoading } = useAuth();

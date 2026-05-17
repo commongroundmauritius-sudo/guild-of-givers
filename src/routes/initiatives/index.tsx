@@ -23,7 +23,7 @@ export const Route = createFileRoute("/initiatives/")({
 });
 
 function InitiativesPage() {
-  const queryKeys = useMemo(() => [[ "public-initiatives" ]], []);
+  const queryKeys = useMemo(() => [["public-initiatives"]], []);
   useRealtimeSync("initiatives", queryKeys);
   const {
     data: initiatives,

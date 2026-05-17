@@ -31,7 +31,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const queryKeys = useMemo(() => [[ "homepage-initiatives" ]], []);
+  const queryKeys = useMemo(() => [["homepage-initiatives"]], []);
   useRealtimeSync("initiatives", queryKeys);
   return (
     <SiteLayout>
@@ -219,7 +219,7 @@ function Why() {
 }
 
 function Initiatives() {
-  const queryKeys = useMemo(() => [[ "homepage-initiatives" ]], []);
+  const queryKeys = useMemo(() => [["homepage-initiatives"]], []);
   useRealtimeSync("initiatives", queryKeys);
 
   const {

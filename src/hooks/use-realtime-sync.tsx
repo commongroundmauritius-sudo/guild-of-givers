@@ -27,7 +27,7 @@ export function useRealtimeSync(table: string, queryKeys: string[][]) {
           queryKeys.forEach((key) => {
             queryClient.invalidateQueries({ queryKey: key });
           });
-        }
+        },
       )
       .subscribe();
 

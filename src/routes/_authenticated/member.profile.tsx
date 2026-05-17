@@ -124,7 +124,9 @@ function MemberProfile() {
                         <p className="text-[10px] font-bold text-teal-600 uppercase">
                           {getJoinedField(p.initiatives, "ngos")?.name || "NGO Partner"}
                         </p>
-                        <h3 className="mt-1 font-semibold text-primary">{getJoinedField(p.initiatives, "title") || "Initiative Title"}</h3>
+                        <h3 className="mt-1 font-semibold text-primary">
+                          {getJoinedField(p.initiatives, "title") || "Initiative Title"}
+                        </h3>
                         <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
                           {getJoinedField(p.initiatives, "description") || ""}
                         </p>

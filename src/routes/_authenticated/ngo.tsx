@@ -77,7 +77,8 @@ function NgoDashboard() {
 
   const submitReportMutation = useMutation({
     mutationFn: async () => {
-      if (role !== "ngo" || !ngoProfile?.id || !reportInitiativeId) throw new Error("Unauthorized or Missing NGO/Initiative");
+      if (role !== "ngo" || !ngoProfile?.id || !reportInitiativeId)
+        throw new Error("Unauthorized or Missing NGO/Initiative");
       const { error } = await supabase.from("reports").insert({
         ngo_id: ngoProfile.id,
         initiative_id: reportInitiativeId,
@@ -213,7 +214,13 @@ function NgoDashboard() {
                       className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
                     />
                     <button
-                      onClick={() => { if (!newInitiative.title || !newInitiative.goal) { toast.error("Title and goal are required"); return; } submitInitiativeMutation.mutate(); }}
+                      onClick={() => {
+                        if (!newInitiative.title || !newInitiative.goal) {
+                          toast.error("Title and goal are required");
+                          return;
+                        }
+                        submitInitiativeMutation.mutate();
+                      }}
                       disabled={
                         submitInitiativeMutation.isPending ||
                         !newInitiative.title ||
@@ -254,7 +261,8 @@ function NgoDashboard() {
                             <span>Progress</span>
                             <span>
                               {(
-                                ((Number(i.current_amount_mur) || 0) / Math.max(1, Number(i.goal_amount_mur) || 0)) *
+                                ((Number(i.current_amount_mur) || 0) /
+                                  Math.max(1, Number(i.goal_amount_mur) || 0)) *
                                 100
                               ).toFixed(0)}
                               %

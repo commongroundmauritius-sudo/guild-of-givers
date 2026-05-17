@@ -60,7 +60,14 @@ export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const navItems = role === "admin" ? ADMIN_NAV : role === "ngo" ? NGO_NAV : role === "member" ? MEMBER_NAV : GUEST_NAV;
+  const navItems =
+    role === "admin"
+      ? ADMIN_NAV
+      : role === "ngo"
+        ? NGO_NAV
+        : role === "member"
+          ? MEMBER_NAV
+          : GUEST_NAV;
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "User";
   const initials = displayName.substring(0, 2).toUpperCase();
 
@@ -159,7 +166,11 @@ export function Header() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to={role === "admin" ? "/admin-dashboard" : role === "ngo" ? "/ngo" : "/member"}>
+                    <Link
+                      to={
+                        role === "admin" ? "/admin-dashboard" : role === "ngo" ? "/ngo" : "/member"
+                      }
+                    >
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </Link>
