@@ -6,7 +6,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { History, LayoutDashboard, Heart, Shield, User, FileText, Users } from "lucide-react";
+import { History, LayoutDashboard, Heart, Shield, User, FileText, Users, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/")({
@@ -132,6 +132,13 @@ function AdminDashboard() {
               <p className="mt-2 text-muted-foreground">Global platform overview and moderation.</p>
             </div>
             <div className="flex gap-3">
+              <Link
+                to="/admin-dashboard/initiatives/new"
+                className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-amber-600 shadow-lg shadow-amber-500/20"
+              >
+                <Plus className="h-4 w-4" />
+                Create Initiative
+              </Link>
               <Link
                 to="/admin-dashboard/profile"
                 className="rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted transition-colors"
@@ -289,6 +296,13 @@ function AdminDashboard() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex gap-3">
+              <Link
+                to="/admin-dashboard/initiatives/new"
+                className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-amber-600 shadow-lg shadow-amber-500/20"
+              >
+                <Plus className="h-4 w-4" />
+                Create Initiative
+              </Link>
                               <button
                                 onClick={() => moderateReport(r.id, "approved")}
                                 className="text-xs font-bold text-forest-soft hover:underline"
