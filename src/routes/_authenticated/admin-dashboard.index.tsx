@@ -369,7 +369,7 @@ function AdminDashboard() {
                   </div>
                 ) : leads && leads.length > 0 ? (
                   <div className="divide-y divide-border/40">
-                    {leads.map((l: unknown) => (
+                    {leads.map((l: any) => (
                       <div key={l.id} className="p-4 flex items-center justify-between">
                         <div>
                           <p className="text-sm font-semibold text-primary">{l.full_name}</p>
