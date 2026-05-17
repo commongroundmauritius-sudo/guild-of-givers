@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, Search, Eye, Globe, EyeOff, Edit3, ArrowRight, Info } from "lucide-react";
+import { Heart, Search, Globe, Edit3, ArrowRight, Info, Plus, Filter } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { getJoinedField } from "@/lib/utils";
@@ -13,6 +13,8 @@ export const Route = createFileRoute("/_authenticated/admin-dashboard/initiative
 
 function AdminInitiativesPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
 
   const {
     data: initiatives,
@@ -23,18 +25,38 @@ function AdminInitiativesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, ngos(name)")
+        .select("*, ngos(id, name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
 
-  const filteredInitiatives = initiatives?.filter(
-    (i) =>
+  const filteredInitiatives = initiatives?.filter((i) => {
+    const matchesSearch =
       (i.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (getJoinedField(i.ngos, "name") || "").toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+      (getJoinedField(i.ngos, "name") || "").toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesSource = sourceFilter === "all" || i.initiative_source === sourceFilter;
+
+    let matchesTab = true;
+    if (activeTab === "ngo_submitted") matchesTab = i.initiative_source === "ngo_submission";
+    else if (activeTab === "admin_created") matchesTab = i.initiative_source === "admin_created";
+    else if (activeTab === "draft") matchesTab = !i.is_published;
+    else if (activeTab === "published") matchesTab = i.is_published;
+    else if (activeTab === "pending") matchesTab = !i.is_approved;
+
+    return matchesSearch && matchesSource && matchesTab;
+  });
+
+  const tabs = [
+    { id: "all", label: "All" },
+    { id: "ngo_submitted", label: "NGO Submitted" },
+    { id: "admin_created", label: "Admin Created" },
+    { id: "draft", label: "Drafts" },
+    { id: "published", label: "Published" },
+    { id: "pending", label: "Pending Review" },
+  ];
 
   return (
     <SiteLayout>
@@ -55,15 +77,55 @@ function AdminInitiativesPage() {
                 Oversee all social impact programs, handle approvals, and manage content.
               </p>
             </div>
-            <div className="relative w-full max-w-sm sm:w-64">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search initiatives..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-full border border-border/40 bg-card py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-              />
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="relative w-full max-w-sm sm:w-64">
+                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search initiatives..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-full border border-border/40 bg-card py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                />
+              </div>
+              <Link
+                to="/admin-dashboard/initiatives/new"
+                className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-amber-600 shadow-lg shadow-amber-500/20"
+              >
+                <Plus className="h-4 w-4" />
+                Create Initiative
+              </Link>
+            </div>
+          </div>
+
+          <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap gap-2 overflow-x-auto pb-2 md:pb-0">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                    activeTab === tab.id
+                      ? "bg-primary text-white shadow-md"
+                      : "bg-card text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value)}
+                className="rounded-xl border border-border/40 bg-card px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+              >
+                <option value="all">All Sources</option>
+                <option value="ngo_submission">NGO Submission</option>
+                <option value="admin_created">Admin Created</option>
+              </select>
             </div>
           </div>
 
@@ -117,33 +179,43 @@ function AdminInitiativesPage() {
                           <Heart className="h-10 w-10 text-amber-200" />
                         </div>
                       )}
-                      <div className="absolute top-4 right-4 flex gap-2">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase shadow-sm ${
-                            i.is_approved ? "bg-green-500 text-white" : "bg-amber-500 text-white"
-                          }`}
-                        >
-                          {i.is_approved ? "Approved" : "Pending Approval"}
-                        </span>
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase shadow-sm ${
-                            i.is_published ? "bg-blue-500 text-white" : "bg-gray-500 text-white"
-                          }`}
-                        >
-                          {i.is_published ? "Published" : "Hidden"}
+                      <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                        <div className="flex gap-2">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase shadow-sm ${
+                              i.is_approved ? "bg-green-500 text-white" : "bg-amber-500 text-white"
+                            }`}
+                          >
+                            {i.is_approved ? "Approved" : "Pending"}
+                          </span>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase shadow-sm ${
+                              i.is_published ? "bg-blue-500 text-white" : "bg-gray-500 text-white"
+                            }`}
+                          >
+                            {i.is_published ? "Published" : "Hidden"}
+                          </span>
+                        </div>
+                        <span className="rounded-full bg-black/40 px-2 py-1 text-[8px] font-bold uppercase text-white backdrop-blur-sm">
+                          {i.initiative_source === 'admin_created' ? 'Admin Created' : 'NGO Submission'}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex flex-1 flex-col p-6">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">
-                        {ngoName || "Partner NGO"}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                          {ngoName || "Internal Initiative"}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground">
+                          {new Date(i.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                       <h2 className="mt-2 font-display text-xl font-bold text-primary group-hover:text-primary/80">
                         {i.title}
                       </h2>
                       <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                        {i.summary || "No summary provided."}
+                        {i.summary || i.caption || "No summary provided."}
                       </p>
 
                       <div className="mt-auto pt-6 flex items-center justify-between border-t border-border/40">
@@ -181,7 +253,7 @@ function AdminInitiativesPage() {
                 No initiatives found
               </h2>
               <p className="mt-2 text-muted-foreground">
-                Adjust your search or wait for new submissions.
+                Adjust your filters or wait for new submissions.
               </p>
             </div>
           )}
