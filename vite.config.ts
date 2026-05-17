@@ -12,13 +12,22 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
-        external: ["node:async_hooks", "node:events", "node:http", "node:https", "node:stream", "node:util", "node:zlib"],
+        external: [
+          "node:async_hooks", 
+          "node:events", 
+          "node:http", 
+          "node:https", 
+          "node:stream", 
+          "node:util", 
+          "node:zlib", 
+          "node:crypto"
+        ],
       },
     },
   },
   plugins: [
     {
-      name: "copy-worker-to-client",
+      name: "cloudflare-pages-artifacts",
       apply: "build",
       async closeBundle() {
         const serverDist = path.resolve(process.cwd(), "dist/server");
@@ -27,17 +36,7 @@ export default defineConfig({
         const targetFile = path.resolve(clientDist, "_worker.js");
 
         if (fs.existsSync(serverFile)) {
-          // Copy all server assets to client assets to ensure relative imports work
-          const serverAssets = path.resolve(serverDist, "assets");
-          const clientAssets = path.resolve(clientDist, "assets");
-          if (fs.existsSync(serverAssets)) {
-            const files = fs.readdirSync(serverAssets);
-            for (const file of files) {
-              fs.copyFileSync(path.resolve(serverAssets, file), path.resolve(clientAssets, file));
-            }
-          }
-
-          console.log(`Copying ${serverFile} to ${targetFile}`);
+          console.log(`Finalizing Cloudflare Pages artifacts...`);
           fs.copyFileSync(serverFile, targetFile);
           
           const bundleJson = path.resolve(clientDist, "_worker_bundle.json");
@@ -62,3 +61,4 @@ export default defineConfig({
     }
   ]
 });
+
