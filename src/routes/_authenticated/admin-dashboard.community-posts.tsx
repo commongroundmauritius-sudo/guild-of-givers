@@ -10,6 +10,7 @@ import { CheckCircle, XCircle, Trash2, MessageCircle, Heart, Eye } from "lucide-
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/community-posts")({
   component: AdminPostsPage,
@@ -196,8 +197,4 @@ function AdminPostsPage() {
       </section>
     </SiteLayout>
   );
-}
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
 }

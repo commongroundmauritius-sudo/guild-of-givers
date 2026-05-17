@@ -59,7 +59,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
           {replyTo && (
             <div className="flex items-center justify-between bg-muted p-2 rounded-md text-xs">
               <span>Replying to a comment</span>
-              <Button variant="ghost" size="xs" onClick={() => setReplyTo(null)}>Cancel</Button>
+              <Button variant="ghost" size="sm" onClick={() => setReplyTo(null)}>Cancel</Button>
             </div>
           )}
           <Textarea
