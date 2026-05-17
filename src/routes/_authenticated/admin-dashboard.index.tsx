@@ -22,8 +22,15 @@ function AdminDashboard() {
     queryKey: ["admin-stats"],
     queryFn: async () => {
       const [init, initPending, ngos, members, reports] = await Promise.all([
-        supabase.from("initiatives").select("id", { count: "exact", head: true }), supabase.from("initiatives").select("id", { count: "exact", head: true }).eq("is_approved", false),
-        supabase.from("ngos").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
+        supabase.from("initiatives").select("id", { count: "exact", head: true }),
+        supabase
+          .from("initiatives")
+          .select("id", { count: "exact", head: true })
+          .eq("is_approved", false),
+        supabase
+          .from("ngos")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending_review"),
         supabase
           .from("user_roles")
           .select("user_id", { count: "exact", head: true })
@@ -37,7 +44,8 @@ function AdminDashboard() {
         initiatives: init.count || 0,
         pendingNgos: ngos.count || 0,
         members: members.count || 0,
-        pendingReports: reports.count || 0, pendingInitiatives: initPending.count || 0,
+        pendingReports: reports.count || 0,
+        pendingInitiatives: initPending.count || 0,
       };
     },
   });
@@ -54,7 +62,7 @@ function AdminDashboard() {
     },
   });
 
-  const { data: pendingReports,  isLoading: reportsLoading } = useQuery({
+  const { data: pendingReports, isLoading: reportsLoading } = useQuery({
     queryKey: ["pending-reports"],
     queryFn: async () => {
       const { data } = await supabase

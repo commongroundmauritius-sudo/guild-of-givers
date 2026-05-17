@@ -18,7 +18,7 @@ export const Route = createFileRoute("/initiatives/$id")({
 
 function InitiativeDetailPage() {
   const { id } = Route.useParams();
-  const queryKeys = useMemo(() => [[ "initiative", id ], [ "public-initiatives" ]], [ id ]);
+  const queryKeys = useMemo(() => [["initiative", id], ["public-initiatives"]], [id]);
   useRealtimeSync("initiatives", queryKeys);
 
   const {
@@ -93,7 +93,8 @@ function InitiativeDetailPage() {
 
   const progress = Math.min(
     100,
-    ((Number(initiative.current_amount_mur) || 0) / Math.max(1, Number(initiative.goal_amount_mur) || 0)) *
+    ((Number(initiative.current_amount_mur) || 0) /
+      Math.max(1, Number(initiative.goal_amount_mur) || 0)) *
       100,
   );
   const gallery = Array.isArray(initiative.gallery_urls) ? initiative.gallery_urls : [];

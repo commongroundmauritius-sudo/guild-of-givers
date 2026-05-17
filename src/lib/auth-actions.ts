@@ -54,7 +54,8 @@ export const createLead = createServerFn({ method: "POST" })
     });
 
     if (error) {
-      if (error.code === '23505') { // Unique violation
+      if (error.code === "23505") {
+        // Unique violation
         return { success: true, message: "Lead already exists" };
       }
       console.error("Error creating lead:", error);
