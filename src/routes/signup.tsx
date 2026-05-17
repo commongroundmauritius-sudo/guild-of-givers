@@ -51,8 +51,8 @@ function SignupPage() {
         },
       });
       setStep(2);
-    } catch (err: Error) {
-      toast.error(err.message);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
     } finally {
       setSubmitting(false);
     }

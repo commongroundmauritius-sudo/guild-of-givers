@@ -74,8 +74,8 @@ function AdminProfile() {
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-4 w-4" />
                         Joined{" "}
-                        {profile?.created_at
-                          ? new Date(profile.created_at).toLocaleDateString()
+                        {(profile as any)?.created_at
+                          ? new Date((profile as any).created_at).toLocaleDateString()
                           : "Recently"}
                       </div>
                     </div>
