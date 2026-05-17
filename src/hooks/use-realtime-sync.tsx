@@ -8,10 +8,13 @@ export function useRealtimeSync(table: string, queryKeys: string[][]) {
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
-    // Prevent duplicate subscriptions in React Strict Mode
+    // If a channel already exists for these dependencies, don't recreate it
+    // This guards against the dual-mount issue in React Strict Mode
     if (channelRef.current) {
       return;
     }
+
+    console.log(`Subscribing to realtime-${table}`);
 
     const channel = supabase
       .channel(`realtime-${table}`)
@@ -37,6 +40,7 @@ export function useRealtimeSync(table: string, queryKeys: string[][]) {
     channelRef.current = channel;
 
     return () => {
+      console.log(`Unsubscribing from realtime-${table}`);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
