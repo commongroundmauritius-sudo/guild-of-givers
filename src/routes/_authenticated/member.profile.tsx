@@ -116,7 +116,7 @@ function MemberProfile() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {preferences && preferences.length > 0 ? (
-                    preferences.map((p: unknown) => (
+                    preferences.map((p: any) => (
                       <div
                         key={p.id}
                         className="rounded-2xl border border-border/40 bg-card p-5 transition hover:shadow-md"
