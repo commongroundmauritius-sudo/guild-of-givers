@@ -166,19 +166,19 @@ function InitiativeEditPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev: Record<string, unknown>) => ({ ...prev, [name]: value }));
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
   const handleTogglePublished = () => {
-    setFormData((prev: Record<string, unknown>) => ({ ...prev, is_published: !prev.is_published }));
+    setFormData((prev: any) => ({ ...prev, is_published: !prev.is_published }));
   };
 
   const handleToggleApproved = () => {
-    setFormData((prev: Record<string, unknown>) => ({ ...prev, is_approved: !prev.is_approved }));
+    setFormData((prev: any) => ({ ...prev, is_approved: !prev.is_approved }));
   };
 
   const handleAddGalleryUrl = () => {
-    setFormData((prev: Record<string, unknown>) => ({
+    setFormData((prev: any) => ({
       ...prev,
       gallery_urls: [...prev.gallery_urls, ""],
     }));
@@ -187,12 +187,12 @@ function InitiativeEditPage() {
   const handleGalleryUrlChange = (index: number, value: string) => {
     const newUrls = [...formData.gallery_urls];
     newUrls[index] = value;
-    setFormData((prev: Record<string, unknown>) => ({ ...prev, gallery_urls: newUrls }));
+    setFormData((prev: any) => ({ ...prev, gallery_urls: newUrls }));
   };
 
   const handleRemoveGalleryUrl = (index: number) => {
     const newUrls = formData.gallery_urls.filter((_: unknown, i: number) => i !== index);
-    setFormData((prev: Record<string, unknown>) => ({ ...prev, gallery_urls: newUrls }));
+    setFormData((prev: any) => ({ ...prev, gallery_urls: newUrls }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
