@@ -14,8 +14,6 @@ export function useRealtimeSync(table: string, queryKeys: string[][]) {
     const instanceId = Math.random().toString(36).substring(2, 9);
     const channelName = `realtime-${table}-${instanceId}`;
 
-    console.log(`[useRealtimeSync] Subscribing to ${channelName}`);
-
     const channel = supabase
       .channel(channelName)
       .on(
@@ -26,23 +24,17 @@ export function useRealtimeSync(table: string, queryKeys: string[][]) {
           table: table,
         },
         () => {
-          console.log(`[useRealtimeSync] Change detected in ${table}, invalidating queries...`);
           queryKeys.forEach((key) => {
             queryClient.invalidateQueries({ queryKey: key });
           });
         }
       )
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          console.log(`[useRealtimeSync] Successfully subscribed to ${channelName}`);
-        }
-      });
+      .subscribe();
 
     channelRef.current = channel;
 
     return () => {
       if (channelRef.current) {
-        console.log(`[useRealtimeSync] Removing channel ${channelName}`);
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
