@@ -8,16 +8,16 @@ export function useRealtimeSync(table: string, queryKeys: string[][]) {
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
-    // If a channel already exists for these dependencies, don't recreate it
-    // This guards against the dual-mount issue in React Strict Mode
-    if (channelRef.current) {
-      return;
-    }
+    // Generate a unique channel name for this specific hook instance to prevent
+    // collisions and the "after subscribe" error when multiple components
+    // listen to the same table.
+    const instanceId = Math.random().toString(36).substring(2, 9);
+    const channelName = `realtime-${table}-${instanceId}`;
 
-    console.log(`Subscribing to realtime-${table}`);
+    console.log(`[useRealtimeSync] Subscribing to ${channelName}`);
 
     const channel = supabase
-      .channel(`realtime-${table}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -26,6 +26,7 @@ export function useRealtimeSync(table: string, queryKeys: string[][]) {
           table: table,
         },
         () => {
+          console.log(`[useRealtimeSync] Change detected in ${table}, invalidating queries...`);
           queryKeys.forEach((key) => {
             queryClient.invalidateQueries({ queryKey: key });
           });
@@ -33,15 +34,15 @@ export function useRealtimeSync(table: string, queryKeys: string[][]) {
       )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
-          console.log(`Successfully subscribed to realtime-${table}`);
+          console.log(`[useRealtimeSync] Successfully subscribed to ${channelName}`);
         }
       });
 
     channelRef.current = channel;
 
     return () => {
-      console.log(`Unsubscribing from realtime-${table}`);
       if (channelRef.current) {
+        console.log(`[useRealtimeSync] Removing channel ${channelName}`);
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
