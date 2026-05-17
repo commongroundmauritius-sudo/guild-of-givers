@@ -11,6 +11,8 @@ import {
   FileText,
   Shield,
   Users,
+  MessageCircle,
+  Megaphone,
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -36,6 +38,9 @@ const GUEST_NAV = [
 
 const ADMIN_NAV = [
   { label: "Dashboard", to: "/admin-dashboard", icon: LayoutDashboard },
+  { label: "Community Hub", to: "/community-hub", icon: MessageCircle },
+  { label: "Announcements", to: "/admin-dashboard/announcements", icon: Megaphone },
+  { label: "Moderation", to: "/admin-dashboard/community-posts", icon: MessageCircle },
   { label: "Initiatives", to: "/admin-dashboard/initiatives", icon: Heart },
   { label: "NGOs", to: "/admin-dashboard/ngos", icon: Shield },
   { label: "Members", to: "/admin-dashboard/members", icon: User },
@@ -44,12 +49,14 @@ const ADMIN_NAV = [
 
 const MEMBER_NAV = [
   { label: "Dashboard", to: "/member", icon: LayoutDashboard },
+  { label: "Community Hub", to: "/community-hub", icon: MessageCircle },
   { label: "Contributions", to: "/member", icon: Heart },
   { label: "Supported", to: "/member", icon: FileText },
 ] as const;
 
 const NGO_NAV = [
   { label: "Dashboard", to: "/ngo", icon: LayoutDashboard },
+  { label: "Community Hub", to: "/community-hub", icon: MessageCircle },
   { label: "Initiatives", to: "/ngo", icon: Heart },
   { label: "Reports", to: "/ngo", icon: FileText },
 ] as const;
