@@ -119,9 +119,6 @@ function NGODashboard() {
         target_milestones: newInitiative.target_milestones,
         expected_outcomes: newInitiative.expected_outcomes,
         impact_pool_target: Number(newInitiative.impact_pool_target),
-        initiative_source: "ngo_submission",
-        creator_user_id: user?.id,
-        creator_role: "ngo",
         status: "active",
         is_approved: false,
       });
