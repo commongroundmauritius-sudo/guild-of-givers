@@ -86,7 +86,7 @@ function Hero() {
               alt="Community impact"
               width={1280}
               height={1600}
-              priority="true"
+              loading="eager"
               className="h-full w-full object-cover"
             />
           </div>
