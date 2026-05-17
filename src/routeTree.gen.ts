@@ -25,14 +25,18 @@ import { Route as AuthenticatedNgoRouteImport } from './routes/_authenticated/ng
 import { Route as AuthenticatedMemberRouteImport } from './routes/_authenticated/member'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin-dashboard'
+import { Route as AuthenticatedCommunityHubIndexRouteImport } from './routes/_authenticated/community-hub.index'
 import { Route as AuthenticatedAdminDashboardIndexRouteImport } from './routes/_authenticated/admin-dashboard.index'
 import { Route as AuthenticatedMemberSettingsRouteImport } from './routes/_authenticated/member.settings'
 import { Route as AuthenticatedMemberProfileRouteImport } from './routes/_authenticated/member.profile'
+import { Route as AuthenticatedCommunityHubPostIdRouteImport } from './routes/_authenticated/community-hub.$postId'
 import { Route as AuthenticatedAdminDashboardSettingsRouteImport } from './routes/_authenticated/admin-dashboard.settings'
 import { Route as AuthenticatedAdminDashboardProfileRouteImport } from './routes/_authenticated/admin-dashboard.profile'
 import { Route as AuthenticatedAdminDashboardNgosRouteImport } from './routes/_authenticated/admin-dashboard.ngos'
 import { Route as AuthenticatedAdminDashboardMembersRouteImport } from './routes/_authenticated/admin-dashboard.members'
 import { Route as AuthenticatedAdminDashboardLeadsRouteImport } from './routes/_authenticated/admin-dashboard.leads'
+import { Route as AuthenticatedAdminDashboardCommunityPostsRouteImport } from './routes/_authenticated/admin-dashboard.community-posts'
+import { Route as AuthenticatedAdminDashboardAnnouncementsRouteImport } from './routes/_authenticated/admin-dashboard.announcements'
 import { Route as AuthenticatedAdminDashboardInitiativesIndexRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.index'
 import { Route as AuthenticatedAdminDashboardInitiativesNewRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.new'
 import { Route as AuthenticatedAdminDashboardInitiativesIdManageRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.$id.manage'
@@ -117,6 +121,12 @@ const AuthenticatedAdminDashboardRoute =
     path: '/admin-dashboard',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedCommunityHubIndexRoute =
+  AuthenticatedCommunityHubIndexRouteImport.update({
+    id: '/community-hub/',
+    path: '/community-hub/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminDashboardIndexRoute =
   AuthenticatedAdminDashboardIndexRouteImport.update({
     id: '/',
@@ -134,6 +144,12 @@ const AuthenticatedMemberProfileRoute =
     id: '/profile',
     path: '/profile',
     getParentRoute: () => AuthenticatedMemberRoute,
+  } as any)
+const AuthenticatedCommunityHubPostIdRoute =
+  AuthenticatedCommunityHubPostIdRouteImport.update({
+    id: '/community-hub/$postId',
+    path: '/community-hub/$postId',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminDashboardSettingsRoute =
   AuthenticatedAdminDashboardSettingsRouteImport.update({
@@ -163,6 +179,18 @@ const AuthenticatedAdminDashboardLeadsRoute =
   AuthenticatedAdminDashboardLeadsRouteImport.update({
     id: '/leads',
     path: '/leads',
+    getParentRoute: () => AuthenticatedAdminDashboardRoute,
+  } as any)
+const AuthenticatedAdminDashboardCommunityPostsRoute =
+  AuthenticatedAdminDashboardCommunityPostsRouteImport.update({
+    id: '/community-posts',
+    path: '/community-posts',
+    getParentRoute: () => AuthenticatedAdminDashboardRoute,
+  } as any)
+const AuthenticatedAdminDashboardAnnouncementsRoute =
+  AuthenticatedAdminDashboardAnnouncementsRouteImport.update({
+    id: '/announcements',
+    path: '/announcements',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
 const AuthenticatedAdminDashboardInitiativesIndexRoute =
@@ -200,14 +228,18 @@ export interface FileRoutesByFullPath {
   '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/': typeof InitiativesIndexRoute
+  '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
+  '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
   '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
   '/admin-dashboard/ngos': typeof AuthenticatedAdminDashboardNgosRoute
   '/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
   '/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
+  '/community-hub/$postId': typeof AuthenticatedCommunityHubPostIdRoute
   '/member/profile': typeof AuthenticatedMemberProfileRoute
   '/member/settings': typeof AuthenticatedMemberSettingsRoute
   '/admin-dashboard/': typeof AuthenticatedAdminDashboardIndexRoute
+  '/community-hub/': typeof AuthenticatedCommunityHubIndexRoute
   '/admin-dashboard/initiatives/new': typeof AuthenticatedAdminDashboardInitiativesNewRoute
   '/admin-dashboard/initiatives/': typeof AuthenticatedAdminDashboardInitiativesIndexRoute
   '/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
@@ -227,14 +259,18 @@ export interface FileRoutesByTo {
   '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives': typeof InitiativesIndexRoute
+  '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
+  '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
   '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
   '/admin-dashboard/ngos': typeof AuthenticatedAdminDashboardNgosRoute
   '/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
   '/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
+  '/community-hub/$postId': typeof AuthenticatedCommunityHubPostIdRoute
   '/member/profile': typeof AuthenticatedMemberProfileRoute
   '/member/settings': typeof AuthenticatedMemberSettingsRoute
   '/admin-dashboard': typeof AuthenticatedAdminDashboardIndexRoute
+  '/community-hub': typeof AuthenticatedCommunityHubIndexRoute
   '/admin-dashboard/initiatives/new': typeof AuthenticatedAdminDashboardInitiativesNewRoute
   '/admin-dashboard/initiatives': typeof AuthenticatedAdminDashboardInitiativesIndexRoute
   '/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
@@ -257,14 +293,18 @@ export interface FileRoutesById {
   '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/': typeof InitiativesIndexRoute
+  '/_authenticated/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
+  '/_authenticated/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
   '/_authenticated/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/_authenticated/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
   '/_authenticated/admin-dashboard/ngos': typeof AuthenticatedAdminDashboardNgosRoute
   '/_authenticated/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
   '/_authenticated/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
+  '/_authenticated/community-hub/$postId': typeof AuthenticatedCommunityHubPostIdRoute
   '/_authenticated/member/profile': typeof AuthenticatedMemberProfileRoute
   '/_authenticated/member/settings': typeof AuthenticatedMemberSettingsRoute
   '/_authenticated/admin-dashboard/': typeof AuthenticatedAdminDashboardIndexRoute
+  '/_authenticated/community-hub/': typeof AuthenticatedCommunityHubIndexRoute
   '/_authenticated/admin-dashboard/initiatives/new': typeof AuthenticatedAdminDashboardInitiativesNewRoute
   '/_authenticated/admin-dashboard/initiatives/': typeof AuthenticatedAdminDashboardInitiativesIndexRoute
   '/_authenticated/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
@@ -287,14 +327,18 @@ export interface FileRouteTypes {
     | '/entities/$id'
     | '/initiatives/$id'
     | '/initiatives/'
+    | '/admin-dashboard/announcements'
+    | '/admin-dashboard/community-posts'
     | '/admin-dashboard/leads'
     | '/admin-dashboard/members'
     | '/admin-dashboard/ngos'
     | '/admin-dashboard/profile'
     | '/admin-dashboard/settings'
+    | '/community-hub/$postId'
     | '/member/profile'
     | '/member/settings'
     | '/admin-dashboard/'
+    | '/community-hub/'
     | '/admin-dashboard/initiatives/new'
     | '/admin-dashboard/initiatives/'
     | '/admin-dashboard/initiatives/$id/manage'
@@ -314,14 +358,18 @@ export interface FileRouteTypes {
     | '/entities/$id'
     | '/initiatives/$id'
     | '/initiatives'
+    | '/admin-dashboard/announcements'
+    | '/admin-dashboard/community-posts'
     | '/admin-dashboard/leads'
     | '/admin-dashboard/members'
     | '/admin-dashboard/ngos'
     | '/admin-dashboard/profile'
     | '/admin-dashboard/settings'
+    | '/community-hub/$postId'
     | '/member/profile'
     | '/member/settings'
     | '/admin-dashboard'
+    | '/community-hub'
     | '/admin-dashboard/initiatives/new'
     | '/admin-dashboard/initiatives'
     | '/admin-dashboard/initiatives/$id/manage'
@@ -343,14 +391,18 @@ export interface FileRouteTypes {
     | '/entities/$id'
     | '/initiatives/$id'
     | '/initiatives/'
+    | '/_authenticated/admin-dashboard/announcements'
+    | '/_authenticated/admin-dashboard/community-posts'
     | '/_authenticated/admin-dashboard/leads'
     | '/_authenticated/admin-dashboard/members'
     | '/_authenticated/admin-dashboard/ngos'
     | '/_authenticated/admin-dashboard/profile'
     | '/_authenticated/admin-dashboard/settings'
+    | '/_authenticated/community-hub/$postId'
     | '/_authenticated/member/profile'
     | '/_authenticated/member/settings'
     | '/_authenticated/admin-dashboard/'
+    | '/_authenticated/community-hub/'
     | '/_authenticated/admin-dashboard/initiatives/new'
     | '/_authenticated/admin-dashboard/initiatives/'
     | '/_authenticated/admin-dashboard/initiatives/$id/manage'
@@ -485,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/community-hub/': {
+      id: '/_authenticated/community-hub/'
+      path: '/community-hub'
+      fullPath: '/community-hub/'
+      preLoaderRoute: typeof AuthenticatedCommunityHubIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin-dashboard/': {
       id: '/_authenticated/admin-dashboard/'
       path: '/'
@@ -505,6 +564,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/member/profile'
       preLoaderRoute: typeof AuthenticatedMemberProfileRouteImport
       parentRoute: typeof AuthenticatedMemberRoute
+    }
+    '/_authenticated/community-hub/$postId': {
+      id: '/_authenticated/community-hub/$postId'
+      path: '/community-hub/$postId'
+      fullPath: '/community-hub/$postId'
+      preLoaderRoute: typeof AuthenticatedCommunityHubPostIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/admin-dashboard/settings': {
       id: '/_authenticated/admin-dashboard/settings'
@@ -541,6 +607,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardLeadsRouteImport
       parentRoute: typeof AuthenticatedAdminDashboardRoute
     }
+    '/_authenticated/admin-dashboard/community-posts': {
+      id: '/_authenticated/admin-dashboard/community-posts'
+      path: '/community-posts'
+      fullPath: '/admin-dashboard/community-posts'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardCommunityPostsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRoute
+    }
+    '/_authenticated/admin-dashboard/announcements': {
+      id: '/_authenticated/admin-dashboard/announcements'
+      path: '/announcements'
+      fullPath: '/admin-dashboard/announcements'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardAnnouncementsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRoute
+    }
     '/_authenticated/admin-dashboard/initiatives/': {
       id: '/_authenticated/admin-dashboard/initiatives/'
       path: '/initiatives'
@@ -566,6 +646,8 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminDashboardRouteChildren {
+  AuthenticatedAdminDashboardAnnouncementsRoute: typeof AuthenticatedAdminDashboardAnnouncementsRoute
+  AuthenticatedAdminDashboardCommunityPostsRoute: typeof AuthenticatedAdminDashboardCommunityPostsRoute
   AuthenticatedAdminDashboardLeadsRoute: typeof AuthenticatedAdminDashboardLeadsRoute
   AuthenticatedAdminDashboardMembersRoute: typeof AuthenticatedAdminDashboardMembersRoute
   AuthenticatedAdminDashboardNgosRoute: typeof AuthenticatedAdminDashboardNgosRoute
@@ -579,6 +661,10 @@ interface AuthenticatedAdminDashboardRouteChildren {
 
 const AuthenticatedAdminDashboardRouteChildren: AuthenticatedAdminDashboardRouteChildren =
   {
+    AuthenticatedAdminDashboardAnnouncementsRoute:
+      AuthenticatedAdminDashboardAnnouncementsRoute,
+    AuthenticatedAdminDashboardCommunityPostsRoute:
+      AuthenticatedAdminDashboardCommunityPostsRoute,
     AuthenticatedAdminDashboardLeadsRoute:
       AuthenticatedAdminDashboardLeadsRoute,
     AuthenticatedAdminDashboardMembersRoute:
@@ -621,6 +707,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMemberRoute: typeof AuthenticatedMemberRouteWithChildren
   AuthenticatedNgoRoute: typeof AuthenticatedNgoRoute
+  AuthenticatedCommunityHubPostIdRoute: typeof AuthenticatedCommunityHubPostIdRoute
+  AuthenticatedCommunityHubIndexRoute: typeof AuthenticatedCommunityHubIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -629,6 +717,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMemberRoute: AuthenticatedMemberRouteWithChildren,
   AuthenticatedNgoRoute: AuthenticatedNgoRoute,
+  AuthenticatedCommunityHubPostIdRoute: AuthenticatedCommunityHubPostIdRoute,
+  AuthenticatedCommunityHubIndexRoute: AuthenticatedCommunityHubIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
