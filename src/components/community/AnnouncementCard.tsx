@@ -15,13 +15,12 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Badge variant="outline">{announcement.category}</Badge>
-            {announcement.pinned && (
-              <Pin className="h-4 w-4 text-amber-500 fill-amber-500" />
-            )}
+            {announcement.pinned && <Pin className="h-4 w-4 text-amber-500 fill-amber-500" />}
           </div>
           <CardTitle className="text-xl">{announcement.title}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            {announcement.profiles?.full_name || "Admin"} • {formatDistanceToNow(new Date(announcement.created_at), { addSuffix: true })}
+            {announcement.profiles?.full_name || "Admin"} •{" "}
+            {formatDistanceToNow(new Date(announcement.created_at), { addSuffix: true })}
           </p>
         </div>
       </CardHeader>
@@ -33,9 +32,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
             className="w-full h-48 object-cover rounded-md mb-4"
           />
         )}
-        <p className="whitespace-pre-wrap text-sm text-foreground/90">
-          {announcement.content}
-        </p>
+        <p className="whitespace-pre-wrap text-sm text-foreground/90">{announcement.content}</p>
       </CardContent>
     </Card>
   );

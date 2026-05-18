@@ -68,14 +68,18 @@ function InitiativeCreatePage() {
 
   const createMutation = useMutation({
     mutationFn: async (publish: boolean) => {
-      const { data, error } = await supabase.from("initiatives").insert({
-        ...formData,
-        is_published: publish,
-        is_approved: true,
-        initiative_source: "admin_created",
-        creator_user_id: user?.id,
-        creator_role: "admin",
-      }).select().single();
+      const { data, error } = await supabase
+        .from("initiatives")
+        .insert({
+          ...formData,
+          is_published: publish,
+          is_approved: true,
+          initiative_source: "admin_created",
+          creator_user_id: user?.id,
+          creator_role: "admin",
+        })
+        .select()
+        .single();
 
       if (error) throw error;
       return data;
@@ -90,7 +94,9 @@ function InitiativeCreatePage() {
     },
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -176,10 +182,14 @@ function InitiativeCreatePage() {
             <div className="lg:col-span-2 space-y-8">
               {/* Core Information */}
               <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
-                <h2 className="mb-6 font-display text-xl font-semibold text-primary">Core Information</h2>
+                <h2 className="mb-6 font-display text-xl font-semibold text-primary">
+                  Core Information
+                </h2>
                 <div className="space-y-6">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Title</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Title
+                    </label>
                     <input
                       name="title"
                       value={formData.title}
@@ -189,7 +199,9 @@ function InitiativeCreatePage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Category</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Category
+                    </label>
                     <input
                       name="category"
                       value={formData.category}
@@ -199,7 +211,9 @@ function InitiativeCreatePage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Associated NGO (Optional)</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Associated NGO (Optional)
+                    </label>
                     <div className="relative">
                       <Building className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <select
@@ -210,13 +224,17 @@ function InitiativeCreatePage() {
                       >
                         <option value="">Select an NGO</option>
                         {ngos?.map((ngo) => (
-                          <option key={ngo.id} value={ngo.id}>{ngo.name}</option>
+                          <option key={ngo.id} value={ngo.id}>
+                            {ngo.name}
+                          </option>
                         ))}
                       </select>
                     </div>
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Caption (Short tagline)</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Caption (Short tagline)
+                    </label>
                     <input
                       name="caption"
                       value={formData.caption}
@@ -226,7 +244,9 @@ function InitiativeCreatePage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Summary</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Summary
+                    </label>
                     <textarea
                       name="summary"
                       value={formData.summary}
@@ -237,7 +257,9 @@ function InitiativeCreatePage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Detailed Story</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Detailed Story
+                    </label>
                     <textarea
                       name="content"
                       value={formData.content}
@@ -252,11 +274,15 @@ function InitiativeCreatePage() {
 
               {/* Impact Pool & Goals */}
               <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
-                <h2 className="mb-6 font-display text-xl font-semibold text-primary">Goals & Impact</h2>
+                <h2 className="mb-6 font-display text-xl font-semibold text-primary">
+                  Goals & Impact
+                </h2>
                 <div className="space-y-6">
                   <div className="grid gap-6 sm:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">Short-term Goals</label>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">
+                        Short-term Goals
+                      </label>
                       <textarea
                         name="short_term_goals"
                         value={formData.short_term_goals}
@@ -266,7 +292,9 @@ function InitiativeCreatePage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">Long-term Goals</label>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">
+                        Long-term Goals
+                      </label>
                       <textarea
                         name="long_term_goals"
                         value={formData.long_term_goals}
@@ -278,7 +306,9 @@ function InitiativeCreatePage() {
                   </div>
                   <div className="grid gap-6 sm:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">Target Milestones</label>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">
+                        Target Milestones
+                      </label>
                       <textarea
                         name="target_milestones"
                         value={formData.target_milestones}
@@ -288,7 +318,9 @@ function InitiativeCreatePage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">Expected Outcomes</label>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">
+                        Expected Outcomes
+                      </label>
                       <textarea
                         name="expected_outcomes"
                         value={formData.expected_outcomes}
@@ -308,7 +340,9 @@ function InitiativeCreatePage() {
                 <h2 className="mb-6 font-display text-xl font-semibold text-primary">Media</h2>
                 <div className="space-y-6">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Main Image URL</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Main Image URL
+                    </label>
                     <div className="flex gap-2">
                       <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border/40 bg-muted">
                         <ImageIcon className="h-4 w-4 text-muted-foreground" />
@@ -323,7 +357,9 @@ function InitiativeCreatePage() {
                     </div>
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Gallery Images</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Gallery Images
+                    </label>
                     <div className="space-y-3">
                       {formData.gallery_urls.map((url, index) => (
                         <div key={index} className="flex gap-2">
@@ -359,7 +395,9 @@ function InitiativeCreatePage() {
                 <h2 className="mb-6 font-display text-xl font-semibold text-primary">Financials</h2>
                 <div className="space-y-6">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Campaign Goal (MUR)</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Campaign Goal (MUR)
+                    </label>
                     <input
                       name="goal_amount_mur"
                       type="number"
@@ -372,7 +410,9 @@ function InitiativeCreatePage() {
                     <h3 className="mb-4 text-xs font-bold uppercase text-amber-600">Impact Pool</h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-muted-foreground">Target Amount</label>
+                        <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                          Target Amount
+                        </label>
                         <input
                           name="impact_pool_target"
                           type="number"
@@ -382,7 +422,9 @@ function InitiativeCreatePage() {
                         />
                       </div>
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-muted-foreground">Current Amount</label>
+                        <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                          Current Amount
+                        </label>
                         <input
                           name="impact_pool_current"
                           type="number"

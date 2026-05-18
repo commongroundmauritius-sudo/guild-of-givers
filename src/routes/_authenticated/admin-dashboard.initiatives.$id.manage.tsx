@@ -357,22 +357,32 @@ function InitiativeEditPage() {
                 </h2>
                 <div className="mb-8 p-4 rounded-2xl bg-muted/50 border border-border/40 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Source:</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Source:
+                    </span>
                     <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase text-amber-600">
-                      {initiative?.initiative_source === 'admin_created' ? 'Admin Created' : 'NGO Submission'}
+                      {initiative?.initiative_source === "admin_created"
+                        ? "Admin Created"
+                        : "NGO Submission"}
                     </span>
                   </div>
                   {initiative?.creator_role && (
                     <div className="flex items-center gap-4">
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Created By:</span>
-                      <span className="text-xs font-medium text-primary">{initiative.creator_role.toUpperCase()}</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Created By:
+                      </span>
+                      <span className="text-xs font-medium text-primary">
+                        {initiative.creator_role.toUpperCase()}
+                      </span>
                     </div>
                   )}
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-2 mb-6">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Category</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Category
+                    </label>
                     <input
                       name="category"
                       value={formData.category}
@@ -382,7 +392,9 @@ function InitiativeEditPage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Associated NGO</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Associated NGO
+                    </label>
                     <select
                       name="ngo_id"
                       value={formData.ngo_id}
@@ -391,7 +403,9 @@ function InitiativeEditPage() {
                     >
                       <option value="">None / Internal</option>
                       {ngos?.map((ngo: any) => (
-                        <option key={ngo.id} value={ngo.id}>{ngo.name}</option>
+                        <option key={ngo.id} value={ngo.id}>
+                          {ngo.name}
+                        </option>
                       ))}
                     </select>
                   </div>

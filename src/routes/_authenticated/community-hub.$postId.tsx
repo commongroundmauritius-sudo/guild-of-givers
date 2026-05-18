@@ -54,7 +54,9 @@ function PostDetailPage() {
       <SiteLayout>
         <div className="mx-auto max-w-4xl px-4 py-32 text-center">
           <h2 className="text-2xl font-bold">Post not found</h2>
-          <p className="mt-2 text-muted-foreground">The post you are looking for might have been deleted.</p>
+          <p className="mt-2 text-muted-foreground">
+            The post you are looking for might have been deleted.
+          </p>
           <Button asChild className="mt-8">
             <Link to="/community-hub">Back to Community Hub</Link>
           </Button>

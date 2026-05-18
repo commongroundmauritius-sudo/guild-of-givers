@@ -197,7 +197,9 @@ function AdminInitiativesPage() {
                           </span>
                         </div>
                         <span className="rounded-full bg-black/40 px-2 py-1 text-[8px] font-bold uppercase text-white backdrop-blur-sm">
-                          {i.initiative_source === 'admin_created' ? 'Admin Created' : 'NGO Submission'}
+                          {i.initiative_source === "admin_created"
+                            ? "Admin Created"
+                            : "NGO Submission"}
                         </span>
                       </div>
                     </div>

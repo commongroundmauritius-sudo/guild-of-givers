@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { updateProfile } from "@/lib/auth-actions";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User, Settings as SettingsIcon, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,14 +23,18 @@ function AdminSettings() {
   const mutation = useMutation({
     mutationFn: async () => {
       if (!user) return;
-      return updateProfile({
-        data: {
-          userId: user.id,
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
           full_name: fullName,
           bio,
           avatar_url: avatarUrl,
-        },
-      });
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Profile updated successfully");

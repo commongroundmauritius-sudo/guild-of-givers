@@ -7,7 +7,7 @@ import {
   toggleReaction,
   Post,
   Comment,
-  Announcement
+  Announcement,
 } from "@/lib/community";
 import { useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +19,7 @@ export function useAnnouncements() {
   });
 }
 
-export function usePosts(page = 0, sort: 'newest' | 'active' | 'reactions' = 'newest') {
+export function usePosts(page = 0, sort: "newest" | "active" | "reactions" = "newest") {
   return useQuery({
     queryKey: ["posts", page, sort],
     queryFn: () => fetchPosts(page, 20, sort),
@@ -51,13 +51,9 @@ export function useCommunityRealtime(queryKey: any[], table: string, filter?: st
   useEffect(() => {
     const channel = supabase
       .channel(`community-${table}-${Math.random().toString(36).substring(7)}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table, filter },
-        () => {
-          queryClient.invalidateQueries({ queryKey: memoizedQueryKey });
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table, filter }, () => {
+        queryClient.invalidateQueries({ queryKey: memoizedQueryKey });
+      })
       .subscribe();
 
     return () => {
@@ -70,7 +66,11 @@ export function usePostMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (newPost: any) => {
-      const { data, error } = await supabase.from("community_posts").insert(newPost).select().single();
+      const { data, error } = await supabase
+        .from("community_posts")
+        .insert(newPost)
+        .select()
+        .single();
       if (error) throw error;
       return data;
     },
@@ -84,7 +84,11 @@ export function useCommentMutation(postId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (newComment: any) => {
-      const { data, error } = await supabase.from("post_comments").insert(newComment).select().single();
+      const { data, error } = await supabase
+        .from("post_comments")
+        .insert(newComment)
+        .select()
+        .single();
       if (error) throw error;
       return data;
     },
@@ -98,7 +102,7 @@ export function useCommentMutation(postId: string) {
 export function useReactionMutation(postId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, reactionType }: { userId: string, reactionType: string }) =>
+    mutationFn: ({ userId, reactionType }: { userId: string; reactionType: string }) =>
       toggleReaction(postId, userId, reactionType),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reactions", postId] });

@@ -29,9 +29,7 @@ export function PostCard({ post }: PostCardProps) {
       <Link to="/community-hub/$postId" params={{ postId: post.id }} className="block">
         <CardContent className="p-4 pt-0 space-y-3">
           <h3 className="font-bold text-lg leading-tight">{post.title}</h3>
-          <p className="text-sm text-foreground/80 line-clamp-3">
-            {post.content}
-          </p>
+          <p className="text-sm text-foreground/80 line-clamp-3">{post.content}</p>
           {post.image_url && (
             <img
               src={post.image_url}
