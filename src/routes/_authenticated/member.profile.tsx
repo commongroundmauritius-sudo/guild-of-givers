@@ -33,7 +33,7 @@ function MemberProfile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("member_preferences")
-        .select("*, initiatives(*, ngos(name))")
+        .select("*, initiatives(*, organizations(organization_name))")
         .eq("user_id", user?.id);
       return data;
     },
@@ -83,19 +83,19 @@ function MemberProfile() {
                       {profile?.phone && (
                         <div className="flex items-center gap-1.5">
                           <Phone className="h-4 w-4" />
-                          {profile.phone}
+                          {profile?.phone}
                         </div>
                       )}
                       {profile?.age && (
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-4 w-4" />
-                          {profile.age} years old
+                          {profile?.age} years old
                         </div>
                       )}
                       {profile?.address && (
                         <div className="flex items-center gap-1.5">
                           <MapPin className="h-4 w-4" />
-                          {profile.address}
+                          {profile?.address}
                         </div>
                       )}
                     </div>
@@ -122,7 +122,8 @@ function MemberProfile() {
                         className="rounded-2xl border border-border/40 bg-card p-5 transition hover:shadow-md"
                       >
                         <p className="text-[10px] font-bold text-teal-600 uppercase">
-                          {getJoinedField(p.initiatives, "ngos")?.name || "NGO Partner"}
+                          {getJoinedField(p.initiatives, "organizations")?.organization_name ||
+                            "Organization Partner"}
                         </p>
                         <h3 className="mt-1 font-semibold text-primary">
                           {getJoinedField(p.initiatives, "title") || "Initiative Title"}

@@ -9,7 +9,7 @@ export function Footer() {
           <Logo />
           <p className="mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
             Building the financial and governance infrastructure for long-term social impact. One
-            membership, a lifetime of change for verified NGOs in Mauritius.
+            membership, a lifetime of change for verified Organizations in Mauritius.
           </p>
         </div>
 

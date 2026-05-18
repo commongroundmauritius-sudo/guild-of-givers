@@ -8,10 +8,10 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated/ngo")({
-  component: NGODashboard,
+  component: OrganizationDashboard,
 });
 
-function NGODashboard() {
+function OrganizationDashboard() {
   const { user, role, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -30,7 +30,7 @@ function NGODashboard() {
   const [reportInitiativeId, setReportInitiativeId] = useState("");
 
   useEffect(() => {
-    if (!authLoading && role && role !== "ngo") {
+    if (!authLoading && role && role !== "organization") {
       toast.error("Unauthorized access");
       navigate({ to: "/dashboard" });
     }
@@ -45,52 +45,56 @@ function NGODashboard() {
     enabled: !!user?.id,
   });
 
-  const { data: ngoProfile } = useQuery({
-    queryKey: ["ngo-profile", profile?.ngo_id],
+  const { data: organizationProfile } = useQuery({
+    queryKey: ["organization-profile", profile?.organization_id],
     queryFn: async () => {
-      if (!profile?.ngo_id) return null;
-      const { data } = await supabase.from("ngos").select("*").eq("id", profile.ngo_id).single();
+      if (!profile?.organization_id) return null;
+      const { data } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("id", profile.organization_id)
+        .single();
       return data;
     },
-    enabled: !!profile?.ngo_id,
+    enabled: !!profile?.organization_id,
   });
 
   const { data: initiatives, refetch: refetchInitiatives } = useQuery({
-    queryKey: ["ngo-initiatives", ngoProfile?.id],
+    queryKey: ["organization-initiatives", organizationProfile?.id],
     queryFn: async () => {
-      if (!ngoProfile?.id) return [];
+      if (!organizationProfile?.id) return [];
       const { data, error } = await supabase
         .from("initiatives")
         .select("*")
-        .eq("ngo_id", ngoProfile.id)
+        .eq("organization_id", organizationProfile.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
-    enabled: !!ngoProfile?.id,
+    enabled: !!organizationProfile?.id,
   });
 
   const { data: reports } = useQuery({
-    queryKey: ["ngo-reports", ngoProfile?.id],
+    queryKey: ["organization-reports", organizationProfile?.id],
     queryFn: async () => {
-      if (!ngoProfile?.id) return [];
+      if (!organizationProfile?.id) return [];
       const { data, error } = await supabase
         .from("reports")
         .select("*, initiatives(title)")
-        .eq("ngo_id", ngoProfile.id)
+        .eq("organization_id", organizationProfile.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
-    enabled: !!ngoProfile?.id,
+    enabled: !!organizationProfile?.id,
   });
 
   const submitReportMutation = useMutation({
     mutationFn: async () => {
-      if (role !== "ngo" || !ngoProfile?.id || !reportInitiativeId)
-        throw new Error("Unauthorized or Missing NGO/Initiative");
+      if (role !== "organization" || !organizationProfile?.id || !reportInitiativeId)
+        throw new Error("Unauthorized or Missing Organization/Initiative");
       const { error } = await supabase.from("reports").insert({
-        ngo_id: ngoProfile.id,
+        organization_id: organizationProfile.id,
         initiative_id: reportInitiativeId,
         title: reportTitle,
         file_url: "#", // Placeholder
@@ -101,16 +105,17 @@ function NGODashboard() {
     onSuccess: () => {
       toast.success("Report submitted for admin review");
       setReportTitle("");
-      queryClient.invalidateQueries({ queryKey: ["ngo-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["organization-reports"] });
     },
     onError: (err: Error) => toast.error(err.message),
   });
 
   const submitInitiativeMutation = useMutation({
     mutationFn: async () => {
-      if (role !== "ngo" || !ngoProfile?.id) throw new Error("Unauthorized or Missing NGO context");
+      if (role !== "organization" || !organizationProfile?.id)
+        throw new Error("Unauthorized or Missing Organization context");
       const { error } = await supabase.from("initiatives").insert({
-        ngo_id: ngoProfile.id,
+        organization_id: organizationProfile.id,
         title: newInitiative.title,
         description: newInitiative.description,
         goal_amount_mur: Number(newInitiative.goal),
@@ -119,9 +124,9 @@ function NGODashboard() {
         target_milestones: newInitiative.target_milestones,
         expected_outcomes: newInitiative.expected_outcomes,
         impact_pool_target: Number(newInitiative.impact_pool_target),
-        initiative_source: "ngo_submission",
+        initiative_source: "organization_submission",
         creator_user_id: user?.id,
-        creator_role: "ngo",
+        creator_role: "organization",
         status: "active",
         is_approved: false,
       });
@@ -168,9 +173,9 @@ function NGODashboard() {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="font-display text-4xl font-semibold text-primary">
-                  {ngoProfile?.name || "NGO Dashboard"}
+                  {organizationProfile?.organization_name || "Organization Dashboard"}
                 </h1>
-                {ngoProfile?.is_verified && (
+                {organizationProfile?.is_verified && (
                   <div
                     className="flex items-center gap-1 rounded-full bg-forest-soft/10 px-3 py-1 text-xs font-medium text-forest-soft"
                     title="This organization has been verified by CommonGround Admins"

@@ -231,10 +231,10 @@ function Initiatives() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, ngos!inner(name, status)")
+        .select("*, organizations!inner(name, status)")
         .eq("is_approved", true)
         .eq("is_published", true)
-        .eq("ngos.status", "active")
+        .eq("organizations.status", "active")
         .limit(3);
 
       if (error) throw error;
@@ -304,7 +304,7 @@ function Initiatives() {
                 </div>
                 <div className="p-8">
                   <span className="text-xs font-medium uppercase text-muted-foreground">
-                    {getJoinedField(i.ngos, "name")}
+                    {getJoinedField(i.organizations, "name")}
                   </span>
                   <h3 className="mt-2 font-display text-2xl font-semibold text-primary">
                     {i.title}
@@ -413,7 +413,7 @@ const FAQS = [
   },
   {
     q: "Is my contribution tax-deductible?",
-    a: "Where partner NGOs are registered for tax-deductible giving, you'll receive an automated receipt at year-end.",
+    a: "Where partner Organizations are registered for tax-deductible giving, you'll receive an automated receipt at year-end.",
   },
   {
     q: "How do I know my impact is real?",
@@ -472,7 +472,7 @@ function FinalCTA() {
             to="/partner"
             className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-card px-7 py-3.5 text-sm font-medium text-primary hover:bg-cream-deep"
           >
-            I represent an NGO
+            I represent an Organization
           </Link>
         </div>
       </div>

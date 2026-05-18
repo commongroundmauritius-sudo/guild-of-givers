@@ -42,7 +42,7 @@ const ADMIN_NAV = [
   { label: "Announcements", to: "/admin-dashboard/announcements", icon: Megaphone },
   { label: "Moderation", to: "/admin-dashboard/community-posts", icon: MessageCircle },
   { label: "Initiatives", to: "/admin-dashboard/initiatives", icon: Heart },
-  { label: "NGOs", to: "/admin-dashboard/ngos", icon: Shield },
+  { label: "Organizations", to: "/admin-dashboard/organizations", icon: Shield },
   { label: "Members", to: "/admin-dashboard/members", icon: User },
   { label: "Leads", to: "/admin-dashboard/leads", icon: Users },
 ] as const;
@@ -54,11 +54,11 @@ const MEMBER_NAV = [
   { label: "Supported", to: "/member", icon: FileText },
 ] as const;
 
-const NGO_NAV = [
-  { label: "Dashboard", to: "/ngo", icon: LayoutDashboard },
+const Organization_NAV = [
+  { label: "Dashboard", to: "/organization", icon: LayoutDashboard },
   { label: "Community Hub", to: "/community-hub", icon: MessageCircle },
-  { label: "Initiatives", to: "/ngo", icon: Heart },
-  { label: "Reports", to: "/ngo", icon: FileText },
+  { label: "Initiatives", to: "/organization", icon: Heart },
+  { label: "Reports", to: "/organization", icon: FileText },
 ] as const;
 
 export function Header() {
@@ -70,8 +70,8 @@ export function Header() {
   const navItems =
     role === "admin"
       ? ADMIN_NAV
-      : role === "ngo"
-        ? NGO_NAV
+      : role === "organization"
+        ? Organization_NAV
         : role === "member"
           ? MEMBER_NAV
           : GUEST_NAV;
@@ -175,7 +175,11 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link
                       to={
-                        role === "admin" ? "/admin-dashboard" : role === "ngo" ? "/ngo" : "/member"
+                        role === "admin"
+                          ? "/admin-dashboard"
+                          : role === "organization"
+                            ? "/organization"
+                            : "/member"
                       }
                     >
                       <LayoutDashboard className="mr-2 h-4 w-4" />

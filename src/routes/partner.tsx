@@ -9,7 +9,7 @@ export const Route = createFileRoute("/partner")({
       { title: "Partner With Us — CommonGround" },
       {
         name: "description",
-        content: "Apply to join the CommonGround NGO network.",
+        content: "Apply to join the CommonGround Organization network.",
       },
     ],
   }),
@@ -28,8 +28,9 @@ function PartnerPage() {
             Apply to join the CommonGround network
           </h1>
           <p className="mt-4 text-muted-foreground">
-            We partner with NGOs working on long-horizon causes — restoration, conservation,
-            education and social impact. Tell us about your work and our team will get back to you.
+            We partner with Organizations working on long-horizon causes — restoration,
+            conservation, education and social impact. Tell us about your work and our team will get
+            back to you.
           </p>
 
           <ul className="mt-6 grid gap-2 text-sm sm:grid-cols-3">
@@ -59,8 +60,8 @@ function PartnerPage() {
               }, 600);
             }}
           >
-            <Field label="NGO name" required>
-              <input required name="ngo" className={inputCls} />
+            <Field label="Organization name" required>
+              <input required name="organization" className={inputCls} />
             </Field>
             <Field label="Registration number" required>
               <input required name="reg" className={inputCls} />

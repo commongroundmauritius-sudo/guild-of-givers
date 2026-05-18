@@ -31,7 +31,7 @@ const FormField = <
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
+    <FormFieldContext.Provider value={{ name: props.organization_name }}>
       <Controller {...props} />
     </FormFieldContext.Provider>
   );
@@ -50,13 +50,13 @@ const useFormField = () => {
     throw new Error("useFormField should be used within <FormItem>");
   }
 
-  const fieldState = getFieldState(fieldContext.name, formState);
+  const fieldState = getFieldState(fieldContext.organization_name, formState);
 
   const { id } = itemContext;
 
   return {
     id,
-    name: fieldContext.name,
+    name: fieldContext.organization_name,
     formItemId: `${id}-form-item`,
     formDescriptionId: `${id}-form-item-description`,
     formMessageId: `${id}-form-item-message`,

@@ -26,13 +26,20 @@ function MemberSettings() {
     mutationFn: async () => {
       if (!user) return;
 
+      const trimmedAddress = address.trim();
+      const ageInt = age ? parseInt(age) : null;
+
+      if (ageInt !== null && (ageInt < 13 || ageInt > 120)) {
+        throw new Error("Age must be between 13 and 120");
+      }
+
       const { error } = await supabase
         .from("profiles")
         .update({
           full_name: fullName,
           phone,
-          address,
-          age: age ? parseInt(age) : null,
+          address: trimmedAddress || null,
+          age: ageInt,
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString(),
         })
@@ -112,6 +119,8 @@ function MemberSettings() {
                     onChange={(e) => setAge(e.target.value)}
                     placeholder="Age"
                     className="pl-10 rounded-xl"
+                    min="13"
+                    max="120"
                   />
                 </div>
               </div>

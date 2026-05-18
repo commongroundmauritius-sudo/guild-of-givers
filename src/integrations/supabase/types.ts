@@ -44,7 +44,7 @@ export type Database = {
           created_at: string;
           id: string;
           initiative_id: string;
-          ngo_id: string | null;
+          organization_id: string | null;
           payment_id: string;
         };
         Insert: {
@@ -52,7 +52,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           initiative_id: string;
-          ngo_id?: string | null;
+          organization_id?: string | null;
           payment_id: string;
         };
         Update: {
@@ -60,7 +60,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           initiative_id?: string;
-          ngo_id?: string | null;
+          organization_id?: string | null;
           payment_id?: string;
         };
         Relationships: [
@@ -72,10 +72,10 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "allocations_ngo_id_fkey";
-            columns: ["ngo_id"];
+            foreignKeyName: "allocations_organization_id_fkey";
+            columns: ["organization_id"];
             isOneToOne: false;
-            referencedRelation: "ngos";
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
           {
@@ -340,7 +340,7 @@ export type Database = {
           is_published: boolean;
           long_term_goals: string | null;
           media_url: string | null;
-          ngo_id: string | null;
+          organization_id: string | null;
           short_term_goals: string | null;
           status: string | null;
           summary: string | null;
@@ -372,7 +372,7 @@ export type Database = {
           is_published?: boolean;
           long_term_goals?: string | null;
           media_url?: string | null;
-          ngo_id?: string | null;
+          organization_id?: string | null;
           short_term_goals?: string | null;
           status?: string | null;
           summary?: string | null;
@@ -404,7 +404,7 @@ export type Database = {
           is_published?: boolean;
           long_term_goals?: string | null;
           media_url?: string | null;
-          ngo_id?: string | null;
+          organization_id?: string | null;
           short_term_goals?: string | null;
           status?: string | null;
           summary?: string | null;
@@ -413,10 +413,10 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "initiatives_ngo_id_fkey";
-            columns: ["ngo_id"];
+            foreignKeyName: "initiatives_organization_id_fkey";
+            columns: ["organization_id"];
             isOneToOne: false;
-            referencedRelation: "ngos";
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
@@ -427,7 +427,7 @@ export type Database = {
           covers_fees: boolean;
           created_at: string;
           email: string;
-          full_name: string;
+          full_organization_name: string;
           id: string;
           phone: string | null;
           status: string;
@@ -437,7 +437,7 @@ export type Database = {
           covers_fees?: boolean;
           created_at?: string;
           email: string;
-          full_name: string;
+          full_organization_name: string;
           id?: string;
           phone?: string | null;
           status?: string;
@@ -460,7 +460,7 @@ export type Database = {
           distribution_percentage: number | null;
           id: string;
           initiative_id: string;
-          ngo_id: string | null;
+          organization_id: string | null;
           user_id: string;
         };
         Insert: {
@@ -468,7 +468,7 @@ export type Database = {
           distribution_percentage?: number | null;
           id?: string;
           initiative_id: string;
-          ngo_id?: string | null;
+          organization_id?: string | null;
           user_id: string;
         };
         Update: {
@@ -476,7 +476,7 @@ export type Database = {
           distribution_percentage?: number | null;
           id?: string;
           initiative_id?: string;
-          ngo_id?: string | null;
+          organization_id?: string | null;
           user_id?: string;
         };
         Relationships: [
@@ -488,21 +488,21 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "member_preferences_ngo_id_fkey";
-            columns: ["ngo_id"];
+            foreignKeyName: "member_preferences_organization_id_fkey";
+            columns: ["organization_id"];
             isOneToOne: false;
-            referencedRelation: "ngos";
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
       };
-      ngo_documents: {
+      organization_documents: {
         Row: {
           created_at: string;
           document_type: string | null;
           file_url: string;
           id: string;
-          ngo_id: string;
+          organization_id: string;
           title: string;
         };
         Insert: {
@@ -510,7 +510,7 @@ export type Database = {
           document_type?: string | null;
           file_url: string;
           id?: string;
-          ngo_id: string;
+          organization_id: string;
           title: string;
         };
         Update: {
@@ -518,20 +518,20 @@ export type Database = {
           document_type?: string | null;
           file_url?: string;
           id?: string;
-          ngo_id?: string;
+          organization_id?: string;
           title?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "ngo_documents_ngo_id_fkey";
-            columns: ["ngo_id"];
+            foreignKeyName: "organization_documents_organization_id_fkey";
+            columns: ["organization_id"];
             isOneToOne: false;
-            referencedRelation: "ngos";
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
       };
-      ngos: {
+      organizations: {
         Row: {
           category: string | null;
           contact_info: string | null;
@@ -545,8 +545,14 @@ export type Database = {
           logo_url: string | null;
           mission: string | null;
           monthly_target_amount: number | null;
-          name: string;
-          owner_id: string | null;
+          organization_name: string;
+          owner_user_id: string | null;
+          address: string | null;
+          contact_email: string | null;
+          contact_phone: string | null;
+          milestones: string | null;
+          expected_outcomes: string | null;
+          allocation_summary: string | null;
           status: string | null;
           supporters_count: number | null;
           transparency_content: string | null;
@@ -566,8 +572,8 @@ export type Database = {
           logo_url?: string | null;
           mission?: string | null;
           monthly_target_amount?: number | null;
-          name: string;
-          owner_id?: string | null;
+          organization_name: string;
+          owner_user_id?: string | null;
           status?: string | null;
           supporters_count?: number | null;
           transparency_content?: string | null;
@@ -588,7 +594,7 @@ export type Database = {
           mission?: string | null;
           monthly_target_amount?: number | null;
           name?: string;
-          owner_id?: string | null;
+          owner_user_id?: string | null;
           status?: string | null;
           supporters_count?: number | null;
           transparency_content?: string | null;
@@ -829,7 +835,7 @@ export type Database = {
           email: string | null;
           full_name: string | null;
           id: string;
-          ngo_id: string | null;
+          organization_id: string | null;
           phone: string | null;
           status: string | null;
           updated_at: string;
@@ -844,7 +850,7 @@ export type Database = {
           email?: string | null;
           full_name?: string | null;
           id: string;
-          ngo_id?: string | null;
+          organization_id?: string | null;
           phone?: string | null;
           status?: string | null;
           updated_at?: string;
@@ -859,17 +865,17 @@ export type Database = {
           email?: string | null;
           full_name?: string | null;
           id?: string;
-          ngo_id?: string | null;
+          organization_id?: string | null;
           phone?: string | null;
           status?: string | null;
           updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "profiles_ngo_id_fkey";
-            columns: ["ngo_id"];
+            foreignKeyName: "profiles_organization_id_fkey";
+            columns: ["organization_id"];
             isOneToOne: false;
-            referencedRelation: "ngos";
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
@@ -920,7 +926,7 @@ export type Database = {
           file_url: string;
           id: string;
           initiative_id: string | null;
-          ngo_id: string;
+          organization_id: string;
           report_date: string | null;
           status: string | null;
           title: string;
@@ -932,7 +938,7 @@ export type Database = {
           file_url: string;
           id?: string;
           initiative_id?: string | null;
-          ngo_id: string;
+          organization_id: string;
           report_date?: string | null;
           status?: string | null;
           title: string;
@@ -944,7 +950,7 @@ export type Database = {
           file_url?: string;
           id?: string;
           initiative_id?: string | null;
-          ngo_id?: string;
+          organization_id?: string;
           report_date?: string | null;
           status?: string | null;
           title?: string;
@@ -958,10 +964,10 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "reports_ngo_id_fkey";
-            columns: ["ngo_id"];
+            foreignKeyName: "reports_organization_id_fkey";
+            columns: ["organization_id"];
             isOneToOne: false;
-            referencedRelation: "ngos";
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
@@ -974,7 +980,7 @@ export type Database = {
           created_at: string;
           id: string;
           next_billing_date: string | null;
-          ngo_id: string | null;
+          organization_id: string | null;
           peach_subscription_id: string | null;
           start_date: string | null;
           status: Database["public"]["Enums"]["subscription_status"];
@@ -988,7 +994,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           next_billing_date?: string | null;
-          ngo_id?: string | null;
+          organization_id?: string | null;
           peach_subscription_id?: string | null;
           start_date?: string | null;
           status?: Database["public"]["Enums"]["subscription_status"];
@@ -1002,7 +1008,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           next_billing_date?: string | null;
-          ngo_id?: string | null;
+          organization_id?: string | null;
           peach_subscription_id?: string | null;
           start_date?: string | null;
           status?: Database["public"]["Enums"]["subscription_status"];
@@ -1011,10 +1017,10 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "subscriptions_ngo_id_fkey";
-            columns: ["ngo_id"];
+            foreignKeyName: "subscriptions_organization_id_fkey";
+            columns: ["organization_id"];
             isOneToOne: false;
-            referencedRelation: "ngos";
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
@@ -1077,7 +1083,7 @@ export type Database = {
       };
     };
     Enums: {
-      app_role: "admin" | "ngo" | "member";
+      app_role: "admin" | "organization" | "member";
       payment_status: "success" | "failed" | "pending";
       subscription_status: "active" | "pending" | "cancelled" | "past_due";
     };
@@ -1205,7 +1211,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "ngo", "member"],
+      app_role: ["admin", "organization", "member"],
       payment_status: ["success", "failed", "pending"],
       subscription_status: ["active", "pending", "cancelled", "past_due"],
     },

@@ -21,14 +21,14 @@ function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const [init, initPending, ngos, members, reports] = await Promise.all([
+      const [init, initPending, organizations, members, reports] = await Promise.all([
         supabase.from("initiatives").select("id", { count: "exact", head: true }),
         supabase
           .from("initiatives")
           .select("id", { count: "exact", head: true })
           .eq("is_approved", false),
         supabase
-          .from("ngos")
+          .from("organizations")
           .select("id", { count: "exact", head: true })
           .eq("status", "pending_review"),
         supabase
@@ -42,7 +42,7 @@ function AdminDashboard() {
       ]);
       return {
         initiatives: init.count || 0,
-        pendingNgos: ngos.count || 0,
+        pendingNgos: organizations.count || 0,
         members: members.count || 0,
         pendingReports: reports.count || 0,
         pendingInitiatives: initPending.count || 0,
@@ -67,7 +67,7 @@ function AdminDashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("reports")
-        .select("*, ngos(name)")
+        .select("*, organizations(name)")
         .eq("status", "pending_review")
         .limit(5);
       return data;
@@ -157,7 +157,7 @@ function AdminDashboard() {
                 bg: "bg-amber-50",
               },
               {
-                label: "Pending NGOs",
+                label: "Pending Organizations",
                 value: stats?.pendingNgos ?? "0",
                 icon: Shield,
                 color: "text-blue-600",
@@ -284,7 +284,7 @@ function AdminDashboard() {
                           <td className="px-6 py-4">
                             <p className="font-medium text-primary">{r.title}</p>
                             <p className="text-xs text-muted-foreground">
-                              {getJoinedField(r.ngos, "name")}
+                              {getJoinedField(r.organizations, "name")}
                             </p>
                           </td>
                           <td className="px-6 py-4">

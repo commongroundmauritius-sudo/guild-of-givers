@@ -14,7 +14,7 @@ interface Profile {
   bio: string | null;
   age: number | null;
   status: string | null;
-  ngo_id: string | null;
+  organization_id: string | null;
 }
 
 interface AuthContextValue {

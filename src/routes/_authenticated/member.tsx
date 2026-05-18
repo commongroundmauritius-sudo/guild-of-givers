@@ -71,10 +71,10 @@ function MemberDashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("initiatives")
-        .select("*, ngos!inner(name, status)")
+        .select("*, organizations!inner(name, status)")
         .eq("is_approved", true)
         .eq("is_published", true)
-        .eq("ngos.status", "active");
+        .eq("organizations.status", "active");
       return data;
     },
   });
@@ -84,7 +84,7 @@ function MemberDashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("reports")
-        .select("*, initiatives(title), ngos(name)")
+        .select("*, initiatives(title), organizations(name)")
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       return data;
@@ -224,7 +224,7 @@ function MemberDashboard() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">
-                          {getJoinedField(i.ngos, "name")}
+                          {getJoinedField(i.organizations, "name")}
                         </span>
                         <h3 className="mt-1 font-display text-lg font-semibold text-primary">
                           {i.title}
@@ -272,7 +272,7 @@ function MemberDashboard() {
                           <p className="text-sm font-semibold text-primary">{r.title}</p>
                           <p className="text-xs text-muted-foreground">
                             {getJoinedField(r.initiatives, "title")} •{" "}
-                            {getJoinedField(r.ngos, "name")}
+                            {getJoinedField(r.organizations, "name")}
                           </p>
                         </div>
                       </div>

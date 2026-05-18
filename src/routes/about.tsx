@@ -8,7 +8,7 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "CommonGround is a membership-based impact platform building governance-first NGO infrastructure for long-term social change.",
+          "CommonGround is a membership-based impact platform building governance-first Organization infrastructure for long-term social change.",
       },
     ],
   }),
@@ -28,7 +28,7 @@ function AboutPage() {
             CommonGround was founded on a simple premise: high-impact social work needs predictable,
             multi-year funding — not one-off campaigns. We are building the governance, financial,
             and reporting infrastructure that lets members support vetted programs with confidence,
-            and lets NGOs focus on the work.
+            and lets Organizations focus on the work.
           </p>
         </div>
       </section>

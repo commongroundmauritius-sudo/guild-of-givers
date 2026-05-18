@@ -87,7 +87,7 @@ export function CreatePostForm() {
     }
   };
 
-  if (role === "ngo" || !role) return null;
+  if (role === "organization" || !role) return null;
 
   return (
     <Card>

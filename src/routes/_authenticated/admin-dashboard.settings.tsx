@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Settings as SettingsIcon, Save } from "lucide-react";
+import { User, Settings as SettingsIcon, Save, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,10 +19,19 @@ function AdminSettings() {
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [bio, setBio] = useState(profile?.bio || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
+  const [age, setAge] = useState(profile?.age?.toString() || "");
+  const [address, setAddress] = useState(profile?.address || "");
 
   const mutation = useMutation({
     mutationFn: async () => {
       if (!user) return;
+
+      const trimmedAddress = address.trim();
+      const ageInt = age ? parseInt(age) : null;
+
+      if (ageInt !== null && (ageInt < 13 || ageInt > 120)) {
+        throw new Error("Age must be between 13 and 120");
+      }
 
       const { error } = await supabase
         .from("profiles")
@@ -30,6 +39,8 @@ function AdminSettings() {
           full_name: fullName,
           bio,
           avatar_url: avatarUrl,
+          age: ageInt,
+          address: trimmedAddress || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -74,17 +85,54 @@ function AdminSettings() {
                 />
               </div>
 
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="age" className="text-sm font-semibold">
+                    Age
+                  </Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="age"
+                      type="number"
+                      value={age}
+                      onChange={(e) => setAge(e.target.value)}
+                      placeholder="Age"
+                      className="pl-10 rounded-xl"
+                      min="13"
+                      max="120"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="avatarUrl" className="text-sm font-semibold">
+                    Avatar URL
+                  </Label>
+                  <Input
+                    id="avatarUrl"
+                    value={avatarUrl}
+                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    placeholder="https://example.com/avatar.jpg"
+                    className="rounded-xl"
+                  />
+                </div>
+              </div>
+
               <div className="grid gap-2">
-                <Label htmlFor="avatarUrl" className="text-sm font-semibold">
-                  Avatar URL
+                <Label htmlFor="address" className="text-sm font-semibold">
+                  Address
                 </Label>
-                <Input
-                  id="avatarUrl"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                  className="rounded-xl"
-                />
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <textarea
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Residential address"
+                    className="min-h-[80px] w-full rounded-xl border border-input bg-background pl-10 pr-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                </div>
               </div>
 
               <div className="grid gap-2">

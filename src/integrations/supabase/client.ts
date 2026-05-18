@@ -14,4 +14,4 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
-export type AppRole = "admin" | "ngo" | "member";
+export type AppRole = "admin" | "organization" | "member";

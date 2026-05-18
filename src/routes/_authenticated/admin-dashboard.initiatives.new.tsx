@@ -42,7 +42,7 @@ function InitiativeCreatePage() {
     target_milestones: "",
     expected_outcomes: "",
     category: "",
-    ngo_id: "",
+    organization_id: "",
     is_published: false,
   });
 
@@ -53,11 +53,11 @@ function InitiativeCreatePage() {
     }
   }, [role, authLoading, navigate]);
 
-  const { data: ngos } = useQuery({
-    queryKey: ["all-ngos"],
+  const { data: organizations } = useQuery({
+    queryKey: ["all-organizations"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("ngos")
+        .from("organizations")
         .select("id, name")
         .eq("status", "active")
         .order("name");
@@ -212,20 +212,20 @@ function InitiativeCreatePage() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      Associated NGO (Optional)
+                      Associated Organization (Optional)
                     </label>
                     <div className="relative">
                       <Building className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <select
-                        name="ngo_id"
-                        value={formData.ngo_id}
+                        name="organization_id"
+                        value={formData.organization_id}
                         onChange={handleInputChange}
                         className="w-full rounded-2xl border border-border/40 bg-muted/30 py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 appearance-none"
                       >
-                        <option value="">Select an NGO</option>
-                        {ngos?.map((ngo) => (
-                          <option key={ngo.id} value={ngo.id}>
-                            {ngo.name}
+                        <option value="">Select an Organization</option>
+                        {organizations?.map((organization) => (
+                          <option key={organization.id} value={organization.id}>
+                            {organization.organization_name}
                           </option>
                         ))}
                       </select>
