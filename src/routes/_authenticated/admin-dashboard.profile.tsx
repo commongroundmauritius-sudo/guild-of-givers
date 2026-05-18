@@ -31,7 +31,10 @@ function AdminProfile() {
   const { data: managedInitiatives } = useQuery({
     queryKey: ["managed-initiatives"],
     queryFn: async () => {
-      const { data } = await supabase.from("initiatives").select("*, organizations(organization_name)").limit(5);
+      const { data } = await supabase
+        .from("initiatives")
+        .select("*, organizations(organization_name)")
+        .limit(5);
       return data;
     },
     enabled: !!user?.id,
