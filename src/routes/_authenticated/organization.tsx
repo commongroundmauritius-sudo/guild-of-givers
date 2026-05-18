@@ -7,7 +7,7 @@ import { BadgeCheck, Send, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
-export const Route = createFileRoute("/_authenticated/ngo")({
+export const Route = createFileRoute("/_authenticated/organization")({
   component: OrganizationDashboard,
 });
 

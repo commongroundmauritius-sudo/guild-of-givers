@@ -21,7 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as InitiativesIndexRouteImport } from './routes/initiatives/index'
 import { Route as InitiativesIdRouteImport } from './routes/initiatives/$id'
 import { Route as EntitiesIdRouteImport } from './routes/entities.$id'
-import { Route as AuthenticatedNgoRouteImport } from './routes/_authenticated/ngo'
+import { Route as AuthenticatedOrganizationRouteImport } from './routes/_authenticated/organization'
 import { Route as AuthenticatedMemberRouteImport } from './routes/_authenticated/member'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin-dashboard'
@@ -100,11 +100,12 @@ const EntitiesIdRoute = EntitiesIdRouteImport.update({
   path: '/entities/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedNgoRoute = AuthenticatedNgoRouteImport.update({
-  id: '/ngo',
-  path: '/ngo',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
+const AuthenticatedOrganizationRoute =
+  AuthenticatedOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedMemberRoute = AuthenticatedMemberRouteImport.update({
   id: '/member',
   path: '/member',
@@ -224,7 +225,7 @@ export interface FileRoutesByFullPath {
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRouteWithChildren
-  '/ngo': typeof AuthenticatedNgoRoute
+  '/organization': typeof AuthenticatedOrganizationRoute
   '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/': typeof InitiativesIndexRoute
@@ -255,7 +256,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRouteWithChildren
-  '/ngo': typeof AuthenticatedNgoRoute
+  '/organization': typeof AuthenticatedOrganizationRoute
   '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives': typeof InitiativesIndexRoute
@@ -289,7 +290,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/member': typeof AuthenticatedMemberRouteWithChildren
-  '/_authenticated/ngo': typeof AuthenticatedNgoRoute
+  '/_authenticated/organization': typeof AuthenticatedOrganizationRoute
   '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/': typeof InitiativesIndexRoute
@@ -323,7 +324,7 @@ export interface FileRouteTypes {
     | '/admin-dashboard'
     | '/dashboard'
     | '/member'
-    | '/ngo'
+    | '/organization'
     | '/entities/$id'
     | '/initiatives/$id'
     | '/initiatives/'
@@ -354,7 +355,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/dashboard'
     | '/member'
-    | '/ngo'
+    | '/organization'
     | '/entities/$id'
     | '/initiatives/$id'
     | '/initiatives'
@@ -387,7 +388,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-dashboard'
     | '/_authenticated/dashboard'
     | '/_authenticated/member'
-    | '/_authenticated/ngo'
+    | '/_authenticated/organization'
     | '/entities/$id'
     | '/initiatives/$id'
     | '/initiatives/'
@@ -509,11 +510,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EntitiesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/ngo': {
-      id: '/_authenticated/ngo'
-      path: '/ngo'
-      fullPath: '/ngo'
-      preLoaderRoute: typeof AuthenticatedNgoRouteImport
+    '/_authenticated/organization': {
+      id: '/_authenticated/organization'
+      path: '/organization'
+      fullPath: '/organization'
+      preLoaderRoute: typeof AuthenticatedOrganizationRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/member': {
@@ -707,7 +708,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMemberRoute: typeof AuthenticatedMemberRouteWithChildren
-  AuthenticatedNgoRoute: typeof AuthenticatedNgoRoute
+  AuthenticatedOrganizationRoute: typeof AuthenticatedOrganizationRoute
   AuthenticatedCommunityHubPostIdRoute: typeof AuthenticatedCommunityHubPostIdRoute
   AuthenticatedCommunityHubIndexRoute: typeof AuthenticatedCommunityHubIndexRoute
 }
@@ -717,7 +718,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedAdminDashboardRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMemberRoute: AuthenticatedMemberRouteWithChildren,
-  AuthenticatedNgoRoute: AuthenticatedNgoRoute,
+  AuthenticatedOrganizationRoute: AuthenticatedOrganizationRoute,
   AuthenticatedCommunityHubPostIdRoute: AuthenticatedCommunityHubPostIdRoute,
   AuthenticatedCommunityHubIndexRoute: AuthenticatedCommunityHubIndexRoute,
 }

@@ -42,7 +42,7 @@ function AdminDashboard() {
       ]);
       return {
         initiatives: init.count || 0,
-        pendingNgos: organizations.count || 0,
+        awaitingReviewOrgs: organizations.count || 0,
         members: members.count || 0,
         pendingReports: reports.count || 0,
         pendingInitiatives: initPending.count || 0,
@@ -158,7 +158,7 @@ function AdminDashboard() {
               },
               {
                 label: "Pending Organizations",
-                value: stats?.pendingNgos ?? "0",
+                value: stats?.awaitingReviewOrgs ?? "0",
                 icon: Shield,
                 color: "text-blue-600",
                 bg: "bg-blue-50",
