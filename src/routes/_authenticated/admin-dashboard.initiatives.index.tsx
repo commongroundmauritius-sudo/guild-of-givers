@@ -25,7 +25,7 @@ function AdminInitiativesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, ngos(id, name)")
+        .select("*, organizations(id, name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -35,12 +35,15 @@ function AdminInitiativesPage() {
   const filteredInitiatives = initiatives?.filter((i) => {
     const matchesSearch =
       (i.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (getJoinedField(i.ngos, "name") || "").toLowerCase().includes(searchTerm.toLowerCase());
+      (getJoinedField(i.organizations, "name") || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
     const matchesSource = sourceFilter === "all" || i.initiative_source === sourceFilter;
 
     let matchesTab = true;
-    if (activeTab === "ngo_submitted") matchesTab = i.initiative_source === "ngo_submission";
+    if (activeTab === "organization_submitted")
+      matchesTab = i.initiative_source === "organization_submission";
     else if (activeTab === "admin_created") matchesTab = i.initiative_source === "admin_created";
     else if (activeTab === "draft") matchesTab = !i.is_published;
     else if (activeTab === "published") matchesTab = i.is_published;
@@ -51,7 +54,7 @@ function AdminInitiativesPage() {
 
   const tabs = [
     { id: "all", label: "All" },
-    { id: "ngo_submitted", label: "NGO Submitted" },
+    { id: "organization_submitted", label: "Organization Submitted" },
     { id: "admin_created", label: "Admin Created" },
     { id: "draft", label: "Drafts" },
     { id: "published", label: "Published" },
@@ -123,7 +126,7 @@ function AdminInitiativesPage() {
                 className="rounded-xl border border-border/40 bg-card px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               >
                 <option value="all">All Sources</option>
-                <option value="ngo_submission">NGO Submission</option>
+                <option value="organization_submission">Organization Submission</option>
                 <option value="admin_created">Admin Created</option>
               </select>
             </div>
@@ -156,7 +159,7 @@ function AdminInitiativesPage() {
           ) : filteredInitiatives && filteredInitiatives.length > 0 ? (
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {filteredInitiatives.map((i) => {
-                const ngoName = getJoinedField(i.ngos, "name");
+                const organizationName = getJoinedField(i.organizations, "name");
 
                 return (
                   <div
@@ -197,7 +200,9 @@ function AdminInitiativesPage() {
                           </span>
                         </div>
                         <span className="rounded-full bg-black/40 px-2 py-1 text-[8px] font-bold uppercase text-white backdrop-blur-sm">
-                          {i.initiative_source === 'admin_created' ? 'Admin Created' : 'NGO Submission'}
+                          {i.initiative_source === "admin_created"
+                            ? "Admin Created"
+                            : "Organization Submission"}
                         </span>
                       </div>
                     </div>
@@ -205,7 +210,7 @@ function AdminInitiativesPage() {
                     <div className="flex flex-1 flex-col p-6">
                       <div className="flex items-center justify-between">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">
-                          {ngoName || "Internal Initiative"}
+                          {organizationName || "Internal Initiative"}
                         </p>
                         <p className="text-[9px] text-muted-foreground">
                           {new Date(i.created_at).toLocaleDateString()}

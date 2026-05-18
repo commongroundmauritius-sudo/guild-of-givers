@@ -27,26 +27,30 @@ function EntityProfilePage() {
   const { id } = Route.useParams();
 
   const {
-    data: ngo,
+    data: organization,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["ngo-entity", id],
+    queryKey: ["organization-entity", id],
     queryFn: async () => {
       if (!id) throw new Error("No Entity ID provided");
-      const { data, error } = await supabase.from("ngos").select("*").eq("id", id).single();
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("id", id)
+        .single();
       if (error) throw error;
       return data;
     },
   });
 
   const { data: initiatives } = useQuery({
-    queryKey: ["ngo-initiatives", id],
+    queryKey: ["organization-initiatives", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
         .select("*")
-        .eq("ngo_id", id)
+        .eq("organization_id", id)
         .eq("is_approved", true)
         .eq("is_published", true);
       if (error) throw error;
@@ -70,7 +74,7 @@ function EntityProfilePage() {
     );
   }
 
-  if (error || !ngo) {
+  if (error || !organization) {
     return (
       <SiteLayout>
         <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
@@ -84,8 +88,10 @@ function EntityProfilePage() {
   }
 
   const progress =
-    ngo.monthly_target_amount && ngo.monthly_target_amount > 0
-      ? (Number(ngo.current_collected_amount || 0) / Number(ngo.monthly_target_amount)) * 100
+    organization.monthly_target_amount && organization.monthly_target_amount > 0
+      ? (Number(organization.current_collected_amount || 0) /
+          Number(organization.monthly_target_amount)) *
+        100
       : 0;
 
   return (
@@ -95,11 +101,15 @@ function EntityProfilePage() {
         <div className="relative h-[40vh] min-h-[400px] w-full overflow-hidden bg-primary/5">
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
             <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl">
-              {ngo.logo_url ? (
-                <img src={ngo.logo_url} alt={ngo.name} className="h-full w-full object-cover" />
+              {organization.logo_url ? (
+                <img
+                  src={organization.logo_url}
+                  alt={organization.organization_name}
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-primary/10 text-4xl font-bold text-primary uppercase">
-                  {ngo.name.charAt(0)}
+                  {organization.organization_name.charAt(0)}
                 </div>
               )}
             </div>
@@ -114,13 +124,13 @@ function EntityProfilePage() {
                 <ArrowLeft className="h-4 w-4" /> Back
               </Link>
               <h1 className="mt-6 font-display text-4xl font-bold text-primary sm:text-5xl lg:text-6xl">
-                {ngo.name}
+                {organization.organization_name}
               </h1>
               <div className="mt-4 flex flex-wrap gap-4">
                 <span className="rounded-full bg-forest/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-forest">
-                  {ngo.category || "Social Entity"}
+                  {organization.category || "Social Entity"}
                 </span>
-                {ngo.is_verified && (
+                {organization.is_verified && (
                   <span className="flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-blue-600">
                     <ShieldCheck className="h-3.5 w-3.5" /> Vetted Partner
                   </span>
@@ -139,7 +149,7 @@ function EntityProfilePage() {
                   About this Organization
                 </h2>
                 <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-                  {ngo.description || "No description provided."}
+                  {organization.description || "No description provided."}
                 </p>
                 <div className="mt-6 grid gap-6 sm:grid-cols-2">
                   <div className="rounded-3xl border border-border/40 bg-card p-6">
@@ -148,7 +158,7 @@ function EntityProfilePage() {
                       <h3 className="font-semibold">Our Mission</h3>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">
-                      {ngo.mission || "Empowering communities through sustainable action."}
+                      {organization.mission || "Empowering communities through sustainable action."}
                     </p>
                   </div>
                   <div className="rounded-3xl border border-border/40 bg-card p-6">
@@ -157,14 +167,14 @@ function EntityProfilePage() {
                       <h3 className="font-semibold">Website</h3>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">
-                      {ngo.website_url ? (
+                      {organization.website_url ? (
                         <a
-                          href={ngo.website_url}
+                          href={organization.website_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:underline"
                         >
-                          {ngo.website_url}
+                          {organization.website_url}
                         </a>
                       ) : (
                         "N/A"
@@ -188,7 +198,7 @@ function EntityProfilePage() {
                       Core Goals
                     </h3>
                     <p className="mt-2 text-primary/80 whitespace-pre-wrap">
-                      {ngo.goals || "No goals specified yet."}
+                      {organization.goals || "No goals specified yet."}
                     </p>
                   </div>
                   <div>
@@ -196,7 +206,7 @@ function EntityProfilePage() {
                       Impact to Date
                     </h3>
                     <p className="mt-2 text-primary/80 whitespace-pre-wrap">
-                      {ngo.impact_metrics || "No impact metrics reported yet."}
+                      {organization.impact_metrics || "No impact metrics reported yet."}
                     </p>
                   </div>
                 </div>
@@ -247,7 +257,7 @@ function EntityProfilePage() {
                 </div>
                 <div className="rounded-[2rem] border border-border/40 bg-card p-8">
                   <p className="text-primary/80">
-                    {ngo.transparency_content ||
+                    {organization.transparency_content ||
                       "This organization is committed to full transparency. Quarterly reports will be posted here."}
                   </p>
                 </div>
@@ -273,10 +283,11 @@ function EntityProfilePage() {
                   <div className="flex items-end justify-between">
                     <div>
                       <span className="block text-3xl font-bold tracking-tight text-primary">
-                        Rs {Number(ngo.current_collected_amount || 0).toLocaleString()}
+                        Rs {Number(organization.current_collected_amount || 0).toLocaleString()}
                       </span>
                       <span className="mt-1 block text-xs font-medium text-muted-foreground">
-                        monthly target: Rs {Number(ngo.monthly_target_amount || 0).toLocaleString()}
+                        monthly target: Rs{" "}
+                        {Number(organization.monthly_target_amount || 0).toLocaleString()}
                       </span>
                     </div>
                     <div className="text-right">
@@ -300,7 +311,7 @@ function EntityProfilePage() {
                     <div className="rounded-2xl bg-muted/30 p-5 text-center">
                       <Users className="mx-auto mb-2 h-5 w-5 text-primary/40" />
                       <span className="block text-xl font-bold text-primary">
-                        {ngo.supporters_count || 0}
+                        {organization.supporters_count || 0}
                       </span>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         Supporters
@@ -309,7 +320,7 @@ function EntityProfilePage() {
                     <div className="rounded-2xl bg-muted/30 p-5 text-center">
                       <MessageSquare className="mx-auto mb-2 h-5 w-5 text-primary/40" />
                       <span className="block text-xl font-bold text-primary">
-                        {ngo.updates_feed_enabled ? "Active" : "Off"}
+                        {organization.updates_feed_enabled ? "Active" : "Off"}
                       </span>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         Updates

@@ -31,7 +31,7 @@ function AdminProfile() {
   const { data: managedInitiatives } = useQuery({
     queryKey: ["managed-initiatives"],
     queryFn: async () => {
-      const { data } = await supabase.from("initiatives").select("*, ngos(name)").limit(5);
+      const { data } = await supabase.from("initiatives").select("*, organizations(name)").limit(5);
       return data;
     },
     enabled: !!user?.id,
@@ -150,7 +150,7 @@ function AdminProfile() {
                       className="rounded-2xl border border-border/40 bg-card p-4 transition hover:shadow-md"
                     >
                       <p className="text-xs font-bold text-amber-600 uppercase">
-                        {getJoinedField(i.ngos, "name")}
+                        {getJoinedField(i.organizations, "name")}
                       </p>
                       <h3 className="mt-1 font-semibold text-primary">{i.title}</h3>
                       <div className="mt-3 flex items-center gap-2">

@@ -34,10 +34,10 @@ function InitiativesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, ngos!inner(name, status)")
+        .select("*, organizations!inner(name, status)")
         .eq("is_approved", true)
         .eq("is_published", true)
-        .eq("ngos.status", "active")
+        .eq("organizations.status", "active")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -98,7 +98,7 @@ function InitiativesPage() {
                 const current = Number(i.current_amount_mur) || 0;
                 const progress = Math.min(100, Math.round((current / goal) * 100));
 
-                const ngoName = getJoinedField(i.ngos, "name");
+                const organizationName = getJoinedField(i.organizations, "name");
 
                 return (
                   <Link
@@ -129,7 +129,7 @@ function InitiativesPage() {
                     <div className="flex flex-1 flex-col p-8">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
-                          {ngoName || "NGO Partner"}
+                          {organizationName || "Organization Partner"}
                         </span>
                       </div>
 

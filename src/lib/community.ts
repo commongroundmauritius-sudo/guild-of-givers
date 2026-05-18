@@ -34,17 +34,15 @@ export async function compressAndUploadImage(file: File, bucket: string, path: s
 
   try {
     const compressedFile = await imageCompression(file, options);
-    const fileName = `${path}/${Date.now()}-${file.name}`;
+    const fileName = `${path}/${Date.now()}-${file.organization_name}`;
 
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, compressedFile);
+    const { data, error } = await supabase.storage.from(bucket).upload(fileName, compressedFile);
 
     if (error) throw error;
 
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(bucket).getPublicUrl(data.path);
 
     return publicUrl;
   } catch (error) {
@@ -65,23 +63,26 @@ export async function fetchAnnouncements() {
   return data as Announcement[];
 }
 
-export async function fetchPosts(page = 0, pageSize = 20, sort: 'newest' | 'active' | 'reactions' = 'newest') {
+export async function fetchPosts(
+  page = 0,
+  pageSize = 20,
+  sort: "newest" | "active" | "reactions" = "newest",
+) {
   let query = supabase
     .from("community_posts")
     .select("*, profiles(full_name, avatar_url), initiatives(title)")
     .eq("is_deleted", false)
     .eq("status", "published");
 
-  if (sort === 'newest') {
+  if (sort === "newest") {
     query = query.order("created_at", { ascending: false });
-  } else if (sort === 'active') {
+  } else if (sort === "active") {
     query = query.order("comments_count", { ascending: false });
-  } else if (sort === 'reactions') {
+  } else if (sort === "reactions") {
     query = query.order("reactions_count", { ascending: false });
   }
 
-  const { data, error } = await query
-    .range(page * pageSize, (page + 1) * pageSize - 1);
+  const { data, error } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
 
   if (error) throw error;
   return data as Post[];
@@ -123,10 +124,15 @@ export async function toggleReaction(postId: string, userId: string, reactionTyp
       return supabase.from("post_reactions").delete().eq("id", existing.id);
     } else {
       // Update reaction
-      return supabase.from("post_reactions").update({ reaction_type: reactionType }).eq("id", existing.id);
+      return supabase
+        .from("post_reactions")
+        .update({ reaction_type: reactionType })
+        .eq("id", existing.id);
     }
   } else {
     // Add reaction
-    return supabase.from("post_reactions").insert({ post_id: postId, user_id: userId, reaction_type: reactionType });
+    return supabase
+      .from("post_reactions")
+      .insert({ post_id: postId, user_id: userId, reaction_type: reactionType });
   }
 }

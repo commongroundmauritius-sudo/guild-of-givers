@@ -24,7 +24,10 @@ export function CreatePostForm() {
   const { data: initiatives = [] } = useQuery({
     queryKey: ["initiatives-list"],
     queryFn: async () => {
-      const { data } = await supabase.from("initiatives").select("id, title").eq("status", "active");
+      const { data } = await supabase
+        .from("initiatives")
+        .select("id, title")
+        .eq("status", "active");
       return data || [];
     },
   });
@@ -84,7 +87,7 @@ export function CreatePostForm() {
     }
   };
 
-  if (role === "ngo" || !role) return null;
+  if (role === "organization" || !role) return null;
 
   return (
     <Card>
@@ -106,8 +109,10 @@ export function CreatePostForm() {
             onChange={(e) => setInitiativeId(e.target.value)}
           >
             <option value="none">Link to an Initiative (Optional)</option>
-            {initiatives.map(i => (
-              <option key={i.id} value={i.id}>{i.title}</option>
+            {initiatives.map((i) => (
+              <option key={i.id} value={i.id}>
+                {i.title}
+              </option>
             ))}
           </select>
 

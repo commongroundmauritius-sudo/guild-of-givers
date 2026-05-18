@@ -27,25 +27,28 @@ export function CommentSection({ postId }: CommentSectionProps) {
     if (!user) return;
     if (!newComment.trim()) return;
 
-    mutation.mutate({
-      post_id: postId,
-      user_id: user.id,
-      content: newComment,
-      parent_comment_id: replyTo,
-    }, {
-      onSuccess: () => {
-        setNewComment("");
-        setReplyTo(null);
-        toast.success("Comment posted!");
+    mutation.mutate(
+      {
+        post_id: postId,
+        user_id: user.id,
+        content: newComment,
+        parent_comment_id: replyTo,
       },
-      onError: (error: any) => {
-        toast.error(error.message || "Failed to post comment");
-      }
-    });
+      {
+        onSuccess: () => {
+          setNewComment("");
+          setReplyTo(null);
+          toast.success("Comment posted!");
+        },
+        onError: (error: any) => {
+          toast.error(error.message || "Failed to post comment");
+        },
+      },
+    );
   };
 
-  const mainComments = comments.filter(c => !c.parent_comment_id);
-  const getReplies = (parentId: string) => comments.filter(c => c.parent_comment_id === parentId);
+  const mainComments = comments.filter((c) => !c.parent_comment_id);
+  const getReplies = (parentId: string) => comments.filter((c) => c.parent_comment_id === parentId);
 
   return (
     <div className="space-y-6">
@@ -59,7 +62,9 @@ export function CommentSection({ postId }: CommentSectionProps) {
           {replyTo && (
             <div className="flex items-center justify-between bg-muted p-2 rounded-md text-xs">
               <span>Replying to a comment</span>
-              <Button variant="ghost" size="sm" onClick={() => setReplyTo(null)}>Cancel</Button>
+              <Button variant="ghost" size="sm" onClick={() => setReplyTo(null)}>
+                Cancel
+              </Button>
             </div>
           )}
           <Textarea
@@ -81,7 +86,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
       )}
 
       <div className="space-y-6">
-        {mainComments.map(comment => (
+        {mainComments.map((comment) => (
           <CommentItem
             key={comment.id}
             comment={comment}
@@ -100,7 +105,12 @@ export function CommentSection({ postId }: CommentSectionProps) {
   );
 }
 
-function CommentItem({ comment, replies, onReply, canReply }: {
+function CommentItem({
+  comment,
+  replies,
+  onReply,
+  canReply,
+}: {
   comment: Comment;
   replies: Comment[];
   onReply: (id: string) => void;
@@ -137,7 +147,7 @@ function CommentItem({ comment, replies, onReply, canReply }: {
 
       {replies.length > 0 && (
         <div className="ml-11 space-y-4 border-l pl-4">
-          {replies.map(reply => (
+          {replies.map((reply) => (
             <CommentItem
               key={reply.id}
               comment={reply}

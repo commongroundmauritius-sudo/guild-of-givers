@@ -82,29 +82,3 @@ export const convertLead = createServerFn({ method: "POST" })
 
     return { success: true };
   });
-
-export const updateProfile = createServerFn({ method: "POST" })
-  .inputValidator(
-    (data: {
-      userId: string;
-      full_name?: string;
-      phone?: string;
-      address?: string;
-      bio?: string;
-      age?: number;
-      avatar_url?: string;
-    }) => data,
-  )
-  .handler(async ({ data }) => {
-    const { userId, ...updates } = data;
-
-    // In production, we'd verify the session user matches userId
-    const { error } = await supabase.from("profiles").update(updates).eq("id", userId);
-
-    if (error) {
-      console.error("Error updating profile:", error);
-      throw new Error("Failed to update profile");
-    }
-
-    return { success: true };
-  });

@@ -22,7 +22,7 @@ const FAQS = [
   },
   {
     q: "Is my contribution tax-deductible?",
-    a: "Where partner NGOs are eligible, you'll receive automated tax-deductible receipts.",
+    a: "Where partner Organizations are eligible, you'll receive automated tax-deductible receipts.",
   },
   {
     q: "How do I know my impact is real?",

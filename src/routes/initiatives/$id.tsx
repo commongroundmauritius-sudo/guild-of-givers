@@ -30,11 +30,11 @@ function InitiativeDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, ngos!inner(*)")
+        .select("*, organizations!inner(*)")
         .eq("id", id)
         .eq("is_approved", true)
         .eq("is_published", true)
-        .eq("ngos.status", "active")
+        .eq("organizations.status", "active")
         .maybeSingle();
 
       if (error) throw error;
@@ -98,7 +98,7 @@ function InitiativeDetailPage() {
       100,
   );
   const gallery = Array.isArray(initiative.gallery_urls) ? initiative.gallery_urls : [];
-  const ngo = getJoinedData(initiative.ngos);
+  const organization = getJoinedData(initiative.organizations);
 
   return (
     <SiteLayout>
@@ -142,15 +142,15 @@ function InitiativeDetailPage() {
               <div className="flex flex-wrap items-center gap-6 border-b border-border/60 pb-8">
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-full bg-muted">
-                    {ngo?.logo_url ? (
+                    {organization?.logo_url ? (
                       <img
-                        src={ngo.logo_url}
-                        alt={ngo.name}
+                        src={organization.logo_url}
+                        alt={organization.organization_name}
                         className="h-full w-full object-cover"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold uppercase">
-                        {ngo?.name?.charAt(0) || "N"}
+                        {organization?.organization_name?.charAt(0) || "N"}
                       </div>
                     )}
                   </div>
@@ -159,7 +159,7 @@ function InitiativeDetailPage() {
                       Managed by
                     </span>
                     <span className="text-sm font-semibold text-primary">
-                      {ngo?.name || "NGO Partner"}
+                      {organization?.organization_name || "Organization Partner"}
                     </span>
                   </div>
                 </div>
@@ -312,8 +312,8 @@ function InitiativeDetailPage() {
                     </span>
                   </div>
                   <p className="mt-4 text-xs leading-relaxed text-primary/70">
-                    This NGO has passed our deep due-diligence process, including financial audit
-                    and site visits.
+                    This Organization has passed our deep due-diligence process, including financial
+                    audit and site visits.
                   </p>
                 </div>
               </div>

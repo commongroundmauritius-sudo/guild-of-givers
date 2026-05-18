@@ -7,23 +7,23 @@ import { Shield, ExternalLink, CheckCircle2, XCircle, Search, Info } from "lucid
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_authenticated/admin-dashboard/ngos")({
-  component: AdminNGOsPage,
+export const Route = createFileRoute("/_authenticated/admin-dashboard/organizations")({
+  component: AdminOrganizationsPage,
 });
 
-function AdminNGOsPage() {
+function AdminOrganizationsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
 
   const {
-    data: ngos,
+    data: organizations,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["admin-ngos"],
+    queryKey: ["admin-organizations"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("ngos")
+        .from("organizations")
         .select("*")
         .order("name", { ascending: true });
       if (error) throw error;
@@ -33,22 +33,22 @@ function AdminNGOsPage() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("ngos").update({ status }).eq("id", id);
+      const { error } = await supabase.from("organizations").update({ status }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("NGO status updated");
-      queryClient.invalidateQueries({ queryKey: ["admin-ngos"] });
+      toast.success("Organization status updated");
+      queryClient.invalidateQueries({ queryKey: ["admin-organizations"] });
     },
     onError: (err: Error) => {
       toast.error("Failed to update status: " + err.message);
     },
   });
 
-  const filteredNGOs = ngos?.filter(
-    (ngo) =>
-      (ngo.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (ngo.category || "").toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredOrganizations = organizations?.filter(
+    (organization) =>
+      (organization.organization_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (organization.category || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -64,17 +64,17 @@ function AdminNGOsPage() {
                 </span>
               </div>
               <h1 className="mt-3 font-display text-4xl font-semibold text-primary">
-                NGO Management
+                Organization Management
               </h1>
               <p className="mt-2 text-muted-foreground">
-                Review, verify, and manage NGO partners on the platform.
+                Review, verify, and manage Organization partners on the platform.
               </p>
             </div>
             <div className="relative w-full max-w-sm sm:w-64">
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search NGOs..."
+                placeholder="Search Organizations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full rounded-full border border-border/40 bg-card py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
@@ -94,29 +94,29 @@ function AdminNGOsPage() {
                 <Info className="h-6 w-6" />
               </div>
               <h2 className="mt-4 font-display text-xl font-semibold text-red-900">
-                Failed to load NGOs
+                Failed to load Organizations
               </h2>
               <p className="mt-2 text-red-700/80">There was an error connecting to the database.</p>
               <button
-                onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-ngos"] })}
+                onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-organizations"] })}
                 className="mt-6 rounded-full bg-red-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
               >
                 Retry
               </button>
             </div>
-          ) : filteredNGOs && filteredNGOs.length > 0 ? (
+          ) : filteredOrganizations && filteredOrganizations.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredNGOs.map((ngo) => (
+              {filteredOrganizations.map((organization) => (
                 <div
-                  key={ngo.id}
+                  key={organization.id}
                   className="overflow-hidden rounded-3xl border border-border/40 bg-card p-6 shadow-sm transition hover:shadow-md"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
-                      {ngo.logo_url ? (
+                      {organization.logo_url ? (
                         <img
-                          src={ngo.logo_url}
-                          alt={ngo.name || "NGO"}
+                          src={organization.logo_url}
+                          alt={organization.organization_name || "Organization"}
                           className="h-full w-full rounded-2xl object-cover"
                         />
                       ) : (
@@ -125,35 +125,35 @@ function AdminNGOsPage() {
                     </div>
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
-                        ngo.status === "active"
+                        organization.status === "active"
                           ? "bg-green-100 text-green-700"
-                          : ngo.status === "suspended"
+                          : organization.status === "suspended"
                             ? "bg-red-100 text-red-700"
                             : "bg-amber-100 text-amber-700"
                       }`}
                     >
-                      {ngo.status || "pending"}
+                      {organization.status || "pending"}
                     </span>
                   </div>
 
                   <div className="mt-4">
                     <h3 className="font-display text-xl font-bold text-primary">
-                      {ngo.name || "Unnamed NGO"}
+                      {organization.organization_name || "Unnamed Organization"}
                     </h3>
                     <p className="mt-1 text-xs font-medium text-amber-600 uppercase tracking-wider">
-                      {ngo.category || "General"}
+                      {organization.category || "General"}
                     </p>
                     <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                      {ngo.description || "No description provided."}
+                      {organization.description || "No description provided."}
                     </p>
                   </div>
 
                   <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4">
                     <div className="flex gap-2">
-                      {ngo.status !== "active" && (
+                      {organization.status !== "active" && (
                         <button
                           onClick={() =>
-                            updateStatusMutation.mutate({ id: ngo.id, status: "active" })
+                            updateStatusMutation.mutate({ id: organization.id, status: "active" })
                           }
                           className="flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-green-600 hover:bg-green-100"
                           title="Approve / Activate"
@@ -161,10 +161,13 @@ function AdminNGOsPage() {
                           <CheckCircle2 className="h-4 w-4" />
                         </button>
                       )}
-                      {ngo.status !== "suspended" && (
+                      {organization.status !== "suspended" && (
                         <button
                           onClick={() =>
-                            updateStatusMutation.mutate({ id: ngo.id, status: "suspended" })
+                            updateStatusMutation.mutate({
+                              id: organization.id,
+                              status: "suspended",
+                            })
                           }
                           className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"
                           title="Suspend"
@@ -173,9 +176,9 @@ function AdminNGOsPage() {
                         </button>
                       )}
                     </div>
-                    {ngo.website_url && (
+                    {organization.website_url && (
                       <a
-                        href={ngo.website_url}
+                        href={organization.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
@@ -193,7 +196,7 @@ function AdminNGOsPage() {
                 <Info className="h-8 w-8 text-muted-foreground" />
               </div>
               <h2 className="mt-6 font-display text-2xl font-semibold text-primary">
-                No NGOs found
+                No Organizations found
               </h2>
               <p className="mt-2 text-muted-foreground">Try adjusting your search term.</p>
             </div>

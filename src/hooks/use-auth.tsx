@@ -14,7 +14,7 @@ interface Profile {
   bio: string | null;
   age: number | null;
   status: string | null;
-  ngo_id: string | null;
+  organization_id: string | null;
 }
 
 interface AuthContextValue {
@@ -79,12 +79,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setSession(s);
       setUser(s?.user ?? null);
+
+      if (s?.user?.id) {
+        await queryClient.invalidateQueries({ queryKey: ["auth-data", s.user.id] });
+      }
     } catch (error) {
       console.error("refreshAuth error:", error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
     // Initial session fetch

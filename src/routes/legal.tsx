@@ -31,7 +31,7 @@ function LegalPage() {
               </h2>
               <p className="mt-4 leading-relaxed">
                 CommonGround operates as a social infrastructure platform facilitating contributions
-                to vetted Non-Governmental Organizations (NGOs) in Mauritius. All partner
+                to vetted Non-Governmental Organizations (Organizations) in Mauritius. All partner
                 organizations must be duly registered with the{" "}
                 <strong>Registrar of Associations</strong> and maintain compliance with the{" "}
                 <strong>Financial Intelligence and Anti-Money Laundering Act (FIAMLA)</strong>.
@@ -53,8 +53,8 @@ function LegalPage() {
                   <p>
                     <strong>2. Allocations:</strong> While CommonGround facilitates member choice,
                     the platform reserves the right to reallocate funds to the "Impact Pool" in
-                    cases where an NGO is suspended or a project is completed, ensuring your
-                    contribution always reaches a verified social need.
+                    cases where an Organization is suspended or a project is completed, ensuring
+                    your contribution always reaches a verified social need.
                   </p>
                   <p>
                     <strong>3. Cancellations:</strong> Memberships can be paused or cancelled at any
@@ -82,7 +82,7 @@ function LegalPage() {
                   </p>
                   <p>
                     <strong>Transparency:</strong> Aggregate impact data (non-personally
-                    identifiable) is shared with NGOs and the public to ensure ecosystem
+                    identifiable) is shared with Organizations and the public to ensure ecosystem
                     accountability.
                   </p>
                 </div>
@@ -97,8 +97,8 @@ function LegalPage() {
               <p className="mt-4 text-sm leading-relaxed">
                 CommonGround acts as a facilitator and platform provider. While we conduct rigorous
                 vetting, direct responsibility for the execution of social programs lies with the
-                recipient NGOs. CommonGround is not liable for operational failures of partner
-                organizations but monitors reporting strictly to maintain platform trust.
+                recipient Organizations. CommonGround is not liable for operational failures of
+                partner organizations but monitors reporting strictly to maintain platform trust.
               </p>
             </div>
 

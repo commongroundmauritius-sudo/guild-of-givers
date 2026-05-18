@@ -14,7 +14,7 @@ function DashboardRouter() {
   useEffect(() => {
     if (loading || !role) return;
     if (role === "admin") navigate({ to: "/admin-dashboard" });
-    else if (role === "ngo") navigate({ to: "/ngo" });
+    else if (role === "organization") navigate({ to: "/organization" });
     else navigate({ to: "/member" });
   }, [role, loading, navigate]);
 

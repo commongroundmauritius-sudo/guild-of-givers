@@ -7,7 +7,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 const REACTIONS = [
   { type: "Support", emoji: "❤️", icon: Heart, label: "Support", color: "text-red-500" },
-  { type: "Celebrate", emoji: "👏", icon: PartyPopper, label: "Celebrate", color: "text-amber-500" },
+  {
+    type: "Celebrate",
+    emoji: "👏",
+    icon: PartyPopper,
+    label: "Celebrate",
+    color: "text-amber-500",
+  },
   { type: "Idea", emoji: "💡", icon: Lightbulb, label: "Idea", color: "text-yellow-500" },
   { type: "Thanks", emoji: "🙏", icon: HandHeart, label: "Thanks", color: "text-blue-500" },
 ];
@@ -21,11 +27,14 @@ export function ReactionButtons({ postId }: ReactionButtonsProps) {
   const { data: reactions = [] } = useReactions(postId);
   const mutation = useReactionMutation(postId);
 
-  const userReaction = reactions.find(r => r.user_id === user?.id);
-  const counts = reactions.reduce((acc, r) => {
-    acc[r.reaction_type] = (acc[r.reaction_type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const userReaction = reactions.find((r) => r.user_id === user?.id);
+  const counts = reactions.reduce(
+    (acc, r) => {
+      acc[r.reaction_type] = (acc[r.reaction_type] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   const canReact = role === "member" || role === "admin";
 
@@ -50,7 +59,7 @@ export function ReactionButtons({ postId }: ReactionButtonsProps) {
                   className={cn(
                     "h-8 gap-1 px-2",
                     isActive && "bg-secondary border-secondary",
-                    !canReact && "opacity-50 cursor-not-allowed"
+                    !canReact && "opacity-50 cursor-not-allowed",
                   )}
                   onClick={() => handleReaction(type)}
                   disabled={!canReact || mutation.isPending}

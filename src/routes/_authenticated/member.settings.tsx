@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { updateProfile } from "@/lib/auth-actions";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Settings as SettingsIcon, Save, User, Phone, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,16 +25,27 @@ function MemberSettings() {
   const mutation = useMutation({
     mutationFn: async () => {
       if (!user) return;
-      return updateProfile({
-        data: {
-          userId: user.id,
+
+      const trimmedAddress = address.trim();
+      const ageInt = age ? parseInt(age) : null;
+
+      if (ageInt !== null && (ageInt < 13 || ageInt > 120)) {
+        throw new Error("Age must be between 13 and 120");
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
           full_name: fullName,
           phone,
-          address,
-          age: age ? parseInt(age) : undefined,
+          address: trimmedAddress || null,
+          age: ageInt,
           avatar_url: avatarUrl,
-        },
-      });
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Profile updated successfully");
@@ -108,6 +119,8 @@ function MemberSettings() {
                     onChange={(e) => setAge(e.target.value)}
                     placeholder="Age"
                     className="pl-10 rounded-xl"
+                    min="13"
+                    max="120"
                   />
                 </div>
               </div>

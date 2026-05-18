@@ -29,11 +29,11 @@ function InitiativeEditPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { role, user, loading: authLoading } = useAuth();
-  const { data: ngos } = useQuery({
-    queryKey: ["all-ngos"],
+  const { data: organizations } = useQuery({
+    queryKey: ["all-organizations"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("ngos")
+        .from("organizations")
         .select("id, name")
         .eq("status", "active")
         .order("name");
@@ -62,7 +62,7 @@ function InitiativeEditPage() {
 
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, ngos(name)")
+        .select("*, organizations(name)")
         .eq("id", id)
         .maybeSingle();
 
@@ -92,7 +92,7 @@ function InitiativeEditPage() {
         impact_pool_target: initiative.impact_pool_target || 0,
         impact_pool_current: initiative.impact_pool_current || 0,
         category: initiative.category || "",
-        ngo_id: initiative.ngo_id || "",
+        organization_id: initiative.organization_id || "",
       });
     }
   }, [initiative]);
@@ -242,7 +242,7 @@ function InitiativeEditPage() {
               <p className="mt-2 text-muted-foreground">
                 Organization:{" "}
                 <span className="font-medium text-primary">
-                  {getJoinedField(initiative.ngos, "name")}
+                  {getJoinedField(initiative.organizations, "name")}
                 </span>
               </p>
             </div>
@@ -357,22 +357,32 @@ function InitiativeEditPage() {
                 </h2>
                 <div className="mb-8 p-4 rounded-2xl bg-muted/50 border border-border/40 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Source:</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Source:
+                    </span>
                     <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase text-amber-600">
-                      {initiative?.initiative_source === 'admin_created' ? 'Admin Created' : 'NGO Submission'}
+                      {initiative?.initiative_source === "admin_created"
+                        ? "Admin Created"
+                        : "Organization Submission"}
                     </span>
                   </div>
                   {initiative?.creator_role && (
                     <div className="flex items-center gap-4">
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Created By:</span>
-                      <span className="text-xs font-medium text-primary">{initiative.creator_role.toUpperCase()}</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Created By:
+                      </span>
+                      <span className="text-xs font-medium text-primary">
+                        {initiative.creator_role.toUpperCase()}
+                      </span>
                     </div>
                   )}
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-2 mb-6">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Category</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Category
+                    </label>
                     <input
                       name="category"
                       value={formData.category}
@@ -382,16 +392,20 @@ function InitiativeEditPage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Associated NGO</label>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Associated Organization
+                    </label>
                     <select
-                      name="ngo_id"
-                      value={formData.ngo_id}
+                      name="organization_id"
+                      value={formData.organization_id}
                       onChange={handleInputChange}
                       className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     >
                       <option value="">None / Internal</option>
-                      {ngos?.map((ngo: any) => (
-                        <option key={ngo.id} value={ngo.id}>{ngo.name}</option>
+                      {organizations?.map((organization: any) => (
+                        <option key={organization.id} value={organization.id}>
+                          {organization.organization_name}
+                        </option>
                       ))}
                     </select>
                   </div>

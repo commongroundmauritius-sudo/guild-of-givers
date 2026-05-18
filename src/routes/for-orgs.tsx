@@ -7,7 +7,7 @@ export const Route = createFileRoute("/for-orgs")({
       { title: "For Organizations — CommonGround" },
       {
         name: "description",
-        content: "Predictable, recurring funding designed for long-horizon NGO programs.",
+        content: "Predictable, recurring funding designed for long-horizon Organization programs.",
       },
     ],
   }),

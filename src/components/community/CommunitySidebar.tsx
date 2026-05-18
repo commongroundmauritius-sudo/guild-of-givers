@@ -13,8 +13,14 @@ export function CommunitySidebar() {
     queryKey: ["community-stats"],
     queryFn: async () => {
       const [postsCount, membersCount, reactionsCount] = await Promise.all([
-        supabase.from("community_posts").select("*", { count: "exact", head: true }).eq("status", "published"),
-        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "member"),
+        supabase
+          .from("community_posts")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "published"),
+        supabase
+          .from("user_roles")
+          .select("*", { count: "exact", head: true })
+          .eq("role", "member"),
         supabase.from("post_reactions").select("*", { count: "exact", head: true }),
       ]);
 
@@ -23,7 +29,7 @@ export function CommunitySidebar() {
         members: membersCount.count || 0,
         reactions: reactionsCount.count || 0,
       };
-    }
+    },
   });
 
   const trending = announcements.slice(0, 3);
@@ -39,11 +45,15 @@ export function CommunitySidebar() {
         </CardHeader>
         <CardContent className="space-y-4">
           {announcementsLoading ? (
-            Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
+            Array(3)
+              .fill(0)
+              .map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
           ) : trending.length > 0 ? (
-            trending.map(item => (
+            trending.map((item) => (
               <div key={item.id} className="space-y-1">
-                <Badge variant="outline" className="text-[10px] h-4">{item.category}</Badge>
+                <Badge variant="outline" className="text-[10px] h-4">
+                  {item.category}
+                </Badge>
                 <p className="text-sm font-medium leading-snug hover:text-primary cursor-pointer transition-colors line-clamp-2">
                   {item.title}
                 </p>
@@ -61,7 +71,9 @@ export function CommunitySidebar() {
         </CardHeader>
         <CardContent className="space-y-4">
           {statsLoading ? (
-            Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)
+            Array(3)
+              .fill(0)
+              .map((_, i) => <Skeleton key={i} className="h-8 w-full" />)
           ) : (
             <>
               <div className="flex items-center justify-between">
