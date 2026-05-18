@@ -8,19 +8,24 @@ BEGIN
     END IF;
 END $$;
 
--- 2. Refactor ngos to organizations
-IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngos') THEN
-    ALTER TABLE public.ngos RENAME TO organizations;
-END IF;
+-- 2. Refactor ngos to organizations and update columns
+DO $$
+BEGIN
+    -- Rename table only if it still exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngos' AND table_schema = 'public') THEN
+        ALTER TABLE public.ngos RENAME TO organizations;
+    END IF;
 
--- 3. Update organizations columns
-IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'owner_id') THEN
-    ALTER TABLE public.organizations RENAME COLUMN owner_id TO owner_user_id;
-END IF;
+    -- Rename owner_id
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'owner_id' AND table_schema = 'public') THEN
+        ALTER TABLE public.organizations RENAME COLUMN owner_id TO owner_user_id;
+    END IF;
 
-IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'name') THEN
-    ALTER TABLE public.organizations RENAME COLUMN name TO organization_name;
-END IF;
+    -- Rename name
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'name' AND table_schema = 'public') THEN
+        ALTER TABLE public.organizations RENAME COLUMN name TO organization_name;
+    END IF;
+END $$;
 
 -- 4. Add new fields to organizations
 ALTER TABLE public.organizations
@@ -42,11 +47,16 @@ BEGIN
 END $$;
 
 -- 6. Rename ngo_documents table
-IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents') THEN
-    ALTER TABLE public.ngo_documents RENAME TO organization_documents;
-END IF;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents' AND table_schema = 'public') THEN
+        ALTER TABLE public.ngo_documents RENAME TO organization_documents;
+    END IF;
+END $$;
 
 -- 7. Handle app_role enum migration
+-- Note: value additions to enums cannot be inside a procedural block in some Postgres versions or if followed by use in same block.
+-- Adding it as a standalone statement is generally fine in Supabase migrations as they handle COMMITs.
 ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'organization';
 
 -- 8. Update role data
@@ -87,7 +97,12 @@ CREATE POLICY "Owners can manage organization documents" ON public.organization_
 USING (EXISTS (SELECT 1 FROM organizations WHERE id = organization_documents.organization_id AND owner_user_id = auth.uid()));
 
 -- Initiatives
-ALTER POLICY "NGO staff can manage own initiatives" ON public.initiatives RENAME TO "Organization staff can manage own initiatives";
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'NGO staff can manage own initiatives' AND tablename = 'initiatives') THEN
+        ALTER POLICY "NGO staff can manage own initiatives" ON public.initiatives RENAME TO "Organization staff can manage own initiatives";
+    END IF;
+END $$;
 
 -- Reports
 DROP POLICY IF EXISTS "NGO staff can manage their own NGO reports" ON public.reports;
