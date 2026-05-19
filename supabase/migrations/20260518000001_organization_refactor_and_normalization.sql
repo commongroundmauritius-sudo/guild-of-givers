@@ -135,11 +135,27 @@ CREATE POLICY "Qualified users can comment" ON public.post_comments FOR INSERT W
     )
 );
 
--- 11. Update initiative_source constraint
-ALTER TABLE public.initiatives DROP CONSTRAINT IF EXISTS initiatives_initiative_source_check;
-UPDATE public.initiatives SET initiative_source = 'organization_submission' WHERE initiative_source = 'ngo_submission';
-ALTER TABLE public.initiatives ADD CONSTRAINT initiatives_initiative_source_check
-    CHECK (initiative_source = ANY (ARRAY['organization_submission'::text, 'admin_created'::text]));
+-- 11. Update initiative_source constraint safely
+DO $$
+BEGIN
+    -- Check if column exists before updating data
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = 'initiatives'
+        AND column_name = 'initiative_source'
+    ) THEN
+        -- Drop old constraint if it exists
+        ALTER TABLE public.initiatives DROP CONSTRAINT IF EXISTS initiatives_initiative_source_check;
+
+        -- Update existing data
+        UPDATE public.initiatives SET initiative_source = 'organization_submission' WHERE initiative_source = 'ngo_submission';
+
+        -- Re-add updated constraint
+        ALTER TABLE public.initiatives ADD CONSTRAINT initiatives_initiative_source_check
+            CHECK (initiative_source = ANY (ARRAY['organization_submission'::text, 'admin_created'::text]));
+    END IF;
+END $$;
 
 -- 12. Grants
 GRANT ALL ON public.organizations TO authenticated;
