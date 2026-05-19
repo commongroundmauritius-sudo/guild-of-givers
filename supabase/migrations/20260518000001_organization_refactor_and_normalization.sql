@@ -55,9 +55,19 @@ BEGIN
 END $$;
 
 
--- 8. Update role data
-UPDATE public.user_roles SET role = 'organization'::public.app_role WHERE role = 'ngo'::public.app_role;
-UPDATE public.initiatives SET creator_role = 'organization'::public.app_role WHERE creator_role = 'ngo'::public.app_role;
+-- 8. Update role data with existence guards
+DO $$
+BEGIN
+    -- Update user_roles if table and column exist
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_roles' AND column_name = 'role' AND table_schema = 'public') THEN
+        UPDATE public.user_roles SET role = 'organization'::public.app_role WHERE role = 'ngo'::public.app_role;
+    END IF;
+
+    -- Update initiatives if creator_role exists
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'initiatives' AND column_name = 'creator_role' AND table_schema = 'public') THEN
+        UPDATE public.initiatives SET creator_role = 'organization'::public.app_role WHERE creator_role = 'ngo'::public.app_role;
+    END IF;
+END $$;
 
 -- 9. Update has_role function
 CREATE OR REPLACE FUNCTION public.has_role(requested_role public.app_role)
