@@ -54,10 +54,6 @@ BEGIN
     END IF;
 END $$;
 
--- 7. Handle app_role enum migration
--- Note: value additions to enums cannot be inside a procedural block in some Postgres versions or if followed by use in same block.
--- Adding it as a standalone statement is generally fine in Supabase migrations as they handle COMMITs.
-ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'organization';
 
 -- 8. Update role data
 UPDATE public.user_roles SET role = 'organization'::public.app_role WHERE role = 'ngo'::public.app_role;
