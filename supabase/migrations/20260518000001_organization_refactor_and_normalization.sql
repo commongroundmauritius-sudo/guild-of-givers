@@ -97,7 +97,7 @@ CREATE POLICY "Public can view organizations with published initiatives" ON publ
 USING ((is_verified = true) OR (EXISTS (SELECT 1 FROM initiatives i WHERE i.organization_id = organizations.id AND i.is_approved = true AND i.is_published = true)));
 
 -- Organization Documents
-ALTER TABLE public.organization_documents ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN ALTER TABLE public.organization_documents ENABLE ROW LEVEL SECURITY; EXCEPTION WHEN OTHERS THEN END; $$;
 DROP POLICY IF EXISTS "Owners can manage organization documents" ON public.organization_documents;
 CREATE POLICY "Owners can manage organization documents" ON public.organization_documents FOR ALL
 USING (EXISTS (SELECT 1 FROM organizations WHERE id = organization_documents.organization_id AND owner_user_id = auth.uid()));
