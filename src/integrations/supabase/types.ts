@@ -593,7 +593,6 @@ export type Database = {
           logo_url?: string | null;
           mission?: string | null;
           monthly_target_amount?: number | null;
-          name?: string;
           owner_user_id?: string | null;
           status?: string | null;
           supporters_count?: number | null;
