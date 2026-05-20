@@ -34,7 +34,7 @@ function InitiativeEditPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organizations")
-        .select("id, name")
+        .select("id, organization_name")
         .eq("status", "active")
         .order("organization_name");
       if (error) throw error;
@@ -42,7 +42,7 @@ function InitiativeEditPage() {
     },
   });
 
-  const [formData, setFormData] = useState<any>(null);
+  const [formData, setFormData] = useState<Record<string, any>>(null);
 
   useEffect(() => {
     if (!authLoading && role && role !== "admin") {
