@@ -5,10 +5,16 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    ssr: { noExternal: true },
+    ssr: {
+      noExternal: true,
+      external: ['react', 'react-dom', 'use-sync-external-store']
+    },
     environments: {
       ssr: {
-        resolve: { noExternal: true },
+        resolve: {
+          noExternal: true,
+          external: ['react', 'react-dom', 'use-sync-external-store']
+        },
       },
     },
   },
