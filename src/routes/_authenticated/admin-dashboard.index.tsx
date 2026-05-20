@@ -67,7 +67,7 @@ function AdminDashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("reports")
-        .select("*, organizations(name)")
+        .select("*, organizations(organization_name)")
         .eq("status", "pending_review")
         .limit(5);
       return data;
@@ -284,7 +284,7 @@ function AdminDashboard() {
                           <td className="px-6 py-4">
                             <p className="font-medium text-primary">{r.title}</p>
                             <p className="text-xs text-muted-foreground">
-                              {getJoinedField(r.organizations, "name")}
+                              {getJoinedField(r.organizations, "organization_name")}
                             </p>
                           </td>
                           <td className="px-6 py-4">

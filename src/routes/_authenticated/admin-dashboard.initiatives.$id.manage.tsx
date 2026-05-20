@@ -36,7 +36,7 @@ function InitiativeEditPage() {
         .from("organizations")
         .select("id, name")
         .eq("status", "active")
-        .order("name");
+        .order("organization_name");
       if (error) throw error;
       return data;
     },
@@ -62,7 +62,7 @@ function InitiativeEditPage() {
 
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, organizations(name)")
+        .select("*, organizations(organization_name)")
         .eq("id", id)
         .maybeSingle();
 
@@ -242,7 +242,7 @@ function InitiativeEditPage() {
               <p className="mt-2 text-muted-foreground">
                 Organization:{" "}
                 <span className="font-medium text-primary">
-                  {getJoinedField(initiative.organizations, "name")}
+                  {getJoinedField(initiative.organizations, "organization_name")}
                 </span>
               </p>
             </div>
