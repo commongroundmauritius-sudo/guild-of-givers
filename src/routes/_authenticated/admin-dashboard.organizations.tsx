@@ -25,7 +25,7 @@ function AdminOrganizationsPage() {
       const { data, error } = await supabase
         .from("organizations")
         .select("*")
-        .order("name", { ascending: true });
+        .order("organization_name", { ascending: true });
       if (error) throw error;
       return data || [];
     },

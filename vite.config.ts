@@ -7,13 +7,13 @@ export default defineConfig({
   vite: {
     ssr: {
       noExternal: true,
-      external: ['react', 'react-dom', 'use-sync-external-store']
+      external: ["react", "react-dom", "use-sync-external-store"],
     },
     environments: {
       ssr: {
         resolve: {
           noExternal: true,
-          external: ['react', 'react-dom', 'use-sync-external-store']
+          external: ["react", "react-dom", "use-sync-external-store"],
         },
       },
     },
