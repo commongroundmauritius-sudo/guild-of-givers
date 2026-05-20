@@ -49,10 +49,10 @@ CREATE POLICY "Qualified users can comment" ON public.post_comments
         (SELECT auth.uid()) = user_id AND (
             public.has_role('admin') OR
             public.has_role('member') OR
-            (public.has_role('ngo') AND EXISTS (
+            (public.has_role('organization') AND EXISTS (
                 SELECT 1 FROM public.community_posts p
                 JOIN public.initiatives i ON p.initiative_id = i.id
-                JOIN public.profiles prof ON prof.ngo_id = i.ngo_id
+                JOIN public.profiles prof ON prof.organization_id = i.organization_id
                 WHERE p.id = post_id AND prof.id = (SELECT auth.uid())
             ))
         )

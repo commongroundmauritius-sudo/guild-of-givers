@@ -1,19 +1,19 @@
 -- 1. Final verification and cleanup of RLS policies with stale labels or definitions
 DO $$
 BEGIN
-    -- Rename any policies that still mention NGO in initiatives
-    IF EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'NGO staff can manage own initiatives' AND tablename = 'initiatives') THEN
-        ALTER POLICY "NGO staff can manage own initiatives" ON public.initiatives RENAME TO "Organization staff can manage own initiatives";
+    -- Rename any policies that still mention Organization in initiatives
+    IF EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Organization staff can manage own initiatives' AND tablename = 'initiatives') THEN
+        ALTER POLICY "Organization staff can manage own initiatives" ON public.initiatives RENAME TO "Organization staff can manage own initiatives";
     END IF;
 
     -- Rename policies in reports
-    IF EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'NGO staff can manage their own NGO reports' AND tablename = 'reports') THEN
-        ALTER POLICY "NGO staff can manage their own NGO reports" ON public.reports RENAME TO "Organization staff can manage their reports";
+    IF EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Organization staff can manage their own Organization reports' AND tablename = 'reports') THEN
+        ALTER POLICY "Organization staff can manage their own Organization reports" ON public.reports RENAME TO "Organization staff can manage their reports";
     END IF;
 
-    -- Update post_comments policy if it still checks has_role('ngo')
+    -- Update post_comments policy if it still checks has_role('organization')
     -- (This was handled in the previous script but we ensure it here too)
-    IF EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'post_comments' AND (qual ILIKE '%has_role%''ngo''%' OR with_check ILIKE '%has_role%''ngo''%')) THEN
+    IF EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'post_comments' AND (qual ILIKE '%has_role%''organization''%' OR with_check ILIKE '%has_role%''organization''%')) THEN
         DROP POLICY IF EXISTS "Qualified users can comment" ON public.post_comments;
         CREATE POLICY "Qualified users can comment" ON public.post_comments FOR INSERT WITH CHECK (
             ((SELECT auth.uid()) = user_id) AND (

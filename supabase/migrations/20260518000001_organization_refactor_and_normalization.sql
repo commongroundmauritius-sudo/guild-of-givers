@@ -13,17 +13,17 @@ DO $$
 BEGIN
     -- Rename table only if it still exists
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngos' AND table_schema = 'public') THEN
-        ALTER TABLE public.ngos RENAME TO organizations;
+        EXECUTE 'ALTER TABLE public.ngos RENAME TO organizations';
     END IF;
 
     -- Rename owner_id
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'owner_id' AND table_schema = 'public') THEN
-        ALTER TABLE public.organizations RENAME COLUMN owner_id TO owner_user_id;
+        EXECUTE 'ALTER TABLE public.organizations RENAME COLUMN owner_id TO owner_user_id';
     END IF;
 
     -- Rename name
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'name' AND table_schema = 'public') THEN
-        ALTER TABLE public.organizations RENAME COLUMN name TO organization_name;
+        EXECUTE 'ALTER TABLE public.organizations RENAME COLUMN name TO organization_name';
     END IF;
 END $$;
 
@@ -50,7 +50,7 @@ END $$;
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents' AND table_schema = 'public') THEN
-        ALTER TABLE public.ngo_documents RENAME TO organization_documents;
+        EXECUTE 'ALTER TABLE public.ngo_documents RENAME TO organization_documents';
     END IF;
 END $$;
 
@@ -87,9 +87,9 @@ $function$;
 
 -- 10. Update RLS Policies
 -- Organizations
-DROP POLICY IF EXISTS "Admins can manage NGOs" ON public.organizations;
-DROP POLICY IF EXISTS "Public can view NGOs with published initiatives" ON public.organizations;
-DROP POLICY IF EXISTS "NGO owners can update their NGO" ON public.organizations;
+DROP POLICY IF EXISTS "Admins can manage Organizations" ON public.organizations;
+DROP POLICY IF EXISTS "Public can view Organizations with published initiatives" ON public.organizations;
+DROP POLICY IF EXISTS "Organization owners can update their Organization" ON public.organizations;
 
 CREATE POLICY "Admins can manage organizations" ON public.organizations FOR ALL USING (has_role('admin'::app_role));
 CREATE POLICY "Organization owners can manage their organization" ON public.organizations FOR ALL USING (owner_user_id = auth.uid());
@@ -105,13 +105,13 @@ USING (EXISTS (SELECT 1 FROM organizations WHERE id = organization_documents.org
 -- Initiatives
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'NGO staff can manage own initiatives' AND tablename = 'initiatives') THEN
-        ALTER POLICY "NGO staff can manage own initiatives" ON public.initiatives RENAME TO "Organization staff can manage own initiatives";
+    IF EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Organization staff can manage own initiatives' AND tablename = 'initiatives') THEN
+        ALTER POLICY "Organization staff can manage own initiatives" ON public.initiatives RENAME TO "Organization staff can manage own initiatives";
     END IF;
 END $$;
 
 -- Reports
-DROP POLICY IF EXISTS "NGO staff can manage their own NGO reports" ON public.reports;
+DROP POLICY IF EXISTS "Organization staff can manage their own Organization reports" ON public.reports;
 DROP POLICY IF EXISTS "Organization staff can manage their reports" ON public.reports;
 CREATE POLICY "Organization staff can manage their reports" ON public.reports FOR ALL
 USING (organization_id IN (SELECT organization_id FROM public.profiles WHERE id = (SELECT auth.uid())));

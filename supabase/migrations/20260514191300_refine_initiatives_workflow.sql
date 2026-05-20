@@ -19,7 +19,7 @@ CREATE POLICY "Anyone can view published initiatives" ON public.initiatives
 FOR SELECT
 USING (is_approved = true AND is_published = true);
 
--- Ensure authenticated users (Admins/NGOs) have necessary grants
+-- Ensure authenticated users (Admins/Organizations) have necessary grants
 GRANT ALL ON public.initiatives TO authenticated;
 
 COMMIT;
