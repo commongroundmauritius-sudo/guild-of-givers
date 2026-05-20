@@ -48,9 +48,6 @@ globalThis.Buffer = Buffer;
 globalThis.process = process;
 `,
       },
-      alias: {
-        "h3-v2": "h3",
-      },
       logLevel: "info",
     });
 
