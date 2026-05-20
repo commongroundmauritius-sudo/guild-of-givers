@@ -231,7 +231,7 @@ function Initiatives() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, organizations!inner(name, status)")
+        .select("*, organizations!inner(organization_name, status)")
         .eq("is_approved", true)
         .eq("is_published", true)
         .eq("organizations.status", "active")
@@ -304,7 +304,7 @@ function Initiatives() {
                 </div>
                 <div className="p-8">
                   <span className="text-xs font-medium uppercase text-muted-foreground">
-                    {getJoinedField(i.organizations, "name")}
+                    {getJoinedField(i.organizations, "organization_name")}
                   </span>
                   <h3 className="mt-2 font-display text-2xl font-semibold text-primary">
                     {i.title}
