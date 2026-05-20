@@ -25,7 +25,7 @@ function AdminInitiativesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, organizations(id, organization_name)")
+        .select("*, organizations(id, name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -35,7 +35,7 @@ function AdminInitiativesPage() {
   const filteredInitiatives = initiatives?.filter((i) => {
     const matchesSearch =
       (i.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (getJoinedField(i.organizations, "organization_name") || "")
+      (getJoinedField(i.organizations, "name") || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
@@ -159,7 +159,7 @@ function AdminInitiativesPage() {
           ) : filteredInitiatives && filteredInitiatives.length > 0 ? (
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {filteredInitiatives.map((i) => {
-                const organizationName = getJoinedField(i.organizations, "organization_name");
+                const organizationName = getJoinedField(i.organizations, "name");
 
                 return (
                   <div

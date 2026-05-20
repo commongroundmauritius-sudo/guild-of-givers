@@ -60,7 +60,7 @@ function InitiativeCreatePage() {
         .from("organizations")
         .select("id, name")
         .eq("status", "active")
-        .order("organization_name");
+        .order("name");
       if (error) throw error;
       return data;
     },
