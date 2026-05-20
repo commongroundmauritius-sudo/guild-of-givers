@@ -58,7 +58,7 @@ function InitiativeCreatePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organizations")
-        .select("id, organization_name")
+        .select("id, name")
         .eq("status", "active")
         .order("organization_name");
       if (error) throw error;
