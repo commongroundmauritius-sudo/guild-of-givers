@@ -64,9 +64,9 @@ DROP POLICY IF EXISTS "Admins can manage initiatives" ON public.initiatives;
 CREATE POLICY "Admins have full access to initiatives" ON public.initiatives
 FOR ALL USING (has_role('admin'::app_role));
 
--- organizations
-DROP POLICY IF EXISTS "Admins can manage Organizations" ON public.organizations;
-CREATE POLICY "Admins can manage Organizations" ON public.organizations
+-- ngos
+DROP POLICY IF EXISTS "Admins can manage NGOs" ON public.ngos;
+CREATE POLICY "Admins can manage NGOs" ON public.ngos
 FOR ALL USING (has_role('admin'::app_role));
 
 -- subscriptions

@@ -34,7 +34,7 @@ function InitiativesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, organizations!inner(organization_name, status)")
+        .select("*, organizations!inner(name, status)")
         .eq("is_approved", true)
         .eq("is_published", true)
         .eq("organizations.status", "active")
@@ -98,7 +98,7 @@ function InitiativesPage() {
                 const current = Number(i.current_amount_mur) || 0;
                 const progress = Math.min(100, Math.round((current / goal) * 100));
 
-                const organizationName = getJoinedField(i.organizations, "organization_name");
+                const organizationName = getJoinedField(i.organizations, "name");
 
                 return (
                   <Link

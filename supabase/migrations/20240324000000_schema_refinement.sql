@@ -24,5 +24,5 @@ ADD COLUMN IF NOT EXISTS processing_status TEXT DEFAULT 'received';
 -- Initiatives: Ensure "media" (image_url/media_url) is present
 -- (Already handled by image_url in 20240320 and media_url in 20240322)
 
--- Organizations: Ensure all fields from section 10 are present
+-- NGOs: Ensure all fields from section 10 are present
 -- (Already handled in 20240320 and 20240322)
