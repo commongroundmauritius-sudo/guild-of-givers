@@ -9,4 +9,12 @@ ALTER TABLE public.member_preferences ADD COLUMN IF NOT EXISTS distribution_perc
 
 -- Governance: Status and Suspension
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
-ALTER TABLE public.ngos ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
+        ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+    ELSIF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'ngos') THEN
+        ALTER TABLE public.ngos ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+    END IF;
+END $$;

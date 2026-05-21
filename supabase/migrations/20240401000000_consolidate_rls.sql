@@ -64,10 +64,20 @@ DROP POLICY IF EXISTS "Admins can manage initiatives" ON public.initiatives;
 CREATE POLICY "Admins have full access to initiatives" ON public.initiatives
 FOR ALL USING (has_role('admin'::app_role));
 
--- ngos
-DROP POLICY IF EXISTS "Admins can manage NGOs" ON public.ngos;
-CREATE POLICY "Admins can manage NGOs" ON public.ngos
-FOR ALL USING (has_role('admin'::app_role));
+-- organizations / ngos
+-- Handle both naming conventions to prevent migration failures
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
+        DROP POLICY IF EXISTS "Admins can manage NGOs" ON public.organizations;
+        CREATE POLICY "Admins can manage Organizations" ON public.organizations
+        FOR ALL USING (has_role('admin'::app_role));
+    ELSIF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'ngos') THEN
+        DROP POLICY IF EXISTS "Admins can manage NGOs" ON public.ngos;
+        CREATE POLICY "Admins can manage NGOs" ON public.ngos
+        FOR ALL USING (has_role('admin'::app_role));
+    END IF;
+END $$;
 
 -- subscriptions
 DROP POLICY IF EXISTS "Admins can view all subscriptions" ON public.subscriptions;
