@@ -35,6 +35,10 @@ async function build() {
       format: "esm",
       platform: "browser",
       target: "es2022",
+      alias: {
+        "h3-v2": path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs"),
+        h3: path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs"),
+      },
       minify: true,
       external,
       define: {
