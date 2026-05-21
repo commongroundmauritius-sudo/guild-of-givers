@@ -6,7 +6,7 @@ export default defineConfig(({ command }) => ({
   },
   vite: {
     ssr: {
-      noExternal: ["h3-v2", "h3"],
+      noExternal: true,
       external: command === "serve" ? ["react", "react-dom", "use-sync-external-store"] : [],
     },
     build: {
@@ -14,13 +14,14 @@ export default defineConfig(({ command }) => ({
       rollupOptions: {
         output: {
           inlineDynamicImports: true,
+          manualChunks: undefined,
         },
       },
     },
     environments: {
       ssr: {
         resolve: {
-          noExternal: ["h3-v2", "h3"],
+          noExternal: true,
           external: command === "serve" ? ["react", "react-dom", "use-sync-external-store"] : [],
         },
       },

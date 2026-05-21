@@ -1,13 +1,17 @@
 import * as esbuild from "esbuild";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(__dirname, "..");
 
 async function build() {
-  const serverEntry = "dist/server/server.js";
-  const workerOutput = "dist/client/_worker.js";
-  const wranglerConfig = "dist/client/wrangler.json";
+  const serverEntry = path.join(rootDir, "dist/server/server.js");
+  const workerOutput = path.join(rootDir, "dist/client/_worker.js");
+  const wranglerConfig = path.join(rootDir, "dist/client/wrangler.json");
 
-  console.log("Bundling worker...");
+  console.log("Bundling worker from:", serverEntry);
 
   const nodeBuiltIns = [
     "assert",
@@ -28,7 +32,7 @@ async function build() {
   const external = [...nodeBuiltIns, ...nodeBuiltIns.map((id) => `node:${id}`)];
 
   try {
-    await esbuild.build({
+    const result = await esbuild.build({
       entryPoints: [serverEntry],
       bundle: true,
       outfile: workerOutput,
@@ -36,11 +40,14 @@ async function build() {
       platform: "browser",
       target: "es2022",
       alias: {
-        "h3-v2": path.resolve("node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
-        h3: path.resolve("node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
+        "h3-v2": path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
+        "h3": path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
       },
       minify: true,
       external,
+      // Ensure we don't accidentally leave dynamic imports to local files
+      conditions: ["worker", "browser", "import"],
+      mainFields: ["module", "main"],
       define: {
         "process.env.NODE_ENV": '"production"',
       },
@@ -53,7 +60,11 @@ globalThis.process = process;
 `,
       },
       logLevel: "info",
+      metafile: true,
     });
+
+    // Optional: Log what was bundled
+    // console.log(await esbuild.analyzeMetafile(result.metafile));
 
     console.log("Updating wrangler.json...");
     if (fs.existsSync(wranglerConfig)) {
@@ -79,7 +90,7 @@ globalThis.process = process;
 }
 
 async function verify() {
-  const workerOutput = "dist/client/_worker.js";
+  const workerOutput = path.join(rootDir, "dist/client/_worker.js");
   if (!fs.existsSync(workerOutput)) {
     console.error("Verification failed: _worker.js does not exist.");
     process.exit(1);
@@ -99,16 +110,28 @@ async function verify() {
     );
   }
 
-  // Final check for h3-v2 imports or assets/ imports
-  const hasExternalImports = content.match(/import\s+['"](h3-v2|assets\/)/);
-  if (hasExternalImports) {
-    console.error(
-      "Verification FAILED: Found external imports in _worker.js:",
-      hasExternalImports[0],
-    );
+  // Final check for h3-v2 imports or assets/ imports or any local imports
+  // We allow node: imports
+  const externalImports = [...content.matchAll(/import\s+.*?from\s+['"](.*?)['"]/g)].map(m => m[1]);
+  const invalidImports = externalImports.filter(imp => !imp.startsWith("node:") && !imp.startsWith("assets/") && imp !== "ws");
+
+  // Also check for literal "assets/h3-v2" or similar
+  const hasAssetsH3 = content.includes("assets/h3-v2") || content.includes('"h3-v2"');
+
+  if ((invalidImports.length > 0 && !invalidImports.every(i => i === 'ws')) || hasAssetsH3) {
+    console.error("Verification FAILED: Found unexpected imports or references in _worker.js");
+    if (invalidImports.length > 0) console.error("Invalid imports:", invalidImports);
+    if (hasAssetsH3) console.error("Found references to h3-v2 or assets/h3-v2");
+
+    // Check if it's just h3-v2 being imported
+    const hasH3Import = content.match(/import\s+.*?from\s+['"]h3-v2['"]/);
+    if (hasH3Import) {
+        console.error("The bundle still contains an external import for 'h3-v2'.");
+    }
+
     process.exit(1);
   } else {
-    console.log("Verification: No external imports (h3-v2 or assets/) found in _worker.js.");
+    console.log("Verification: No external or invalid imports found in _worker.js.");
   }
 }
 
