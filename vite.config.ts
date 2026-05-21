@@ -1,21 +1,21 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig(({ command }) => ({
+export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
   vite: {
     ssr: {
-      noExternal: true,
-      external: command === "serve" ? ["react", "react-dom", "use-sync-external-store"] : [],
+        noExternal: true,
     },
-    environments: {
-      ssr: {
-        resolve: {
-          noExternal: true,
-          external: command === "serve" ? ["react", "react-dom", "use-sync-external-store"] : [],
+    build: {
+      ssr: true,
+      rollupOptions: {
+        output: {
+          inlineDynamicImports: true,
+          manualChunks: undefined,
         },
       },
     },
   },
-}));
+});
