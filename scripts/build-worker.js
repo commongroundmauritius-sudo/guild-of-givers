@@ -36,8 +36,8 @@ async function build() {
       platform: "browser",
       target: "es2022",
       alias: {
-        "h3-v2": path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs"),
-        h3: path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs"),
+        "h3-v2": path.resolve("node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
+        h3: path.resolve("node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
       },
       minify: true,
       external,
@@ -85,6 +85,7 @@ async function verify() {
     process.exit(1);
   }
   const content = fs.readFileSync(workerOutput, "utf-8");
+
   // Check for export default or export { ... as default }
   const hasDefaultExport =
     content.includes("export default") ||
@@ -96,6 +97,18 @@ async function verify() {
     console.warn(
       "Verification: default export NOT found in _worker.js! The bundle might be invalid for Cloudflare Pages SSR.",
     );
+  }
+
+  // Final check for h3-v2 imports or assets/ imports
+  const hasExternalImports = content.match(/import\s+['"](h3-v2|assets\/)/);
+  if (hasExternalImports) {
+    console.error(
+      "Verification FAILED: Found external imports in _worker.js:",
+      hasExternalImports[0],
+    );
+    process.exit(1);
+  } else {
+    console.log("Verification: No external imports (h3-v2 or assets/) found in _worker.js.");
   }
 }
 
