@@ -1,4 +1,5 @@
 -- Sync missing functions that exist in production but were not in migration files
+-- These depend on the 'organizations' table being correctly named.
 
 -- 1. check_report_status_permissions
 CREATE OR REPLACE FUNCTION public.check_report_status_permissions()
