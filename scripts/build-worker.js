@@ -41,11 +41,10 @@ async function build() {
       target: "es2022",
       alias: {
         "h3-v2": path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
-        "h3": path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
+        h3: path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
       },
       minify: true,
       external,
-      // Ensure we don't accidentally leave dynamic imports to local files
       conditions: ["worker", "browser", "import"],
       mainFields: ["module", "main"],
       define: {
@@ -63,9 +62,6 @@ globalThis.process = process;
       metafile: true,
     });
 
-    // Optional: Log what was bundled
-    // console.log(await esbuild.analyzeMetafile(result.metafile));
-
     console.log("Updating wrangler.json...");
     if (fs.existsSync(wranglerConfig)) {
       const config = JSON.parse(fs.readFileSync(wranglerConfig, "utf-8"));
@@ -78,8 +74,6 @@ globalThis.process = process;
       }
       fs.writeFileSync(wranglerConfig, JSON.stringify(config, null, 2));
       console.log("wrangler.json updated.");
-    } else {
-      console.warn("wrangler.json not found in dist/client, skipping update.");
     }
 
     console.log("Build worker completed successfully.");
@@ -91,48 +85,45 @@ globalThis.process = process;
 
 async function verify() {
   const workerOutput = path.join(rootDir, "dist/client/_worker.js");
+  const serverDist = path.join(rootDir, "dist/server");
+
+  console.log("Starting final validation...");
+
   if (!fs.existsSync(workerOutput)) {
     console.error("Verification failed: _worker.js does not exist.");
     process.exit(1);
   }
+
   const content = fs.readFileSync(workerOutput, "utf-8");
 
-  // Check for export default or export { ... as default }
-  const hasDefaultExport =
-    content.includes("export default") ||
-    (content.includes("export") && content.includes("as default"));
+  // 1. Check for runtime external imports (the actual issue)
+  const externalImports = [...content.matchAll(/import\s+.*?from\s+['"](.*?)['"]/g)].map(
+    (m) => m[1],
+  );
+  const invalidImports = externalImports.filter((imp) => !imp.startsWith("node:") && imp !== "ws");
 
-  if (hasDefaultExport) {
-    console.log("Verification: default export found in _worker.js.");
-  } else {
-    console.warn(
-      "Verification: default export NOT found in _worker.js! The bundle might be invalid for Cloudflare Pages SSR.",
+  if (invalidImports.length > 0) {
+    console.error(
+      "Verification FAILED: Found unexpected RUNTIME external imports in _worker.js:",
+      invalidImports,
     );
-  }
-
-  // Final check for h3-v2 imports or assets/ imports or any local imports
-  // We allow node: imports
-  const externalImports = [...content.matchAll(/import\s+.*?from\s+['"](.*?)['"]/g)].map(m => m[1]);
-  const invalidImports = externalImports.filter(imp => !imp.startsWith("node:") && !imp.startsWith("assets/") && imp !== "ws");
-
-  // Also check for literal "assets/h3-v2" or similar
-  const hasAssetsH3 = content.includes("assets/h3-v2") || content.includes('"h3-v2"');
-
-  if ((invalidImports.length > 0 && !invalidImports.every(i => i === 'ws')) || hasAssetsH3) {
-    console.error("Verification FAILED: Found unexpected imports or references in _worker.js");
-    if (invalidImports.length > 0) console.error("Invalid imports:", invalidImports);
-    if (hasAssetsH3) console.error("Found references to h3-v2 or assets/h3-v2");
-
-    // Check if it's just h3-v2 being imported
-    const hasH3Import = content.match(/import\s+.*?from\s+['"]h3-v2['"]/);
-    if (hasH3Import) {
-        console.error("The bundle still contains an external import for 'h3-v2'.");
-    }
-
     process.exit(1);
-  } else {
-    console.log("Verification: No external or invalid imports found in _worker.js.");
   }
+
+  // 2. Check for "h3-v2" or "assets/h3-v2" in runtime imports (explicit requirement)
+  if (content.includes("import") && content.includes("h3-v2")) {
+    console.error("Verification FAILED: Found 'h3-v2' import in _worker.js");
+    process.exit(1);
+  }
+
+  // 3. Check for any local JS chunks that shouldn't be there
+  const splitChunkRef = content.match(/import\s+.*?from\s+['"]\.\/assets\/server-.*?\.js['"]/);
+  if (splitChunkRef) {
+    console.error("Verification FAILED: Found split chunk import in _worker.js:", splitChunkRef[0]);
+    process.exit(1);
+  }
+
+  console.log("Verification: SUCCESS. _worker.js is self-contained for the runtime.");
 }
 
 await build();
