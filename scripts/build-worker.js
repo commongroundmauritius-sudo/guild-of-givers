@@ -9,9 +9,15 @@ const rootDir = path.resolve(__dirname, "..");
 const h3Plugin = {
   name: "h3-resolver",
   setup(build) {
+    // Force h3-v2 and h3 to resolve to the cloudflare entry point
     build.onResolve({ filter: /^h3(-v2)?$/ }, (args) => {
-      return { path: path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs") };
+      const cloudflareEntry = path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs");
+      if (fs.existsSync(cloudflareEntry)) {
+        return { path: cloudflareEntry };
+      }
+      return { path: path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/generic.mjs") };
     });
+
     build.onResolve({ filter: /^\./ }, (args) => {
       // Resolve relative imports within dist/server
       if (args.importer.includes("dist/server")) {
@@ -105,7 +111,6 @@ globalThis.process = process;
 
 async function verify() {
   const workerOutput = path.join(rootDir, "dist/client/_worker.js");
-  const serverDist = path.join(rootDir, "dist/server");
 
   console.log("Starting final validation...");
 
@@ -117,7 +122,7 @@ async function verify() {
   const content = fs.readFileSync(workerOutput, "utf-8");
   const executableContent = content
     .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+    .replace(/(^|[^:])\/\/.*$/gm, "");
 
   const remainingImports = executableContent.match(/^\s*import\s+[^;]+;?/gm) || [];
   const problematic = remainingImports.filter((i) => {
@@ -130,27 +135,32 @@ async function verify() {
   if (problematic.length > 0) {
     console.error("Verification failed: Found problematic external imports in _worker.js:");
     problematic.forEach((i) => console.error("  ", i));
+    process.exit(1);
   } else {
     console.log("Verification: No problematic external imports found in _worker.js.");
   }
 
   const hasDefaultExport = /export\s+default\s+|export\s*\{[^}]*\bas\s+default\b/.test(executableContent);
   if (!hasDefaultExport) {
-    console.warn("Verification: default export might be missing in _worker.js");
+    console.error("Verification failed: default export is missing in _worker.js");
+    process.exit(1);
   }
 
-  // 2. Check for "h3-v2" only in runtime import specifiers. Bundled h3 code may
-  // still contain harmless package-name strings or comments.
+  // 2. Check for "h3-v2" or "h3" only in runtime import specifiers.
   if (remainingImports.some((i) => /['"]h3-v2['"]|['"]h3['"]/.test(i))) {
-    console.error("Verification FAILED: Found 'h3-v2' import in _worker.js");
+    console.error("Verification FAILED: Found 'h3-v2' or 'h3' import in _worker.js");
     process.exit(1);
   }
 
-  // 3. Check for any local JS chunks that shouldn't be there
-  const splitChunkRef = executableContent.match(/^\s*import\s+.*?from\s+['"]\.\/assets\/server-.*?\.js['"]/m);
-  if (splitChunkRef) {
-    console.error("Verification FAILED: Found split chunk import in _worker.js:", splitChunkRef[0]);
-    process.exit(1);
+  // 3. Check for any assets/ imports
+  const assetsRef = executableContent.match(/['"](\.\/)?assets\/.*?['"]/m);
+  if (assetsRef) {
+    // Specifically check if it's an import statement
+    const assetImport = executableContent.match(/^\s*import\s+.*?from\s+['"](\.\/)?assets\/.*?['"]/m);
+    if (assetImport) {
+       console.error("Verification FAILED: Found asset import in _worker.js:", assetImport[0]);
+       process.exit(1);
+    }
   }
 
   console.log("Verification: SUCCESS. _worker.js is self-contained for the runtime.");
