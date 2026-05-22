@@ -6,7 +6,7 @@ export default defineConfig({
   },
   vite: {
     ssr: {
-        noExternal: true,
+      noExternal: true,
     },
     build: {
       ssr: true,

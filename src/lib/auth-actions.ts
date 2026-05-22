@@ -82,3 +82,32 @@ export const convertLead = createServerFn({ method: "POST" })
 
     return { success: true };
   });
+
+import { paymentService } from "./payments/service";
+
+export const startMembershipSubscription = createServerFn({ method: "POST" })
+  .inputValidator((data: { userId: string, amount: number, billingDate: number, coversFees: boolean, priorities: string[] }) => data)
+  .handler(async ({ data }) => {
+    // 1. Initialize with provider
+    const result = await paymentService.subscribe({
+      userId: data.userId,
+      amount: data.amount,
+      billingDate: data.billingDate,
+      coversFees: data.coversFees,
+      priorityInitiatives: data.priorities
+    });
+
+    // 2. Update local subscription record
+    const { error } = await supabase.from("subscriptions").upsert({
+      user_id: data.userId,
+      amount_mur: data.amount,
+      status: result.status as any,
+      peach_subscription_id: result.subscriptionId,
+      next_billing_date: result.nextBillingDate,
+      covers_fees: data.coversFees
+    });
+
+    if (error) throw error;
+
+    return result;
+  });

@@ -3,23 +3,23 @@ import fs from "node:fs";
 import path from "node:path";
 
 const h3Plugin = {
-  name: 'h3-resolver',
+  name: "h3-resolver",
   setup(build) {
-    build.onResolve({ filter: /^h3(-v2)?$/ }, args => {
-      return { path: path.resolve('node_modules/h3-v2/dist/_entries/generic.mjs') }
-    })
-    build.onResolve({ filter: /^\./ }, args => {
+    build.onResolve({ filter: /^h3(-v2)?$/ }, (args) => {
+      return { path: path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs") };
+    });
+    build.onResolve({ filter: /^\./ }, (args) => {
       // Resolve relative imports within dist/server
-      if (args.importer.includes('dist/server')) {
-          const resolved = path.resolve(path.dirname(args.importer), args.path);
-          if (fs.existsSync(resolved) || fs.existsSync(resolved + '.js')) {
-              return { path: fs.existsSync(resolved) ? resolved : resolved + '.js' };
-          }
+      if (args.importer.includes("dist/server")) {
+        const resolved = path.resolve(path.dirname(args.importer), args.path);
+        if (fs.existsSync(resolved) || fs.existsSync(resolved + ".js")) {
+          return { path: fs.existsSync(resolved) ? resolved : resolved + ".js" };
+        }
       }
       return null;
-    })
+    });
   },
-}
+};
 
 async function build() {
   const serverEntry = "dist/server/server.js";
@@ -57,7 +57,7 @@ async function build() {
       target: "es2022",
       alias: {
         "h3-v2": path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs"),
-        "h3": path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs"),
+        h3: path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs"),
       },
       minify: false,
       external,
@@ -105,18 +105,18 @@ async function verify() {
   const content = fs.readFileSync(workerOutput, "utf-8");
 
   const remainingImports = content.match(/import\s+[^;]+;?/g) || [];
-  const problematic = remainingImports.filter(i => {
-      const match = i.match(/['"]([^'"]+)['"]/);
-      if (!match) return false;
-      const mod = match[1];
-      return !mod.startsWith('node:') && mod !== 'ws';
+  const problematic = remainingImports.filter((i) => {
+    const match = i.match(/['"]([^'"]+)['"]/);
+    if (!match) return false;
+    const mod = match[1];
+    return !mod.startsWith("node:") && mod !== "ws";
   });
 
   if (problematic.length > 0) {
-      console.error("Verification failed: Found problematic external imports in _worker.js:");
-      problematic.forEach(i => console.error("  ", i));
+    console.error("Verification failed: Found problematic external imports in _worker.js:");
+    problematic.forEach((i) => console.error("  ", i));
   } else {
-      console.log("Verification: No problematic external imports found in _worker.js.");
+    console.log("Verification: No problematic external imports found in _worker.js.");
   }
 
   const hasDefaultExport = content.includes("export default") || content.includes("export{");
