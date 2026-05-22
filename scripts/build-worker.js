@@ -115,8 +115,11 @@ async function verify() {
   }
 
   const content = fs.readFileSync(workerOutput, "utf-8");
+  const executableContent = content
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
 
-  const remainingImports = content.match(/import\s+[^;]+;?/g) || [];
+  const remainingImports = executableContent.match(/^\s*import\s+[^;]+;?/gm) || [];
   const problematic = remainingImports.filter((i) => {
     const match = i.match(/['"]([^'"]+)['"]/);
     if (!match) return false;
@@ -131,19 +134,20 @@ async function verify() {
     console.log("Verification: No problematic external imports found in _worker.js.");
   }
 
-  const hasDefaultExport = content.includes("export default") || content.includes("export{");
+  const hasDefaultExport = /export\s+default\s+|export\s*\{[^}]*\bas\s+default\b/.test(executableContent);
   if (!hasDefaultExport) {
     console.warn("Verification: default export might be missing in _worker.js");
   }
 
-  // 2. Check for "h3-v2" or "assets/h3-v2" in runtime imports (explicit requirement)
-  if (content.includes("import") && content.includes("h3-v2")) {
+  // 2. Check for "h3-v2" only in runtime import specifiers. Bundled h3 code may
+  // still contain harmless package-name strings or comments.
+  if (remainingImports.some((i) => /['"]h3-v2['"]|['"]h3['"]/.test(i))) {
     console.error("Verification FAILED: Found 'h3-v2' import in _worker.js");
     process.exit(1);
   }
 
   // 3. Check for any local JS chunks that shouldn't be there
-  const splitChunkRef = content.match(/import\s+.*?from\s+['"]\.\/assets\/server-.*?\.js['"]/);
+  const splitChunkRef = executableContent.match(/^\s*import\s+.*?from\s+['"]\.\/assets\/server-.*?\.js['"]/m);
   if (splitChunkRef) {
     console.error("Verification FAILED: Found split chunk import in _worker.js:", splitChunkRef[0]);
     process.exit(1);
