@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
 
       return {
-        role: (roleRes.data?.role as AppRole) ?? "member",
+        role: (roleRes.data?.role as AppRole) ?? null,
         profile: profileRes.data as Profile | null,
         isSubscribed: !!subRes.data,
       };

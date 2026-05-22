@@ -16,6 +16,7 @@ function OrganizationDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showInitiativeForm, setShowInitiativeForm] = useState(false);
+  const [editingInitiativeId, setEditingInitiativeId] = useState<string | null>(null);
   const [newInitiative, setNewInitiative] = useState({
     title: "",
     description: "",
@@ -114,8 +115,9 @@ function OrganizationDashboard() {
     mutationFn: async () => {
       if (role !== "organization" || !organizationProfile?.id)
         throw new Error("Unauthorized or Missing Organization context");
-      const { error } = await supabase.from("initiatives").insert({
-        organization_id: organizationProfile.id,
+
+      const payload = {
+        initiative_id: editingInitiativeId,
         title: newInitiative.title,
         description: newInitiative.description,
         goal_amount_mur: Number(newInitiative.goal),
@@ -124,16 +126,31 @@ function OrganizationDashboard() {
         target_milestones: newInitiative.target_milestones,
         expected_outcomes: newInitiative.expected_outcomes,
         impact_pool_target: Number(newInitiative.impact_pool_target),
-        initiative_source: "organization_submission",
-        creator_user_id: user?.id,
-        creator_role: "organization",
-        status: "active",
-        is_approved: false,
-      });
-      if (error) throw error;
+        version_number: 1, // Simplified
+        status: "pending",
+        created_by: user?.id,
+      };
+
+      if (editingInitiativeId) {
+          const { error } = await supabase.from("initiative_versions").insert(payload);
+          if (error) throw error;
+      } else {
+          // New initiative creation still direct for now, or could use versions too
+          const { error } = await supabase.from("initiatives").insert({
+            ...payload,
+            organization_id: organizationProfile.id,
+            initiative_id: undefined, // ensure it is not in the spread if it is null
+            initiative_source: "organization_submission",
+            creator_user_id: user?.id,
+            creator_role: "organization",
+            status: "active",
+            is_approved: false,
+          });
+          if (error) throw error;
+      }
     },
     onSuccess: () => {
-      toast.success("Initiative submitted for approval");
+      toast.success(editingInitiativeId ? "Changes submitted for approval" : "Initiative submitted for approval");
       setNewInitiative({
         title: "",
         description: "",
@@ -145,6 +162,7 @@ function OrganizationDashboard() {
         impact_pool_target: "0",
       });
       setShowInitiativeForm(false);
+      setEditingInitiativeId(null);
       refetchInitiatives();
     },
     onError: (err: Error) => toast.error(err.message),

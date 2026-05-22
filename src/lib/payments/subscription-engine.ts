@@ -43,7 +43,7 @@ export class SubscriptionEngine {
       .from("payments")
       .insert({
         user_id: userId,
-        subscription_id: null, // Would need actual UUID from DB if exists
+        subscription_id: null,
         amount_mur: amount,
         status: "success",
         peach_payment_id: transactionId || null,
@@ -58,9 +58,26 @@ export class SubscriptionEngine {
     }
 
     // 2. Trigger allocations
-    await allocationEngine.processPayment(payment.id, userId, amount);
+    const { error: allocError } = await supabase.rpc("allocate_payment_funds", {
+        p_payment_id: payment.id,
+        p_user_id: userId,
+        p_total_amount: amount
+    });
 
-    // 3. Update user status/subscription if applicable
+    if (allocError) {
+        console.error("RPC Allocation failed, falling back to TS engine:", allocError);
+        await allocationEngine.processPayment(payment.id, userId, amount);
+    }
+
+    // 3. Activate Membership (Decoupling logic: Role assignment now happens here)
+    const { error: activateError } = await supabase.rpc("activate_membership", {
+        p_user_id: userId
+    });
+    if (activateError) {
+        console.error("Failed to activate membership role:", activateError);
+    }
+
+    // 4. Update subscription status
     if (subscriptionId) {
       await this.updateSubscriptionStatus(subscriptionId, "active");
     }
@@ -83,34 +100,11 @@ export class SubscriptionEngine {
   }
 
   async runBillingCycle(): Promise<void> {
-    console.log("[SubscriptionEngine] Running billing cycle for today...");
-
-    const { data: subscriptions } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("status", "active")
-      .lte("next_billing_date", new Date().toISOString());
-
-    if (!subscriptions) return;
-
-    for (const sub of subscriptions) {
-      console.log(`[SubscriptionEngine] Billing subscription ${sub.id} for user ${sub.user_id}`);
-
-      const event = MockPaymentProvider.generateMockEvent("subscription.renewal", {
-        userId: sub.user_id,
-        subscriptionId: sub.peach_subscription_id || "mock_sub",
-        amount: Number(sub.amount_mur),
-      });
-
-      await this.handlePaymentEvent(event);
-
-      const nextDate = new Date();
-      nextDate.setMonth(nextDate.getMonth() + 1);
-
-      await supabase
-        .from("subscriptions")
-        .update({ next_billing_date: nextDate.toISOString() })
-        .eq("id", sub.id);
+    console.log("[SubscriptionEngine] Triggering database billing cycle...");
+    const { error } = await supabase.rpc("process_recurring_billing");
+    if (error) {
+        console.error("Failed to trigger DB billing cycle:", error);
+        throw error;
     }
   }
 }

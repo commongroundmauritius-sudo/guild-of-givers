@@ -263,7 +263,7 @@ function SignupPage() {
                 <h2 className="font-display text-3xl font-semibold text-primary">Payment</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Simulating a secure payment via our abstraction layer.
-                  In production, this will redirect to Peach Payments.
+                  Your CommonGround Member account will be activated immediately after this mock transaction.
                 </p>
                 <div className="mt-8 rounded-2xl border border-teal-600/20 bg-teal-600/5 p-6">
                   <p className="text-sm font-semibold text-teal-700 uppercase">Order Summary</p>
