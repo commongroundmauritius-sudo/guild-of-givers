@@ -30,6 +30,7 @@ import { Route as AuthenticatedAdminDashboardIndexRouteImport } from './routes/_
 import { Route as AuthenticatedMemberSettingsRouteImport } from './routes/_authenticated/member.settings'
 import { Route as AuthenticatedMemberProfileRouteImport } from './routes/_authenticated/member.profile'
 import { Route as AuthenticatedCommunityHubPostIdRouteImport } from './routes/_authenticated/community-hub.$postId'
+import { Route as AuthenticatedAdminDashboardVerifyPaymentsRouteImport } from './routes/_authenticated/admin-dashboard.verify-payments'
 import { Route as AuthenticatedAdminDashboardSettingsRouteImport } from './routes/_authenticated/admin-dashboard.settings'
 import { Route as AuthenticatedAdminDashboardProfileRouteImport } from './routes/_authenticated/admin-dashboard.profile'
 import { Route as AuthenticatedAdminDashboardOrganizationsRouteImport } from './routes/_authenticated/admin-dashboard.organizations'
@@ -152,6 +153,12 @@ const AuthenticatedCommunityHubPostIdRoute =
     path: '/community-hub/$postId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminDashboardVerifyPaymentsRoute =
+  AuthenticatedAdminDashboardVerifyPaymentsRouteImport.update({
+    id: '/verify-payments',
+    path: '/verify-payments',
+    getParentRoute: () => AuthenticatedAdminDashboardRoute,
+  } as any)
 const AuthenticatedAdminDashboardSettingsRoute =
   AuthenticatedAdminDashboardSettingsRouteImport.update({
     id: '/settings',
@@ -236,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
   '/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
   '/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
+  '/admin-dashboard/verify-payments': typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
   '/community-hub/$postId': typeof AuthenticatedCommunityHubPostIdRoute
   '/member/profile': typeof AuthenticatedMemberProfileRoute
   '/member/settings': typeof AuthenticatedMemberSettingsRoute
@@ -267,6 +275,7 @@ export interface FileRoutesByTo {
   '/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
   '/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
   '/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
+  '/admin-dashboard/verify-payments': typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
   '/community-hub/$postId': typeof AuthenticatedCommunityHubPostIdRoute
   '/member/profile': typeof AuthenticatedMemberProfileRoute
   '/member/settings': typeof AuthenticatedMemberSettingsRoute
@@ -301,6 +310,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
   '/_authenticated/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
   '/_authenticated/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
+  '/_authenticated/admin-dashboard/verify-payments': typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
   '/_authenticated/community-hub/$postId': typeof AuthenticatedCommunityHubPostIdRoute
   '/_authenticated/member/profile': typeof AuthenticatedMemberProfileRoute
   '/_authenticated/member/settings': typeof AuthenticatedMemberSettingsRoute
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/admin-dashboard/organizations'
     | '/admin-dashboard/profile'
     | '/admin-dashboard/settings'
+    | '/admin-dashboard/verify-payments'
     | '/community-hub/$postId'
     | '/member/profile'
     | '/member/settings'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/admin-dashboard/organizations'
     | '/admin-dashboard/profile'
     | '/admin-dashboard/settings'
+    | '/admin-dashboard/verify-payments'
     | '/community-hub/$postId'
     | '/member/profile'
     | '/member/settings'
@@ -399,6 +411,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-dashboard/organizations'
     | '/_authenticated/admin-dashboard/profile'
     | '/_authenticated/admin-dashboard/settings'
+    | '/_authenticated/admin-dashboard/verify-payments'
     | '/_authenticated/community-hub/$postId'
     | '/_authenticated/member/profile'
     | '/_authenticated/member/settings'
@@ -573,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCommunityHubPostIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-dashboard/verify-payments': {
+      id: '/_authenticated/admin-dashboard/verify-payments'
+      path: '/verify-payments'
+      fullPath: '/admin-dashboard/verify-payments'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardVerifyPaymentsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRoute
+    }
     '/_authenticated/admin-dashboard/settings': {
       id: '/_authenticated/admin-dashboard/settings'
       path: '/settings'
@@ -654,6 +674,7 @@ interface AuthenticatedAdminDashboardRouteChildren {
   AuthenticatedAdminDashboardOrganizationsRoute: typeof AuthenticatedAdminDashboardOrganizationsRoute
   AuthenticatedAdminDashboardProfileRoute: typeof AuthenticatedAdminDashboardProfileRoute
   AuthenticatedAdminDashboardSettingsRoute: typeof AuthenticatedAdminDashboardSettingsRoute
+  AuthenticatedAdminDashboardVerifyPaymentsRoute: typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
   AuthenticatedAdminDashboardIndexRoute: typeof AuthenticatedAdminDashboardIndexRoute
   AuthenticatedAdminDashboardInitiativesNewRoute: typeof AuthenticatedAdminDashboardInitiativesNewRoute
   AuthenticatedAdminDashboardInitiativesIndexRoute: typeof AuthenticatedAdminDashboardInitiativesIndexRoute
@@ -676,6 +697,8 @@ const AuthenticatedAdminDashboardRouteChildren: AuthenticatedAdminDashboardRoute
       AuthenticatedAdminDashboardProfileRoute,
     AuthenticatedAdminDashboardSettingsRoute:
       AuthenticatedAdminDashboardSettingsRoute,
+    AuthenticatedAdminDashboardVerifyPaymentsRoute:
+      AuthenticatedAdminDashboardVerifyPaymentsRoute,
     AuthenticatedAdminDashboardIndexRoute:
       AuthenticatedAdminDashboardIndexRoute,
     AuthenticatedAdminDashboardInitiativesNewRoute:

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
-import { createLead, convertLead } from "@/lib/auth-actions";
+import { createLead, convertLead, startMembershipSubscription } from "@/lib/auth-actions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/signup")({
@@ -61,23 +61,37 @@ function SignupPage() {
   const submitAccount = async () => {
     if (submitting) return;
     setSubmitting(true);
-    const { error } = await signUp(email.trim().toLowerCase(), password, {
+    const { error, data: authResult } = await signUp(email.trim().toLowerCase(), password, {
       full_name: fullName,
       phone: phone,
       subscription_amount: finalAmount,
       covers_fees: coversFees,
     });
+
     if (error) {
       toast.error((error as Error).message);
       setSubmitting(false);
       return;
     }
 
-    // Mark lead as converted
+    // After account creation, trigger the subscription via abstraction layer
     try {
+      const user = authResult?.user;
+      if (user) {
+        await startMembershipSubscription({
+          data: {
+            userId: user.id,
+            amount: finalAmount,
+            billingDate: 7,
+            coversFees,
+            priorities: [], // Default empty, user will set in dashboard
+          },
+        });
+      }
+
       await convertLead({ data: { email: email.trim().toLowerCase() } });
     } catch (e) {
-      console.error("Lead conversion failed", e);
+      console.error("Post-signup processing failed", e);
     }
 
     setSubmitting(false);
@@ -248,14 +262,21 @@ function SignupPage() {
               <div>
                 <h2 className="font-display text-3xl font-semibold text-primary">Payment</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Payment integration is coming soon. For now, your membership is registered and a
-                  CommonGround team member will reach out to set up recurring billing.
+                  Simulating a secure payment via our abstraction layer.
+                  In production, this will redirect to Peach Payments.
                 </p>
+                <div className="mt-8 rounded-2xl border border-teal-600/20 bg-teal-600/5 p-6">
+                  <p className="text-sm font-semibold text-teal-700 uppercase">Order Summary</p>
+                  <div className="mt-4 flex justify-between">
+                    <span className="text-muted-foreground">Monthly Contribution</span>
+                    <span className="font-bold">Rs {finalAmount.toLocaleString()}</span>
+                  </div>
+                </div>
                 <button
                   onClick={() => setStep(3)}
-                  className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  className="mt-8 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
-                  Continue
+                  Complete Checkout (Mock)
                 </button>
               </div>
             )}

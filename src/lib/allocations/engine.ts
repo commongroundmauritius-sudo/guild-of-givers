@@ -3,12 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 interface AllocationResult {
   initiativeId: string;
   amount: number;
+  potentialAmount: number;
   isOverflow: boolean;
 }
 
 export class AllocationEngine {
-  private readonly CG_FEE_PERCENT = 0.2;
-  private readonly NGO_POOL_PERCENT = 0.8;
+  private readonly CG_FEE_PERCENT = 0.20;
+  private readonly NGO_POOL_PERCENT = 0.80;
 
   async calculateAllocations(userId: string, netAmount: number): Promise<AllocationResult[]> {
     // 1. Get member preferences (priorities)
@@ -16,7 +17,7 @@ export class AllocationEngine {
       .from("member_preferences")
       .select("initiative_id, initiatives(id, goal_amount_mur, current_amount_mur, is_impact_pool)")
       .eq("user_id", userId)
-      .order("priority_level", { ascending: true }); // Simplification for priority order
+      .order("priority_level", { ascending: true });
 
     if (prefError || !preferences) {
       console.error("Error fetching preferences:", prefError);
@@ -46,13 +47,18 @@ export class AllocationEngine {
       const current = Number(initiative.current_amount_mur) || 0;
       const space = Math.max(0, cap - current);
 
+      // Potential is what they WANTED to give to this initiative
+      const potential = netAmount / Math.max(1, preferences.length);
+      // Simplified: assume equal potential split for now, or total if P1
+
       const toAllocate = Math.min(remainingPool, space);
 
       if (toAllocate > 0) {
         allocations.push({
           initiativeId: initiative.id,
           amount: toAllocate,
-          isOverflow: false,
+          potentialAmount: potential,
+          isOverflow: toAllocate < potential
         });
         remainingPool -= toAllocate;
       }
@@ -63,7 +69,8 @@ export class AllocationEngine {
       allocations.push({
         initiativeId: impactPoolId,
         amount: remainingPool,
-        isOverflow: true,
+        potentialAmount: 0, // Fallback doesn't usually have "potential" in same sense
+        isOverflow: true
       });
     }
 
@@ -81,18 +88,18 @@ export class AllocationEngine {
         payment_id: paymentId,
         initiative_id: res.initiativeId,
         amount_mur: res.amount,
+        potential_amount_mur: res.potentialAmount,
+        is_overflow: res.isOverflow
       });
 
       // Update initiative progress
       await supabase.rpc("increment_initiative_amount", {
         initiative_id: res.initiativeId,
-        increment_by: res.amount,
+        increment_by: res.amount
       });
     }
 
-    console.log(
-      `[AllocationEngine] Processed payment ${paymentId}. CG Share: ${cgShare}, NGO Pool: ${netAmount}`,
-    );
+    console.log(`[AllocationEngine] Processed payment ${paymentId}. CG Share: ${cgShare}, NGO Pool: ${netAmount}`);
   }
 }
 
