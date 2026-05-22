@@ -34,7 +34,7 @@ export async function compressAndUploadImage(file: File, bucket: string, path: s
 
   try {
     const compressedFile = await imageCompression(file, options);
-    const fileName = `${path}/${Date.now()}-${file.organization_name}`;
+    const fileName = `${path}/${Date.now()}-${file.name}`;
 
     const { data, error } = await supabase.storage.from(bucket).upload(fileName, compressedFile);
 
