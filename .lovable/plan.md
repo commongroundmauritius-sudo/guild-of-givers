@@ -20,15 +20,15 @@ src/routes/
   about.tsx               # About / mission
   initiatives.tsx         # Long-term programs list (reads `initiatives` table if present)
   for-orgs.tsx            # Pitch for organizations
-  partner.tsx             # NGO partner application form
+  partner.tsx             # Organization partner application form
   faq.tsx                 # Standalone FAQ page
   legal.tsx               # Legal / terms / privacy
   login.tsx               # Email/password + Google sign-in
   signup.tsx              # Multi-step Become a Member (Amount → Details → Payment → Done)
   _authenticated.tsx      # Auth gate (redirect to /login if no session)
-  _authenticated/dashboard.tsx     # Router: sends user to member/ngo/admin dashboard by role
+  _authenticated/dashboard.tsx     # Router: sends user to member/organization/admin dashboard by role
   _authenticated/member.tsx        # Member dashboard placeholder
-  _authenticated/ngo.tsx           # NGO dashboard placeholder
+  _authenticated/organization.tsx           # Organization dashboard placeholder
   _authenticated/admin.tsx         # Admin dashboard placeholder
 ```
 
@@ -51,9 +51,9 @@ Each route gets its own `head()` with unique title + meta description + og tags 
 ## Auth + roles
 
 - `useAuth` hook with `onAuthStateChange` listener (set up BEFORE `getSession`) exposing `{ user, session, role, loading, signIn, signUp, signInWithGoogle, signOut }`.
-- Role detection assumes the standard pattern: a `user_roles` table with `app_role` enum (`admin | ngo | member`) and a `has_role(_user_id, _role)` security-definer function. On login, query `user_roles` for `auth.uid()`; default to `member` if no row. (If your existing schema uses a different shape, tell me on plan review and I'll adjust — I won't create tables in your live DB.)
+- Role detection assumes the standard pattern: a `user_roles` table with `app_role` enum (`admin | organization | member`) and a `has_role(_user_id, _role)` security-definer function. On login, query `user_roles` for `auth.uid()`; default to `member` if no row. (If your existing schema uses a different shape, tell me on plan review and I'll adjust — I won't create tables in your live DB.)
 - `_authenticated.tsx` uses `beforeLoad` to redirect to `/login` when no session.
-- `/dashboard` reads the role from context and `redirect()`s to `/member`, `/ngo`, or `/admin`.
+- `/dashboard` reads the role from context and `redirect()`s to `/member`, `/organization`, or `/admin`.
 
 ## Out of scope this turn
 

@@ -34,10 +34,10 @@ function InitiativesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, organizations!inner(organization_name, status)")
+        .select("*, organizations(organization_name, status)")
         .eq("is_approved", true)
         .eq("is_published", true)
-        .eq("organizations.status", "active")
+        .or("organization_id.is.null,organizations.status.eq.active")
         .order("created_at", { ascending: false });
 
       if (error) throw error;

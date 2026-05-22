@@ -2,13 +2,13 @@
 
 ## Audit Summary
 
-A full regression audit was conducted following the migration from NGO-centric architecture to an Organization-based model. The migration is confirmed successful, with consistent terminology and normalized role values across the entire stack.
+A full regression audit was conducted following the migration from Organization-centric architecture to an Organization-based model. The migration is confirmed successful, with consistent terminology and normalized role values across the entire stack.
 
 ## Terminology & Role Normalization
 
-- **Role Migration**: The database `app_role` enum now includes `organization`. All users and initiatives have been migrated from `ngo` to `organization`.
-- **Global Cleanup**: Removed all legacy references to "ngo", "ngos", and "ngo_id" from the source code.
-- **Route Normalization**: Routes like `/ngo` have been renamed to `/organization`.
+- **Role Migration**: The database `app_role` enum now includes `organization`. All users and initiatives have been migrated from `organization` to `organization`.
+- **Global Cleanup**: Removed all legacy references to "organization", "organizations", and "organization_id" from the source code.
+- **Route Normalization**: Routes like `/organization` have been renamed to `/organization`.
 - **Logic Consistency**: Internal variables and labels now consistently use "organization".
 
 ## Database Integrity Validation

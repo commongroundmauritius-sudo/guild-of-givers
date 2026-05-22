@@ -86,6 +86,18 @@ function AdminDashboard() {
     },
   });
 
+  const { data: pendingVersions, isLoading: versionsLoading } = useQuery({
+    queryKey: ["pending-initiative-versions"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("initiative_versions")
+        .select("*, initiatives(title, organizations(organization_name))")
+        .eq("status", "pending")
+        .limit(5);
+      return data;
+    },
+  });
+
   const { data: leads, isLoading: leadsLoading } = useQuery({
     queryKey: ["membership-leads"],
     queryFn: async () => {
@@ -97,6 +109,21 @@ function AdminDashboard() {
       return data;
     },
   });
+
+  const approveVersion = async (versionId: string) => {
+    if (role !== "admin") return;
+    const { error } = await supabase.rpc("approve_initiative_version", {
+      p_version_id: versionId,
+      p_admin_id: user?.id,
+    });
+
+    if (error) toast.error("Failed to approve version");
+    else {
+      toast.success("Initiative updated");
+      queryClient.invalidateQueries({ queryKey: ["pending-initiative-versions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+    }
+  };
 
   const moderateReport = async (reportId: string, status: "approved" | "rejected") => {
     if (role !== "admin") {
@@ -207,6 +234,42 @@ function AdminDashboard() {
           </div>
 
           <div className="mt-12 grid gap-12 lg:grid-cols-2">
+            <div>
+              <h2 className="mb-6 font-display text-2xl font-semibold text-primary">
+                Initiative Updates
+              </h2>
+              <div className="overflow-hidden rounded-3xl border border-border/40 bg-card">
+                {versionsLoading ? (
+                  <div className="p-6 space-y-4">
+                    <Skeleton className="h-16 w-full rounded-2xl" />
+                  </div>
+                ) : pendingVersions && pendingVersions.length > 0 ? (
+                  <div className="divide-y divide-border/40">
+                    {pendingVersions.map((v) => (
+                      <div key={v.id} className="p-6 transition hover:bg-muted/50 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-primary">{v.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Version of: {(v.initiatives as any)?.title}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => approveVersion(v.id)}
+                          className="text-xs font-bold text-teal-600 uppercase hover:underline"
+                        >
+                          Approve
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center text-muted-foreground italic text-sm">
+                    No pending version updates.
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-2xl font-semibold text-primary">
