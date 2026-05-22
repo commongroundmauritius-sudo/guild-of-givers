@@ -43,7 +43,7 @@ This report compares the **CommonGround Operating Blueprint** against the curren
 **Status:** Missing
 
 - **Business Purpose:** Distribute funds according to member priorities and platform fees.
-- **Blueprint Behavior:** 20% platform / 80% NGO split. Priority overflow logic (P1 → P2 → P3 → Impact Pool).
+- **Blueprint Behavior:** 20% platform / 80% Organization split. Priority overflow logic (P1 → P2 → P3 → Impact Pool).
 - **Actual Implementation:** Tables exist to store preferences and allocations, but no calculation logic exists.
 - **Gaps:** No priority overflow logic; no 20/80 split calculation.
 - **Files:** `src/lib/auth-actions.ts` (Preference toggle only)
@@ -89,7 +89,7 @@ This report compares the **CommonGround Operating Blueprint** against the curren
 
 ---
 
-## 6. NGO (Organization) Dashboard
+## 6. Organization (Organization) Dashboard
 
 **Status:** Partially implemented
 
@@ -111,7 +111,7 @@ This report compares the **CommonGround Operating Blueprint** against the curren
 **Status:** Partially implemented
 
 - **Business Purpose:** Governance and quality control.
-- **Blueprint Behavior:** NGO Edit → New version pending review → Old version remains visible.
+- **Blueprint Behavior:** Organization Edit → New version pending review → Old version remains visible.
 - **Actual Implementation:** One record per initiative. Edit overwrites current record.
 - **Gaps:** No "Versioning" system. Editing a live initiative immediately updates the public view if approved.
 - **Files:** `src/routes/_authenticated/admin-dashboard.initiatives.index.tsx`
@@ -128,8 +128,8 @@ This report compares the **CommonGround Operating Blueprint** against the curren
 **Status:** Fully implemented
 
 - **Business Purpose:** Transparency and trust.
-- **Blueprint Behavior:** Admin uploads/approves NGO reports; members view.
-- **Actual Implementation:** NGO submits → Admin approves → Member views in dashboard.
+- **Blueprint Behavior:** Admin uploads/approves Organization reports; members view.
+- **Actual Implementation:** Organization submits → Admin approves → Member views in dashboard.
 - **Files:** `src/routes/_authenticated/member.tsx`
 - **Database Tables:** `reports`
 - **Frontend Components:** "Transparency Updates" feed in Member Dashboard.
@@ -143,8 +143,8 @@ This report compares the **CommonGround Operating Blueprint** against the curren
 
 **Status:** Missing
 
-- **Business Purpose:** Platform revenue tracking and NGO pool oversight.
-- **Blueprint Behavior:** View Collected, Fees, Net, CG share, and NGO share.
+- **Business Purpose:** Platform revenue tracking and Organization pool oversight.
+- **Blueprint Behavior:** View Collected, Fees, Net, CG share, and Organization share.
 - **Actual Implementation:** Admin Dashboard displays "Total Revenue" and "Active Subscriptions" cards with raw data.
 - **Gaps:** No logic for net-of-fee calculation or platform share split.
 - **Files:** `src/routes/_authenticated/admin-dashboard.index.tsx`
@@ -161,7 +161,7 @@ This report compares the **CommonGround Operating Blueprint** against the curren
 **Status:** Fully implemented
 
 - **Business Purpose:** Central control and moderation.
-- **Blueprint Behavior:** Manage NGOs, initiatives, posts, and internal finance.
+- **Blueprint Behavior:** Manage Organizations, initiatives, posts, and internal finance.
 - **Actual Implementation:** Unified dashboard for all administrative tasks.
 - **Files:** `src/routes/_authenticated/admin-dashboard.tsx`
 - **Database Tables:** `admin_actions`, `organizations`, `profiles`, `initiatives`
@@ -177,7 +177,7 @@ This report compares the **CommonGround Operating Blueprint** against the curren
 **Status:** Fully implemented
 
 - **Business Purpose:** Protect data integrity and user privacy.
-- **Blueprint Behavior:** Role-based access control (Admin, NGO, Member, Public).
+- **Blueprint Behavior:** Role-based access control (Admin, Organization, Member, Public).
 - **Actual Implementation:** Strict RLS policies and role-assignment triggers.
 - **Files:** `supabase/migrations/...consolidate_rls.sql`
 - **Database Tables:** `user_roles`
@@ -243,12 +243,12 @@ This report compares the **CommonGround Operating Blueprint** against the curren
 
 1.  **Allocation Engine:** The platform currently has no way to actually calculate or distribute funds based on user priorities.
 2.  **Payment Integration:** No connection to Peach Payments to automate subscription activation.
-3.  **Initiative Versioning:** Lack of versioning creates a governance risk when NGOs update active initiatives.
+3.  **Initiative Versioning:** Lack of versioning creates a governance risk when Organizations update active initiatives.
 
 ### RECOMMENDED IMPLEMENTATION ORDER
 
 1.  **Priority Ranking (UI/DB):** Align the member preference system with the 1-4 ranking blueprint.
 2.  **Allocation Backend:** Implement the 20/80 split and priority overflow logic.
 3.  **Payment Webhooks:** Connect Peach Payments to automate the "Lead → Member" conversion.
-4.  **NGO Metrics:** Add priority distribution and cumulative funding views to the Organization Dashboard.
+4.  **Organization Metrics:** Add priority distribution and cumulative funding views to the Organization Dashboard.
 5.  **Versioning:** Create an `initiative_versions` table to support safe editing of live campaigns.

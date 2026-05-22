@@ -26,13 +26,13 @@
 - **Integrity:** **PASS**. Functions use `SECURITY DEFINER` for atomic ledger updates.
 - **Status:** PASS
 
-## 5. NGO Permissions Verification
-- **Visibility:** **PASS**. NGOs restricted to their own organization scope via RLS.
-- **Financial Privacy:** **PASS**. Internal platform fee split (20%) is calculated in `allocate_payment_funds` sub-function, isolated from NGO dashboard queries.
+## 5. Organization Permissions Verification
+- **Visibility:** **PASS**. Organizations restricted to their own organization scope via RLS.
+- **Financial Privacy:** **PASS**. Internal platform fee split (20%) is calculated in `allocate_payment_funds` sub-function, isolated from Organization dashboard queries.
 - **Status:** PASS
 
 ## 6. Initiative Workflow Verification
-- **Versioning:** **PASS**. NGO edits now create entries in `initiative_versions`.
+- **Versioning:** **PASS**. Organization edits now create entries in `initiative_versions`.
 - **Governance:** **PASS**. Admin dashboard allows review and promotion to live via `approve_initiative_version` RPC, which archives old state to `superseded`.
 - **Status:** PASS
 

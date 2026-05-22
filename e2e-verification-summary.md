@@ -7,12 +7,12 @@
 2. **State Machine (Persistence):** PASS
    - Verified that `SubscriptionEngine` correctly creates `payments` and updates `subscriptions`.
 3. **Allocation Engine (20/80 & Overflow):** PASS
-   - Verified MUR 800 allocated to NGO pool from MUR 1000 total (80%).
+   - Verified MUR 800 allocated to Organization pool from MUR 1000 total (80%).
    - Priority-based overflow (P1 -> P2 -> Impact Pool) verified via SQL simulation.
 4. **Financial Calculations:** PASS
    - `allocations` table now correctly tracks `potential_amount_mur` and `is_overflow`.
 5. **Permissions & Visibility:** PASS
-   - RLS policies ensure members see only their own financial data and NGOs see only public/vetted info.
+   - RLS policies ensure members see only their own financial data and Organizations see only public/vetted info.
 6. **Browser Validation (Logic Flow):** PASS
    - Signup logic flow patched and build-verified.
 

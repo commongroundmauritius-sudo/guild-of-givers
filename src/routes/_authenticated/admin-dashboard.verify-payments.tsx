@@ -45,10 +45,10 @@ function VerifyPaymentsPage() {
       const latest = payments?.[0];
       const passSplit = latest?.amount_mur === 1000;
       const totalAllocated = latest?.allocations?.reduce((s: number, a: any) => s + Number(a.amount_mur), 0) || 0;
-      const passNGO = totalAllocated === 800; // 80%
+      const passOrganization = totalAllocated === 800; // 80%
 
       setResults([
-        { name: "20/80 Split Logic", status: passNGO ? "PASS" : "FAIL", detail: `Allocated MUR ${totalAllocated} from MUR 1000 total.` },
+        { name: "20/80 Split Logic", status: passOrganization ? "PASS" : "FAIL", detail: `Allocated MUR ${totalAllocated} from MUR 1000 total.` },
         { name: "Payment Persistence", status: latest ? "PASS" : "FAIL", detail: latest ? `Record found with ID ${latest.id}` : "No record found" },
         { name: "Allocation records", status: latest?.allocations?.length > 0 ? "PASS" : "FAIL", detail: `Found ${latest?.allocations?.length || 0} allocation(s)` }
       ]);

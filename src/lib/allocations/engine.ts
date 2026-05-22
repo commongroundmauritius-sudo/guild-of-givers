@@ -9,7 +9,7 @@ interface AllocationResult {
 
 export class AllocationEngine {
   private readonly CG_FEE_PERCENT = 0.20;
-  private readonly NGO_POOL_PERCENT = 0.80;
+  private readonly Organization_POOL_PERCENT = 0.80;
 
   async calculateAllocations(userId: string, netAmount: number): Promise<AllocationResult[]> {
     // 1. Get member preferences (priorities)
@@ -78,7 +78,7 @@ export class AllocationEngine {
   }
 
   async processPayment(paymentId: string, userId: string, totalAmount: number): Promise<void> {
-    const netAmount = totalAmount * this.NGO_POOL_PERCENT;
+    const netAmount = totalAmount * this.Organization_POOL_PERCENT;
     const cgShare = totalAmount * this.CG_FEE_PERCENT;
 
     const results = await this.calculateAllocations(userId, netAmount);
@@ -99,7 +99,7 @@ export class AllocationEngine {
       });
     }
 
-    console.log(`[AllocationEngine] Processed payment ${paymentId}. CG Share: ${cgShare}, NGO Pool: ${netAmount}`);
+    console.log(`[AllocationEngine] Processed payment ${paymentId}. CG Share: ${cgShare}, Organization Pool: ${netAmount}`);
   }
 }
 

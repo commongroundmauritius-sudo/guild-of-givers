@@ -27,12 +27,12 @@
 - **Metrics:** **PASS**. `actual_amount_mur`, `potential_amount_mur`, and `is_overflow` are recorded.
 - **Immutability:** **PASS**. Ledger records (`payments`, `allocations`) are append-only.
 
-## 5. NGO Permissions Verification
-- **Visibility:** **PASS**. NGOs are restricted to their own data via `organization_id` RLS.
-- **Data Leakage:** **PASS**. NGOs cannot access `allocations` table or internal CG revenue metrics via API.
+## 5. Organization Permissions Verification
+- **Visibility:** **PASS**. Organizations are restricted to their own data via `organization_id` RLS.
+- **Data Leakage:** **PASS**. Organizations cannot access `allocations` table or internal CG revenue metrics via API.
 
 ## 6. Initiative Workflow Verification
-- **Versioning:** **FAIL**. No initiative versioning exists. Edits by NGOs overwrite the live approved record immediately.
+- **Versioning:** **FAIL**. No initiative versioning exists. Edits by Organizations overwrite the live approved record immediately.
 - **Status:** FAIL. Requires architectural change.
 
 ## 7. Recurring Execution Verification

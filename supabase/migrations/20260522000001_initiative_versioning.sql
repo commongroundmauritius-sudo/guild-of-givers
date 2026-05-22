@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.initiative_versions (
 ALTER TABLE public.initiative_versions ENABLE ROW LEVEL SECURITY;
 
 -- Policies
-CREATE POLICY "NGO staff can view own initiative versions" ON public.initiative_versions
+CREATE POLICY "Organization staff can view own initiative versions" ON public.initiative_versions
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM public.initiatives i
@@ -43,7 +43,7 @@ CREATE POLICY "NGO staff can view own initiative versions" ON public.initiative_
         )
     );
 
-CREATE POLICY "NGO staff can create initiative versions" ON public.initiative_versions
+CREATE POLICY "Organization staff can create initiative versions" ON public.initiative_versions
     FOR INSERT WITH CHECK (
         EXISTS (
             SELECT 1 FROM public.initiatives i

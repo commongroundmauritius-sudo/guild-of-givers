@@ -14,20 +14,20 @@ Welcome to the CommonGround codebase. This file provides critical architectural 
 - **Schema Management:** All DDL changes must be performed via migrations in `supabase/migrations/`.
 - **Naming Convention:** Use 14-digit timestamps (`YYYYMMDDHHMMSS_name.sql`) for migration files to ensure correct ordering and Supabase CLI compatibility.
 - **Idempotency:** Use `DO $$ BEGIN ... END $$;` blocks for logic within migrations to allow them to be re-run safely.
-- **RLS Policies:** Every new table **MUST** have RLS enabled and appropriate policies defined for `member`, `ngo`, and `admin` roles.
+- **RLS Policies:** Every new table **MUST** have RLS enabled and appropriate policies defined for `member`, `organization`, and `admin` roles.
 
 ## 3. Styling & Components
 
 - **Theming:** Use the established role-based themes:
   - **Member:** Teal (#0D3D34)
-  - **NGO:** Coral (#F26D5F)
+  - **Organization:** Coral (#F26D5F)
   - **Admin:** Amber (#F2994A)
 - **CSS Variables:** Prefer semantic CSS variables from `src/styles.css` over hardcoded hex values.
 
 ## 4. Key Workflows
 
 - **Initiative Moderation:** Initiatives are not visible to members unless `is_approved = true`.
-- **NGO Vetting:** Only NGOs with `is_verified = true` are public-facing.
+- **Organization Vetting:** Only Organizations with `is_verified = true` are public-facing.
 - **Member Signup:** Ensure the `profiles` and `user_roles` records are created before the user reaches the dashboard.
 
 ## 5. Development Utilities

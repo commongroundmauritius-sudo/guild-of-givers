@@ -32,14 +32,14 @@
 - **Overflow Tracking:** PASS (`is_overflow` flag).
 - **Integrity:** PASS (Historical records are immutable).
 
-## 5. NGO Permissions
+## 5. Organization Permissions
 - **Visibility:**
-  - **PASS:** NGOs restricted to their own initiatives via staff RLS.
-  - **PASS:** NGOs cannot see platform revenue or raw allocations for other orgs.
+  - **PASS:** Organizations restricted to their own initiatives via staff RLS.
+  - **PASS:** Organizations cannot see platform revenue or raw allocations for other orgs.
 - **Status:** PASS
 
 ## 6. Initiative Workflow
-- **Flow:** Approved -> NGO Edit -> Pending Review Version.
+- **Flow:** Approved -> Organization Edit -> Pending Review Version.
 - **Verification:**
   - **FAIL:** No initiative versioning exists. Edits overwrite the live record immediately once submitted (even if `is_approved` remains true, the content changes).
 - **Status:** FAIL
