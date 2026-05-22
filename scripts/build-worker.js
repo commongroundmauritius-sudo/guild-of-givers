@@ -1,6 +1,10 @@
 import * as esbuild from "esbuild";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(__dirname, "..");
 
 const h3Plugin = {
   name: "h3-resolver",
@@ -22,11 +26,11 @@ const h3Plugin = {
 };
 
 async function build() {
-  const serverEntry = "dist/server/server.js";
-  const workerOutput = "dist/client/_worker.js";
-  const wranglerConfig = "dist/client/wrangler.json";
+  const serverEntry = path.join(rootDir, "dist/server/server.js");
+  const workerOutput = path.join(rootDir, "dist/client/_worker.js");
+  const wranglerConfig = path.join(rootDir, "dist/client/wrangler.json");
 
-  console.log("Bundling worker...");
+  console.log("Bundling worker from:", serverEntry);
 
   const nodeBuiltIns = [
     "assert",
@@ -47,7 +51,7 @@ async function build() {
   const external = [...nodeBuiltIns, ...nodeBuiltIns.map((id) => `node:${id}`)];
 
   try {
-    await esbuild.build({
+    const result = await esbuild.build({
       entryPoints: [serverEntry],
       plugins: [h3Plugin],
       bundle: true,
@@ -56,11 +60,13 @@ async function build() {
       platform: "browser",
       target: "es2022",
       alias: {
-        "h3-v2": path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs"),
-        h3: path.resolve("node_modules/h3-v2/dist/_entries/generic.mjs"),
+        "h3-v2": path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
+        h3: path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs"),
       },
       minify: false,
       external,
+      conditions: ["worker", "browser", "import"],
+      mainFields: ["module", "main"],
       define: {
         "process.env.NODE_ENV": '"production"',
       },
@@ -73,6 +79,7 @@ globalThis.process = process;
 `,
       },
       logLevel: "info",
+      metafile: true,
     });
 
     console.log("Updating wrangler.json...");
@@ -97,11 +104,16 @@ globalThis.process = process;
 }
 
 async function verify() {
-  const workerOutput = "dist/client/_worker.js";
+  const workerOutput = path.join(rootDir, "dist/client/_worker.js");
+  const serverDist = path.join(rootDir, "dist/server");
+
+  console.log("Starting final validation...");
+
   if (!fs.existsSync(workerOutput)) {
     console.error("Verification failed: _worker.js does not exist.");
     process.exit(1);
   }
+
   const content = fs.readFileSync(workerOutput, "utf-8");
 
   const remainingImports = content.match(/import\s+[^;]+;?/g) || [];
@@ -123,6 +135,21 @@ async function verify() {
   if (!hasDefaultExport) {
     console.warn("Verification: default export might be missing in _worker.js");
   }
+
+  // 2. Check for "h3-v2" or "assets/h3-v2" in runtime imports (explicit requirement)
+  if (content.includes("import") && content.includes("h3-v2")) {
+    console.error("Verification FAILED: Found 'h3-v2' import in _worker.js");
+    process.exit(1);
+  }
+
+  // 3. Check for any local JS chunks that shouldn't be there
+  const splitChunkRef = content.match(/import\s+.*?from\s+['"]\.\/assets\/server-.*?\.js['"]/);
+  if (splitChunkRef) {
+    console.error("Verification FAILED: Found split chunk import in _worker.js:", splitChunkRef[0]);
+    process.exit(1);
+  }
+
+  console.log("Verification: SUCCESS. _worker.js is self-contained for the runtime.");
 }
 
 await build();

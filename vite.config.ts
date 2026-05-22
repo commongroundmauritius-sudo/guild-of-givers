@@ -2,7 +2,9 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig(({ isSsrBuild }) => ({
   tanstackStart: {
-    server: { entry: "server" },
+    server: {
+      entry: "server",
+    },
   },
   vite: {
     ssr: {
