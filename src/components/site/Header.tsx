@@ -13,6 +13,7 @@ import {
   Users,
   MessageCircle,
   Megaphone,
+  TrendingUp,
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -45,6 +46,7 @@ const ADMIN_NAV = [
   { label: "Organizations", to: "/admin-dashboard/organizations", icon: Shield },
   { label: "Members", to: "/admin-dashboard/members", icon: User },
   { label: "Leads", to: "/admin-dashboard/leads", icon: Users },
+  { label: "Finances", to: "/admin-dashboard/finances", icon: TrendingUp },
 ] as const;
 
 const MEMBER_NAV = [
