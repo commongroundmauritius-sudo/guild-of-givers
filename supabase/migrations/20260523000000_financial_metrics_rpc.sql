@@ -41,7 +41,5 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Revoke execute from public/anon/authenticated (except via proper channels if needed)
--- We only allow authenticated users with admin role to execute this based on internal check.
--- But standard practice for SECURITY DEFINER is to revoke from PUBLIC.
 REVOKE EXECUTE ON FUNCTION public.get_admin_financial_metrics() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_admin_financial_metrics() TO authenticated;

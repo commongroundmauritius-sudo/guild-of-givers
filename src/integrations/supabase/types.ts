@@ -322,7 +322,6 @@ export type Database = {
           content: string | null;
           created_at: string;
           creator_role: Database["public"]["Enums"]["app_role"] | null;
-          creator_user_id: string | null;
           current_amount_mur: number | null;
           description: string | null;
           expected_outcomes: string | null;
@@ -354,7 +353,6 @@ export type Database = {
           content?: string | null;
           created_at?: string;
           creator_role?: Database["public"]["Enums"]["app_role"] | null;
-          creator_user_id?: string | null;
           current_amount_mur?: number | null;
           description?: string | null;
           expected_outcomes?: string | null;
@@ -386,7 +384,6 @@ export type Database = {
           content?: string | null;
           created_at?: string;
           creator_role?: Database["public"]["Enums"]["app_role"] | null;
-          creator_user_id?: string | null;
           current_amount_mur?: number | null;
           description?: string | null;
           expected_outcomes?: string | null;

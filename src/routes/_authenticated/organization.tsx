@@ -140,9 +140,6 @@ function OrganizationDashboard() {
             ...payload,
             organization_id: organizationProfile.id,
             initiative_id: undefined, // ensure it is not in the spread if it is null
-            initiative_source: "organization_submission",
-            creator_user_id: user?.id,
-            creator_role: "organization",
             status: "active",
             is_approved: false,
           });

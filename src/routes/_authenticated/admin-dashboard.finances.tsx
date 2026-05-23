@@ -68,7 +68,6 @@ function AdminFinancesPage() {
         .reduce((sum, a) => sum + Number(a.amount_mur), 0);
 
       // 4. Current Future Potential (Based on Active Subs)
-      // This is an aggregate of current supporter intent
       const { data: activeSubDetails } = await supabase
         .from("subscriptions")
         .select("amount_mur, user_id")

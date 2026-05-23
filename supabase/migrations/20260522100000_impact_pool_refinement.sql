@@ -101,7 +101,6 @@ DECLARE
     v_space NUMERIC;
     v_to_allocate NUMERIC;
     v_impact_pool_id UUID;
-    v_impact_pool_org_id UUID;
     v_potential NUMERIC;
     v_pref_count INTEGER;
 BEGIN
@@ -109,8 +108,8 @@ BEGIN
     v_net_pool := p_total_amount * 0.80;
     v_remaining := v_net_pool;
 
-    -- Get Impact Pool and its Organization ID
-    SELECT id, organization_id INTO v_impact_pool_id, v_impact_pool_org_id
+    -- Get Impact Pool ID
+    SELECT id INTO v_impact_pool_id
     FROM public.initiatives
     WHERE is_impact_pool = true LIMIT 1;
 
@@ -124,7 +123,7 @@ BEGIN
 
     -- Process Priorities
     FOR v_pref IN
-        SELECT mp.initiative_id, i.organization_id, i.goal_amount_mur, i.current_amount_mur, i.is_unlimited
+        SELECT mp.initiative_id, i.goal_amount_mur, i.current_amount_mur, i.is_unlimited
         FROM public.member_preferences mp
         JOIN public.initiatives i ON i.id = mp.initiative_id
         WHERE mp.user_id = p_user_id
@@ -143,8 +142,8 @@ BEGIN
         v_to_allocate := LEAST(v_remaining, v_space);
 
         IF v_to_allocate > 0 THEN
-            INSERT INTO public.allocations (payment_id, initiative_id, organization_id, amount_mur, potential_amount_mur, is_overflow)
-            VALUES (p_payment_id, v_pref.initiative_id, v_pref.organization_id, v_to_allocate, v_potential, v_to_allocate < v_potential);
+            INSERT INTO public.allocations (payment_id, initiative_id, amount_mur, potential_amount_mur, is_overflow)
+            VALUES (p_payment_id, v_pref.initiative_id, v_to_allocate, v_potential, v_to_allocate < v_potential);
 
             PERFORM public.increment_initiative_amount(v_pref.initiative_id, v_to_allocate);
             v_remaining := v_remaining - v_to_allocate;
@@ -153,8 +152,8 @@ BEGIN
 
     -- Final Fallback to Impact Pool
     IF v_remaining > 0 AND v_impact_pool_id IS NOT NULL THEN
-        INSERT INTO public.allocations (payment_id, initiative_id, organization_id, amount_mur, potential_amount_mur, is_overflow)
-        VALUES (p_payment_id, v_impact_pool_id, v_impact_pool_org_id, v_remaining, 0, true);
+        INSERT INTO public.allocations (payment_id, initiative_id, amount_mur, potential_amount_mur, is_overflow)
+        VALUES (p_payment_id, v_impact_pool_id, v_remaining, 0, true);
 
         PERFORM public.increment_initiative_amount(v_impact_pool_id, v_remaining);
     END IF;

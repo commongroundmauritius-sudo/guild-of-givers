@@ -74,9 +74,6 @@ function InitiativeCreatePage() {
           ...formData,
           is_published: publish,
           is_approved: true,
-          initiative_source: "admin_created",
-          creator_user_id: user?.id,
-          creator_role: "admin",
         })
         .select()
         .single();

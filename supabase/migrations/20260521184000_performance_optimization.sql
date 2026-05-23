@@ -1,15 +1,14 @@
 -- 1. Add indices to unindexed foreign keys
--- Note: idx_allocations_organization_id depends on organization_id added in 20260521183500
-CREATE INDEX IF NOT EXISTS idx_allocations_organization_id ON public.allocations(organization_id);
 CREATE INDEX IF NOT EXISTS idx_announcements_author_id ON public.announcements(author_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON public.audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_community_posts_initiative_id ON public.community_posts(initiative_id);
-CREATE INDEX IF NOT EXISTS idx_initiatives_creator_user_id ON public.initiatives(creator_user_id);
-CREATE INDEX IF NOT EXISTS idx_member_preferences_organization_id ON public.member_preferences(organization_id);
 CREATE INDEX IF NOT EXISTS idx_post_comments_parent_comment_id ON public.post_comments(parent_comment_id);
 CREATE INDEX IF NOT EXISTS idx_post_comments_user_id ON public.post_comments(user_id);
 CREATE INDEX IF NOT EXISTS idx_post_reactions_user_id ON public.post_reactions(user_id);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_organization_id ON public.subscriptions(organization_id);
+
+-- Explicit foreign key indices for RLS performance
+CREATE INDEX IF NOT EXISTS idx_allocations_initiative_id ON public.allocations(initiative_id);
+CREATE INDEX IF NOT EXISTS idx_initiatives_organization_id ON public.initiatives(organization_id);
 
 -- 2. Consolidate RLS policies
 DROP POLICY IF EXISTS "Initiative access policy" ON public.initiatives;
