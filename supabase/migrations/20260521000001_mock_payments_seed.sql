@@ -1,11 +1,4 @@
--- Seed an impact pool initiative if it doesn't exist
-INSERT INTO public.initiatives (title, description, is_impact_pool, goal_amount_mur, current_amount_mur, is_approved, is_published)
-VALUES ('Impact Pool', 'Default fallback for all overflow contributions.', true, 1000000, 0, true, true)
-ON CONFLICT DO NOTHING;
-
--- Seed some sample initiatives
-INSERT INTO public.initiatives (title, description, goal_amount_mur, current_amount_mur, is_approved, is_published)
-VALUES
-('Education for All', 'Providing school supplies to underserved children.', 50000, 0, true, true),
-('Food Security Initiative', 'Supporting local food banks and community gardens.', 75000, 0, true, true)
-ON CONFLICT DO NOTHING;
+-- Migration 20260521000001_mock_payments_seed.sql
+-- Legacy seeding logic removed.
+-- The "Impact Pool" architecture is now correctly established in 20260522100000_impact_pool_refinement.sql.
+-- This file is kept as a placeholder to maintain migration sequence without reintroducing NULL organization_id violations.

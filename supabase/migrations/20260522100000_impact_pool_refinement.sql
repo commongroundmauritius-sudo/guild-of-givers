@@ -70,6 +70,8 @@ DROP POLICY IF EXISTS "System entities are protected" ON public.organizations;
 CREATE POLICY "System entities are protected" ON public.organizations
 FOR UPDATE USING (
   (is_system_entity IS NOT TRUE) OR (public.has_role('admin'))
+) WITH CHECK (
+  (is_system_entity IS NOT TRUE) OR (public.has_role('admin'))
 );
 
 DROP POLICY IF EXISTS "System entities cannot be deleted" ON public.organizations;
@@ -81,6 +83,8 @@ FOR DELETE USING (
 DROP POLICY IF EXISTS "System owned initiatives are protected" ON public.initiatives;
 CREATE POLICY "System owned initiatives are protected" ON public.initiatives
 FOR ALL USING (
+  (is_system_owned IS NOT TRUE) OR (public.has_role('admin'))
+) WITH CHECK (
   (is_system_owned IS NOT TRUE) OR (public.has_role('admin'))
 );
 
