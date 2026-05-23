@@ -1,4 +1,5 @@
 -- 1. Add indices to unindexed foreign keys
+-- Note: idx_allocations_organization_id depends on organization_id added in 20260521183500
 CREATE INDEX IF NOT EXISTS idx_allocations_organization_id ON public.allocations(organization_id);
 CREATE INDEX IF NOT EXISTS idx_announcements_author_id ON public.announcements(author_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON public.audit_logs(user_id);
