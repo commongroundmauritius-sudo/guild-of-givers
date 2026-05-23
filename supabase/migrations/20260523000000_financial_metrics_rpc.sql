@@ -4,7 +4,7 @@ DECLARE
   result jsonb;
   gross_total numeric;
   platform_share numeric;
-  ngo_pool_share numeric;
+  organization_pool_share numeric;
   active_recurring numeric;
 BEGIN
   -- Check if user is admin
@@ -22,7 +22,7 @@ BEGIN
 
   -- Official split calculations (CommonGround 20/80 blueprint)
   platform_share := gross_total * 0.20;
-  ngo_pool_share := gross_total * 0.80;
+  organization_pool_share := gross_total * 0.80;
 
   -- Active recurring volume pipeline
   SELECT COALESCE(SUM(amount_mur), 0) INTO active_recurring
@@ -32,7 +32,7 @@ BEGIN
   result := jsonb_build_object(
     'gross_total', gross_total,
     'platform_share', platform_share,
-    'ngo_pool_share', ngo_pool_share,
+    'organization_pool_share', organization_pool_share,
     'monthly_recurring_forecast', active_recurring
   );
 

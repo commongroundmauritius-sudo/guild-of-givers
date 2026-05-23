@@ -1,6 +1,16 @@
 -- 1. Data Migration
-UPDATE public.user_roles SET role = 'organization' WHERE role = 'ngo';
-UPDATE public.initiatives SET creator_role = 'organization' WHERE creator_role = 'ngo';
+-- Safely migrate roles if 'ngo' exists in the enum
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'app_role' AND e.enumlabel = 'ngo'
+    ) THEN
+        UPDATE public.user_roles SET role = 'organization' WHERE role = 'ngo';
+        UPDATE public.initiatives SET creator_role = 'organization' WHERE creator_role = 'ngo';
+    END IF;
+END $$;
 
 -- 2. Policy Normalization
 DROP POLICY IF EXISTS "Qualified users can comment" ON public.post_comments;

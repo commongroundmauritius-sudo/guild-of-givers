@@ -68,6 +68,7 @@ function AdminFinancesPage() {
         .reduce((sum, a) => sum + Number(a.amount_mur), 0);
 
       // 4. Current Future Potential (Based on Active Subs)
+      // This is an aggregate of current supporter intent
       const { data: activeSubDetails } = await supabase
         .from("subscriptions")
         .select("amount_mur, user_id")
@@ -134,8 +135,8 @@ function AdminFinancesPage() {
               color="amber"
             />
             <FinCard
-              title="NGO Pool (80%)"
-              value={`Rs ${authoritative.ngo_pool_share.toLocaleString()}`}
+              title="Organization Pool (80%)"
+              value={`Rs ${authoritative.organization_pool_share.toLocaleString()}`}
               sub="Total assigned for distribution"
               icon={Waves}
               color="teal"
@@ -225,7 +226,7 @@ function AdminFinancesPage() {
                     <AllocRow
                       label="Potential Demand (Active)"
                       value={finances?.allocations.potential || 0}
-                      desc="Projected NGO pool from active memberships"
+                      desc="Projected pool from active memberships"
                       dim
                     />
                      <AllocRow
