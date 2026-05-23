@@ -20,11 +20,11 @@ BEGIN
   FROM public.payments
   WHERE status = 'success';
 
-  -- Official split calculations
+  -- Official split calculations (CommonGround 20/80 blueprint)
   platform_share := gross_total * 0.20;
   ngo_pool_share := gross_total * 0.80;
 
-  -- Active recurring volume
+  -- Active recurring volume pipeline
   SELECT COALESCE(SUM(amount_mur), 0) INTO active_recurring
   FROM public.subscriptions
   WHERE status = 'active';
@@ -40,5 +40,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Revoke execute from public/anon
-REVOKE EXECUTE ON FUNCTION public.get_admin_financial_metrics() FROM public, anon;
+-- Revoke execute from public/anon/authenticated (except via proper channels if needed)
+-- We only allow authenticated users with admin role to execute this based on internal check.
+-- But standard practice for SECURITY DEFINER is to revoke from PUBLIC.
+REVOKE EXECUTE ON FUNCTION public.get_admin_financial_metrics() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_admin_financial_metrics() TO authenticated;
