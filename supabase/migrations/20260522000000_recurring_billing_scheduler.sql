@@ -18,6 +18,7 @@ ALTER TABLE public.billing_runs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admins can view billing runs" ON public.billing_runs FOR SELECT USING (public.has_role('admin'));
 
 -- Allocation Sub-function
+-- Note: This is a placeholder function that may be redefined by subsequent architectural migrations.
 CREATE OR REPLACE FUNCTION public.allocate_payment_funds(p_payment_id UUID, p_user_id UUID, p_total_amount NUMERIC)
 RETURNS VOID AS $$
 DECLARE
@@ -71,7 +72,7 @@ BEGIN
             PERFORM public.increment_initiative_amount(v_pref.initiative_id, v_to_allocate);
             v_remaining := v_remaining - v_to_allocate;
         END IF;
-    LOOP END;
+    END LOOP;
 
     -- Final Fallback to Impact Pool
     IF v_remaining > 0 AND v_impact_pool_id IS NOT NULL THEN
