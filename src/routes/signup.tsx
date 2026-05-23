@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useState } from "react";
 import { ArrowLeft, Check } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -32,8 +33,15 @@ function SignupPage() {
   const [phone, setPhone] = useState("");
   const [coversFees, setCoversFees] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { signUp } = useAuth();
+  const { signUp, role, loading } = useAuth();
   const navigate = useNavigate();
+  useEffect(() => {
+    if (!loading && role) {
+      if (role === "admin") navigate({ to: "/admin-dashboard" });
+      else if (role === "organization") navigate({ to: "/organization" });
+      else if (role === "member") navigate({ to: "/member" });
+    }
+  }, [role, loading, navigate]);
 
   const finalAmount = customAmount ? Number(customAmount) || 0 : amount;
 
