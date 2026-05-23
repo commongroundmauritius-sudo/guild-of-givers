@@ -8,12 +8,14 @@ export default defineConfig({
   },
   vite: {
     ssr: {
-      noExternal: ["h3-v2", "h3"],
+      // Force all dependencies to be bundled for the SSR build
+      // (excluding node built-ins which are handled by the worker runtime)
+      noExternal: true,
     },
     build: {
       rollupOptions: {
         output: {
-          // Force single chunk for server build to avoid split chunk issues
+          // Force single chunk for server build
           inlineDynamicImports: true,
         },
       },

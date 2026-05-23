@@ -28,6 +28,24 @@ const h3Plugin = {
       }
       return null;
     });
+
+    // Handle bare node built-ins that don't have the node: prefix
+    const nodeBuiltIns = [
+      "assert",
+      "async_hooks",
+      "buffer",
+      "crypto",
+      "diagnostics_channel",
+      "events",
+      "path",
+      "process",
+      "stream",
+      "util",
+      "v8",
+    ];
+    build.onResolve({ filter: new RegExp(`^(${nodeBuiltIns.join("|")})$`) }, (args) => {
+      return { path: "node:" + args.path, external: true };
+    });
   },
 };
 
@@ -146,21 +164,19 @@ async function verify() {
     process.exit(1);
   }
 
-  // 2. Check for "h3-v2" or "h3" only in runtime import specifiers.
-  if (remainingImports.some((i) => /['"]h3-v2['"]|['"]h3['"]/.test(i))) {
-    console.error("Verification FAILED: Found 'h3-v2' or 'h3' import in _worker.js");
+  // 2. Check for ANY bare framework imports
+  const forbiddenPatterns = [/['"]h3(-v2)?['"]/, /['"]rou3['"]/, /['"]srvx['"]/, /['"]seroval['"]/, /['"]@tanstack/];
+  if (remainingImports.some((i) => forbiddenPatterns.some(p => p.test(i)))) {
+    console.error("Verification FAILED: Found forbidden framework import in _worker.js");
+    remainingImports.filter(i => forbiddenPatterns.some(p => p.test(i))).forEach(i => console.error("  ", i));
     process.exit(1);
   }
 
   // 3. Check for any assets/ imports
-  const assetsRef = executableContent.match(/['"](\.\/)?assets\/.*?['"]/m);
-  if (assetsRef) {
-    // Specifically check if it's an import statement
-    const assetImport = executableContent.match(/^\s*import\s+.*?from\s+['"](\.\/)?assets\/.*?['"]/m);
-    if (assetImport) {
-       console.error("Verification FAILED: Found asset import in _worker.js:", assetImport[0]);
-       process.exit(1);
-    }
+  const assetImport = executableContent.match(/^\s*import\s+.*?from\s+['"](\.\/)?assets\/.*?['"]/m);
+  if (assetImport) {
+     console.error("Verification FAILED: Found asset import in _worker.js:", assetImport[0]);
+     process.exit(1);
   }
 
   console.log("Verification: SUCCESS. _worker.js is self-contained for the runtime.");
