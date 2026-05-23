@@ -41,10 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [sessionLoading, setSessionLoading] = useState(true);
 
   // Use React Query for auth data to get better caching and stale-while-revalidate behavior
-  const { data: authData } = useQuery({
+  const { data: authData, isLoading: authDataLoading } = useQuery({
     queryKey: ["auth-data", user?.id],
     queryFn: async () => {
       if (!user) return null;
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("refreshAuth error:", error);
     } finally {
-      setLoading(false);
+      setSessionLoading(false);
     }
   }, [queryClient]);
 
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      setLoading(false);
+      setSessionLoading(false);
 
       if (_event === "SIGNED_OUT") {
         queryClient.clear();
@@ -109,6 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, [refreshAuth, queryClient]);
+
+  // Combined loading state: session must be loaded AND if user exists, authData must be loaded
+  const loading = sessionLoading || (!!user && authDataLoading);
 
   const value: AuthContextValue = {
     user,
@@ -151,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // queryClient.clear() is handled in onAuthStateChange SIGNED_OUT
         setUser(null);
         setSession(null);
-        setLoading(false);
+        setSessionLoading(false);
       }
     },
     refreshAuth,
