@@ -1,5 +1,5 @@
--- 1. Data Migration
--- Safely migrate roles if 'ngo' exists in the enum
+-- Terminology Alignment: Data Migration (NGO -> Organization)
+-- Safely migrate roles if 'ngo' still exists in the enum from legacy environments
 DO $$
 BEGIN
     IF EXISTS (
@@ -7,12 +7,13 @@ BEGIN
         JOIN pg_type t ON e.enumtypid = t.oid
         WHERE t.typname = 'app_role' AND e.enumlabel = 'ngo'
     ) THEN
+        -- Convert data from 'ngo' to 'organization'
         UPDATE public.user_roles SET role = 'organization' WHERE role = 'ngo';
         UPDATE public.initiatives SET creator_role = 'organization' WHERE creator_role = 'ngo';
     END IF;
 END $$;
 
--- 2. Policy Normalization
+-- Policy Normalization
 DROP POLICY IF EXISTS "Qualified users can comment" ON public.post_comments;
 CREATE POLICY "Qualified users can comment" ON public.post_comments
     FOR INSERT TO authenticated

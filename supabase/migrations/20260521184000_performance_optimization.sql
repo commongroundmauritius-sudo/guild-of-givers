@@ -25,8 +25,7 @@ CREATE POLICY "Initiative access policy" ON public.initiatives
 
 DROP POLICY IF EXISTS "Initiative management policy" ON public.initiatives;
 CREATE POLICY "Initiative management policy" ON public.initiatives
-    FOR ALL USING (has_role('admin'::app_role))
-    WITH CHECK (has_role('admin'::app_role));
+    FOR ALL USING (has_role('admin'::app_role));
 
 DROP POLICY IF EXISTS "Organization staff management policy" ON public.initiatives;
 CREATE POLICY "Organization staff management policy" ON public.initiatives
@@ -35,12 +34,6 @@ CREATE POLICY "Organization staff management policy" ON public.initiatives
             SELECT 1 FROM public.profiles
             WHERE profiles.id = (SELECT auth.uid())
             AND profiles.organization_id = initiatives.organization_id
-        )
-    )
-    WITH CHECK (
-        EXISTS ( SELECT 1 FROM public.profiles
-                 WHERE profiles.id = (SELECT auth.uid())
-                 AND profiles.organization_id = initiatives.organization_id
         )
     );
 

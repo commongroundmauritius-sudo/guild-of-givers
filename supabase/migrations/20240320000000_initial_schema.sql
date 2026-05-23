@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
 -- Create organizations table
 CREATE TABLE IF NOT EXISTS public.organizations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
+  organization_name TEXT NOT NULL,
   description TEXT,
   logo_url TEXT,
   website_url TEXT,
