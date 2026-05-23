@@ -26,17 +26,23 @@ REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authentic
 REVOKE EXECUTE ON FUNCTION public.has_role(public.app_role) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.has_role(public.app_role) TO authenticated;
 
--- 3. Optimize RLS performance
+-- 3. Optimize RLS performance and align with current ownership model
 DROP POLICY IF EXISTS "Organization owners can manage their organization" ON public.organizations;
 CREATE POLICY "Organization owners can manage their organization" ON public.organizations
-    FOR ALL USING (owner_user_id = (SELECT auth.uid()));
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = (SELECT auth.uid())
+            AND profiles.organization_id = organizations.id
+        )
+    );
 
 DROP POLICY IF EXISTS "Owners can manage organization documents" ON public.organization_documents;
 CREATE POLICY "Owners can manage organization documents" ON public.organization_documents
     FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM public.organizations
-            WHERE organizations.id = organization_documents.organization_id
-            AND organizations.owner_user_id = (SELECT auth.uid())
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = (SELECT auth.uid())
+            AND profiles.organization_id = organization_documents.organization_id
         )
     );

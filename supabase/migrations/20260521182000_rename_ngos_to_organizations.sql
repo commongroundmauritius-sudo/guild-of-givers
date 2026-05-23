@@ -10,9 +10,7 @@ BEGIN
             ALTER TABLE public.organizations RENAME COLUMN name TO organization_name;
         END IF;
 
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'owner_id') THEN
-            ALTER TABLE public.organizations RENAME COLUMN owner_id TO owner_user_id;
-        END IF;
+        -- LEGACY owner_id/owner_user_id handling removed to align with profiles.organization_id model
     END IF;
 
     -- Rename foreign key columns in other tables

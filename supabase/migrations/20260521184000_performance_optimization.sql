@@ -11,10 +11,7 @@ CREATE INDEX IF NOT EXISTS idx_post_reactions_user_id ON public.post_reactions(u
 CREATE INDEX IF NOT EXISTS idx_subscriptions_organization_id ON public.subscriptions(organization_id);
 
 -- 2. Consolidate RLS policies
-DROP POLICY IF EXISTS "Admins have full access to initiatives" ON public.initiatives;
-DROP POLICY IF EXISTS "Anyone can view published initiatives" ON public.initiatives;
-DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
-
+DROP POLICY IF EXISTS "Initiative access policy" ON public.initiatives;
 CREATE POLICY "Initiative access policy" ON public.initiatives
     FOR SELECT USING (
         (is_approved = true AND is_published = true) OR
@@ -26,10 +23,12 @@ CREATE POLICY "Initiative access policy" ON public.initiatives
         ))
     );
 
+DROP POLICY IF EXISTS "Initiative management policy" ON public.initiatives;
 CREATE POLICY "Initiative management policy" ON public.initiatives
     FOR ALL USING (has_role('admin'::app_role))
     WITH CHECK (has_role('admin'::app_role));
 
+DROP POLICY IF EXISTS "Organization staff management policy" ON public.initiatives;
 CREATE POLICY "Organization staff management policy" ON public.initiatives
     FOR ALL USING (
         EXISTS (
@@ -45,19 +44,26 @@ CREATE POLICY "Organization staff management policy" ON public.initiatives
         )
     );
 
-DROP POLICY IF EXISTS "Admins can manage organizations" ON public.organizations;
-DROP POLICY IF EXISTS "Public can view organizations with published initiatives" ON public.organizations;
-
+DROP POLICY IF EXISTS "Organization view policy" ON public.organizations;
 CREATE POLICY "Organization view policy" ON public.organizations
     FOR SELECT USING (
         (is_verified = true) OR
         (EXISTS (SELECT 1 FROM initiatives i WHERE i.organization_id = organizations.id AND i.is_approved = true AND i.is_published = true)) OR
-        (owner_user_id = (SELECT auth.uid())) OR
+        (EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = (SELECT auth.uid())
+            AND profiles.organization_id = organizations.id
+        )) OR
         has_role('admin'::app_role)
     );
 
+DROP POLICY IF EXISTS "Organization management policy" ON public.organizations;
 CREATE POLICY "Organization management policy" ON public.organizations
     FOR ALL USING (
-        (owner_user_id = (SELECT auth.uid())) OR
+        (EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = (SELECT auth.uid())
+            AND profiles.organization_id = organizations.id
+        )) OR
         has_role('admin'::app_role)
     );

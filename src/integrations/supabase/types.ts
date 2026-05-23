@@ -546,7 +546,6 @@ export type Database = {
           mission: string | null;
           monthly_target_amount: number | null;
           organization_name: string;
-          owner_user_id: string | null;
           address: string | null;
           contact_email: string | null;
           contact_phone: string | null;
@@ -573,7 +572,6 @@ export type Database = {
           mission?: string | null;
           monthly_target_amount?: number | null;
           organization_name: string;
-          owner_user_id?: string | null;
           status?: string | null;
           supporters_count?: number | null;
           transparency_content?: string | null;
@@ -593,7 +591,6 @@ export type Database = {
           logo_url?: string | null;
           mission?: string | null;
           monthly_target_amount?: number | null;
-          owner_user_id?: string | null;
           status?: string | null;
           supporters_count?: number | null;
           transparency_content?: string | null;
