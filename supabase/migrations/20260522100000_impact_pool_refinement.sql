@@ -1,29 +1,41 @@
--- Add is_unlimited column to initiatives
+-- 1. Infrastructure columns
 ALTER TABLE public.initiatives ADD COLUMN IF NOT EXISTS is_unlimited BOOLEAN DEFAULT false;
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS is_system_entity BOOLEAN DEFAULT false;
+ALTER TABLE public.initiatives ADD COLUMN IF NOT EXISTS is_system_owned BOOLEAN DEFAULT false;
 
--- Correct the Impact Pool initiative architecture
--- 1. Ensure platform internal organization exists
+-- 2. System Entity Protection Functions
+CREATE OR REPLACE FUNCTION public.ensure_platform_org()
+RETURNS UUID AS $$
+DECLARE
+    v_id UUID;
+BEGIN
+    SELECT id INTO v_id FROM public.organizations WHERE organization_name = 'CommonGround Platform' LIMIT 1;
+    IF v_id IS NULL THEN
+        INSERT INTO public.organizations (organization_name, status, is_verified, is_system_entity)
+        VALUES ('CommonGround Platform', 'active', true, true)
+        RETURNING id INTO v_id;
+    END IF;
+    RETURN v_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 3. Architecture Setup
 DO $$
 DECLARE
     v_platform_org_id UUID;
 BEGIN
-    SELECT id INTO v_platform_org_id FROM public.organizations WHERE organization_name = 'CommonGround Platform' LIMIT 1;
+    v_platform_org_id := public.ensure_platform_org();
 
-    IF v_platform_org_id IS NULL THEN
-        INSERT INTO public.organizations (organization_name, status, is_verified)
-        VALUES ('CommonGround Platform', 'active', true)
-        RETURNING id INTO v_platform_org_id;
-    END IF;
-
-    -- 2. Update existing Impact Pool to be owned by CommonGround Platform
+    -- Update existing Impact Pool (now correctly owned and marked)
     UPDATE public.initiatives
     SET organization_id = v_platform_org_id,
         is_unlimited = true,
+        is_system_owned = true,
         title = 'CommonGround Impact Pool',
         description = 'Build a physical CommonGround Community Hub where Organizations can meet and host activities.'
     WHERE is_impact_pool = true;
 
-    -- 3. Ensure an Impact Pool exists if it didn't
+    -- Ensure an Impact Pool exists if it didn't
     IF NOT EXISTS (SELECT 1 FROM public.initiatives WHERE is_impact_pool = true) THEN
         INSERT INTO public.initiatives (
             organization_id,
@@ -31,6 +43,7 @@ BEGIN
             description,
             is_impact_pool,
             is_unlimited,
+            is_system_owned,
             goal_amount_mur,
             current_amount_mur,
             is_approved,
@@ -42,6 +55,7 @@ BEGIN
             'Build a physical CommonGround Community Hub where Organizations can meet and host activities.',
             true,
             true,
+            true,
             0,
             0,
             true,
@@ -51,7 +65,26 @@ BEGIN
 END;
 $$;
 
--- Update Allocation Sub-function to respect is_unlimited and ensure correct ownership lookup
+-- 4. RLS Protection for System Records
+DROP POLICY IF EXISTS "System entities are protected" ON public.organizations;
+CREATE POLICY "System entities are protected" ON public.organizations
+FOR UPDATE USING (
+  (is_system_entity IS NOT TRUE) OR (public.has_role('admin'))
+);
+
+DROP POLICY IF EXISTS "System entities cannot be deleted" ON public.organizations;
+CREATE POLICY "System entities cannot be deleted" ON public.organizations
+FOR DELETE USING (
+  (is_system_entity IS NOT TRUE)
+);
+
+DROP POLICY IF EXISTS "System owned initiatives are protected" ON public.initiatives;
+CREATE POLICY "System owned initiatives are protected" ON public.initiatives
+FOR ALL USING (
+  (is_system_owned IS NOT TRUE) OR (public.has_role('admin'))
+);
+
+-- 5. Allocation Sub-function
 CREATE OR REPLACE FUNCTION public.allocate_payment_funds(p_payment_id UUID, p_user_id UUID, p_total_amount NUMERIC)
 RETURNS VOID AS $$
 DECLARE
