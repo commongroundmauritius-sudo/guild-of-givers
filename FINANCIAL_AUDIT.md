@@ -33,3 +33,7 @@ Audit of the ledger integrity, allocation engine, and payment flows.
 ### Verification (2026-05-24)
 - **Allocation Idempotency:** Confirmed lack of guarding logic. Fixed in migration 20260525000003.
 - **Rounding Logic:** Refactored to subtraction-based model to ensure ledger balance. [FIN-002] and [FIN-003] marked as RESOLVED.
+
+### Verification (2026-05-24)
+- **Idempotency [FIN-002]:** RPC now returns early if payment_id exists in financial_events. Verified by code review of migration 20260525000003.
+- **Rounding [FIN-003]:** Logic now uses subtraction for the second component to ensure total consistency. Verified.
