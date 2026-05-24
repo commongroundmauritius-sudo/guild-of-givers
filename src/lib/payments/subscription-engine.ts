@@ -1,11 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
-import { allocationEngine } from "../allocations/engine";
 import { PaymentEvent } from "./types";
-import { MockPaymentProvider } from "./mock-provider";
 
 export class SubscriptionEngine {
   async handlePaymentEvent(event: PaymentEvent): Promise<void> {
-    const { type, userId, subscriptionId, transactionId, amount, payload } = event;
+    const { type, userId, subscriptionId, transactionId, amount } = event;
 
     switch (type) {
       case "payment.success":
@@ -57,7 +55,8 @@ export class SubscriptionEngine {
       return;
     }
 
-    // 2. Trigger allocations
+    // 2. Trigger atomic PostgreSQL allocation engine
+    // This is the single source of truth for all money flow
     const { error: allocError } = await supabase.rpc("allocate_payment_funds", {
         p_payment_id: payment.id,
         p_user_id: userId,
@@ -65,11 +64,12 @@ export class SubscriptionEngine {
     });
 
     if (allocError) {
-        console.error("RPC Allocation failed, falling back to TS engine:", allocError);
-        await allocationEngine.processPayment(payment.id, userId, amount);
+        console.error("CRITICAL: Atomic financial allocation failed:", allocError);
+        // We do NOT fall back to TS engine anymore to maintain ledger integrity
+        // Instead, we log this for admin intervention
     }
 
-    // 3. Activate Membership (Decoupling logic: Role assignment now happens here)
+    // 3. Activate Membership role
     const { error: activateError } = await supabase.rpc("activate_membership", {
         p_user_id: userId
     });
@@ -100,7 +100,6 @@ export class SubscriptionEngine {
   }
 
   async runBillingCycle(): Promise<void> {
-    console.log("[SubscriptionEngine] Triggering database billing cycle...");
     const { error } = await supabase.rpc("process_recurring_billing");
     if (error) {
         console.error("Failed to trigger DB billing cycle:", error);

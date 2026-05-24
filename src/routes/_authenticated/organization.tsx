@@ -1,447 +1,286 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BadgeCheck, Send, Plus, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Building2,
+  Target,
+  Users,
+  TrendingUp,
+  Plus,
+  FileText,
+  Send,
+  Calendar,
+  History,
+  CheckCircle2
+} from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
 export const Route = createFileRoute("/_authenticated/organization")({
   component: OrganizationDashboard,
 });
 
-function OrganizationDashboard() {
-  const { user, role, signOut, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
+export default function OrganizationDashboard() {
+  const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
-  const [showInitiativeForm, setShowInitiativeForm] = useState(false);
-  const [editingInitiativeId, setEditingInitiativeId] = useState<string | null>(null);
+  const [showNewInitiative, setShowNewInitiative] = useState(false);
   const [newInitiative, setNewInitiative] = useState({
     title: "",
     description: "",
     goal: "",
-    short_term_goals: "",
-    long_term_goals: "",
-    target_milestones: "",
-    expected_outcomes: "",
-    impact_pool_target: "0",
+    monthly_target: "",
   });
-  const [reportTitle, setReportTitle] = useState("");
-  const [reportInitiativeId, setReportInitiativeId] = useState("");
-
-  useEffect(() => {
-    if (!authLoading && role && role !== "organization") {
-      toast.error("Unauthorized access");
-      navigate({ to: "/dashboard" });
-    }
-  }, [role, authLoading, navigate]);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("*").eq("id", user?.id).single();
+      const { data } = await supabase
+        .from("profiles")
+        .select("*, organizations(*)")
+        .eq("id", user?.id)
+        .single();
       return data;
     },
     enabled: !!user?.id,
   });
 
-  const { data: organizationProfile } = useQuery({
-    queryKey: ["organization-profile", profile?.organization_id],
-    queryFn: async () => {
-      if (!profile?.organization_id) return null;
-      const { data } = await supabase
-        .from("organizations")
-        .select("*")
-        .eq("id", profile.organization_id)
-        .single();
-      return data;
-    },
-    enabled: !!profile?.organization_id,
-  });
+  const organization = profile?.organizations;
 
-  const { data: initiatives, refetch: refetchInitiatives } = useQuery({
-    queryKey: ["organization-initiatives", organizationProfile?.id],
+  const { data: initiatives, isLoading } = useQuery({
+    queryKey: ["org-initiatives", organization?.id],
     queryFn: async () => {
-      if (!organizationProfile?.id) return [];
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("initiatives")
         .select("*")
-        .eq("organization_id", organizationProfile.id)
+        .eq("organization_id", organization?.id)
         .order("created_at", { ascending: false });
-      if (error) throw error;
       return data;
     },
-    enabled: !!organizationProfile?.id,
+    enabled: !!organization?.id,
   });
 
-  const { data: reports } = useQuery({
-    queryKey: ["organization-reports", organizationProfile?.id],
+  const { data: fundingCycles } = useQuery({
+    queryKey: ["org-funding-cycles", organization?.id],
     queryFn: async () => {
-      if (!organizationProfile?.id) return [];
-      const { data, error } = await supabase
-        .from("reports")
+      const { data } = await supabase
+        .from("initiative_funding_cycles")
         .select("*, initiatives(title)")
-        .eq("organization_id", organizationProfile.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
+        .in("initiative_id", initiatives?.map(i => i.id) || [])
+        .order("year", { ascending: false })
+        .order("month", { ascending: false });
       return data;
     },
-    enabled: !!organizationProfile?.id,
-  });
-
-  const submitReportMutation = useMutation({
-    mutationFn: async () => {
-      if (role !== "organization" || !organizationProfile?.id || !reportInitiativeId)
-        throw new Error("Unauthorized or Missing Organization/Initiative");
-      const { error } = await supabase.from("reports").insert({
-        organization_id: organizationProfile.id,
-        initiative_id: reportInitiativeId,
-        title: reportTitle,
-        file_url: "#", // Placeholder
-        status: "pending_review",
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Report submitted for admin review");
-      setReportTitle("");
-      queryClient.invalidateQueries({ queryKey: ["organization-reports"] });
-    },
-    onError: (err: Error) => toast.error(err.message),
+    enabled: !!initiatives?.length,
   });
 
   const submitInitiativeMutation = useMutation({
     mutationFn: async () => {
-      if (role !== "organization" || !organizationProfile?.id)
-        throw new Error("Unauthorized or Missing Organization context");
-
-      const payload = {
-        initiative_id: editingInitiativeId,
+      const { error } = await supabase.from("initiatives").insert({
+        organization_id: organization?.id,
         title: newInitiative.title,
         description: newInitiative.description,
         goal_amount_mur: Number(newInitiative.goal),
-        short_term_goals: newInitiative.short_term_goals,
-        long_term_goals: newInitiative.long_term_goals,
-        target_milestones: newInitiative.target_milestones,
-        expected_outcomes: newInitiative.expected_outcomes,
-        impact_pool_target: Number(newInitiative.impact_pool_target),
-        version_number: 1, // Simplified
-        status: "pending",
-        created_by: user?.id,
-      };
-
-      if (editingInitiativeId) {
-          const { error } = await supabase.from("initiative_versions").insert(payload);
-          if (error) throw error;
-      } else {
-          // New initiative creation still direct for now, or could use versions too
-          const { error } = await supabase.from("initiatives").insert({
-            ...payload,
-            organization_id: organizationProfile.id,
-            initiative_id: undefined, // ensure it is not in the spread if it is null
-            status: "active",
-            is_approved: false,
-          });
-          if (error) throw error;
-      }
+        monthly_target_mur: Number(newInitiative.monthly_target),
+        is_approved: false,
+        is_published: false,
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
-      toast.success(editingInitiativeId ? "Changes submitted for approval" : "Initiative submitted for approval");
-      setNewInitiative({
-        title: "",
-        description: "",
-        goal: "",
-        short_term_goals: "",
-        long_term_goals: "",
-        target_milestones: "",
-        expected_outcomes: "",
-        impact_pool_target: "0",
-      });
-      setShowInitiativeForm(false);
-      setEditingInitiativeId(null);
-      refetchInitiatives();
+      queryClient.invalidateQueries({ queryKey: ["org-initiatives"] });
+      setShowNewInitiative(false);
+      setNewInitiative({ title: "", description: "", goal: "", monthly_target: "" });
+      toast.success("Initiative submitted for approval");
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: any) => toast.error(err.message),
   });
 
-  if (authLoading) {
+  if (authLoading || isLoading) {
     return (
       <SiteLayout>
-        <div className="flex h-[60vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-coral-500" />
+        <div className="mx-auto max-w-7xl px-4 py-16">
+          <Skeleton className="h-12 w-64 mb-8" />
+          <div className="grid gap-6 md:grid-cols-3">
+             {[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}
+          </div>
         </div>
       </SiteLayout>
     );
   }
 
-  const totalFunding = initiatives?.reduce(
-    (acc, i) => acc + (Number(i.current_amount_mur) || 0),
-    0,
-  );
+  const totalRaised = initiatives?.reduce((acc, i) => acc + Number(i.current_amount_mur), 0) || 0;
+  const activeSupporters = fundingCycles?.filter(c => c.month === new Date().getMonth() + 1).reduce((acc, c) => acc + c.supporter_count, 0) || 0;
 
   return (
     <SiteLayout>
-      <section className="min-h-screen bg-muted/30 py-20 font-inter">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-between gap-6">
+      <section className="bg-muted/30 min-h-screen">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <div className="flex items-center gap-3">
-                <h1 className="font-display text-4xl font-semibold text-primary">
-                  {organizationProfile?.organization_name || "Organization Dashboard"}
-                </h1>
-                {organizationProfile?.is_verified && (
-                  <div
-                    className="flex items-center gap-1 rounded-full bg-forest-soft/10 px-3 py-1 text-xs font-medium text-forest-soft"
-                    title="This organization has been verified by CommonGround Admins"
-                  >
-                    <BadgeCheck className="h-4 w-4" />
-                    Verified
-                  </div>
-                )}
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-coral-50 text-coral-600 border-coral-200">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  Organization Partner
+                </Badge>
               </div>
-              <p className="mt-2 text-muted-foreground">
-                Manage your initiatives, funding cycles, and member updates.
+              <h1 className="mt-3 font-display text-4xl font-semibold text-coral-600 sm:text-5xl">
+                {organization?.organization_name || "Organization Dashboard"}
+              </h1>
+              <p className="mt-2 text-muted-foreground font-medium">
+                Track your initiative funding cycles and impact metrics.
               </p>
             </div>
             <button
-              onClick={() => signOut().then(() => navigate({ to: "/login" }))}
-              className="rounded-full border border-input bg-background px-5 py-2.5 text-sm hover:bg-muted"
+              onClick={() => setShowNewInitiative(!showNewInitiative)}
+              className="flex items-center gap-2 rounded-full bg-coral-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-coral-600 shadow-lg shadow-coral-500/20"
             >
-              Sign out
+              <Plus className="h-4 w-4" />
+              New Initiative
             </button>
           </div>
 
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
-              {
-                title: "Total Funding",
-                value: `Rs ${(totalFunding || 0).toLocaleString()}`,
-              },
-              { title: "Active Initiatives", value: initiatives?.length ?? 0 },
-              { title: "Impact Score", value: "—" },
+              { title: "Lifetime Raised", value: `Rs ${totalRaised.toLocaleString()}`, icon: TrendingUp },
+              { title: "Active Supporters", value: activeSupporters, icon: Users },
+              { title: "Approved Initiatives", value: initiatives?.filter(i => i.is_approved).length || 0, icon: Target },
             ].map((c) => (
-              <div
-                key={c.title}
-                className="rounded-3xl border border-coral-500/20 bg-coral-500/5 p-6"
-              >
-                <p className="text-sm text-coral-500 font-medium">{c.title}</p>
-                <p className="mt-3 font-display text-3xl text-coral-500">{c.value}</p>
+              <div key={c.title} className="rounded-3xl border border-coral-500/20 bg-card p-6 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-coral-100 text-coral-600">
+                    <c.icon className="h-4 w-4" />
+                  </div>
+                  <p className="text-[10px] text-coral-600 font-bold uppercase tracking-widest">{c.title}</p>
+                </div>
+                <p className="mt-4 font-display text-3xl font-bold text-primary">{c.value}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-16 grid gap-12 lg:grid-cols-2">
-            <div>
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-2xl font-semibold text-coral-500">
-                  Your Initiatives
-                </h2>
-                <button
-                  onClick={() => setShowInitiativeForm(!showInitiativeForm)}
-                  className="rounded-full bg-coral-500 px-4 py-2 text-sm font-medium text-white hover:bg-coral-600"
-                >
-                  {showInitiativeForm ? "Cancel" : "New Initiative"}
-                </button>
-              </div>
-
-              {showInitiativeForm && (
-                <div className="mt-6 rounded-3xl border border-coral-500/20 bg-coral-500/5 p-6 animate-in fade-in slide-in-from-top-4">
-                  <h3 className="text-sm font-semibold text-coral-500 uppercase">
-                    Submit New Initiative
-                  </h3>
-                  <div className="mt-4 space-y-4">
-                    <input
-                      placeholder="Initiative Title"
-                      value={newInitiative.title}
-                      onChange={(e) =>
-                        setNewInitiative({ ...newInitiative, title: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
-                    />
-                    <textarea
-                      placeholder="Description"
-                      value={newInitiative.description}
-                      onChange={(e) =>
-                        setNewInitiative({ ...newInitiative, description: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20 h-24"
-                    />
-                    <input
-                      placeholder="Funding Goal (MUR)"
-                      type="number"
-                      value={newInitiative.goal}
-                      onChange={(e) => setNewInitiative({ ...newInitiative, goal: e.target.value })}
-                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
-                    />
-                    <textarea
-                      placeholder="Short-term Goals"
-                      value={newInitiative.short_term_goals}
-                      onChange={(e) =>
-                        setNewInitiative({ ...newInitiative, short_term_goals: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20 h-24"
-                    />
-                    <textarea
-                      placeholder="Long-term Goals"
-                      value={newInitiative.long_term_goals}
-                      onChange={(e) =>
-                        setNewInitiative({ ...newInitiative, long_term_goals: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20 h-24"
-                    />
-                    <textarea
-                      placeholder="Target Milestones"
-                      value={newInitiative.target_milestones}
-                      onChange={(e) =>
-                        setNewInitiative({ ...newInitiative, target_milestones: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20 h-24"
-                    />
-                    <textarea
-                      placeholder="Expected Outcomes"
-                      value={newInitiative.expected_outcomes}
-                      onChange={(e) =>
-                        setNewInitiative({ ...newInitiative, expected_outcomes: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20 h-24"
-                    />
-                    <div>
-                      <label className="text-xs font-medium text-coral-500 uppercase">
-                        Impact Pool Target (MUR)
-                      </label>
-                      <input
-                        placeholder="Impact Pool Target"
-                        type="number"
-                        value={newInitiative.impact_pool_target}
-                        onChange={(e) =>
-                          setNewInitiative({ ...newInitiative, impact_pool_target: e.target.value })
-                        }
-                        className="mt-1 w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
-                      />
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (!newInitiative.title || !newInitiative.goal) {
-                          toast.error("Title and goal are required");
-                          return;
-                        }
-                        submitInitiativeMutation.mutate();
-                      }}
-                      disabled={
-                        submitInitiativeMutation.isPending ||
-                        !newInitiative.title ||
-                        !newInitiative.goal
-                      }
-                      className="w-full rounded-xl bg-coral-500 py-3 text-sm font-medium text-white transition hover:bg-coral-600 disabled:opacity-50"
-                    >
-                      Submit for Approval
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {initiatives && initiatives.length > 0 ? (
-                  initiatives.map((i) => (
-                    <div
-                      key={i.id}
-                      className="group overflow-hidden rounded-3xl border border-border/40 bg-card transition hover:border-primary/40"
-                    >
-                      <div className="aspect-video bg-muted" />
-                      <div className="p-6">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-display text-lg font-semibold text-primary">
-                            {i.title}
-                          </h3>
-                          {!i.is_approved && (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 uppercase">
-                              Pending
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                          {i.description}
-                        </p>
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between text-xs font-medium">
-                            <span>Progress</span>
-                            <span>
-                              {(
-                                ((Number(i.current_amount_mur) || 0) /
-                                  Math.max(1, Number(i.goal_amount_mur) || 0)) *
-                                100
-                              ).toFixed(0)}
-                              %
-                            </span>
-                          </div>
-                          <div className="mt-2 h-1.5 w-full rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-coral-500"
-                              style={{
-                                width: `${((Number(i.current_amount_mur) || 0) / Math.max(1, Number(i.goal_amount_mur) || 0)) * 100}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full rounded-3xl border border-dashed border-border bg-card p-12 text-center">
-                    <p className="text-muted-foreground">
-                      You haven't created any initiatives yet.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <h2 className="font-display text-2xl font-semibold text-coral-500">
-                Submit Transparency Report
-              </h2>
-              <div className="mt-6 rounded-3xl border border-coral-500/20 bg-coral-500/5 p-6">
+          {showNewInitiative && (
+             <div className="mt-12 rounded-3xl border border-coral-500/20 bg-card p-8 shadow-xl max-w-2xl">
+                <h2 className="text-2xl font-display font-semibold text-primary mb-6">Create New Initiative</h2>
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-medium uppercase text-coral-500/70">
-                      Report Title
-                    </label>
-                    <input
-                      value={reportTitle}
-                      onChange={(e) => setReportTitle(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
-                      placeholder="Q1 2024 Impact Report"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium uppercase text-coral-500/70">
-                      Related Initiative
-                    </label>
-                    <select
-                      value={reportInitiativeId}
-                      onChange={(e) => setReportInitiativeId(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-coral-500/20 bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
-                    >
-                      <option value="">Select an initiative</option>
-                      {initiatives?.map((i) => (
-                        <option key={i.id} value={i.id}>
-                          {i.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <button
-                    onClick={() => submitReportMutation.mutate()}
-                    disabled={submitReportMutation.isPending || !reportTitle || !reportInitiativeId}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-coral-500 py-3 text-sm font-medium text-white transition hover:bg-coral-600 disabled:opacity-50"
-                  >
-                    <Send className="h-4 w-4" />
-                    Submit for Approval
-                  </button>
+                   <input
+                     placeholder="Initiative Title"
+                     value={newInitiative.title}
+                     onChange={e => setNewInitiative({...newInitiative, title: e.target.value})}
+                     className="w-full rounded-xl border border-border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
+                   />
+                   <textarea
+                     placeholder="Description"
+                     value={newInitiative.description}
+                     onChange={e => setNewInitiative({...newInitiative, description: e.target.value})}
+                     className="w-full rounded-xl border border-border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-coral-500/20 h-32"
+                   />
+                   <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Monthly Target (MUR)</label>
+                        <input
+                          placeholder="e.g. 50000"
+                          type="number"
+                          value={newInitiative.monthly_target}
+                          onChange={e => setNewInitiative({...newInitiative, monthly_target: e.target.value})}
+                          className="w-full rounded-xl border border-border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Lifetime Goal (MUR)</label>
+                        <input
+                          placeholder="e.g. 500000"
+                          type="number"
+                          value={newInitiative.goal}
+                          onChange={e => setNewInitiative({...newInitiative, goal: e.target.value})}
+                          className="w-full rounded-xl border border-border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-coral-500/20"
+                        />
+                      </div>
+                   </div>
+                   <button
+                     onClick={() => submitInitiativeMutation.mutate()}
+                     className="w-full bg-coral-500 text-white font-bold py-4 rounded-xl hover:bg-coral-600 transition-colors shadow-lg shadow-coral-500/20"
+                   >
+                     Submit for Admin Review
+                   </button>
                 </div>
-              </div>
-            </div>
+             </div>
+          )}
+
+          <div className="mt-16 grid gap-12 lg:grid-cols-2">
+             <div className="space-y-8">
+                <h2 className="font-display text-2xl font-semibold text-primary flex items-center gap-2">
+                   <Calendar className="h-6 w-6 text-coral-500" />
+                   Funding Cycle History
+                </h2>
+                <div className="rounded-3xl border border-border/40 bg-card overflow-hidden">
+                   <Table>
+                      <TableHeader className="bg-muted/50">
+                         <TableRow>
+                            <TableHead>Initiative</TableHead>
+                            <TableHead>Cycle</TableHead>
+                            <TableHead className="text-right">Raised</TableHead>
+                            <TableHead className="text-right">Supporters</TableHead>
+                         </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                         {fundingCycles?.map(c => (
+                            <TableRow key={c.id}>
+                               <TableCell className="font-medium text-xs">{(c.initiatives as any)?.title}</TableCell>
+                               <TableCell className="text-xs">{c.month}/{c.year}</TableCell>
+                               <TableCell className="text-right font-display font-bold">Rs {Number(c.received_amount_mur).toLocaleString()}</TableCell>
+                               <TableCell className="text-right">{c.supporter_count}</TableCell>
+                            </TableRow>
+                         ))}
+                      </TableBody>
+                   </Table>
+                </div>
+             </div>
+
+             <div className="space-y-8">
+                <h2 className="font-display text-2xl font-semibold text-primary flex items-center gap-2">
+                   <CheckCircle2 className="h-6 w-6 text-coral-500" />
+                   Active Initiatives
+                </h2>
+                <div className="space-y-4">
+                   {initiatives?.map(i => (
+                      <div key={i.id} className="p-6 rounded-3xl border border-border/40 bg-card hover:border-coral-500/40 transition-colors group">
+                         <div className="flex justify-between items-start mb-4">
+                            <div>
+                               <h3 className="font-display font-bold text-lg">{i.title}</h3>
+                               <Badge variant={i.is_approved ? "default" : "secondary"}>{i.is_approved ? 'Active' : 'Pending Review'}</Badge>
+                            </div>
+                            <div className="text-right">
+                               <p className="text-[10px] font-bold text-muted-foreground uppercase">Target</p>
+                               <p className="font-display font-bold">Rs {Number(i.monthly_target_mur).toLocaleString()} / mo</p>
+                            </div>
+                         </div>
+                         <div className="space-y-2">
+                            <div className="flex justify-between text-xs font-bold">
+                               <span className="text-muted-foreground uppercase">Progress</span>
+                               <span>Rs {Number(i.current_amount_mur).toLocaleString()} Total</span>
+                            </div>
+                            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                               <div
+                                 className="h-full bg-coral-500 rounded-full transition-all duration-1000"
+                                 style={{ width: `${Math.min(100, (Number(i.current_amount_mur) / (Number(i.goal_amount_mur) || 1)) * 100)}%` }}
+                               />
+                            </div>
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             </div>
           </div>
         </div>
       </section>
