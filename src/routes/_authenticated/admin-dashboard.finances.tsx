@@ -109,7 +109,9 @@ function AdminFinancesPage() {
     );
   }
 
-  const { authoritative } = finances!;
+  if (!finances) return <SiteLayout><div className="mx-auto max-w-7xl px-4 py-32 text-center text-muted-foreground font-display"><h1 className="text-4xl font-semibold text-primary mb-4">Financial metrics unavailable</h1><p>Please ensure all database migrations have been applied and you have proper administrative permissions.</p></div></SiteLayout>;
+
+  const { authoritative } = finances;
 
   return (
     <SiteLayout>
