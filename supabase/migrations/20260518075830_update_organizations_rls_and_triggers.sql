@@ -1,42 +1,36 @@
--- Update Organizations RLS
--- Runs AFTER the rename
+-- Update organizations RLS and triggers to use organization_id and owner check
+BEGIN;
 
--- 1. Clean up old NGO policies
-DROP POLICY IF EXISTS "Public view NGOs" ON public.organizations;
-DROP POLICY IF EXISTS "Optimized public view NGOs" ON public.organizations;
+-- 1. Organizations RLS
+ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 
--- 2. New Organization policies
-DROP POLICY IF EXISTS "Public view policy" ON public.organizations;
-CREATE POLICY "Public view policy" ON public.organizations
-FOR SELECT USING (is_verified = true OR status = 'active');
+DROP POLICY IF EXISTS "Anyone can view verified organizations" ON public.organizations;
+CREATE POLICY "Anyone can view verified organizations" ON public.organizations
+FOR SELECT USING (is_verified = true);
 
-DROP POLICY IF EXISTS "Organization owner management" ON public.organizations;
-CREATE POLICY "Organization owner management" ON public.organizations
+DROP POLICY IF EXISTS "Admins can manage organizations" ON public.organizations;
+CREATE POLICY "Admins can manage organizations" ON public.organizations
+FOR ALL USING (public.has_role('admin'));
+
+DROP POLICY IF EXISTS "NGO owners can update their NGO" ON public.organizations;
+DROP POLICY IF EXISTS "Organization owners can update their organization" ON public.organizations;
+CREATE POLICY "Organization staff can update their organization" ON public.organizations
+FOR UPDATE USING (
+    EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE organization_id = organizations.id AND id = auth.uid()
+    )
+);
+
+-- 2. Initiatives RLS refinement
+DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
+CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives
 FOR ALL USING (
     EXISTS (
         SELECT 1 FROM public.profiles
-        WHERE profiles.organization_id = organizations.id
-        AND profiles.id = auth.uid()
+        WHERE profiles.id = auth.uid()
+        AND profiles.organization_id = initiatives.organization_id
     )
 );
 
-DROP POLICY IF EXISTS "Admin management policy" ON public.organizations;
-CREATE POLICY "Admin management policy" ON public.organizations
-FOR ALL USING (public.has_role('admin'));
-
--- 3. Update initiatives and reports policies for the new column name
-DROP POLICY IF EXISTS "NGO management policy" ON public.initiatives;
-CREATE POLICY "Organization management policy" ON public.initiatives
-FOR ALL USING (
-    organization_id IN (
-        SELECT organization_id FROM public.profiles WHERE id = auth.uid()
-    )
-);
-
-DROP POLICY IF EXISTS "NGO staff can manage their own NGO reports" ON public.reports;
-CREATE POLICY "Organization management policy" ON public.reports
-FOR ALL USING (
-    organization_id IN (
-        SELECT organization_id FROM public.profiles WHERE id = auth.uid()
-    )
-);
+COMMIT;

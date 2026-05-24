@@ -1,26 +1,19 @@
--- Final RLS fix for allocations
--- This ensures members can see their own contribution distribution
+-- Ensure Admins can see all allocations
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'allocations') THEN
+        DROP POLICY IF EXISTS "Admins can view all allocations" ON public.allocations;
+        CREATE POLICY "Admins can view all allocations" ON public.allocations
+        FOR SELECT USING (public.has_role('admin'));
+    END IF;
+END $$;
 
-DROP POLICY IF EXISTS "Users can view own allocations" ON public.allocations;
-
-CREATE POLICY "Users can view own allocations" ON public.allocations
-FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM public.payments
-    WHERE public.payments.id = public.allocations.payment_id
-    AND public.payments.user_id = auth.uid()
-  )
-);
-
--- Ensure organization staff can see allocations for their initiatives
-CREATE POLICY "Organization staff can view allocations" ON public.allocations
-FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM public.initiatives
-    JOIN public.profiles ON profiles.organization_id = initiatives.organization_id
-    WHERE initiatives.id = allocations.initiative_id
-    AND profiles.id = auth.uid()
-  )
-);
+-- Ensure Admins can see all member preferences (for priority distribution)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'member_preferences') THEN
+        DROP POLICY IF EXISTS "Admins can view all member preferences" ON public.member_preferences;
+        CREATE POLICY "Admins can view all member preferences" ON public.member_preferences
+        FOR SELECT USING (public.has_role('admin'));
+    END IF;
+END $$;
