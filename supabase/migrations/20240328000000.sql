@@ -3,26 +3,22 @@
 -- Add organization_id to profiles to support Organization staff/owners
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES public.organizations(id) ON DELETE SET NULL;
 
--- Ensure reports have an initiative_id (refined from previous migration)
--- (Already handled in 20240327 but ensuring consistency here)
-
--- Add owner_id to Organizations for better access control
-ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
-
 -- Update RLS for Organization dashboard access
 -- This allows Organization staff to see their own initiatives even if not public yet
+DROP POLICY IF EXISTS "Organization staff can manage their own Organization initiatives" ON public.initiatives;
 CREATE POLICY "Organization staff can manage their own Organization initiatives"
-  ON initiatives FOR ALL
+  ON public.initiatives FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM profiles WHERE id = auth.uid()
+      SELECT organization_id FROM public.profiles WHERE id = (SELECT auth.uid())
     )
   );
 
+DROP POLICY IF EXISTS "Organization staff can manage their own Organization reports" ON public.reports;
 CREATE POLICY "Organization staff can manage their own Organization reports"
-  ON reports FOR ALL
+  ON public.reports FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM profiles WHERE id = auth.uid()
+      SELECT organization_id FROM public.profiles WHERE id = (SELECT auth.uid())
     )
   );

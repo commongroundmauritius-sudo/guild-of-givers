@@ -36,7 +36,7 @@ export class AllocationEngine {
     const allocations: AllocationResult[] = [];
     let remainingPool = netAmount;
 
-    // 3. Allocation logic: P1 -> P2 -> P3 -> Fallback
+    // 3. Allocation logic: P1 -> P2 -> P3 -> P4 -> Fallback
     for (const pref of preferences) {
       if (remainingPool <= 0) break;
 
@@ -49,7 +49,6 @@ export class AllocationEngine {
 
       // Potential is what they WANTED to give to this initiative
       const potential = netAmount / Math.max(1, preferences.length);
-      // Simplified: assume equal potential split for now, or total if P1
 
       const toAllocate = Math.min(remainingPool, space);
 
@@ -69,7 +68,7 @@ export class AllocationEngine {
       allocations.push({
         initiativeId: impactPoolId,
         amount: remainingPool,
-        potentialAmount: 0, // Fallback doesn't usually have "potential" in same sense
+        potentialAmount: 0,
         isOverflow: true
       });
     }

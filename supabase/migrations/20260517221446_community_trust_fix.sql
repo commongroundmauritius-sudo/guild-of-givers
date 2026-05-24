@@ -11,7 +11,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-DROP TRIGGER IF EXISTS tr_handle_post_approval ON public.community_posts;
-CREATE TRIGGER tr_handle_post_approval
+CREATE OR REPLACE TRIGGER tr_handle_post_approval
     AFTER UPDATE ON public.community_posts
     FOR EACH ROW EXECUTE FUNCTION public.handle_post_approval();

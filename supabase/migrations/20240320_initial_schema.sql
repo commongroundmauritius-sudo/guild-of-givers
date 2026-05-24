@@ -1,6 +1,6 @@
 -- Create custom types
 DO $$ BEGIN
-    CREATE TYPE public.app_role AS ENUM ('admin', 'organization', 'member');
+    CREATE TYPE public.app_role AS ENUM ('admin', 'ngo', 'member');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
   UNIQUE(user_id, role)
 );
 
--- Create organizations table
-CREATE TABLE IF NOT EXISTS public.organizations (
+-- Create ngos table
+CREATE TABLE IF NOT EXISTS public.ngos (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.organizations (
 -- Create initiatives table
 CREATE TABLE IF NOT EXISTS public.initiatives (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  organization_id UUID REFERENCES public.organizations ON DELETE CASCADE NOT NULL,
+  ngo_id UUID REFERENCES public.ngos ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
   goal_amount_mur DECIMAL,
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS public.allocations (
 -- Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ngos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.initiatives ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
@@ -157,13 +157,13 @@ DO $$ BEGIN
     CREATE POLICY "Admins can view all roles" ON public.user_roles FOR SELECT USING (public.has_role('admin'));
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- Organizations
+-- NGOs
 DO $$ BEGIN
-    CREATE POLICY "Anyone can view verified Organizations" ON public.organizations FOR SELECT USING (is_verified = true);
+    CREATE POLICY "Anyone can view verified NGOs" ON public.ngos FOR SELECT USING (is_verified = true);
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN
-    CREATE POLICY "Admins can manage Organizations" ON public.organizations FOR ALL USING (public.has_role('admin'));
+    CREATE POLICY "Admins can manage NGOs" ON public.ngos FOR ALL USING (public.has_role('admin'));
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- Initiatives
@@ -172,11 +172,11 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN
-    CREATE POLICY "Organizations can manage own initiatives" ON public.initiatives FOR ALL USING (
+    CREATE POLICY "NGOs can manage own initiatives" ON public.initiatives FOR ALL USING (
       EXISTS (
         SELECT 1 FROM public.user_roles
         WHERE user_id = auth.uid()
-        AND role = 'organization'
+        AND role = 'ngo'
       )
     );
 EXCEPTION WHEN duplicate_object THEN null; END $$;

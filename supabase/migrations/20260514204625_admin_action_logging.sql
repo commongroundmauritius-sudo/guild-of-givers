@@ -1,9 +1,5 @@
--- Migration: 20260514200000_admin_action_logging.sql
--- Description: Creates the admin_actions table for auditing administrative operations.
-
-BEGIN;
-
-CREATE TABLE IF NOT EXISTS public.admin_actions (
+-- Create admin_actions table for the 'blame system'
+CREATE TABLE public.admin_actions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     admin_id UUID NOT NULL REFERENCES auth.users(id),
     action_type TEXT NOT NULL,
@@ -20,7 +16,6 @@ ALTER TABLE public.admin_actions ENABLE ROW LEVEL SECURITY;
 GRANT SELECT, INSERT ON public.admin_actions TO authenticated;
 
 -- Admin-only visibility policy
-DROP POLICY IF EXISTS "Admins can view all actions" ON public.admin_actions;
 CREATE POLICY "Admins can view all actions" ON public.admin_actions
 FOR SELECT
 USING (
@@ -32,7 +27,6 @@ USING (
 );
 
 -- Policy to allow any authenticated user with admin role to insert logs
-DROP POLICY IF EXISTS "Admins can insert actions" ON public.admin_actions;
 CREATE POLICY "Admins can insert actions" ON public.admin_actions
 FOR INSERT
 WITH CHECK (
@@ -42,5 +36,3 @@ WITH CHECK (
         AND user_roles.role = 'admin'::app_role
     )
 );
-
-COMMIT;

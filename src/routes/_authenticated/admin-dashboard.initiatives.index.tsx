@@ -33,6 +33,8 @@ function AdminInitiativesPage() {
   });
 
   const filteredInitiatives = initiatives?.filter((i) => {
+    if (i.is_system_owned) return false;
+
     const matchesSearch =
       (i.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (getJoinedField(i.organizations, "organization_name") || "")
@@ -49,23 +51,23 @@ function AdminInitiativesPage() {
     else if (activeTab === "published") matchesTab = i.is_published;
     else if (activeTab === "pending") matchesTab = !i.is_approved;
 
-    return matchesSearch && matchesSource && matchesTab;
+    return matchesSearch && matchesTab && matchesSource;
   });
 
   const tabs = [
     { id: "all", label: "All" },
-    { id: "organization_submitted", label: "Organization Submitted" },
-    { id: "admin_created", label: "Admin Created" },
-    { id: "draft", label: "Drafts" },
-    { id: "published", label: "Published" },
     { id: "pending", label: "Pending Review" },
+    { id: "organization_submitted", label: "Org Submitted" },
+    { id: "admin_created", label: "Admin Created" },
+    { id: "published", label: "Published" },
+    { id: "draft", label: "Drafts" },
   ];
 
   return (
     <SiteLayout>
       <section className="bg-muted/30 min-h-screen py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
+          <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
             <div>
               <div className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-amber-500" />
@@ -77,11 +79,50 @@ function AdminInitiativesPage() {
                 Initiative Management
               </h1>
               <p className="mt-2 text-muted-foreground">
-                Oversee all social impact programs, handle approvals, and manage content.
+                Review, moderate, and manage all initiatives across the platform.
               </p>
             </div>
+            <Link
+              to="/admin-dashboard/initiatives/new"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              Create Initiative
+            </Link>
+          </div>
+
+          <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition ${
+                    activeTab === tab.id
+                      ? "bg-amber-600 text-white shadow-sm"
+                      : "bg-card text-muted-foreground hover:bg-muted hover:text-primary"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
             <div className="flex flex-wrap items-center gap-4">
-              <div className="relative w-full max-w-sm sm:w-64">
+              <div className="flex items-center gap-2 rounded-full border border-border/40 bg-card px-4 py-1.5">
+                <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                <select
+                  value={sourceFilter}
+                  onChange={(e) => setSourceFilter(e.target.value)}
+                  className="bg-transparent text-xs font-semibold outline-none"
+                >
+                  <option value="all">All Sources</option>
+                  <option value="organization_submission">Org Submissions</option>
+                  <option value="admin_created">Admin Created</option>
+                </select>
+              </div>
+
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
@@ -91,51 +132,13 @@ function AdminInitiativesPage() {
                   className="w-full rounded-full border border-border/40 bg-card py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                 />
               </div>
-              <Link
-                to="/admin-dashboard/initiatives/new"
-                className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-amber-600 shadow-lg shadow-amber-500/20"
-              >
-                <Plus className="h-4 w-4" />
-                Create Initiative
-              </Link>
-            </div>
-          </div>
-
-          <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-wrap gap-2 overflow-x-auto pb-2 md:pb-0">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
-                    activeTab === tab.id
-                      ? "bg-primary text-white shadow-md"
-                      : "bg-card text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <select
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
-                className="rounded-xl border border-border/40 bg-card px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-              >
-                <option value="all">All Sources</option>
-                <option value="organization_submission">Organization Submission</option>
-                <option value="admin_created">Admin Created</option>
-              </select>
             </div>
           </div>
 
           {isLoading ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-64 w-full rounded-3xl" />
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-64 w-full rounded-[2rem]" />
               ))}
             </div>
           ) : error ? (
@@ -146,120 +149,86 @@ function AdminInitiativesPage() {
               <h2 className="mt-4 font-display text-xl font-semibold text-red-900">
                 Failed to load initiatives
               </h2>
-              <p className="mt-2 text-red-700/80">
-                There was an error fetching data from the server.
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-6 rounded-full bg-red-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
-              >
-                Retry
-              </button>
+              <p className="mt-2 text-red-700/80">There was an error connecting to the database.</p>
             </div>
           ) : filteredInitiatives && filteredInitiatives.length > 0 ? (
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {filteredInitiatives.map((i) => {
-                const organizationName = getJoinedField(i.organizations, "organization_name");
-
-                return (
-                  <div
-                    key={i.id}
-                    className="group flex flex-col overflow-hidden rounded-3xl border border-border/40 bg-card transition-all hover:shadow-lg"
-                  >
-                    <div className="relative aspect-video bg-muted">
-                      {i.image_url ? (
-                        <img
-                          src={i.image_url}
-                          alt={i.title}
-                          className="h-full w-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=800";
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100/50">
-                          <Heart className="h-10 w-10 text-amber-200" />
-                        </div>
-                      )}
-                      <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
-                        <div className="flex gap-2">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase shadow-sm ${
-                              i.is_approved ? "bg-green-500 text-white" : "bg-amber-500 text-white"
-                            }`}
-                          >
-                            {i.is_approved ? "Approved" : "Pending"}
-                          </span>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase shadow-sm ${
-                              i.is_published ? "bg-blue-500 text-white" : "bg-gray-500 text-white"
-                            }`}
-                          >
-                            {i.is_published ? "Published" : "Hidden"}
-                          </span>
-                        </div>
-                        <span className="rounded-full bg-black/40 px-2 py-1 text-[8px] font-bold uppercase text-white backdrop-blur-sm">
-                          {i.initiative_source === "admin_created"
-                            ? "Admin Created"
-                            : "Organization Submission"}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredInitiatives.map((i) => (
+                <div
+                  key={i.id}
+                  className="group overflow-hidden rounded-[2rem] border border-border/40 bg-card transition hover:shadow-lg"
+                >
+                  <div className="relative h-40 w-full overflow-hidden bg-muted">
+                    {i.image_url ? (
+                      <img
+                        src={i.image_url}
+                        alt={i.title}
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-amber-50/50">
+                        <Heart className="h-10 w-10 text-amber-200" />
+                      </div>
+                    )}
+                    <div className="absolute left-4 top-4 flex flex-col gap-2">
+                      {!i.is_approved && (
+                        <span className="rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold uppercase text-white shadow-sm">
+                          Pending Review
                         </span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-1 flex-col p-6">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">
-                          {organizationName || "Internal Initiative"}
-                        </p>
-                        <p className="text-[9px] text-muted-foreground">
-                          {new Date(i.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <h2 className="mt-2 font-display text-xl font-bold text-primary group-hover:text-primary/80">
-                        {i.title}
-                      </h2>
-                      <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                        {i.summary || i.caption || "No summary provided."}
-                      </p>
-
-                      <div className="mt-auto pt-6 flex items-center justify-between border-t border-border/40">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                            <Globe
-                              className={`h-3.5 w-3.5 ${i.is_published ? "text-forest-soft" : "text-gray-300"}`}
-                            />
-                            {i.is_published ? "Live" : "Draft"}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                            <Edit3 className="h-3.5 w-3.5 text-amber-500" />
-                            Manage
-                          </div>
-                        </div>
-                        <Link
-                          to="/admin-dashboard/initiatives/$id/manage"
-                          params={{ id: i.id }}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-white transition hover:bg-amber-600"
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </div>
+                      )}
+                      {!i.is_published && i.is_approved && (
+                        <span className="rounded-full bg-slate-500 px-3 py-1 text-[10px] font-bold uppercase text-white shadow-sm">
+                          Draft
+                        </span>
+                      )}
                     </div>
                   </div>
-                );
-              })}
+
+                  <div className="p-6">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                        {getJoinedField(i.organizations, "organization_name") || "No Organization"}
+                      </span>
+                      <span className="text-[9px] font-medium text-muted-foreground uppercase">
+                        {i.initiative_source?.replace("_", " ")}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-lg font-bold text-primary transition group-hover:text-amber-600">
+                      {i.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                      {i.description}
+                    </p>
+
+                    <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold uppercase text-muted-foreground">
+                          Funding
+                        </span>
+                        <span className="text-xs font-bold text-primary">
+                          Rs {Number(i.current_amount_mur || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <Link
+                        to={`/admin-dashboard/initiatives/${i.id}/manage`}
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 text-amber-600 transition group-hover:bg-amber-600 group-hover:text-white shadow-sm"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center rounded-[2.5rem] border border-dashed border-border/60 bg-card p-20 text-center">
+            <div className="flex flex-col items-center justify-center rounded-[3rem] border border-dashed border-border/60 bg-card p-20 text-center">
               <div className="rounded-full bg-muted p-4">
                 <Info className="h-8 w-8 text-muted-foreground" />
               </div>
               <h2 className="mt-6 font-display text-2xl font-semibold text-primary">
                 No initiatives found
               </h2>
-              <p className="mt-2 text-muted-foreground">
-                Adjust your filters or wait for new submissions.
-              </p>
+              <p className="mt-2 text-muted-foreground">Try adjusting your filters or search.</p>
             </div>
           )}
         </div>

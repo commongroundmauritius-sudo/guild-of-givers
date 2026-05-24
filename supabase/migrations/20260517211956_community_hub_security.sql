@@ -1,6 +1,6 @@
 -- Community Hub Security & Logic
 
--- Helper function to check role
+-- Helper function to check role (already exists, but ensuring it has right definition)
 CREATE OR REPLACE FUNCTION public.has_role(requested_role public.app_role)
 RETURNS boolean AS $$
 BEGIN
@@ -10,7 +10,7 @@ BEGIN
     AND role = requested_role
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- 1. Announcements Policies
 CREATE POLICY "Public can view non-deleted announcements" ON public.announcements
@@ -49,10 +49,10 @@ CREATE POLICY "Qualified users can comment" ON public.post_comments
         (SELECT auth.uid()) = user_id AND (
             public.has_role('admin') OR
             public.has_role('member') OR
-            (public.has_role('organization') AND EXISTS (
+            (public.has_role('ngo') AND EXISTS (
                 SELECT 1 FROM public.community_posts p
                 JOIN public.initiatives i ON p.initiative_id = i.id
-                JOIN public.profiles prof ON prof.organization_id = i.organization_id
+                JOIN public.profiles prof ON prof.ngo_id = i.ngo_id
                 WHERE p.id = post_id AND prof.id = (SELECT auth.uid())
             ))
         )
@@ -139,9 +139,9 @@ BEGIN
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-CREATE TRIGGER tr_handle_post_creation
+CREATE OR REPLACE TRIGGER tr_handle_post_creation
     BEFORE INSERT ON public.community_posts
     FOR EACH ROW EXECUTE FUNCTION public.handle_post_creation();
 
@@ -173,9 +173,9 @@ BEGIN
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-CREATE TRIGGER tr_handle_comment_creation
+CREATE OR REPLACE TRIGGER tr_handle_comment_creation
     AFTER INSERT ON public.post_comments
     FOR EACH ROW EXECUTE FUNCTION public.handle_comment_creation();
 
@@ -199,7 +199,7 @@ BEGIN
         RAISE EXCEPTION 'Activity limit reached. Try again later.';
     END IF;
 
-    -- Notification (bundled logic would be complex in trigger, simple for now)
+    -- Notification
     INSERT INTO public.notifications (user_id, type, entity_id)
     SELECT user_id, 'new_reaction', NEW.post_id
     FROM public.community_posts
@@ -207,9 +207,9 @@ BEGIN
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-CREATE TRIGGER tr_handle_reaction_creation
+CREATE OR REPLACE TRIGGER tr_handle_reaction_creation
     AFTER INSERT ON public.post_reactions
     FOR EACH ROW EXECUTE FUNCTION public.handle_reaction_creation();
 
@@ -220,9 +220,9 @@ BEGIN
     UPDATE public.community_posts SET reactions_count = reactions_count - 1 WHERE id = OLD.post_id;
     RETURN OLD;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-CREATE TRIGGER tr_handle_reaction_deletion
+CREATE OR REPLACE TRIGGER tr_handle_reaction_deletion
     AFTER DELETE ON public.post_reactions
     FOR EACH ROW EXECUTE FUNCTION public.handle_reaction_deletion();
 
@@ -245,13 +245,13 @@ BEGIN
     END IF;
     RETURN NULL;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-CREATE TRIGGER tr_audit_announcements
+CREATE OR REPLACE TRIGGER tr_audit_announcements
     AFTER INSERT OR UPDATE OR DELETE ON public.announcements
     FOR EACH ROW EXECUTE FUNCTION public.log_community_action();
 
-CREATE TRIGGER tr_audit_posts
+CREATE OR REPLACE TRIGGER tr_audit_posts
     AFTER UPDATE OR DELETE ON public.community_posts
     FOR EACH ROW EXECUTE FUNCTION public.log_community_action();
 

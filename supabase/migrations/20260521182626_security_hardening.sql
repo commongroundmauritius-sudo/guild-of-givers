@@ -23,10 +23,11 @@ REVOKE EXECUTE ON FUNCTION public.handle_reaction_deletion() FROM PUBLIC, anon, 
 REVOKE EXECUTE ON FUNCTION public.log_community_action() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authenticated;
 
+-- Keep has_role accessible to authenticated users if needed for RPC, but revoke from anon
 REVOKE EXECUTE ON FUNCTION public.has_role(public.app_role) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.has_role(public.app_role) TO authenticated;
 
--- 3. Optimize RLS performance
+-- 3. Optimize RLS performance by using (SELECT auth.uid()) instead of auth.uid()
 DROP POLICY IF EXISTS "Organization owners can manage their organization" ON public.organizations;
 CREATE POLICY "Organization owners can manage their organization" ON public.organizations
     FOR ALL USING (owner_user_id = (SELECT auth.uid()));

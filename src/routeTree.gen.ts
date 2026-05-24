@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminDashboardProfileRouteImport } from './routes
 import { Route as AuthenticatedAdminDashboardOrganizationsRouteImport } from './routes/_authenticated/admin-dashboard.organizations'
 import { Route as AuthenticatedAdminDashboardMembersRouteImport } from './routes/_authenticated/admin-dashboard.members'
 import { Route as AuthenticatedAdminDashboardLeadsRouteImport } from './routes/_authenticated/admin-dashboard.leads'
+import { Route as AuthenticatedAdminDashboardFinancesRouteImport } from './routes/_authenticated/admin-dashboard.finances'
 import { Route as AuthenticatedAdminDashboardCommunityPostsRouteImport } from './routes/_authenticated/admin-dashboard.community-posts'
 import { Route as AuthenticatedAdminDashboardAnnouncementsRouteImport } from './routes/_authenticated/admin-dashboard.announcements'
 import { Route as AuthenticatedAdminDashboardInitiativesIndexRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.index'
@@ -189,6 +190,12 @@ const AuthenticatedAdminDashboardLeadsRoute =
     path: '/leads',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+const AuthenticatedAdminDashboardFinancesRoute =
+  AuthenticatedAdminDashboardFinancesRouteImport.update({
+    id: '/finances',
+    path: '/finances',
+    getParentRoute: () => AuthenticatedAdminDashboardRoute,
+  } as any)
 const AuthenticatedAdminDashboardCommunityPostsRoute =
   AuthenticatedAdminDashboardCommunityPostsRouteImport.update({
     id: '/community-posts',
@@ -238,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/initiatives/': typeof InitiativesIndexRoute
   '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
+  '/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
   '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
   '/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
@@ -270,6 +278,7 @@ export interface FileRoutesByTo {
   '/initiatives': typeof InitiativesIndexRoute
   '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
+  '/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
   '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
   '/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
@@ -305,6 +314,7 @@ export interface FileRoutesById {
   '/initiatives/': typeof InitiativesIndexRoute
   '/_authenticated/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/_authenticated/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
+  '/_authenticated/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
   '/_authenticated/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/_authenticated/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
   '/_authenticated/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
@@ -340,6 +350,7 @@ export interface FileRouteTypes {
     | '/initiatives/'
     | '/admin-dashboard/announcements'
     | '/admin-dashboard/community-posts'
+    | '/admin-dashboard/finances'
     | '/admin-dashboard/leads'
     | '/admin-dashboard/members'
     | '/admin-dashboard/organizations'
@@ -372,6 +383,7 @@ export interface FileRouteTypes {
     | '/initiatives'
     | '/admin-dashboard/announcements'
     | '/admin-dashboard/community-posts'
+    | '/admin-dashboard/finances'
     | '/admin-dashboard/leads'
     | '/admin-dashboard/members'
     | '/admin-dashboard/organizations'
@@ -406,6 +418,7 @@ export interface FileRouteTypes {
     | '/initiatives/'
     | '/_authenticated/admin-dashboard/announcements'
     | '/_authenticated/admin-dashboard/community-posts'
+    | '/_authenticated/admin-dashboard/finances'
     | '/_authenticated/admin-dashboard/leads'
     | '/_authenticated/admin-dashboard/members'
     | '/_authenticated/admin-dashboard/organizations'
@@ -628,6 +641,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardLeadsRouteImport
       parentRoute: typeof AuthenticatedAdminDashboardRoute
     }
+    '/_authenticated/admin-dashboard/finances': {
+      id: '/_authenticated/admin-dashboard/finances'
+      path: '/finances'
+      fullPath: '/admin-dashboard/finances'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardFinancesRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRoute
+    }
     '/_authenticated/admin-dashboard/community-posts': {
       id: '/_authenticated/admin-dashboard/community-posts'
       path: '/community-posts'
@@ -669,6 +689,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminDashboardRouteChildren {
   AuthenticatedAdminDashboardAnnouncementsRoute: typeof AuthenticatedAdminDashboardAnnouncementsRoute
   AuthenticatedAdminDashboardCommunityPostsRoute: typeof AuthenticatedAdminDashboardCommunityPostsRoute
+  AuthenticatedAdminDashboardFinancesRoute: typeof AuthenticatedAdminDashboardFinancesRoute
   AuthenticatedAdminDashboardLeadsRoute: typeof AuthenticatedAdminDashboardLeadsRoute
   AuthenticatedAdminDashboardMembersRoute: typeof AuthenticatedAdminDashboardMembersRoute
   AuthenticatedAdminDashboardOrganizationsRoute: typeof AuthenticatedAdminDashboardOrganizationsRoute
@@ -687,6 +708,8 @@ const AuthenticatedAdminDashboardRouteChildren: AuthenticatedAdminDashboardRoute
       AuthenticatedAdminDashboardAnnouncementsRoute,
     AuthenticatedAdminDashboardCommunityPostsRoute:
       AuthenticatedAdminDashboardCommunityPostsRoute,
+    AuthenticatedAdminDashboardFinancesRoute:
+      AuthenticatedAdminDashboardFinancesRoute,
     AuthenticatedAdminDashboardLeadsRoute:
       AuthenticatedAdminDashboardLeadsRoute,
     AuthenticatedAdminDashboardMembersRoute:

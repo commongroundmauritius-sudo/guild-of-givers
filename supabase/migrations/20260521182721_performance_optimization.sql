@@ -10,7 +10,7 @@ CREATE INDEX IF NOT EXISTS idx_post_comments_user_id ON public.post_comments(use
 CREATE INDEX IF NOT EXISTS idx_post_reactions_user_id ON public.post_reactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_organization_id ON public.subscriptions(organization_id);
 
--- 2. Consolidate RLS policies
+-- 2. Consolidate redundant permissive policies
 DROP POLICY IF EXISTS "Admins have full access to initiatives" ON public.initiatives;
 DROP POLICY IF EXISTS "Anyone can view published initiatives" ON public.initiatives;
 DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
@@ -45,6 +45,7 @@ CREATE POLICY "Organization staff management policy" ON public.initiatives
         )
     );
 
+DROP POLICY IF EXISTS "Organization owners can manage their organization" ON public.organizations;
 DROP POLICY IF EXISTS "Admins can manage organizations" ON public.organizations;
 DROP POLICY IF EXISTS "Public can view organizations with published initiatives" ON public.organizations;
 

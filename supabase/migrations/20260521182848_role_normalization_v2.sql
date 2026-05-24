@@ -1,8 +1,4 @@
--- 1. Data Migration
-UPDATE public.user_roles SET role = 'organization' WHERE role = 'ngo';
-UPDATE public.initiatives SET creator_role = 'organization' WHERE creator_role = 'ngo';
-
--- 2. Policy Normalization
+-- Update post_comments policy to use normalized 'organization' role and subquery
 DROP POLICY IF EXISTS "Qualified users can comment" ON public.post_comments;
 CREATE POLICY "Qualified users can comment" ON public.post_comments
     FOR INSERT TO authenticated

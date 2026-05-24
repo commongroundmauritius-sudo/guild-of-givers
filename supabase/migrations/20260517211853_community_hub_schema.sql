@@ -105,7 +105,7 @@ CREATE INDEX IF NOT EXISTS idx_post_comments_post_id ON public.post_comments(pos
 CREATE INDEX IF NOT EXISTS idx_post_reactions_post_id ON public.post_reactions(post_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
 
--- Enable RLS (Policies will be in the next migration)
+-- Enable RLS
 ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_trust ENABLE ROW LEVEL SECURITY;
