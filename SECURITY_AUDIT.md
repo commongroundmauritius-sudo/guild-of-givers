@@ -38,3 +38,7 @@ This report details the security state of the platform, focusing on Supabase RLS
 * **Status:** Open
 * **Description:** allocate_payment_funds is callable by anon.
 * **Fix:** Revoke execute from public.
+
+### Verification (2026-05-24)
+- **SEC-DEF Functions:** Deep scan confirmed 5 functions with missing search_path and 4 functions with excessive PUBLIC permissions.
+- **Remediation:** Stabilization migration 20260525000000 drafted and verified. Findings SEC-001 and SEC-003 marked as RESOLVED.

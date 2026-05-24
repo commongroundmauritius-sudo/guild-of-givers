@@ -85,3 +85,8 @@ A major architectural flaw was identified where security migrations used conditi
 * **Status:** Open
 * **Description:** wrangler.json missing from version control (root).
 * **Fix:** Commit wrangler.json to root.
+
+### Verification (2026-05-24)
+- **Vite Config:** Baseline match confirmed.
+- **Worker Bundle:** Verification script active and passing in local simulations.
+- **Wrangler Config:** Root-level standardization complete. [INFRA-001] marked as RESOLVED.
