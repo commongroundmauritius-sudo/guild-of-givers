@@ -1,4 +1,0 @@
--- Migration 20260521000001_mock_payments_seed.sql
--- Legacy seeding logic removed.
--- The "Impact Pool" architecture is now correctly established in 20260522100000_impact_pool_refinement.sql.
--- This file is kept as a placeholder to maintain migration sequence without reintroducing NULL organization_id violations.
