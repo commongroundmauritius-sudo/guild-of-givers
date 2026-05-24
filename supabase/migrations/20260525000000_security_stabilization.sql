@@ -20,3 +20,8 @@ REVOKE EXECUTE ON FUNCTION public.increment_initiative_amount(uuid, numeric) FRO
 -- 3. Grant limited access where required
 GRANT EXECUTE ON FUNCTION public.get_admin_financial_metrics() TO authenticated;
 -- Verify if get_admin_financial_metrics has its own internal role check (it should)
+
+-- Additional fixes from Phase 1-C deep scan
+ALTER FUNCTION public.get_ledger_summary_metrics() SET search_path = public;
+REVOKE EXECUTE ON FUNCTION public.get_ledger_summary_metrics() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_ledger_summary_metrics() TO authenticated;

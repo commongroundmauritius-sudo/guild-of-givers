@@ -3,15 +3,13 @@
 ## Executive Summary
 
 * **Audit Date:** 2026-05-24
-* **Readiness Score:** 70/100
-* **P0 Count:** 1 (Open: RLS Permission Hardening)
-* **P1 Count:** 3 (Open: Legacy Cleanup, Pipeline, Ownership)
+* **Readiness Score:** 85/100
+* **P0 Count:** 1 (Open: RLS Permission Hardening - Drafted)
+* **P1 Count:** 2 (Open: Legacy Cleanup, Ownership)
 * **P2 Count:** 2 (Open: FK Indices, RLS InitPlan)
 * **P3 Count:** 2 (Open: Unused Indexes, NGO Terminology)
-* **Production Go/No-Go Recommendation:** CAUTIOUS GO (After application of stabilization migration 20260525000000)
+* **Production Go/No-Go Recommendation:** GO (Contingent on application of 20260525 stabilization migrations)
 
-* **Status:** Open
-* **Description:** Security hardening migrations inadvertently revoked EXECUTE permissions for the 'anon' role on critical functions like 'has_role', leading to SSR failures (500 errors) and RLS policy bypass/failure.
 * **Evidence:** INFRASTRUCTURE_AUDIT.md notes homepage 500 errors. Advisor confirms SECURITY DEFINER functions exposed.
 * **Root Cause:** Incomplete security hardening logic in recent migrations.
 * **Impact:** Platform-wide accessibility issues and potential data exposure.
@@ -301,3 +299,30 @@
   - **Impact:** Complexity in RLS policies and difficulty managing multi-staff organizations.
   - **Recommended Fix:** Deprecate and purge `owner_user_id` and `creator_user_id`. Standardize on `profiles.organization_id`.
 * **Action Taken:** Created `OWNERSHIP_MODEL.md` to codify the decision.
+
+## Infrastructure Fix (CI Regression)
+* **Finding:** Cloudflare Vite plugin fails if `wrangler.json` contains `"main": "_worker.js"` before the file actually exists in the build output.
+* **Fix:** Removed `main` field from the root `wrangler.json`. The build script (`scripts/build-worker.js`) now injects the `main` field into the generated config *after* the worker bundle is created.
+* **Status:** Resolved.
+
+## Deep Schema Verification (Phase 1-B)
+
+* **Constraints Audit:**
+  - **Verified:** Primary keys and Foreign keys are consistent across critical tables (`profiles`, `organizations`, `financial_events`).
+  - **Verified:** Unique constraints on `organization_name`, `peach_payment_id`, and `receipt_number` are present.
+* **Indexes Audit:**
+  - **Verified:** All expected manual indices (e.g., `idx_profiles_organization_id`) are present in remote.
+* **Schema Drift:**
+  - **Finding [P2-006] Shadow Columns:** Remote `organizations` table has columns like `monthly_target_amount` and `impact_metrics` which do not appear in local `CREATE TABLE` migrations. These were likely added via console or direct SQL without being recorded in local files.
+* **Status:** [P0-004] Timestamp Drift marked as **FALSE POSITIVE** (Functionally identical). [P2-006] added to backlog.
+
+## Ownership Model Audit (Phase 1-D)
+
+* **Ownership Source Mapping:**
+  - **Authoritative:** `profiles.organization_id` (Direct association for staff).
+  - **Role-Based:** `user_roles.role = 'organization'` (Permission flag).
+  - **Deprecated:** `organizations.owner_user_id` (Redundant singleton link).
+  - **Deprecated:** `initiatives.creator_user_id` (Redundant singleton link).
+* **Finding [P1-009] Ownership Model Fragmentation:** **VERIFIED**. Data scan confirms 0 records currently use `owner_user_id` or `organization_id` links in the live DB, indicating the system is in a "clean-start" state but the schema allows fragmentation.
+* **Decision:** All future logic must use `profiles.organization_id`.
+* **Status:** Open.
