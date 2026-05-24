@@ -58,7 +58,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents') THEN
         ALTER TABLE public.ngo_documents RENAME TO organization_documents;
     END IF;
-    -- ngo_documents.ngo_id -> organization_id
+    -- organization_documents.ngo_id -> organization_id
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organization_documents' AND column_name = 'ngo_id') THEN
         ALTER TABLE public.organization_documents RENAME COLUMN ngo_id TO organization_id;
     END IF;

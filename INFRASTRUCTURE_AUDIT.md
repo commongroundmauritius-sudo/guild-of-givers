@@ -61,3 +61,21 @@ A secondary root cause of instability was identified during the audit: **Migrati
 - **Issue:** Early migrations made rigid assumptions about table names (`ngos` vs `organizations`) and column existence (`is_approved`). This caused "SQLSTATE 42703 (Column does not exist)" errors during clean-state deployments (Supabase Preview/Local Reset).
 - **Fix:** Procedural `DO` blocks have been applied to 10+ migrations to allow them to handle both legacy and modern schema states idempotently.
 - **Verification:** The migration sequence is now hardened for "from-scratch" execution.
+
+## 9. RLS & Schema Consistency Refactor
+The audit revealed that previous "fixes" introduced conditional branching logic inside security migrations, which caused `SQLSTATE 42P01 (Relation does not exist)` errors during CI.
+- **Root Cause:** Migrations were attempting to define policies for both `ngos` and `organizations` simultaneously, often before one of those tables existed in the timeline.
+- **Resolution:**
+  - Migrations have been refactored to be **Timeline Consistent**.
+  - All files before the `2026-05-18` rename event strictly reference `ngos`.
+  - All files after the rename event strictly reference `organizations`.
+  - Conditional branching inside RLS policies has been removed in favor of explicit, order-dependent DDL statements.
+- **Result:** The migration history is now linear and consistent with the database's evolution, preventing runtime schema resolution failures.
+
+## 10. Removal of Conditional RLS Branching
+A major architectural flaw was identified where security migrations used conditional branching (`IF EXISTS table_name`) to apply policies to different schema versions. This led to `SQLSTATE 42P01` errors because Postgres validates relation existence at the statement level even if the branch is not executed.
+- **Resolution:**
+  - Separated schema existence concerns from security policies.
+  - Migrations now strictly follow the **Timeline Principle**: they only reference the schema state as it existed at the time of the migration's timestamp.
+  - The pivot point for the NGO -> Organization rename is strictly established at `20260518075811`.
+- **Constraint:** Dual-branching in RLS migrations is now strictly FORBIDDEN to ensure CI stability.

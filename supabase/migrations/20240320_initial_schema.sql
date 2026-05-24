@@ -43,8 +43,7 @@ CREATE TABLE IF NOT EXISTS public.ngos (
   logo_url TEXT,
   website_url TEXT,
   is_verified BOOLEAN DEFAULT false NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  owner_user_id UUID REFERENCES auth.users(id) -- Added back to satisfy initial schema assumptions if needed
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Create initiatives table
@@ -57,10 +56,7 @@ CREATE TABLE IF NOT EXISTS public.initiatives (
   current_amount_mur DECIMAL DEFAULT 0,
   image_url TEXT,
   status TEXT DEFAULT 'active',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  creator_user_id UUID REFERENCES auth.users(id), -- Added back
-  is_approved BOOLEAN DEFAULT false, -- Added back to avoid policy failure
-  is_published BOOLEAN DEFAULT false -- Added back
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Create subscriptions table
