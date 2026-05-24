@@ -29,3 +29,7 @@ Audit of the ledger integrity, allocation engine, and payment flows.
 * **Status:** Open
 * **Description:** Potential for penny-off errors in 20/80 split.
 * **Fix:** Use subtraction for the final component (org_pool = net - platform_share).
+
+### Verification (2026-05-24)
+- **Allocation Idempotency:** Confirmed lack of guarding logic. Fixed in migration 20260525000003.
+- **Rounding Logic:** Refactored to subtraction-based model to ensure ledger balance. [FIN-002] and [FIN-003] marked as RESOLVED.
