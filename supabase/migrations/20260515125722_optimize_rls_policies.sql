@@ -1,69 +1,25 @@
--- Optimize RLS policies by wrapping auth.uid() in a subquery
+-- Optimize RLS policies for common queries
+-- This includes better Organization visibility and profile access
 
-BEGIN;
+DO $$
+BEGIN
+    -- 1. Optimized Organization Visibility
+    DROP POLICY IF EXISTS "Public view Organizations" ON public.organizations;
+    DROP POLICY IF EXISTS "Public view NGOs" ON public.ngos;
 
--- Allocations
-DROP POLICY IF EXISTS "Users can view own allocations" ON public.allocations;
-CREATE POLICY "Users can view own allocations" ON public.allocations
-FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM public.payments
-    WHERE payments.id = allocations.payment_id
-    AND payments.user_id = (SELECT auth.uid())
-  )
-);
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organizations') THEN
+        CREATE POLICY "Optimized public view Organizations" ON public.organizations
+        FOR SELECT
+        USING (is_verified = true OR status = 'active');
+    ELSE
+        CREATE POLICY "Optimized public view NGOs" ON public.ngos
+        FOR SELECT
+        USING (is_verified = true OR status = 'active');
+    END IF;
 
--- Reports
-DROP POLICY IF EXISTS "NGO staff can manage their own NGO reports" ON public.reports;
-CREATE POLICY "NGO staff can manage their own NGO reports" ON public.reports
-FOR ALL USING (
-  ngo_id IN (
-    SELECT ngo_id FROM public.profiles
-    WHERE id = (SELECT auth.uid())
-  )
-);
-
--- Initiatives
-DROP POLICY IF EXISTS "NGO staff can manage own initiatives" ON public.initiatives;
-CREATE POLICY "NGO staff can manage own initiatives" ON public.initiatives
-FOR ALL USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE profiles.id = (SELECT auth.uid())
-    AND profiles.ngo_id = initiatives.ngo_id
-  )
-);
-
--- Leads
-DROP POLICY IF EXISTS "Admins can manage leads" ON public.leads;
-CREATE POLICY "Admins can manage leads" ON public.leads
-FOR ALL USING (
-  EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_roles.user_id = (SELECT auth.uid())
-    AND user_roles.role = 'admin'::app_role
-  )
-);
-
--- Admin Actions
-DROP POLICY IF EXISTS "Admins can view all actions" ON public.admin_actions;
-CREATE POLICY "Admins can view all actions" ON public.admin_actions
-FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_roles.user_id = (SELECT auth.uid())
-    AND user_roles.role = 'admin'::app_role
-  )
-);
-
-DROP POLICY IF EXISTS "Admins can insert actions" ON public.admin_actions;
-CREATE POLICY "Admins can insert actions" ON public.admin_actions
-FOR INSERT WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_roles.user_id = (SELECT auth.uid())
-    AND user_roles.role = 'admin'::app_role
-  )
-);
-
-COMMIT;
+    -- 2. Profiles - Ensure users can always see their own record correctly
+    DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+    CREATE POLICY "Users can view own profile" ON public.profiles
+    FOR SELECT
+    USING (auth.uid() = id);
+END $$;

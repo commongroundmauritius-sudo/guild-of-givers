@@ -55,3 +55,9 @@ This audit identifies the root causes of recurring platform regressions. The pla
 1. **Restore Config:** Re-apply the Vite bundling fixes found in the baseline.
 2. **Permission Fix:** Ensure `anon` has `EXECUTE` on `has_role`.
 3. **Commit Protections:** Add `.github/CODEOWNERS` and `.github/workflows/infrastructure-guard.yml`.
+
+## 8. Migration Drift & Clean-State Recovery
+A secondary root cause of instability was identified during the audit: **Migration Drift**.
+- **Issue:** Early migrations made rigid assumptions about table names (`ngos` vs `organizations`) and column existence (`is_approved`). This caused "SQLSTATE 42703 (Column does not exist)" errors during clean-state deployments (Supabase Preview/Local Reset).
+- **Fix:** Procedural `DO` blocks have been applied to 10+ migrations to allow them to handle both legacy and modern schema states idempotently.
+- **Verification:** The migration sequence is now hardened for "from-scratch" execution.

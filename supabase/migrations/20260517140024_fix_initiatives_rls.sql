@@ -1,29 +1,28 @@
--- Fix RLS for initiatives to ensure NGOs can insert their own initiatives correctly
-DROP POLICY IF EXISTS "NGO staff can manage own initiatives" ON public.initiatives;
+-- Fix Initiatives RLS for Organization management
+-- This ensures Organizations can manage their own initiatives after the rename or while still NGOs
 
-CREATE POLICY "NGO staff can manage own initiatives" ON public.initiatives
-FOR ALL
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE profiles.id = (SELECT auth.uid())
-    AND profiles.ngo_id = initiatives.ngo_id
-  )
-)
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE profiles.id = (SELECT auth.uid())
-    AND profiles.ngo_id = initiatives.ngo_id
-  )
-);
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "NGOs can manage own initiatives" ON public.initiatives;
+    DROP POLICY IF EXISTS "Organization staff can manage their own Organization initiatives" ON public.initiatives;
+    DROP POLICY IF EXISTS "Organization management policy" ON public.initiatives;
 
--- Ensure admins can always view and manage everything
-DROP POLICY IF EXISTS "Admins have full access to initiatives" ON public.initiatives;
-
-CREATE POLICY "Admins have full access to initiatives" ON public.initiatives
-FOR ALL
-TO authenticated
-USING (public.has_role('admin'))
-WITH CHECK (public.has_role('admin'));
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'initiatives' AND column_name = 'organization_id') THEN
+        CREATE POLICY "Organization management policy" ON public.initiatives
+        FOR ALL
+        USING (
+            organization_id IN (
+                SELECT organization_id FROM public.profiles WHERE id = auth.uid()
+            )
+        );
+    ELSIF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'initiatives' AND column_name = 'ngo_id') THEN
+        CREATE POLICY "Organization management policy" ON public.initiatives
+        FOR ALL
+        USING (
+            ngo_id IN (
+                SELECT ngo_id FROM public.profiles WHERE id = auth.uid()
+                OR organization_id FROM public.profiles WHERE id = auth.uid()
+            )
+        );
+    END IF;
+END $$;

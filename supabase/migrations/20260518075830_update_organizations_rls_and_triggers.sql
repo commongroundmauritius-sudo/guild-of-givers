@@ -1,21 +1,27 @@
--- Update RLS Policies for Organizations
-DROP POLICY IF EXISTS "NGO owners can update their NGO" ON public.organizations;
-CREATE POLICY "Organization owners can manage their organization" ON public.organizations
-    FOR ALL
-    USING (owner_user_id = auth.uid());
+-- Update Organizations RLS and add administrative triggers
+-- This migration runs after the NGO -> Organization rename
 
--- Add RLS for organization_documents
-ALTER TABLE public.organization_documents ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Owners can manage organization documents" ON public.organization_documents;
-CREATE POLICY "Owners can manage organization documents" ON public.organization_documents
-    FOR ALL
-    USING (EXISTS (
-        SELECT 1 FROM public.organizations
-        WHERE id = organization_documents.organization_id
-        AND owner_user_id = auth.uid()
-    ));
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "Admins can manage Organizations" ON public.organizations;
+    DROP POLICY IF EXISTS "Organization management policy" ON public.organizations;
+    DROP POLICY IF EXISTS "Optimized public view Organizations" ON public.organizations;
 
--- Grant access
-GRANT ALL ON public.organizations TO authenticated;
-GRANT ALL ON public.organization_documents TO authenticated;
-GRANT SELECT ON public.organizations TO anon;
+    -- 1. Public view (Consistency with previous logic)
+    CREATE POLICY "Public view policy" ON public.organizations
+    FOR SELECT USING (is_verified = true OR status = 'active');
+
+    -- 2. Organization Management
+    CREATE POLICY "Organization owner management" ON public.organizations
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.organization_id = organizations.id
+            AND profiles.id = auth.uid()
+        )
+    );
+
+    -- 3. Admin Oversight
+    CREATE POLICY "Admin management policy" ON public.organizations
+    FOR ALL USING (public.has_role('admin'));
+END $$;
