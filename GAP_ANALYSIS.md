@@ -252,3 +252,9 @@ This report compares the **CommonGround Operating Blueprint** against the curren
 3.  **Payment Webhooks:** Connect Peach Payments to automate the "Lead → Member" conversion.
 4.  **Organization Metrics:** Add priority distribution and cumulative funding views to the Organization Dashboard.
 5.  **Versioning:** Create an `initiative_versions` table to support safe editing of live campaigns.
+
+### Audit Sync (2026-05-24)
+* **Gap Identified:** Schema drift between local migrations and remote state (P0-004).
+* **Gap Identified:** Security hardening regression in 'anon' permissions (P0-001).
+* **Gap Identified:** Missing root-level infrastructure config (P1-007).
+* **Reference:** MASTER_AUDIT_REPORT.md
