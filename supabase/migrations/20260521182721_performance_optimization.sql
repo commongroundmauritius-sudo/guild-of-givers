@@ -1,64 +1,26 @@
--- 1. Add indices to unindexed foreign keys
-CREATE INDEX IF NOT EXISTS idx_allocations_organization_id ON public.allocations(organization_id);
-CREATE INDEX IF NOT EXISTS idx_announcements_author_id ON public.announcements(author_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON public.audit_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_community_posts_initiative_id ON public.community_posts(initiative_id);
-CREATE INDEX IF NOT EXISTS idx_initiatives_creator_user_id ON public.initiatives(creator_user_id);
-CREATE INDEX IF NOT EXISTS idx_member_preferences_organization_id ON public.member_preferences(organization_id);
-CREATE INDEX IF NOT EXISTS idx_post_comments_parent_comment_id ON public.post_comments(parent_comment_id);
-CREATE INDEX IF NOT EXISTS idx_post_comments_user_id ON public.post_comments(user_id);
-CREATE INDEX IF NOT EXISTS idx_post_reactions_user_id ON public.post_reactions(user_id);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_organization_id ON public.subscriptions(organization_id);
+-- Performance Optimization and Refinement of RLS Policies
+-- Runs AFTER everything is renamed to Organization
 
--- 2. Consolidate redundant permissive policies
-DROP POLICY IF EXISTS "Admins have full access to initiatives" ON public.initiatives;
+-- 1. Update Initiative Public Visibility
 DROP POLICY IF EXISTS "Anyone can view published initiatives" ON public.initiatives;
-DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
+CREATE POLICY "Anyone can view published initiatives" ON public.initiatives
+FOR SELECT
+USING (is_approved = true AND is_published = true);
 
-CREATE POLICY "Initiative access policy" ON public.initiatives
-    FOR SELECT USING (
-        (is_approved = true AND is_published = true) OR
-        has_role('admin'::app_role) OR
-        (EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE profiles.id = (SELECT auth.uid())
-            AND profiles.organization_id = initiatives.organization_id
-        ))
-    );
-
-CREATE POLICY "Initiative management policy" ON public.initiatives
-    FOR ALL USING (has_role('admin'::app_role))
-    WITH CHECK (has_role('admin'::app_role));
-
-CREATE POLICY "Organization staff management policy" ON public.initiatives
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE profiles.id = (SELECT auth.uid())
-            AND profiles.organization_id = initiatives.organization_id
-        )
-    )
-    WITH CHECK (
-        EXISTS ( SELECT 1 FROM public.profiles
-                 WHERE profiles.id = (SELECT auth.uid())
-                 AND profiles.organization_id = initiatives.organization_id
-        )
-    );
-
-DROP POLICY IF EXISTS "Organization owners can manage their organization" ON public.organizations;
-DROP POLICY IF EXISTS "Admins can manage organizations" ON public.organizations;
-DROP POLICY IF EXISTS "Public can view organizations with published initiatives" ON public.organizations;
-
+-- 2. Update Organization Public Visibility
+DROP POLICY IF EXISTS "Public view policy" ON public.organizations;
 CREATE POLICY "Organization view policy" ON public.organizations
-    FOR SELECT USING (
-        (is_verified = true) OR
-        (EXISTS (SELECT 1 FROM initiatives i WHERE i.organization_id = organizations.id AND i.is_approved = true AND i.is_published = true)) OR
-        (owner_user_id = (SELECT auth.uid())) OR
-        has_role('admin'::app_role)
-    );
+FOR SELECT
+USING (
+    is_verified = true OR
+    EXISTS (
+        SELECT 1 FROM public.initiatives i
+        WHERE i.organization_id = organizations.id
+        AND i.is_approved = true
+        AND i.is_published = true
+    )
+);
 
-CREATE POLICY "Organization management policy" ON public.organizations
-    FOR ALL USING (
-        (owner_user_id = (SELECT auth.uid())) OR
-        has_role('admin'::app_role)
-    );
+-- Indices for performance
+CREATE INDEX IF NOT EXISTS idx_initiatives_org_id ON public.initiatives(organization_id) WHERE organization_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_profiles_org_id ON public.profiles(organization_id) WHERE organization_id IS NOT NULL;
