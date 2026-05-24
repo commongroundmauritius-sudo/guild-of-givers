@@ -12,7 +12,7 @@ DECLARE
     v_org_pool_amount NUMERIC;
 
     v_cg_account_id UUID;
-    v_ngo_pool_account_id UUID;
+    v_org_pool_account_id UUID;
     v_impact_pool_account_id UUID;
     v_fee_account_id UUID;
     v_impact_pool_initiative_id UUID;
@@ -37,7 +37,7 @@ BEGIN
     SELECT * INTO v_fee_config FROM public.fee_configurations WHERE active = true LIMIT 1;
 
     SELECT id INTO v_cg_account_id FROM public.financial_accounts WHERE account_type = 'platform' AND is_system = true LIMIT 1;
-    SELECT id INTO v_ngo_pool_account_id FROM public.financial_accounts WHERE account_type = 'organization_pool' AND is_system = true LIMIT 1;
+    SELECT id INTO v_org_pool_account_id FROM public.financial_accounts WHERE account_type = 'organization_pool' AND is_system = true LIMIT 1;
     SELECT id INTO v_fee_account_id FROM public.financial_accounts WHERE account_type = 'fee' AND is_system = true LIMIT 1;
 
     SELECT id INTO v_impact_pool_initiative_id FROM public.initiatives WHERE is_impact_pool = true AND is_system_owned = true LIMIT 1;
@@ -72,9 +72,7 @@ BEGIN
     v_cg_share := v_net_amount * 0.20;
     v_org_pool_amount := v_net_amount * 0.80;
 
-    -- 3. Record Initial Payment Received (Implicitly flows to temp pool, but we ledger it per account)
-    -- This is a complex flow, we will ledger each transition.
-
+    -- 3. Ledger Entries
     -- A. Transaction Fee
     SELECT cached_balance_mur INTO v_prev_bal FROM public.financial_accounts WHERE id = v_fee_account_id FOR UPDATE;
     v_new_bal := v_prev_bal + v_fee_amount;
@@ -89,12 +87,11 @@ BEGIN
     VALUES (p_payment_id, v_billing_cycle_id, p_user_id, v_cg_account_id, 'platform_share', v_cg_share, v_prev_bal, v_new_bal);
     UPDATE public.financial_accounts SET cached_balance_mur = v_new_bal WHERE id = v_cg_account_id;
 
-    -- C. Organization Pool (80%) - Pass through
-    SELECT cached_balance_mur INTO v_prev_bal FROM public.financial_accounts WHERE id = v_ngo_pool_account_id FOR UPDATE;
+    -- C. Organization Pool (80%)
+    SELECT cached_balance_mur INTO v_prev_bal FROM public.financial_accounts WHERE id = v_org_pool_account_id FOR UPDATE;
     v_new_bal := v_prev_bal + v_org_pool_amount;
     INSERT INTO public.financial_events (payment_id, billing_cycle_id, user_id, account_id, event_type, amount_mur, previous_balance, resulting_balance)
-    VALUES (p_payment_id, v_billing_cycle_id, p_user_id, v_ngo_pool_account_id, 'organization_pool', v_org_pool_amount, v_prev_bal, v_new_bal);
-    -- We don't update cached_balance yet because we will subtract from it immediately as we allocate.
+    VALUES (p_payment_id, v_billing_cycle_id, p_user_id, v_org_pool_account_id, 'organization_pool', v_org_pool_amount, v_prev_bal, v_new_bal);
     v_remaining_pool := v_org_pool_amount;
 
     -- 4. Priority Allocation
@@ -108,7 +105,6 @@ BEGIN
     ) LOOP
         EXIT WHEN v_remaining_pool <= 0;
 
-        -- Get or create funding cycle
         SELECT id, target_amount_mur, received_amount_mur INTO v_funding_cycle_id, v_cycle_target, v_cycle_received
         FROM public.initiative_funding_cycles
         WHERE initiative_id = v_pref.initiative_id AND billing_cycle_id = v_billing_cycle_id
@@ -124,42 +120,29 @@ BEGIN
 
         v_cycle_space := GREATEST(0, v_cycle_target - v_cycle_received);
 
-        IF v_cycle_space > 0 OR v_pref.monthly_target_mur = 0 THEN -- target 0 means unlimited for this purpose or not set
+        IF v_cycle_space > 0 OR v_pref.monthly_target_mur = 0 THEN
             v_to_allocate := LEAST(v_remaining_pool, CASE WHEN v_cycle_target > 0 THEN v_cycle_space ELSE v_remaining_pool END);
 
             IF v_to_allocate > 0 THEN
-                -- A. Deduct from Pool
                 v_prev_bal := v_new_bal;
                 v_new_bal := v_prev_bal - v_to_allocate;
-                -- (We update the pool account at the very end with the final residual if any)
 
-                -- B. Add to Initiative Account
                 SELECT cached_balance_mur INTO v_prev_bal FROM public.financial_accounts WHERE id = v_pref.account_id FOR UPDATE;
                 INSERT INTO public.financial_events (payment_id, billing_cycle_id, user_id, initiative_id, account_id, event_type, amount_mur, previous_balance, resulting_balance)
                 VALUES (p_payment_id, v_billing_cycle_id, p_user_id, v_pref.initiative_id, v_pref.account_id, 'allocation', v_to_allocate, v_prev_bal, v_prev_bal + v_to_allocate);
                 UPDATE public.financial_accounts SET cached_balance_mur = v_prev_bal + v_to_allocate WHERE id = v_pref.account_id;
 
-                -- C. Update Funding Cycle
                 UPDATE public.initiative_funding_cycles
-                SET
-                    received_amount_mur = received_amount_mur + v_to_allocate,
+                SET received_amount_mur = received_amount_mur + v_to_allocate,
                     remaining_amount_mur = GREATEST(0, target_amount_mur - (received_amount_mur + v_to_allocate)),
-                    status = CASE
-                        WHEN (received_amount_mur + v_to_allocate) >= target_amount_mur AND target_amount_mur > 0 THEN 'completed'::public.funding_cycle_status
-                        ELSE 'active'::public.funding_cycle_status
-                    END
+                    status = CASE WHEN (received_amount_mur + v_to_allocate) >= target_amount_mur AND target_amount_mur > 0 THEN 'completed'::public.funding_cycle_status ELSE 'active'::public.funding_cycle_status END
                 WHERE id = v_funding_cycle_id;
 
-                -- Update initiative lifetime
                 UPDATE public.initiatives SET current_amount_mur = current_amount_mur + v_to_allocate WHERE id = v_pref.initiative_id;
-
                 v_remaining_pool := v_remaining_pool - v_to_allocate;
             END IF;
         END IF;
 
-        -- If initiative was full, we might have overflowed but we handle it by just moving to next priority.
-        -- Requirement says "Overflow generates separate events".
-        -- If we skipped an initiative because it was full, let's record that.
         IF v_remaining_pool > 0 AND v_cycle_space = 0 AND v_cycle_target > 0 THEN
              INSERT INTO public.financial_events (payment_id, billing_cycle_id, user_id, initiative_id, account_id, event_type, amount_mur, previous_balance, resulting_balance, metadata)
              VALUES (p_payment_id, v_billing_cycle_id, p_user_id, v_pref.initiative_id, v_pref.account_id, 'overflow', v_remaining_pool, 0, 0, jsonb_build_object('reason', 'target_reached'));
@@ -168,29 +151,23 @@ BEGIN
 
     -- 5. Impact Pool Fallback
     IF v_remaining_pool > 0 THEN
-        -- A. Deduct from Pool
         v_prev_bal := v_new_bal;
         v_new_bal := v_prev_bal - v_remaining_pool;
 
-        -- B. Add to Impact Pool
         SELECT cached_balance_mur INTO v_prev_bal FROM public.financial_accounts WHERE id = v_impact_pool_account_id FOR UPDATE;
         INSERT INTO public.financial_events (payment_id, billing_cycle_id, user_id, initiative_id, account_id, event_type, amount_mur, previous_balance, resulting_balance)
         VALUES (p_payment_id, v_billing_cycle_id, p_user_id, v_impact_pool_initiative_id, v_impact_pool_account_id, 'impact_pool', v_remaining_pool, v_prev_bal, v_prev_bal + v_remaining_pool);
         UPDATE public.financial_accounts SET cached_balance_mur = v_prev_bal + v_remaining_pool WHERE id = v_impact_pool_account_id;
 
-        -- Update impact pool cycles (Impact pool is usually unlimited target=0)
         INSERT INTO public.initiative_funding_cycles (initiative_id, billing_cycle_id, month, year, target_amount_mur, received_amount_mur, status)
         VALUES (v_impact_pool_initiative_id, v_billing_cycle_id, v_current_month, v_current_year, 0, v_remaining_pool, 'active')
-        ON CONFLICT (initiative_id, billing_cycle_id) DO UPDATE
-        SET received_amount_mur = initiative_funding_cycles.received_amount_mur + EXCLUDED.received_amount_mur;
+        ON CONFLICT (initiative_id, billing_cycle_id) DO UPDATE SET received_amount_mur = initiative_funding_cycles.received_amount_mur + EXCLUDED.received_amount_mur;
 
         UPDATE public.initiatives SET current_amount_mur = current_amount_mur + v_remaining_pool WHERE id = v_impact_pool_initiative_id;
-
         v_remaining_pool := 0;
     END IF;
 
-    -- Final update to Organization Pool (should be 0 if all allocated)
-    UPDATE public.financial_accounts SET cached_balance_mur = v_new_bal WHERE id = v_ngo_pool_account_id;
+    UPDATE public.financial_accounts SET cached_balance_mur = v_new_bal WHERE id = v_org_pool_account_id;
 
     -- 6. Update Supporter Counts
     UPDATE public.initiative_funding_cycles
@@ -214,22 +191,11 @@ DECLARE
     v_impact_pool NUMERIC;
     v_recurring_forecast NUMERIC;
 BEGIN
-    -- 1. Gross Contributions (Sum successful payments)
     SELECT COALESCE(SUM(amount_mur), 0) INTO v_gross_total FROM public.payments WHERE status = 'success';
-
-    -- 2. Transaction Fees
     SELECT COALESCE(SUM(amount_mur), 0) INTO v_total_fees FROM public.financial_events WHERE event_type = 'transaction_fee';
-
-    -- 3. Platform Share
     SELECT COALESCE(SUM(amount_mur), 0) INTO v_platform_share FROM public.financial_events WHERE event_type = 'platform_share';
-
-    -- 4. Organization Pool Total (Total assigned to initiatives)
     SELECT COALESCE(SUM(amount_mur), 0) INTO v_organization_pool FROM public.financial_events WHERE event_type = 'allocation';
-
-    -- 5. Impact Pool Total
     SELECT COALESCE(SUM(amount_mur), 0) INTO v_impact_pool FROM public.financial_events WHERE event_type = 'impact_pool';
-
-    -- 6. Recurring Forecast
     SELECT COALESCE(SUM(amount_mur), 0) INTO v_recurring_forecast FROM public.subscriptions WHERE status = 'active';
 
     RETURN jsonb_build_object(

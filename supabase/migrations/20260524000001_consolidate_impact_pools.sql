@@ -74,8 +74,10 @@ BEGIN
     WHERE is_impact_pool = true AND id != v_new_impact_pool_id;
 
     -- 4. Initialize financial account for the new impact pool
-    INSERT INTO public.financial_accounts (account_type, reference_id, is_system)
-    VALUES ('initiative', v_new_impact_pool_id, false)
-    ON CONFLICT (reference_id) DO NOTHING;
+    -- We use a subquery check to avoid duplicate key error if reference_id already exists
+    IF NOT EXISTS (SELECT 1 FROM public.financial_accounts WHERE reference_id = v_new_impact_pool_id) THEN
+        INSERT INTO public.financial_accounts (account_type, reference_id, is_system)
+        VALUES ('initiative', v_new_impact_pool_id, false);
+    END IF;
 
 END $$;

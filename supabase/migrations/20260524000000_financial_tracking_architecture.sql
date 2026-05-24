@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS public.fee_configurations (
 -- Ensure only one active fee config
 CREATE UNIQUE INDEX IF NOT EXISTS fee_configurations_active_idx ON public.fee_configurations (active) WHERE (active = true);
 
--- 5. Create billing cycles (to group monthly metrics)
+-- 5. Create billing cycles
 CREATE TABLE IF NOT EXISTS public.billing_cycles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     month INTEGER NOT NULL CHECK (month >= 1 AND month <= 12),
@@ -144,14 +144,14 @@ ON CONFLICT DO NOTHING;
 INSERT INTO public.financial_accounts (account_type, reference_id, is_system)
 SELECT 'initiative', id, false
 FROM public.initiatives
-WHERE id NOT IN (SELECT reference_id FROM public.financial_accounts WHERE account_type = 'initiative');
+WHERE id NOT IN (SELECT reference_id FROM public.financial_accounts WHERE reference_id IS NOT NULL);
 
--- 11. Initial Fee Configuration (placeholder based on user example)
+-- 11. Initial Fee Configuration
 INSERT INTO public.fee_configurations (fee_type, percentage_value, fixed_amount_mur, active)
 VALUES ('hybrid', 3.5, 10, true)
 ON CONFLICT DO NOTHING;
 
--- 12. RLS Policies for financial tables
+-- 12. RLS Policies
 ALTER TABLE public.financial_accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.fee_configurations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.billing_cycles ENABLE ROW LEVEL SECURITY;
@@ -159,7 +159,17 @@ ALTER TABLE public.initiative_funding_cycles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.financial_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payouts ENABLE ROW LEVEL SECURITY;
 
--- Admins can do everything
+-- Helpers for RLS
+CREATE OR REPLACE FUNCTION public.has_role(requested_role public.app_role)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = auth.uid()
+    AND role = requested_role
+  );
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
+
+-- Policies
 CREATE POLICY "Admins can manage financial accounts" ON public.financial_accounts FOR ALL USING (public.has_role('admin'));
 CREATE POLICY "Admins can manage fee configurations" ON public.fee_configurations FOR ALL USING (public.has_role('admin'));
 CREATE POLICY "Admins can manage billing cycles" ON public.billing_cycles FOR ALL USING (public.has_role('admin'));
@@ -167,21 +177,11 @@ CREATE POLICY "Admins can manage funding cycles" ON public.initiative_funding_cy
 CREATE POLICY "Admins can manage financial events" ON public.financial_events FOR ALL USING (public.has_role('admin'));
 CREATE POLICY "Admins can manage payouts" ON public.payouts FOR ALL USING (public.has_role('admin'));
 
--- Public/Authenticated read access (limited)
 CREATE POLICY "Users can view own financial events" ON public.financial_events FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Anyone can view billing cycles" ON public.billing_cycles FOR SELECT USING (true);
 CREATE POLICY "Anyone can view funding cycles" ON public.initiative_funding_cycles FOR SELECT USING (true);
 
--- Organization access to their initiative cycles
-CREATE POLICY "Organizations can view their funding cycles" ON public.initiative_funding_cycles FOR SELECT USING (
-    EXISTS (
-        SELECT 1 FROM public.initiatives i
-        JOIN public.profiles p ON p.organization_id = i.organization_id
-        WHERE i.id = initiative_funding_cycles.initiative_id AND p.id = auth.uid()
-    )
-);
-
--- 13. Trigger to ensure financial_events are immutable (no updates/deletes)
+-- 13. Immutability trigger
 CREATE OR REPLACE FUNCTION public.check_financial_event_immutability()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -189,10 +189,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS financial_events_immutable_update ON public.financial_events;
 CREATE TRIGGER financial_events_immutable_update
 BEFORE UPDATE ON public.financial_events
 FOR EACH ROW EXECUTE FUNCTION public.check_financial_event_immutability();
 
+DROP TRIGGER IF EXISTS financial_events_immutable_delete ON public.financial_events;
 CREATE TRIGGER financial_events_immutable_delete
 BEFORE DELETE ON public.financial_events
 FOR EACH ROW EXECUTE FUNCTION public.check_financial_event_immutability();

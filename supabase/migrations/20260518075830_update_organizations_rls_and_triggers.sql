@@ -1,21 +1,36 @@
--- Update RLS Policies for Organizations
+-- Update organizations RLS and triggers to use organization_id and owner check
+BEGIN;
+
+-- 1. Organizations RLS
+ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view verified organizations" ON public.organizations;
+CREATE POLICY "Anyone can view verified organizations" ON public.organizations
+FOR SELECT USING (is_verified = true);
+
+DROP POLICY IF EXISTS "Admins can manage organizations" ON public.organizations;
+CREATE POLICY "Admins can manage organizations" ON public.organizations
+FOR ALL USING (public.has_role('admin'));
+
 DROP POLICY IF EXISTS "NGO owners can update their NGO" ON public.organizations;
-CREATE POLICY "Organization owners can manage their organization" ON public.organizations
-    FOR ALL
-    USING (owner_user_id = auth.uid());
+DROP POLICY IF EXISTS "Organization owners can update their organization" ON public.organizations;
+CREATE POLICY "Organization staff can update their organization" ON public.organizations
+FOR UPDATE USING (
+    EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE organization_id = organizations.id AND id = auth.uid()
+    )
+);
 
--- Add RLS for organization_documents
-ALTER TABLE public.organization_documents ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Owners can manage organization documents" ON public.organization_documents;
-CREATE POLICY "Owners can manage organization documents" ON public.organization_documents
-    FOR ALL
-    USING (EXISTS (
-        SELECT 1 FROM public.organizations
-        WHERE id = organization_documents.organization_id
-        AND owner_user_id = auth.uid()
-    ));
+-- 2. Initiatives RLS refinement
+DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
+CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives
+FOR ALL USING (
+    EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE profiles.id = auth.uid()
+        AND profiles.organization_id = initiatives.organization_id
+    )
+);
 
--- Grant access
-GRANT ALL ON public.organizations TO authenticated;
-GRANT ALL ON public.organization_documents TO authenticated;
-GRANT SELECT ON public.organizations TO anon;
+COMMIT;

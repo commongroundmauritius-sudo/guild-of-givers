@@ -85,14 +85,10 @@ BEGIN
     END IF;
 END $$;
 
--- ngos/organizations
+-- organizations
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'ngos') THEN
-        DROP POLICY IF EXISTS "Admins can manage NGOs" ON public.ngos;
-        CREATE POLICY "Admins can manage NGOs" ON public.ngos
-        FOR ALL USING (has_role('admin'::app_role));
-    ELSIF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
         DROP POLICY IF EXISTS "Admins can manage organizations" ON public.organizations;
         CREATE POLICY "Admins can manage organizations" ON public.organizations
         FOR ALL USING (has_role('admin'::app_role));

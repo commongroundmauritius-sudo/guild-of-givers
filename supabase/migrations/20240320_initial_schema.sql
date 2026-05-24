@@ -1,6 +1,6 @@
 -- Create custom types
 DO $$ BEGIN
-    CREATE TYPE public.app_role AS ENUM ('admin', 'ngo', 'member');
+    CREATE TYPE public.app_role AS ENUM ('admin', 'organization', 'member');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -35,10 +35,10 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
   UNIQUE(user_id, role)
 );
 
--- Create ngos table
-CREATE TABLE IF NOT EXISTS public.ngos (
+-- Create organizations table
+CREATE TABLE IF NOT EXISTS public.organizations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
+  organization_name TEXT NOT NULL UNIQUE,
   description TEXT,
   logo_url TEXT,
   website_url TEXT,
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.ngos (
 -- Create initiatives table
 CREATE TABLE IF NOT EXISTS public.initiatives (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  ngo_id UUID REFERENCES public.ngos ON DELETE CASCADE NOT NULL,
+  organization_id UUID REFERENCES public.organizations ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
   goal_amount_mur DECIMAL,
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS public.allocations (
 -- Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.ngos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.initiatives ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
@@ -131,90 +131,50 @@ RETURNS BOOLEAN AS $$
     WHERE user_id = auth.uid()
     AND role = requested_role
   );
-$$ LANGUAGE sql SECURITY DEFINER;
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
 
 -- RLS Policies
 
 -- Profiles
-DO $$ BEGIN
-    CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT USING (public.has_role('admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT USING (public.has_role('admin'));
 
 -- User Roles
-DO $$ BEGIN
-    CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT USING (auth.uid() = user_id);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Admins can view all roles" ON public.user_roles FOR SELECT USING (public.has_role('admin'));
 
-DO $$ BEGIN
-    CREATE POLICY "Admins can view all roles" ON public.user_roles FOR SELECT USING (public.has_role('admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
--- NGOs
-DO $$ BEGIN
-    CREATE POLICY "Anyone can view verified NGOs" ON public.ngos FOR SELECT USING (is_verified = true);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE POLICY "Admins can manage NGOs" ON public.ngos FOR ALL USING (public.has_role('admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+-- Organizations
+CREATE POLICY "Anyone can view verified organizations" ON public.organizations FOR SELECT USING (is_verified = true);
+CREATE POLICY "Admins can manage organizations" ON public.organizations FOR ALL USING (public.has_role('admin'));
 
 -- Initiatives
-DO $$ BEGIN
-    CREATE POLICY "Anyone can view initiatives" ON public.initiatives FOR SELECT USING (true);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE POLICY "NGOs can manage own initiatives" ON public.initiatives FOR ALL USING (
-      EXISTS (
-        SELECT 1 FROM public.user_roles
-        WHERE user_id = auth.uid()
-        AND role = 'ngo'
-      )
-    );
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+CREATE POLICY "Anyone can view initiatives" ON public.initiatives FOR SELECT USING (true);
+CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives FOR ALL USING (
+    EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE profiles.id = auth.uid()
+        AND profiles.organization_id = initiatives.organization_id
+    )
+);
 
 -- Subscriptions
-DO $$ BEGIN
-    CREATE POLICY "Users can view own subscriptions" ON public.subscriptions FOR SELECT USING (auth.uid() = user_id);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE POLICY "Admins can view all subscriptions" ON public.subscriptions FOR SELECT USING (public.has_role('admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+CREATE POLICY "Users can view own subscriptions" ON public.subscriptions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Admins can view all subscriptions" ON public.subscriptions FOR SELECT USING (public.has_role('admin'));
 
 -- Payments
-DO $$ BEGIN
-    CREATE POLICY "Users can view own payments" ON public.payments FOR SELECT USING (auth.uid() = user_id);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE POLICY "Admins can view all payments" ON public.payments FOR SELECT USING (public.has_role('admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+CREATE POLICY "Users can view own payments" ON public.payments FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Admins can view all payments" ON public.payments FOR SELECT USING (public.has_role('admin'));
 
 -- Receipts
-DO $$ BEGIN
-    CREATE POLICY "Users can view own receipts" ON public.receipts FOR SELECT USING (auth.uid() = user_id);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE POLICY "Admins can view all receipts" ON public.receipts FOR SELECT USING (public.has_role('admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+CREATE POLICY "Users can view own receipts" ON public.receipts FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Admins can view all receipts" ON public.receipts FOR SELECT USING (public.has_role('admin'));
 
 -- Allocations
-DO $$ BEGIN
-    CREATE POLICY "Users can view own allocations" ON public.allocations FOR SELECT USING (
-      EXISTS (
-        SELECT 1 FROM public.payments
-        WHERE public.payments.id = public.allocations.payment_id
-        AND public.payments.user_id = auth.uid()
-      )
-    );
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+CREATE POLICY "Users can view own allocations" ON public.allocations FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM public.payments
+    WHERE public.payments.id = public.allocations.payment_id
+    AND public.payments.user_id = auth.uid()
+  )
+);

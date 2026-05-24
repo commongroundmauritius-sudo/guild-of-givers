@@ -23,24 +23,15 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'reports') THEN
         DROP POLICY IF EXISTS "NGO staff can manage their own NGO reports" ON public.reports;
-        -- Check if it's ngo_id or organization_id
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reports' AND column_name = 'ngo_id') THEN
-            CREATE POLICY "NGO staff can manage their own NGO reports" ON public.reports
-            FOR ALL USING (
-              ngo_id IN (
-                SELECT ngo_id FROM public.profiles
-                WHERE id = (SELECT auth.uid())
-              )
-            );
-        ELSIF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reports' AND column_name = 'organization_id') THEN
-            CREATE POLICY "Organization staff can manage their own reports" ON public.reports
-            FOR ALL USING (
-              organization_id IN (
-                SELECT organization_id FROM public.profiles
-                WHERE id = (SELECT auth.uid())
-              )
-            );
-        END IF;
+        DROP POLICY IF EXISTS "Organization staff can manage their own reports" ON public.reports;
+
+        CREATE POLICY "Organization staff can manage their own reports" ON public.reports
+        FOR ALL USING (
+          organization_id IN (
+            SELECT organization_id FROM public.profiles
+            WHERE id = (SELECT auth.uid())
+          )
+        );
     END IF;
 END $$;
 
@@ -49,25 +40,16 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
         DROP POLICY IF EXISTS "NGO staff can manage own initiatives" ON public.initiatives;
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'initiatives' AND column_name = 'ngo_id') THEN
-            CREATE POLICY "NGO staff can manage own initiatives" ON public.initiatives
-            FOR ALL USING (
-              EXISTS (
-                SELECT 1 FROM public.profiles
-                WHERE profiles.id = (SELECT auth.uid())
-                AND profiles.ngo_id = initiatives.ngo_id
-              )
-            );
-        ELSIF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'initiatives' AND column_name = 'organization_id') THEN
-            CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives
-            FOR ALL USING (
-              EXISTS (
-                SELECT 1 FROM public.profiles
-                WHERE profiles.id = (SELECT auth.uid())
-                AND profiles.organization_id = initiatives.organization_id
-              )
-            );
-        END IF;
+        DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
+
+        CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives
+        FOR ALL USING (
+          EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = (SELECT auth.uid())
+            AND profiles.organization_id = initiatives.organization_id
+          )
+        );
     END IF;
 END $$;
 

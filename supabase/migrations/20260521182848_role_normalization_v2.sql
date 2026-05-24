@@ -1,16 +1,48 @@
--- Update post_comments policy to use normalized 'organization' role and subquery
-DROP POLICY IF EXISTS "Qualified users can comment" ON public.post_comments;
-CREATE POLICY "Qualified users can comment" ON public.post_comments
-    FOR INSERT TO authenticated
-    WITH CHECK (
-        (SELECT auth.uid()) = user_id AND (
-            has_role('admin'::app_role) OR
-            has_role('member'::app_role) OR
-            (has_role('organization'::app_role) AND (EXISTS (
-                SELECT 1 FROM public.community_posts p
-                JOIN public.initiatives i ON p.initiative_id = i.id
-                JOIN public.profiles prof ON prof.organization_id = i.organization_id
-                WHERE p.id = post_comments.post_id AND prof.id = (SELECT auth.uid())
-            )))
-        )
-    );
+-- Final Role and Schema Normalization: Organization
+-- This ensures all logic uses 'organization' instead of legacy terminology
+
+BEGIN;
+
+-- 1. Ensure 'organization' exists in app_role enum
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_enum e ON t.oid = e.enumtypid WHERE t.typname = 'app_role' AND e.enumlabel = 'organization') THEN
+        ALTER TYPE public.app_role ADD VALUE 'organization';
+    END IF;
+END $$;
+
+-- 2. Update user_roles to use 'organization'
+-- (We use text conversion to avoid type issues if legacy role was already removed)
+UPDATE public.user_roles SET role = 'organization' WHERE role::text = 'ngo';
+
+-- 3. Update has_role function to be case-insensitive and robust
+CREATE OR REPLACE FUNCTION public.has_role(requested_role public.app_role)
+RETURNS boolean AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = (SELECT auth.uid())
+    AND role = requested_role
+  );
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
+
+-- 4. Standardize RLS policies naming
+DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
+CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives
+FOR ALL USING (
+    EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE profiles.id = auth.uid()
+        AND profiles.organization_id = initiatives.organization_id
+    )
+);
+
+DROP POLICY IF EXISTS "Organization staff can manage their own reports" ON public.reports;
+CREATE POLICY "Organization staff can manage their own reports" ON public.reports
+FOR ALL USING (
+  organization_id IN (
+    SELECT organization_id FROM public.profiles
+    WHERE id = (SELECT auth.uid())
+  )
+);
+
+COMMIT;

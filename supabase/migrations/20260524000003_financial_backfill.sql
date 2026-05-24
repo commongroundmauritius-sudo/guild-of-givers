@@ -48,7 +48,6 @@ BEGIN
         SELECT COALESCE(SUM(amount_mur), 0) INTO v_allocated_total FROM public.allocations WHERE payment_id = v_payment.id;
 
         -- In historical data, total - allocations = fees + platform share.
-        -- We'll assume fees=0 for backfill to avoid invention, and assign the rest to platform.
         v_cg_share := v_payment.amount_mur - v_allocated_total;
 
         -- A. Platform Share (The remainder)
@@ -61,7 +60,6 @@ BEGIN
         SELECT cached_balance_mur INTO v_prev_bal FROM public.financial_accounts WHERE id = v_org_pool_account_id;
         INSERT INTO public.financial_events (payment_id, billing_cycle_id, user_id, account_id, event_type, amount_mur, previous_balance, resulting_balance)
         VALUES (v_payment.id, v_billing_cycle_id, v_payment.user_id, v_org_pool_account_id, 'organization_pool', v_allocated_total, v_prev_bal, v_prev_bal + v_allocated_total);
-        -- Balance remains at previous because it passes through immediately to allocations below.
 
         -- C. Allocations
         FOR v_alloc IN SELECT * FROM public.allocations WHERE payment_id = v_payment.id LOOP
