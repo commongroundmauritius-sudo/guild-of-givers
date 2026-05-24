@@ -1,5 +1,5 @@
--- Migration: 20240401000000_consolidate_rls.sql
--- Description: Consolidate redundant RLS policies and optimize performance with (SELECT auth.uid())
+-- Consolidate and harden RLS policies across all tables
+-- This migration ensures that every table has a consistent security baseline
 
 BEGIN;
 

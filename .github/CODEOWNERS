@@ -1,0 +1,14 @@
+# Infrastructure & Build System
+/scripts/build-worker.js @commongroundmauritius-sudo/infrastructure
+/vite.config.ts @commongroundmauritius-sudo/infrastructure
+/package.json @commongroundmauritius-sudo/infrastructure
+/tsconfig.json @commongroundmauritius-sudo/infrastructure
+
+# Database & Security
+/supabase/migrations/ @commongroundmauritius-sudo/security
+/src/integrations/supabase/ @commongroundmauritius-sudo/security
+/src/hooks/use-auth.tsx @commongroundmauritius-sudo/security
+
+# App Entry Points
+/src/server.ts @commongroundmauritius-sudo/infrastructure
+/src/start.ts @commongroundmauritius-sudo/infrastructure

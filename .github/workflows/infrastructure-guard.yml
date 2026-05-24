@@ -1,0 +1,37 @@
+name: Infrastructure Guard
+
+on:
+  pull_request:
+    paths:
+      - 'vite.config.ts'
+      - 'scripts/build-worker.js'
+      - 'package.json'
+      - 'supabase/migrations/**'
+      - '.github/workflows/**'
+
+jobs:
+  verify-infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Verify Vite Configuration
+        run: |
+          grep -q 'noExternal: true' vite.config.ts || (echo 'ERROR: vite.config.ts missing noExternal' && false)
+          grep -q 'inlineDynamicImports: true' vite.config.ts || (echo 'ERROR: vite.config.ts missing inlineDynamicImports' && false)
+
+      - name: Build and Validate Worker
+        run: npm run build
+
+      - name: Detect Infrastructure Drift
+        run: |
+          grep -q '"main": "_worker.js"' dist/client/wrangler.json || (echo 'ERROR: wrangler.json mismatch' && false)

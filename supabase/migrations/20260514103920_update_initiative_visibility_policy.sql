@@ -6,6 +6,6 @@ ALTER TABLE public.initiatives ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEF
 DROP POLICY IF EXISTS "Anyone can view approved initiatives" ON initiatives;
 DROP POLICY IF EXISTS "Anyone can view published initiatives" ON initiatives;
 
-CREATE POLICY "Anyone can view published initiatives" ON initiatives
+CREATE POLICY "Anyone can view published initiatives" ON public.initiatives
 FOR SELECT
 USING (is_approved = true AND is_published = true);
