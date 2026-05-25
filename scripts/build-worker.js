@@ -52,7 +52,8 @@ const h3Plugin = {
 async function build() {
   const serverEntry = path.join(rootDir, "dist/server/server.js");
   const workerOutput = path.join(rootDir, "dist/client/_worker.js");
-  const wranglerConfig = path.join(rootDir, "dist/client/wrangler.json");
+  const wranglerConfigRoot = path.join(rootDir, "wrangler.json");
+  const wranglerConfigDist = path.join(rootDir, "dist/client/wrangler.json");
 
   console.log("Bundling worker from:", serverEntry);
 
@@ -106,9 +107,11 @@ globalThis.process = process;
       metafile: true,
     });
 
-    console.log("Updating wrangler.json...");
-    if (fs.existsSync(wranglerConfig)) {
-      const config = JSON.parse(fs.readFileSync(wranglerConfig, "utf-8"));
+    console.log("Updating wrangler.json in dist/client...");
+    const configSource = fs.existsSync(wranglerConfigRoot) ? wranglerConfigRoot : wranglerConfigDist;
+
+    if (fs.existsSync(configSource)) {
+      const config = JSON.parse(fs.readFileSync(configSource, "utf-8"));
       config.main = "_worker.js";
       if (!config.compatibility_flags) {
         config.compatibility_flags = [];
@@ -116,8 +119,17 @@ globalThis.process = process;
       if (!config.compatibility_flags.includes("nodejs_compat")) {
         config.compatibility_flags.push("nodejs_compat");
       }
-      fs.writeFileSync(wranglerConfig, JSON.stringify(config, null, 2));
-      console.log("wrangler.json updated.");
+
+      // Ensure dist/client directory exists
+      const distDir = path.dirname(wranglerConfigDist);
+      if (!fs.existsSync(distDir)) {
+        fs.mkdirSync(distDir, { recursive: true });
+      }
+
+      fs.writeFileSync(wranglerConfigDist, JSON.stringify(config, null, 2));
+      console.log("wrangler.json generated in dist/client.");
+    } else {
+      console.warn("wrangler.json not found in root or dist/client, skipping update.");
     }
 
     console.log("Build worker completed successfully.");

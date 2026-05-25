@@ -15,6 +15,7 @@ import {
 import { Link, useNavigate, createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { AllocationPreview } from "@/components/member/AllocationPreview";
 
 export const Route = createFileRoute("/_authenticated/member")({
   component: MemberDashboard,
@@ -282,28 +283,33 @@ export default function MemberDashboard() {
             </div>
 
             <div>
-               <h2 className="font-display text-2xl font-semibold text-primary">Membership Status</h2>
-               <div className="mt-6 p-8 rounded-3xl border border-border/40 bg-card">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Current Plan</p>
-                      <p className="text-xl font-bold">{subscription ? `Rs ${Number(subscription.amount_mur).toLocaleString()} / mo` : 'None'}</p>
+              <div className="space-y-8">
+                <AllocationPreview amount={Number(subscription?.amount_mur || 0)} userId={user?.id} />
+                <div>
+                  <h2 className="font-display text-2xl font-semibold text-primary">Membership Status</h2>
+                  <div className="mt-6 p-8 rounded-3xl border border-border/40 bg-card">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <p className="text-xs font-bold text-muted-foreground uppercase">Current Plan</p>
+                        <p className="text-xl font-bold">{subscription ? `Rs ${Number(subscription.amount_mur).toLocaleString()} / mo` : 'None'}</p>
+                      </div>
+                      <Badge variant={isSubscribed ? "default" : "secondary"}>
+                        {subscription?.status || 'Inactive'}
+                      </Badge>
                     </div>
-                    <Badge variant={isSubscribed ? "default" : "secondary"}>
-                      {subscription?.status || 'Inactive'}
-                    </Badge>
+                    <div className="space-y-4 pt-6 border-t border-border/40">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Next Billing Date</span>
+                        <span className="font-semibold">{subscription?.next_billing_date ? new Date(subscription.next_billing_date).toLocaleDateString() : '—'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Membership Since</span>
+                        <span className="font-semibold">{subscription?.created_at ? new Date(subscription.created_at).toLocaleDateString() : '—'}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-4 pt-6 border-t border-border/40">
-                    <div className="flex justify-between text-sm">
-                       <span className="text-muted-foreground">Next Billing Date</span>
-                       <span className="font-semibold">{subscription?.next_billing_date ? new Date(subscription.next_billing_date).toLocaleDateString() : '—'}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                       <span className="text-muted-foreground">Membership Since</span>
-                       <span className="font-semibold">{subscription?.created_at ? new Date(subscription.created_at).toLocaleDateString() : '—'}</span>
-                    </div>
-                  </div>
-               </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
