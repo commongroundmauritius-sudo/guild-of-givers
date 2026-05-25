@@ -6,9 +6,6 @@ export const toggleInitiativePreference = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { userId, initiativeId, selected } = data;
 
-    // Verify ownership via RLS or subquery if needed, but here we enforce same-user
-    // In a real production app, we would also verify the user's session token on the server.
-
     if (selected) {
       const { error } = await supabase.from("member_preferences").upsert(
         {
@@ -38,10 +35,11 @@ export const createLead = createServerFn({ method: "POST" })
       phone?: string;
       amount: number;
       coversFees: boolean;
+      status?: string;
     }) => data,
   )
   .handler(async ({ data }) => {
-    const { email, fullName, phone, amount, coversFees } = data;
+    const { email, fullName, phone, amount, coversFees, status = "started" } = data;
     const trimmedEmail = email.trim().toLowerCase();
 
     const { error } = await supabase.from("leads").insert({
@@ -50,12 +48,11 @@ export const createLead = createServerFn({ method: "POST" })
       phone: phone?.trim() || null,
       amount_mur: amount,
       covers_fees: coversFees,
-      status: "pending_review",
+      status: status,
     });
 
     if (error) {
       if (error.code === "23505") {
-        // Unique violation
         return { success: true, message: "Lead already exists" };
       }
       console.error("Error creating lead:", error);
@@ -66,15 +63,15 @@ export const createLead = createServerFn({ method: "POST" })
   });
 
 export const convertLead = createServerFn({ method: "POST" })
-  .inputValidator((data: { email: string }) => data)
+  .inputValidator((data: { email: string; status?: string }) => data)
   .handler(async ({ data }) => {
-    const { email } = data;
+    const { email, status = "converted" } = data;
 
     const { error } = await supabase
       .from("leads")
-      .update({ status: "converted" })
+      .update({ status: status })
       .eq("email", email.trim().toLowerCase())
-      .neq("status", "converted");
+      .neq("status", status);
 
     if (error) {
       console.error("Error converting lead:", error);
@@ -88,7 +85,6 @@ import { paymentService } from "./payments/service";
 export const startMembershipSubscription = createServerFn({ method: "POST" })
   .inputValidator((data: { userId: string, amount: number, billingDate: number, coversFees: boolean, priorities: string[] }) => data)
   .handler(async ({ data }) => {
-    // 1. Initialize with provider
     const result = await paymentService.subscribe({
       userId: data.userId,
       amount: data.amount,
@@ -97,7 +93,6 @@ export const startMembershipSubscription = createServerFn({ method: "POST" })
       priorityInitiatives: data.priorities
     });
 
-    // 2. Update local subscription record
     const { error } = await supabase.from("subscriptions").upsert({
       user_id: data.userId,
       amount_mur: data.amount,

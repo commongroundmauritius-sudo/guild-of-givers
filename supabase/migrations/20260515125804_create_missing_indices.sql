@@ -2,7 +2,16 @@
 
 -- Financial/Core joins
 CREATE INDEX IF NOT EXISTS idx_initiatives_organization_id ON public.initiatives(organization_id);
-CREATE INDEX IF NOT EXISTS idx_organization_documents_organization_id ON public.organization_documents(organization_id);
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organization_documents') THEN
+        CREATE INDEX IF NOT EXISTS idx_organization_documents_organization_id ON public.organization_documents(organization_id);
+    ELSIF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents') THEN
+        CREATE INDEX IF NOT EXISTS idx_ngo_documents_ngo_id ON public.ngo_documents(ngo_id);
+    END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_organizations_owner_user_id ON public.organizations(owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_organization_id ON public.profiles(organization_id);
 CREATE INDEX IF NOT EXISTS idx_reports_organization_id ON public.reports(organization_id);

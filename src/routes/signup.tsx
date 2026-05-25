@@ -70,6 +70,7 @@ function SignupPage() {
           phone: phone.trim(),
           amount: finalAmount,
           coversFees,
+          status: "started"
         },
       });
       setStep(2);
@@ -78,6 +79,19 @@ function SignupPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handlePaymentCompletion = async () => {
+     if (submitting) return;
+     setSubmitting(true);
+     try {
+       await convertLead({ data: { email: email.trim().toLowerCase(), status: "converted" } });
+       setStep(3);
+     } catch (err) {
+       toast.error("Failed to process payment status.");
+     } finally {
+       setSubmitting(false);
+     }
   };
 
   const submitAccount = async () => {
@@ -112,14 +126,14 @@ function SignupPage() {
           },
         });
 
-        // Record conversion event with idempotency check
+        // Record member_acquired event with idempotency check
         const sessionId = sessionStorage.getItem("cg_session_id") || "direct-signup";
-        const convKey = `conv_recorded_${sourceInitiativeId}`;
+        const convKey = `member_acquired_recorded_${sourceInitiativeId}`;
 
         if (sourceInitiativeId && !sessionStorage.getItem(convKey)) {
           await supabase.from("initiative_events").insert({
             initiative_id: sourceInitiativeId,
-            event_type: "registration_conversion",
+            event_type: "member_acquired",
             user_id: user.id,
             session_id: sessionId,
           });
@@ -128,7 +142,6 @@ function SignupPage() {
         }
       }
 
-      await convertLead({ data: { email: email.trim().toLowerCase() } });
       setStep(4);
     } catch (err) {
       console.error("Post-signup error:", err);
@@ -316,10 +329,11 @@ function SignupPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setStep(3)}
-                  className="mt-8 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  onClick={handlePaymentCompletion}
+                  disabled={submitting}
+                  className="mt-8 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                 >
-                  Complete Checkout (Mock)
+                  {submitting ? "Processing..." : "Complete Checkout (Mock)"}
                 </button>
               </div>
             )}

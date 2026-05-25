@@ -1,6 +1,6 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Search, Mail, Phone, Calendar, Info, CheckCircle2, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,6 +50,16 @@ function AdminLeadsPage() {
       (lead.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       (lead.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
   );
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "converted": return "bg-green-100 text-green-700";
+      case "started": return "bg-blue-100 text-blue-700";
+      case "abandoned": return "bg-gray-100 text-gray-700";
+      case "inactive": return "bg-amber-100 text-amber-700";
+      default: return "bg-purple-100 text-purple-700";
+    }
+  };
 
   return (
     <SiteLayout>
@@ -163,15 +173,9 @@ function AdminLeadsPage() {
                         </td>
                         <td className="px-8 py-5">
                           <span
-                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
-                              lead.status === "converted"
-                                ? "bg-green-100 text-green-700"
-                                : lead.status === "archived"
-                                  ? "bg-gray-100 text-gray-700"
-                                  : "bg-amber-100 text-amber-700"
-                            }`}
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${getStatusColor(lead.status)}`}
                           >
-                            {lead.status || "pending"}
+                            {lead.status || "started"}
                           </span>
                         </td>
                         <td className="px-8 py-5">
@@ -181,16 +185,18 @@ function AdminLeadsPage() {
                                 onClick={() =>
                                   updateStatusMutation.mutate({ id: lead.id, status: "converted" })
                                 }
+                                title="Mark as Converted"
                                 className="p-1.5 rounded-full bg-green-50 text-green-600 hover:bg-green-100"
                               >
                                 <CheckCircle2 className="h-4 w-4" />
                               </button>
                             )}
-                            {lead.status !== "archived" && (
+                            {lead.status !== "abandoned" && (
                               <button
                                 onClick={() =>
-                                  updateStatusMutation.mutate({ id: lead.id, status: "archived" })
+                                  updateStatusMutation.mutate({ id: lead.id, status: "abandoned" })
                                 }
+                                title="Mark as Abandoned"
                                 className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100"
                               >
                                 <XCircle className="h-4 w-4" />
