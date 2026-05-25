@@ -4,7 +4,7 @@
 BEGIN;
 
 -- 1. Standardize any remaining comments
-COMMENT ON TABLE public.organizations IS 'Primary table for registered organizations (formerly NGOs)';
+COMMENT ON TABLE public.organizations IS 'Primary table for registered organizations';
 COMMENT ON COLUMN public.profiles.organization_id IS 'Link to the organization this user represents';
 
 -- 2. Audit and update financial account type descriptions if needed

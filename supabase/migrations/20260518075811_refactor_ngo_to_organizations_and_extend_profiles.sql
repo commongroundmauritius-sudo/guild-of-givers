@@ -12,11 +12,11 @@ BEGIN
 END $$;
 
 -- 2. Ensure organizations table exists with correct name
--- (The initial schema should already use 'organizations', but we check for 'ngos' just in case of legacy drift)
+-- (The initial schema should already use 'organizations', but we check for 'organizations' just in case of legacy drift)
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngos') THEN
-        ALTER TABLE public.ngos RENAME TO organizations;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organizations') THEN
+        ALTER TABLE public.organizations RENAME TO organizations;
         ALTER TABLE public.organizations RENAME COLUMN name TO organization_name;
     END IF;
 END $$;
@@ -64,8 +64,8 @@ BEGIN
         ALTER TABLE public.allocations RENAME COLUMN organization_id TO organization_id;
     END IF;
     -- documents table
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents') THEN
-        ALTER TABLE public.ngo_documents RENAME TO organization_documents;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organization_documents') THEN
+        ALTER TABLE public.organization_documents RENAME TO organization_documents;
     END IF;
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organization_documents' AND column_name = 'organization_id') THEN
         ALTER TABLE public.organization_documents RENAME COLUMN organization_id TO organization_id;

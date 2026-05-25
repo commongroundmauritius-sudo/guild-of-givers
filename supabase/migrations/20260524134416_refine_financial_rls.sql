@@ -46,6 +46,6 @@ FOR ALL USING (
 
 -- 4. Final Terminology Alignment
 -- Update any remaining comments or metadata that might confuse the system
-COMMENT ON TABLE public.organizations IS 'Authoritative table for registered organizations (formerly NGOs)';
+COMMENT ON TABLE public.organizations IS 'Authoritative table for registered organizations';
 
 COMMIT;

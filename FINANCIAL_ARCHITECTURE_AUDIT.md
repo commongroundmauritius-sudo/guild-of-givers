@@ -16,7 +16,7 @@
 | **Historical Records** | MISSING | No `initiative_monthly_records` table for snapshotting closed cycles. |
 
 ## 2. Terminology Audit
-- **NGO -> Organization:** The database still uses `ngo_pool_account_id` and `v_ngo_pool_account_id` in some internal variables within `allocate_payment_funds`.
+- **Organization -> Organization:** The database still uses `organization_pool_account_id` and `v_organization_pool_account_id` in some internal variables within `allocate_payment_funds`.
 - **Finding [P3-003]:** Inconsistent internal naming in SQL functions.
 
 ## 3. Architecture Gaps

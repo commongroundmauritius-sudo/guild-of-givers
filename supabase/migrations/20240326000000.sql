@@ -9,4 +9,4 @@ ALTER TABLE public.member_preferences ADD COLUMN IF NOT EXISTS distribution_perc
 
 -- Governance: Status and Suspension
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
-ALTER TABLE public.ngos ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';

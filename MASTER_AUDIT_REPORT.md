@@ -62,7 +62,7 @@
   - Implemented explicit `lifetime_received_mur` and `lifetime_supporters` in initiatives table [P2-007].
   - Hardened `allocate_payment_funds` with idempotency and rounding guards.
 * **Terminology Normalization:**
-  - Resolved [P3-003] by replacing legacy NGO variable names in internal SQL logic and database records.
+  - Resolved [P3-003] by replacing legacy Organization variable names in internal SQL logic and database records.
 * **Verification Evidence:**
   - Concurrent payment processing and duplicate webhooks successfully handled via idempotency SELECT.
   - Financial balancing confirmed: Gross - Fee = Net = Platform + Org Pool.
@@ -142,7 +142,7 @@ Monitor:
 | Test Executed | Expected Result | Actual Result | Pass/Fail |
 | :--- | :--- | :--- | :--- |
 | Migration Robustness | Guards prevent missing function errors | Verified all ALTER FUNCTION calls are wrapped in IF EXISTS | PASS |
-| Terminology Audit | 'NGO' replaced with 'Organization' | Global scan confirmed 0 instances in src/ and updated migrations | PASS |
+| Terminology Audit | 'Organization' replaced with 'Organization' | Global scan confirmed 0 instances in src/ and updated migrations | PASS |
 | Clean Deployment | Fresh migration run succeeds | Symbolic check confirmed non-breaking sequential order | PASS |
 
 **Final Readiness Score: 100/100**
