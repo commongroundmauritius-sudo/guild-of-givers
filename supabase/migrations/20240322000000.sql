@@ -48,26 +48,46 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organization_documents') THEN
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view organization documents') THEN
-            CREATE POLICY "Anyone can view organization documents" ON public.organization_documents FOR SELECT USING (true);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organization_documents') THEN
+                    CREATE POLICY "Anyone can view organization documents" ON public.organization_documents FOR SELECT USING (true);
+    END IF;
+END $$;
         END IF;
     END IF;
 
     -- Legacy check for NGO documents during transition phase
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents') THEN
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view NGO documents') THEN
-            CREATE POLICY "Anyone can view NGO documents" ON public.ngo_documents FOR SELECT USING (true);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'ngo_documents') THEN
+                    CREATE POLICY "Anyone can view NGO documents" ON public.ngo_documents FOR SELECT USING (true);
+    END IF;
+END $$;
         END IF;
     END IF;
 
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'initiative_updates') THEN
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view initiative updates') THEN
-            CREATE POLICY "Anyone can view initiative updates" ON public.initiative_updates FOR SELECT USING (true);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiative_updates') THEN
+                    CREATE POLICY "Anyone can view initiative updates" ON public.initiative_updates FOR SELECT USING (true);
+    END IF;
+END $$;
         END IF;
     END IF;
 
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reports') THEN
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view reports') THEN
-            CREATE POLICY "Anyone can view reports" ON public.reports FOR SELECT USING (true);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'reports') THEN
+                    CREATE POLICY "Anyone can view reports" ON public.reports FOR SELECT USING (true);
+    END IF;
+END $$;
         END IF;
     END IF;
 END $$;

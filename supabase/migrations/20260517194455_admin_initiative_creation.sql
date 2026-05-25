@@ -31,8 +31,13 @@ END $$;
 UPDATE public.initiatives SET initiative_source = 'organization_submission' WHERE initiative_source IS NULL;
 
 -- Admin visibility and creation policy
-DROP POLICY IF EXISTS "Admins can manage all initiatives" ON public.initiatives;
-CREATE POLICY "Admins can manage all initiatives" ON public.initiatives
-FOR ALL USING (public.has_role('admin'));
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
+        DROP POLICY IF EXISTS "Admins can manage all initiatives" ON public.initiatives;
+        CREATE POLICY "Admins can manage all initiatives" ON public.initiatives
+        FOR ALL USING (public.has_role('admin'));
 
+    END IF;
+END $$;
 COMMIT;

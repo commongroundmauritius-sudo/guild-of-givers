@@ -11,9 +11,13 @@ BEGIN
     END IF;
 END $$;
 
--- 2. Update user_roles to use 'organization'
--- (We use text conversion to avoid type issues if legacy role was already removed)
-UPDATE public.user_roles SET role = 'organization' WHERE role::text = 'organization';
+-- 2. Update user_roles to use 'organization' (Guarded)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_roles') THEN
+        UPDATE public.user_roles SET role = 'organization' WHERE role::text = 'organization';
+    END IF;
+END $$;
 
 -- 3. Update has_role function to be case-insensitive and robust
 CREATE OR REPLACE FUNCTION public.has_role(requested_role public.app_role)
@@ -25,28 +29,43 @@ RETURNS boolean AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
 
--- 4. Standardize RLS policies naming
-DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
-CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives
-FOR ALL USING (
-    EXISTS (
-        SELECT 1 FROM public.profiles
-        WHERE profiles.id = auth.uid()
-        AND profiles.organization_id = initiatives.organization_id
-    )
-);
+-- 4. Standardize RLS policies naming (Guarded)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
+                DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
+                CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives
+                FOR ALL USING (
+                    EXISTS (
+                        SELECT 1 FROM public.profiles
+                        WHERE profiles.id = auth.uid()
+                        AND profiles.organization_id = initiatives.organization_id
+                    )
+                );
+    END IF;
+END $$;
+    END IF;
+END $$;
 
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reports') THEN
-        DROP POLICY IF EXISTS "Organization staff can manage their own reports" ON public.reports;
-        CREATE POLICY "Organization staff can manage their own reports" ON public.reports
-        FOR ALL USING (
-          organization_id IN (
-            SELECT organization_id FROM public.profiles
-            WHERE id = (SELECT auth.uid())
-          )
-        );
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'reports') THEN
+                DROP POLICY IF EXISTS "Organization staff can manage their own reports" ON public.reports;
+                CREATE POLICY "Organization staff can manage their own reports" ON public.reports
+                FOR ALL USING (
+                  organization_id IN (
+                    SELECT organization_id FROM public.profiles
+                    WHERE id = (SELECT auth.uid())
+                  )
+                );
+    END IF;
+END $$;
     END IF;
 END $$;
 
