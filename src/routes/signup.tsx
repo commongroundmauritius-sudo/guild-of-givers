@@ -79,6 +79,7 @@ function SignupPage() {
           amount: finalAmount,
           coversFees,
           status: "started",
+          sourceInitiativeId,
         },
       });
       setStep(2);
@@ -93,7 +94,9 @@ function SignupPage() {
     if (submitting) return;
     setSubmitting(true);
     try {
-      await convertLead({ data: { email: email.trim().toLowerCase(), status: "converted" } });
+      await convertLead({
+        data: { email: email.trim().toLowerCase(), status: "converted", sourceInitiativeId },
+      });
       setStep(3);
     } catch (err) {
       toast.error("Failed to process payment status.");

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { paymentService } from "./payments/service";
 
 export const toggleInitiativePreference = createServerFn({ method: "POST" })
   .inputValidator((data: { userId: string; initiativeId: string; selected: boolean }) => data)
@@ -36,10 +37,19 @@ export const createLead = createServerFn({ method: "POST" })
       amount: number;
       coversFees: boolean;
       status?: string;
+      sourceInitiativeId?: string | null;
     }) => data,
   )
   .handler(async ({ data }) => {
-    const { email, fullName, phone, amount, coversFees, status = "started" } = data;
+    const {
+      email,
+      fullName,
+      phone,
+      amount,
+      coversFees,
+      status = "started",
+      sourceInitiativeId,
+    } = data;
     const trimmedEmail = email.trim().toLowerCase();
 
     const { error } = await supabase.from("leads").insert({
@@ -49,11 +59,19 @@ export const createLead = createServerFn({ method: "POST" })
       amount_mur: amount,
       covers_fees: coversFees,
       status: status,
+      source_initiative_id: sourceInitiativeId || null,
+      last_activity_at: new Date().toISOString(),
     });
 
     if (error) {
       if (error.code === "23505") {
-        return { success: true, message: "Lead already exists" };
+        // Upsert logic for existing lead to update last activity
+        await supabase
+          .from("leads")
+          .update({ last_activity_at: new Date().toISOString() })
+          .eq("email", trimmedEmail)
+          .eq("source_initiative_id", sourceInitiativeId || null);
+        return { success: true, message: "Lead activity updated" };
       }
       console.error("Error creating lead:", error);
       throw new Error("Failed to capture details. Please try again.");
@@ -63,15 +81,27 @@ export const createLead = createServerFn({ method: "POST" })
   });
 
 export const convertLead = createServerFn({ method: "POST" })
-  .inputValidator((data: { email: string; status?: string }) => data)
+  .inputValidator(
+    (data: { email: string; status?: string; sourceInitiativeId?: string | null }) => data,
+  )
   .handler(async ({ data }) => {
-    const { email, status = "converted" } = data;
+    const { email, status = "converted", sourceInitiativeId } = data;
 
-    const { error } = await supabase
+    const query = supabase
       .from("leads")
-      .update({ status: status })
+      .update({
+        status: status,
+        last_activity_at: new Date().toISOString(),
+        converted_at: status === "converted" ? new Date().toISOString() : undefined,
+      })
       .eq("email", email.trim().toLowerCase())
       .neq("status", status);
+
+    if (sourceInitiativeId) {
+      query.eq("source_initiative_id", sourceInitiativeId);
+    }
+
+    const { error } = await query;
 
     if (error) {
       console.error("Error converting lead:", error);
@@ -79,8 +109,6 @@ export const convertLead = createServerFn({ method: "POST" })
 
     return { success: true };
   });
-
-import { paymentService } from "./payments/service";
 
 export const startMembershipSubscription = createServerFn({ method: "POST" })
   .inputValidator(
