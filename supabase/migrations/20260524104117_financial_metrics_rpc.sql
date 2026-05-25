@@ -40,6 +40,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Revoke execute from public/anon/authenticated (except via proper channels if needed)
-REVOKE EXECUTE ON FUNCTION public.get_admin_financial_metrics() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.get_admin_financial_metrics() TO authenticated;
+-- Revoke execute from public/anon/authenticated (Guarded)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'get_admin_financial_metrics' AND n.nspname = 'public') THEN
+        REVOKE EXECUTE ON FUNCTION public.get_admin_financial_metrics() FROM PUBLIC, anon;
+        GRANT EXECUTE ON FUNCTION public.get_admin_financial_metrics() TO authenticated;
+    END IF;
+END $$;

@@ -1,44 +1,38 @@
-CREATE OR REPLACE FUNCTION public.allocate_payment_funds(
-    p_payment_id UUID,
-    p_user_id UUID,
-    p_total_amount NUMERIC
-)
-RETURNS VOID AS $$
+CREATE OR REPLACE FUNCTION public.allocate_payment_funds(p_payment_id uuid, p_user_id uuid, p_total_amount numeric)
+RETURNS void AS $$
 DECLARE
-    v_fee_config RECORD;
-    v_fee_amount NUMERIC := 0;
-    v_net_amount NUMERIC;
-    v_cg_share NUMERIC;
-    v_org_pool_amount NUMERIC;
-
-    v_cg_account_id UUID;
-    v_org_pool_account_id UUID;
-    v_impact_pool_account_id UUID;
-    v_fee_account_id UUID;
-    v_impact_pool_initiative_id UUID;
-
-    v_billing_cycle_id UUID;
-    v_current_month INTEGER;
-    v_current_year INTEGER;
-
-    v_pref RECORD;
-    v_remaining_pool NUMERIC;
-    v_to_allocate NUMERIC;
-    v_initiative_account_id UUID;
-    v_funding_cycle_id UUID;
-    v_cycle_target NUMERIC;
-    v_cycle_received NUMERIC;
-    v_cycle_space NUMERIC;
-
-    v_prev_bal NUMERIC;
-    v_new_bal NUMERIC;
+    v_fee_config public.fee_config;
+    v_fee_amount numeric;
+    v_net_amount numeric;
+    v_cg_share numeric;
+    v_org_pool_amount numeric;
+    v_remaining_pool numeric;
+    v_to_allocate numeric;
+    v_prev_bal numeric;
+    v_new_bal numeric;
+    v_cg_account_id uuid;
+    v_org_pool_account_id uuid;
+    v_fee_account_id uuid;
+    v_impact_pool_account_id uuid;
+    v_impact_pool_initiative_id uuid;
+    v_billing_cycle_id uuid;
+    v_current_month integer;
+    v_current_year integer;
+    v_pref record;
+    v_funding_cycle_id uuid;
+    v_cycle_target numeric;
+    v_cycle_received numeric;
+    v_cycle_space numeric;
 BEGIN
-    -- 1. Setup & Validation
-    SELECT * INTO v_fee_config FROM public.fee_configurations WHERE active = true LIMIT 1;
+    -- 1. Configuration & Context
+    SELECT * INTO v_fee_config FROM public.fee_config LIMIT 1;
+    IF v_fee_config IS NULL THEN
+        RAISE EXCEPTION 'Fee configuration not found';
+    END IF;
 
-    SELECT id INTO v_cg_account_id FROM public.financial_accounts WHERE account_type = 'platform' AND is_system = true LIMIT 1;
-    SELECT id INTO v_org_pool_account_id FROM public.financial_accounts WHERE account_type = 'organization_pool' AND is_system = true LIMIT 1;
-    SELECT id INTO v_fee_account_id FROM public.financial_accounts WHERE account_type = 'fee' AND is_system = true LIMIT 1;
+    SELECT id INTO v_cg_account_id FROM public.financial_accounts WHERE account_type = 'platform' LIMIT 1;
+    SELECT id INTO v_org_pool_account_id FROM public.financial_accounts WHERE account_type = 'organization_pool' LIMIT 1;
+    SELECT id INTO v_fee_account_id FROM public.financial_accounts WHERE account_type = 'fee' LIMIT 1;
 
     SELECT id INTO v_impact_pool_initiative_id FROM public.initiatives WHERE is_impact_pool = true AND is_system_owned = true LIMIT 1;
     SELECT id INTO v_impact_pool_account_id FROM public.financial_accounts WHERE reference_id = v_impact_pool_initiative_id LIMIT 1;
@@ -210,4 +204,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-GRANT EXECUTE ON FUNCTION public.get_ledger_summary_metrics() TO authenticated;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'get_ledger_summary_metrics' AND n.nspname = 'public') THEN
+        GRANT EXECUTE ON FUNCTION public.get_ledger_summary_metrics() TO authenticated;
+    END IF;
+END $$;
