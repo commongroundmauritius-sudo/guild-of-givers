@@ -41,11 +41,24 @@ export class SubscriptionEngine {
       .maybeSingle();
 
     if (profile?.primary_initiative_id) {
-      await supabase.from("initiative_events").insert({
-        initiative_id: profile.primary_initiative_id,
-        event_type: eventType,
-        user_id: userId,
-      });
+      // For status events, we don't have a unique constraint, but we can check existence
+      // of a very recent event to prevent double-firing from simultaneous webhooks.
+      const { data: recent } = await supabase
+        .from("initiative_events")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("initiative_id", profile.primary_initiative_id)
+        .eq("event_type", eventType)
+        .gt("created_at", new Date(Date.now() - 1000 * 60).toISOString()) // Last 1 minute
+        .maybeSingle();
+
+      if (!recent) {
+        await supabase.from("initiative_events").insert({
+          initiative_id: profile.primary_initiative_id,
+          event_type: eventType,
+          user_id: userId,
+        });
+      }
     }
   }
 
@@ -56,6 +69,16 @@ export class SubscriptionEngine {
     amount: number | undefined,
   ): Promise<void> {
     if (!amount) return;
+
+    // Idempotency check: does this transaction ID already exist?
+    if (transactionId) {
+      const { data: existing } = await supabase
+        .from("payments")
+        .select("id")
+        .eq("peach_payment_id", transactionId)
+        .maybeSingle();
+      if (existing) return;
+    }
 
     const { data: payment, error: pError } = await supabase
       .from("payments")
@@ -94,26 +117,18 @@ export class SubscriptionEngine {
 
     if (subscriptionId) {
       const wasUpdated = await this.updateSubscriptionStatus(subscriptionId, "active");
-      // If it was previously cancelled or past_due and now becomes active, record activation
-      // but only if it wasn't already active (to avoid double counting on renewals)
-      // Actually updateSubscriptionStatus handles the check.
       if (wasUpdated) {
-          // This would be a resume or a recovery from past_due
           await this.recordSupporterStatusEvent(userId, "supporter_activated");
       }
     }
   }
 
-  /**
-   * Updates subscription status and returns true if the status was actually changed.
-   */
   private async updateSubscriptionStatus(
     subscriptionId: string | undefined,
     newStatus: string,
   ): Promise<boolean> {
     if (!subscriptionId) return false;
 
-    // Fetch current status to check for change
     const { data: current } = await supabase
       .from("subscriptions")
       .select("status")

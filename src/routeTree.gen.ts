@@ -40,6 +40,7 @@ import { Route as AuthenticatedAdminDashboardLeadsRouteImport } from './routes/_
 import { Route as AuthenticatedAdminDashboardFinancesRouteImport } from './routes/_authenticated/admin-dashboard.finances'
 import { Route as AuthenticatedAdminDashboardCommunityPostsRouteImport } from './routes/_authenticated/admin-dashboard.community-posts'
 import { Route as AuthenticatedAdminDashboardAnnouncementsRouteImport } from './routes/_authenticated/admin-dashboard.announcements'
+import { Route as AuthenticatedAdminDashboardAnalyticsRouteImport } from './routes/_authenticated/admin-dashboard.analytics'
 import { Route as AuthenticatedAdminDashboardInitiativesIndexRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.index'
 import { Route as AuthenticatedAdminDashboardInitiativesNewRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.new'
 import { Route as AuthenticatedAdminDashboardInitiativesIdManageRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.$id.manage'
@@ -244,6 +245,13 @@ const AuthenticatedAdminDashboardAnnouncementsRoute =
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
 
+const AuthenticatedAdminDashboardAnalyticsRoute =
+  AuthenticatedAdminDashboardAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAdminDashboardRoute,
+  } as any)
+
 const AuthenticatedAdminDashboardInitiativesIndexRoute =
   AuthenticatedAdminDashboardInitiativesIndexRouteImport.update({
     id: '/initiatives/',
@@ -432,6 +440,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/member/settings'
       preLoaderRoute: typeof AuthenticatedMemberSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/admin-dashboard/analytics': {
+      id: '/_authenticated/admin-dashboard/analytics'
+      path: '/analytics'
+      fullPath: '/admin-dashboard/analytics'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
     }
     '/_authenticated/admin-dashboard/announcements': {
       id: '/_authenticated/admin-dashboard/announcements'

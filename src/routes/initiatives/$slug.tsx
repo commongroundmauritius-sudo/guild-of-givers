@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Share2, Heart, ShieldCheck, MapPin, Calendar, Users } from "lucide-react";
 import { toast } from "sonner";
-import { getJoinedData } from "@/lib/utils";
 
 export const Route = createFileRoute("/initiatives/$slug")({
   head: () => ({
@@ -29,7 +28,6 @@ function InitiativeDetailPage() {
   } = useQuery({
     queryKey: ["initiative-slug", slug],
     queryFn: async () => {
-      // First try fetching by slug
       let { data, error } = await supabase
         .from("initiatives")
         .select("*, organizations!inner(*)")
@@ -41,10 +39,8 @@ function InitiativeDetailPage() {
 
       if (error) throw error;
 
-      // If not found by slug, try fetching by ID (backward compatibility)
       if (!data) {
-        // Simple check if slug looks like a UUID
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (uuidRegex.test(slug)) {
           const { data: byId, error: errorId } = await supabase
             .from("initiatives")
@@ -57,8 +53,6 @@ function InitiativeDetailPage() {
 
           if (errorId) throw errorId;
           data = byId;
-
-          // If found by ID, we'll handle the redirect in a useEffect
         }
       }
 
@@ -66,22 +60,23 @@ function InitiativeDetailPage() {
     },
   });
 
-  // Redirect if found by ID but accessed via slug param (permanent redirect to slug)
   useEffect(() => {
     if (initiative && initiative.slug && initiative.slug !== slug) {
       navigate({ to: "/initiatives/$slug", params: { slug: initiative.slug }, replace: true });
     }
   }, [initiative, slug, navigate]);
 
-  // Record page view and attribution
   useEffect(() => {
     if (initiative) {
-      // Attribution persistence
+      // Attribution persistence with 30-day window
       if (typeof window !== "undefined") {
+        const now = Date.now();
+        const expiresAt = now + 30 * 24 * 60 * 60 * 1000; // 30 days
         localStorage.setItem("source_initiative_id", initiative.id);
+        localStorage.setItem("source_initiative_expires_at", expiresAt.toString());
       }
 
-      // Record analytics event (session-aware)
+      // Record analytics event (session-aware deduplication)
       const recordPageView = async () => {
         if (typeof window === "undefined") return;
 
@@ -92,8 +87,9 @@ function InitiativeDetailPage() {
         const lastViewedKey = `last_viewed_${initiative.id}`;
         const lastViewed = sessionStorage.getItem(lastViewedKey);
 
-        // Deduplicate: only record once per session
-        if (!lastViewed) {
+        // Deduplicate: only record once per session and only if not too frequent
+        const now = Date.now();
+        if (!lastViewed || now - parseInt(lastViewed) > 1000 * 60 * 30) { // 30 min re-view window
           const { error } = await supabase.from("initiative_events").insert({
             initiative_id: initiative.id,
             event_type: "page_view",
@@ -101,7 +97,7 @@ function InitiativeDetailPage() {
           });
 
           if (!error) {
-            sessionStorage.setItem(lastViewedKey, Date.now().toString());
+            sessionStorage.setItem(lastViewedKey, now.toString());
           }
         }
       };
@@ -171,7 +167,6 @@ function InitiativeDetailPage() {
   return (
     <SiteLayout>
       <article className="pb-24">
-        {/* Hero Section */}
         <div className="relative h-[60vh] min-h-[400px] w-full overflow-hidden">
           {initiative.image_url ? (
             <img
@@ -205,7 +200,6 @@ function InitiativeDetailPage() {
 
         <div className="mx-auto mt-12 max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-3">
-            {/* Main Content */}
             <div className="lg:col-span-2">
               <div className="flex flex-wrap items-center gap-6 border-b border-border/60 pb-8">
                 <div className="flex items-center gap-3">
@@ -273,7 +267,6 @@ function InitiativeDetailPage() {
                 </div>
               </div>
 
-              {/* Gallery */}
               {gallery.length > 0 && (
                 <div className="mt-16">
                   <h3 className="font-display text-2xl font-semibold text-primary">
@@ -297,7 +290,6 @@ function InitiativeDetailPage() {
               )}
             </div>
 
-            {/* Sidebar / Action Card */}
             <div className="lg:sticky lg:top-24 lg:h-fit">
               <div className="rounded-[2.5rem] border border-border/40 bg-card p-8 shadow-2xl shadow-primary/5">
                 <div className="mb-8 flex items-center justify-between">
@@ -342,16 +334,16 @@ function InitiativeDetailPage() {
                   <div className="grid grid-cols-2 gap-4 py-2">
                     <div className="rounded-2xl bg-muted/30 p-5 text-center">
                       <Users className="mx-auto mb-2 h-5 w-5 text-primary/40" />
-                      <span className="block text-xl font-bold text-primary">24</span>
+                      <span className="block text-xl font-bold text-primary">{initiative.active_supporter_count || 0}</span>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Backers
+                        Active
                       </span>
                     </div>
                     <div className="rounded-2xl bg-muted/30 p-5 text-center">
                       <Heart className="mx-auto mb-2 h-5 w-5 text-primary/40" />
-                      <span className="block text-xl font-bold text-primary">12</span>
+                      <span className="block text-xl font-bold text-primary">{initiative.conversion_count || 0}</span>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Days left
+                        Total Members
                       </span>
                     </div>
                   </div>

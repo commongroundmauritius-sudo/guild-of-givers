@@ -43,8 +43,16 @@ function SignupPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("source_initiative_id");
-      if (stored) {
-        setSourceInitiativeId(stored);
+      const expiresAt = localStorage.getItem("source_initiative_expires_at");
+
+      if (stored && expiresAt) {
+        if (Date.now() < parseInt(expiresAt)) {
+          setSourceInitiativeId(stored);
+        } else {
+          // Expired attribution
+          localStorage.removeItem("source_initiative_id");
+          localStorage.removeItem("source_initiative_expires_at");
+        }
       }
     }
   }, []);
@@ -131,14 +139,18 @@ function SignupPage() {
         const convKey = `member_acquired_recorded_${sourceInitiativeId}`;
 
         if (sourceInitiativeId && !sessionStorage.getItem(convKey)) {
-          await supabase.from("initiative_events").insert({
+          const { error: eventError } = await supabase.from("initiative_events").insert({
             initiative_id: sourceInitiativeId,
             event_type: "member_acquired",
             user_id: user.id,
             session_id: sessionId,
           });
-          sessionStorage.setItem(convKey, "true");
-          localStorage.removeItem("source_initiative_id");
+
+          if (!eventError || eventError.code === '23505') { // Success or already exists
+            sessionStorage.setItem(convKey, "true");
+            localStorage.removeItem("source_initiative_id");
+            localStorage.removeItem("source_initiative_expires_at");
+          }
         }
       }
 
