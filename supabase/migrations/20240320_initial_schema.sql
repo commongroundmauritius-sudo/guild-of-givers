@@ -42,9 +42,16 @@ CREATE TABLE IF NOT EXISTS public.organizations (
   description TEXT,
   logo_url TEXT,
   website_url TEXT,
+  owner_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  monthly_target_amount NUMERIC DEFAULT 0,
+  impact_metrics TEXT,
   is_verified BOOLEAN DEFAULT false NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Add organization_id to profiles after organizations table exists
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES public.organizations(id) ON DELETE SET NULL;
+
 
 -- Create initiatives table
 CREATE TABLE IF NOT EXISTS public.initiatives (

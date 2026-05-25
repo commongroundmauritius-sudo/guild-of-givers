@@ -41,40 +41,32 @@ ALTER TABLE public.organization_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.initiative_updates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for new tables
-DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view Organization documents') THEN
-        CREATE POLICY "Anyone can view Organization documents" ON public.organization_documents FOR SELECT USING (true);
-    END IF;
-EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view initiative updates') THEN
-        CREATE POLICY "Anyone can view initiative updates" ON public.initiative_updates FOR SELECT USING (true);
-    END IF;
-EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view reports') THEN
-        CREATE POLICY "Anyone can view reports" ON public.reports FOR SELECT USING (true);
-    END IF;
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
--- Update trigger
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger AS $$
+-- RLS Policies
+DO $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name)
-  VALUES (
-    new.id,
-    COALESCE(new.raw_user_meta_data->>'full_name', '')
-  )
-  ON CONFLICT (id) DO NOTHING;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organization_documents') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view organization documents') THEN
+            CREATE POLICY "Anyone can view organization documents" ON public.organization_documents FOR SELECT USING (true);
+        END IF;
+    END IF;
 
-  INSERT INTO public.user_roles (user_id, role)
-  VALUES (new.id, 'member')
-  ON CONFLICT (user_id, role) DO NOTHING;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view NGO documents') THEN
+            CREATE POLICY "Anyone can view NGO documents" ON public.ngo_documents FOR SELECT USING (true);
+        END IF;
+    END IF;
 
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'initiative_updates') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view initiative updates') THEN
+            CREATE POLICY "Anyone can view initiative updates" ON public.initiative_updates FOR SELECT USING (true);
+        END IF;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reports') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view reports') THEN
+            CREATE POLICY "Anyone can view reports" ON public.reports FOR SELECT USING (true);
+        END IF;
+    END IF;
+END $$;

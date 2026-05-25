@@ -12,7 +12,10 @@ import {
   Send,
   Calendar,
   History,
-  CheckCircle2
+  CheckCircle2,
+  Eye,
+  UserCheck,
+  UserX
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -121,7 +124,11 @@ export default function OrganizationDashboard() {
   }
 
   const totalRaised = initiatives?.reduce((acc, i) => acc + Number(i.current_amount_mur), 0) || 0;
-  const activeSupporters = fundingCycles?.filter(c => c.month === new Date().getMonth() + 1).reduce((acc, c) => acc + c.supporter_count, 0) || 0;
+  const totalViews = initiatives?.reduce((acc, i) => acc + (i.view_count || 0), 0) || 0;
+  const totalAcquired = initiatives?.reduce((acc, i) => acc + (i.conversion_count || 0), 0) || 0;
+  const totalActive = initiatives?.reduce((acc, i) => acc + (i.active_supporter_count || 0), 0) || 0;
+  const totalInactive = initiatives?.reduce((acc, i) => acc + (i.inactive_supporter_count || 0), 0) || 0;
+  const conversionRate = totalViews > 0 ? ((totalAcquired / totalViews) * 100).toFixed(1) : "0.0";
 
   return (
     <SiteLayout>
@@ -151,11 +158,14 @@ export default function OrganizationDashboard() {
             </button>
           </div>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {/* Stats Grid */}
+          <div className="mt-12 grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {[
               { title: "Lifetime Raised", value: `Rs ${totalRaised.toLocaleString()}`, icon: TrendingUp },
-              { title: "Active Supporters", value: activeSupporters, icon: Users },
-              { title: "Approved Initiatives", value: initiatives?.filter(i => i.is_approved).length || 0, icon: Target },
+              { title: "Page Views", value: totalViews.toLocaleString(), icon: Eye },
+              { title: "Members Acquired", value: totalAcquired.toLocaleString(), icon: UserCheck },
+              { title: "Active Supporters", value: totalActive.toLocaleString(), icon: Users },
+              { title: "Conversion Rate", value: `${conversionRate}%`, icon: TrendingUp },
             ].map((c) => (
               <div key={c.title} className="rounded-3xl border border-coral-500/20 bg-card p-6 shadow-sm">
                 <div className="flex items-center gap-3">
@@ -164,7 +174,7 @@ export default function OrganizationDashboard() {
                   </div>
                   <p className="text-[10px] text-coral-600 font-bold uppercase tracking-widest">{c.title}</p>
                 </div>
-                <p className="mt-4 font-display text-3xl font-bold text-primary">{c.value}</p>
+                <p className="mt-4 font-display text-2xl font-bold text-primary">{c.value}</p>
               </div>
             ))}
           </div>
@@ -250,24 +260,54 @@ export default function OrganizationDashboard() {
              <div className="space-y-8">
                 <h2 className="font-display text-2xl font-semibold text-primary flex items-center gap-2">
                    <CheckCircle2 className="h-6 w-6 text-coral-500" />
-                   Active Initiatives
+                   Initiative Performance
                 </h2>
                 <div className="space-y-4">
-                   {initiatives?.map(i => (
+                   {initiatives?.map(i => {
+                      const initiativeRate = (i.view_count || 0) > 0
+                         ? ((i.conversion_count / i.view_count) * 100).toFixed(1)
+                         : "0.0";
+
+                      return (
                       <div key={i.id} className="p-6 rounded-3xl border border-border/40 bg-card hover:border-coral-500/40 transition-colors group">
                          <div className="flex justify-between items-start mb-4">
                             <div>
                                <h3 className="font-display font-bold text-lg">{i.title}</h3>
-                               <Badge variant={i.is_approved ? "default" : "secondary"}>{i.is_approved ? 'Active' : 'Pending Review'}</Badge>
+                               <div className="flex gap-2 mt-1">
+                                  <Badge variant={i.is_approved ? "default" : "secondary"}>{i.is_approved ? 'Active' : 'Pending Review'}</Badge>
+                                  <Badge variant="outline" className="text-[9px] uppercase tracking-tighter">
+                                     {initiativeRate}% Conv.
+                                  </Badge>
+                               </div>
                             </div>
                             <div className="text-right">
                                <p className="text-[10px] font-bold text-muted-foreground uppercase">Target</p>
                                <p className="font-display font-bold">Rs {Number(i.monthly_target_mur).toLocaleString()} / mo</p>
                             </div>
                          </div>
+
+                         <div className="grid grid-cols-4 gap-4 mb-6 py-4 border-y border-border/20">
+                            <div className="text-center">
+                               <p className="text-[9px] font-bold text-muted-foreground uppercase">Views</p>
+                               <p className="font-display font-bold text-sm">{i.view_count || 0}</p>
+                            </div>
+                            <div className="text-center">
+                               <p className="text-[9px] font-bold text-muted-foreground uppercase">Acquired</p>
+                               <p className="font-display font-bold text-sm text-forest">{i.conversion_count || 0}</p>
+                            </div>
+                            <div className="text-center">
+                               <p className="text-[9px] font-bold text-muted-foreground uppercase">Active</p>
+                               <p className="font-display font-bold text-sm text-blue-600">{i.active_supporter_count || 0}</p>
+                            </div>
+                            <div className="text-center">
+                               <p className="text-[9px] font-bold text-muted-foreground uppercase">Inactive</p>
+                               <p className="font-display font-bold text-sm text-red-500">{i.inactive_supporter_count || 0}</p>
+                            </div>
+                         </div>
+
                          <div className="space-y-2">
                             <div className="flex justify-between text-xs font-bold">
-                               <span className="text-muted-foreground uppercase">Progress</span>
+                               <span className="text-muted-foreground uppercase">Funding Progress</span>
                                <span>Rs {Number(i.current_amount_mur).toLocaleString()} Total</span>
                             </div>
                             <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
@@ -278,7 +318,7 @@ export default function OrganizationDashboard() {
                             </div>
                          </div>
                       </div>
-                   ))}
+                   )})}
                 </div>
              </div>
           </div>
