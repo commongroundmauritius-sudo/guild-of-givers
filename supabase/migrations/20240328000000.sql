@@ -1,33 +1,23 @@
--- Link users to NGOs and improve data relationships
+-- Link users to Organizations and improve data relationships
 
--- Add ngo_id to profiles to support NGO staff/owners
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngos') THEN
-        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS ngo_id UUID REFERENCES public.ngos(id) ON DELETE SET NULL;
-    END IF;
-END $$;
+-- Add organization_id to profiles to support Organization staff/owners
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES public.organizations(id) ON DELETE SET NULL;
 
--- Update RLS for NGO dashboard access
-DROP POLICY IF EXISTS "NGO staff can manage their own NGO initiatives" ON public.initiatives;
-CREATE POLICY "NGO staff can manage their own NGO initiatives"
+-- Update RLS for Organization dashboard access
+DROP POLICY IF EXISTS "Organization staff can manage their own Organization initiatives" ON public.initiatives;
+CREATE POLICY "Organization staff can manage their own Organization initiatives"
   ON public.initiatives FOR ALL
   USING (
-    ngo_id IN (
-      SELECT ngo_id FROM public.profiles WHERE id = (SELECT auth.uid())
+    organization_id IN (
+      SELECT organization_id FROM public.profiles WHERE id = (SELECT auth.uid())
     )
   );
 
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reports') THEN
-        DROP POLICY IF EXISTS "NGO staff can manage their own NGO reports" ON public.reports;
-        CREATE POLICY "NGO staff can manage their own NGO reports"
-          ON public.reports FOR ALL
-          USING (
-            ngo_id IN (
-              SELECT ngo_id FROM public.profiles WHERE id = (SELECT auth.uid())
-            )
-          );
-    END IF;
-END $$;
+DROP POLICY IF EXISTS "Organization staff can manage their own Organization reports" ON public.reports;
+CREATE POLICY "Organization staff can manage their own Organization reports"
+  ON public.reports FOR ALL
+  USING (
+    organization_id IN (
+      SELECT organization_id FROM public.profiles WHERE id = (SELECT auth.uid())
+    )
+  );

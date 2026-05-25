@@ -13,7 +13,7 @@ END $$;
 
 -- 2. Update user_roles to use 'organization'
 -- (We use text conversion to avoid type issues if legacy role was already removed)
-UPDATE public.user_roles SET role = 'organization' WHERE role::text = 'ngo';
+UPDATE public.user_roles SET role = 'organization' WHERE role::text = 'organization';
 
 -- 3. Update has_role function to be case-insensitive and robust
 CREATE OR REPLACE FUNCTION public.has_role(requested_role public.app_role)

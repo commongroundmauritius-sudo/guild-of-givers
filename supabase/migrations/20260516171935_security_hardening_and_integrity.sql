@@ -4,8 +4,24 @@ BEGIN;
 
 -- 1. Function Search Path Security
 -- Explicitly set search_path to public for all security definer functions
-ALTER FUNCTION public.has_role(public.app_role) SET search_path = public;
-ALTER FUNCTION public.handle_new_user() SET search_path = public;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'has_role' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.has_role(public.app_role) SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'handle_new_user' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.handle_new_user() SET search_path = public;
+    END IF;
+END $$;
 
 -- 2. Profile Integrity
 -- Ensure age is valid if provided (handled in refactor_organization migration as well, but being defensive)

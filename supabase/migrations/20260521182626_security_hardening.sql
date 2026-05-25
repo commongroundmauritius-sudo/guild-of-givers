@@ -1,15 +1,103 @@
 -- 1. Fix search_path for sensitive functions
-ALTER FUNCTION public.check_report_status_permissions() SET search_path = public;
-ALTER FUNCTION public.check_initiative_status_permissions() SET search_path = public;
-ALTER FUNCTION public.handle_comment_creation() SET search_path = public;
-ALTER FUNCTION public.handle_new_user() SET search_path = public;
-ALTER FUNCTION public.handle_post_approval() SET search_path = public;
-ALTER FUNCTION public.handle_post_creation() SET search_path = public;
-ALTER FUNCTION public.handle_reaction_creation() SET search_path = public;
-ALTER FUNCTION public.handle_reaction_deletion() SET search_path = public;
-ALTER FUNCTION public.has_role(public.app_role) SET search_path = public;
-ALTER FUNCTION public.log_community_action() SET search_path = public;
-ALTER FUNCTION public.rls_auto_enable() SET search_path = public;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'check_report_status_permissions' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.check_report_status_permissions() SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'check_initiative_status_permissions' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.check_initiative_status_permissions() SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'handle_comment_creation' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.handle_comment_creation() SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'handle_new_user' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.handle_new_user() SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'handle_post_approval' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.handle_post_approval() SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'handle_post_creation' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.handle_post_creation() SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'handle_reaction_creation' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.handle_reaction_creation() SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'handle_reaction_deletion' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.handle_reaction_deletion() SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'has_role' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.has_role(public.app_role) SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'log_community_action' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.log_community_action() SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'rls_auto_enable' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.rls_auto_enable() SET search_path = public;
+    END IF;
+END $$;
 
 -- 2. Revoke public/anon/authenticated execution of SECURITY DEFINER functions
 REVOKE EXECUTE ON FUNCTION public.check_report_status_permissions() FROM PUBLIC, anon, authenticated;

@@ -14,7 +14,7 @@ This audit identifies the root causes of recurring platform regressions. The pla
   - **Effect:** Vite began treating framework modules (`h3-v2`, `rou3`) as external imports. The Cloudflare Worker runtime cannot resolve these as separate files, leading to "No such module" errors.
 - **Homepage 401/500 Failures:**
   - **Factor 1:** RLS Side Effects. Security hardening migrations inadvertently revoked `EXECUTE` permissions for the `anon` role on the `has_role` function.
-  - **Factor 2:** Schema Drift. Renaming `ngos` to `organizations` and modifying columns like `organization_name` caused mismatches in TanStack Start's SSR queries.
+  - **Factor 2:** Schema Drift. Renaming `organizations` to `organizations` and modifying columns like `organization_name` caused mismatches in TanStack Start's SSR queries.
 - **Deployment Inconsistencies:**
   - **Factor:** Manual re-creation of `wrangler.json` or build artifacts in different branches led to race conditions where the deployment pointed to a non-existent `_worker_bundle.json` instead of the modern `_worker.js`.
 
@@ -58,16 +58,16 @@ This audit identifies the root causes of recurring platform regressions. The pla
 
 ## 8. Migration Drift & Clean-State Recovery
 A secondary root cause of instability was identified during the audit: **Migration Drift**.
-- **Issue:** Early migrations made rigid assumptions about table names (`ngos` vs `organizations`) and column existence (`is_approved`). This caused "SQLSTATE 42703 (Column does not exist)" errors during clean-state deployments (Supabase Preview/Local Reset).
+- **Issue:** Early migrations made rigid assumptions about table names (`organizations` vs `organizations`) and column existence (`is_approved`). This caused "SQLSTATE 42703 (Column does not exist)" errors during clean-state deployments (Supabase Preview/Local Reset).
 - **Fix:** Procedural `DO` blocks have been applied to 10+ migrations to allow them to handle both legacy and modern schema states idempotently.
 - **Verification:** The migration sequence is now hardened for "from-scratch" execution.
 
 ## 9. RLS & Schema Consistency Refactor
 The audit revealed that previous "fixes" introduced conditional branching logic inside security migrations, which caused `SQLSTATE 42P01 (Relation does not exist)` errors during CI.
-- **Root Cause:** Migrations were attempting to define policies for both `ngos` and `organizations` simultaneously, often before one of those tables existed in the timeline.
+- **Root Cause:** Migrations were attempting to define policies for both `organizations` and `organizations` simultaneously, often before one of those tables existed in the timeline.
 - **Resolution:**
   - Migrations have been refactored to be **Timeline Consistent**.
-  - All files before the `2026-05-18` rename event strictly reference `ngos`.
+  - All files before the `2026-05-18` rename event strictly reference `organizations`.
   - All files after the rename event strictly reference `organizations`.
   - Conditional branching inside RLS policies has been removed in favor of explicit, order-dependent DDL statements.
 - **Result:** The migration history is now linear and consistent with the database's evolution, preventing runtime schema resolution failures.
@@ -77,7 +77,7 @@ A major architectural flaw was identified where security migrations used conditi
 - **Resolution:**
   - Separated schema existence concerns from security policies.
   - Migrations now strictly follow the **Timeline Principle**: they only reference the schema state as it existed at the time of the migration's timestamp.
-  - The pivot point for the NGO -> Organization rename is strictly established at `20260518075811`.
+  - The pivot point for the Organization -> Organization rename is strictly established at `20260518075811`.
 - **Constraint:** Dual-branching in RLS migrations is now strictly FORBIDDEN to ensure CI stability.
 
 ### [INFRA-001] Root Infrastructure Config

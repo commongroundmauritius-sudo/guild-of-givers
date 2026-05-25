@@ -1,7 +1,7 @@
 -- Fix RLS for initiatives to ensure Organizations can manage their own initiatives correctly
 BEGIN;
 
-DROP POLICY IF EXISTS "NGO staff can manage own initiatives" ON public.initiatives;
+DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
 DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
 
 CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives

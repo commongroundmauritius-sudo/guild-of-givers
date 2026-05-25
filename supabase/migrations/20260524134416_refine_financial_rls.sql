@@ -1,9 +1,9 @@
--- Final cleanup of any lingering NGO references in RLS or logic
+-- Final cleanup of any lingering Organization references in RLS or logic
 
 BEGIN;
 
 -- 1. Standards for initiative_versions
-DROP POLICY IF EXISTS "NGO staff can view own initiative versions" ON public.initiative_versions;
+DROP POLICY IF EXISTS "Organization staff can view own initiative versions" ON public.initiative_versions;
 DROP POLICY IF EXISTS "Organization staff can view own initiative versions" ON public.initiative_versions;
 CREATE POLICY "Organization staff can view own initiative versions" ON public.initiative_versions
 FOR SELECT USING (
@@ -14,7 +14,7 @@ FOR SELECT USING (
     )
 );
 
-DROP POLICY IF EXISTS "NGO staff can create initiative versions" ON public.initiative_versions;
+DROP POLICY IF EXISTS "Organization staff can create initiative versions" ON public.initiative_versions;
 DROP POLICY IF EXISTS "Organization staff can create initiative versions" ON public.initiative_versions;
 CREATE POLICY "Organization staff can create initiative versions" ON public.initiative_versions
 FOR INSERT WITH CHECK (
@@ -46,6 +46,6 @@ FOR ALL USING (
 
 -- 4. Final Terminology Alignment
 -- Update any remaining comments or metadata that might confuse the system
-COMMENT ON TABLE public.organizations IS 'Authoritative table for registered organizations (formerly NGOs)';
+COMMENT ON TABLE public.organizations IS 'Authoritative table for registered organizations';
 
 COMMIT;
