@@ -43,7 +43,12 @@ FOR EACH ROW EXECUTE FUNCTION public.check_initiative_permissions();
 
 -- 4. Reports Hardening: Organizations cannot approve their own reports
 -- Assuming reports have a status or verification field (adding if not exists)
-ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending_review';
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reports') THEN
+        ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending_review';
+    END IF;
+END $$;
 
 CREATE OR REPLACE FUNCTION public.check_report_status_permissions()
 RETURNS trigger AS $$
@@ -60,10 +65,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-DROP TRIGGER IF EXISTS tr_check_report_status_permissions ON public.reports;
-CREATE TRIGGER tr_check_report_status_permissions
-BEFORE UPDATE ON public.reports
-FOR EACH ROW EXECUTE FUNCTION public.check_report_status_permissions();
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reports') THEN
+        DROP TRIGGER IF EXISTS tr_check_report_status_permissions ON public.reports;
+        CREATE TRIGGER tr_check_report_status_permissions
+        BEFORE UPDATE ON public.reports
+        FOR EACH ROW EXECUTE FUNCTION public.check_report_status_permissions();
+    END IF;
+END $$;
 
 -- 5. Data Defaults and Constraints
 ALTER TABLE public.initiatives ALTER COLUMN is_approved SET DEFAULT false;

@@ -7,24 +7,61 @@ export class SubscriptionEngine {
 
     switch (type) {
       case "payment.success":
-        await this.processSuccessfulPayment(userId, subscriptionId, transactionId, amount);
-        break;
-
       case "subscription.renewal":
         await this.processSuccessfulPayment(userId, subscriptionId, transactionId, amount);
         break;
 
       case "subscription.cancelled":
-        await this.updateSubscriptionStatus(subscriptionId, "cancelled");
+        if (await this.updateSubscriptionStatus(subscriptionId, "cancelled")) {
+          await this.recordSupporterStatusEvent(userId, "supporter_deactivated");
+        }
         break;
 
       case "subscription.resumed":
-        await this.updateSubscriptionStatus(subscriptionId, "active");
+        if (await this.updateSubscriptionStatus(subscriptionId, "active")) {
+          await this.recordSupporterStatusEvent(userId, "supporter_activated");
+        }
         break;
 
       case "payment.failed":
-        await this.handleFailedPayment(subscriptionId);
+        if (await this.updateSubscriptionStatus(subscriptionId, "past_due")) {
+          await this.recordSupporterStatusEvent(userId, "supporter_deactivated");
+        }
         break;
+    }
+  }
+
+  private async recordSupporterStatusEvent(
+    userId: string | undefined,
+    eventType: string,
+  ): Promise<void> {
+    if (!userId) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("primary_initiative_id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profile?.primary_initiative_id) {
+      // For status events, we don't have a unique constraint, but we can check existence
+      // of a very recent event to prevent double-firing from simultaneous webhooks.
+      const { data: recent } = await supabase
+        .from("initiative_events")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("initiative_id", profile.primary_initiative_id)
+        .eq("event_type", eventType)
+        .gt("created_at", new Date(Date.now() - 1000 * 60).toISOString()) // Last 1 minute
+        .maybeSingle();
+
+      if (!recent) {
+        await supabase.from("initiative_events").insert({
+          initiative_id: profile.primary_initiative_id,
+          event_type: eventType,
+          user_id: userId,
+        });
+      }
     }
   }
 
@@ -36,7 +73,16 @@ export class SubscriptionEngine {
   ): Promise<void> {
     if (!amount) return;
 
-    // 1. Record payment in DB
+    // Idempotency check: does this transaction ID already exist?
+    if (transactionId) {
+      const { data: existing } = await supabase
+        .from("payments")
+        .select("id")
+        .eq("peach_payment_id", transactionId)
+        .maybeSingle();
+      if (existing) return;
+    }
+
     const { data: payment, error: pError } = await supabase
       .from("payments")
       .insert({
@@ -55,55 +101,60 @@ export class SubscriptionEngine {
       return;
     }
 
-    // 2. Trigger atomic PostgreSQL allocation engine
-    // This is the single source of truth for all money flow
     const { error: allocError } = await supabase.rpc("allocate_payment_funds", {
-        p_payment_id: payment.id,
-        p_user_id: userId,
-        p_total_amount: amount
+      p_payment_id: payment.id,
+      p_user_id: userId,
+      p_total_amount: amount,
     });
 
     if (allocError) {
-        console.error("CRITICAL: Atomic financial allocation failed:", allocError);
-        // We do NOT fall back to TS engine anymore to maintain ledger integrity
-        // Instead, we log this for admin intervention
+      console.error("CRITICAL: Atomic financial allocation failed:", allocError);
     }
 
-    // 3. Activate Membership role
     const { error: activateError } = await supabase.rpc("activate_membership", {
-        p_user_id: userId
+      p_user_id: userId,
     });
     if (activateError) {
-        console.error("Failed to activate membership role:", activateError);
+      console.error("Failed to activate membership role:", activateError);
     }
 
-    // 4. Update subscription status
     if (subscriptionId) {
-      await this.updateSubscriptionStatus(subscriptionId, "active");
+      const wasUpdated = await this.updateSubscriptionStatus(subscriptionId, "active");
+      if (wasUpdated) {
+        await this.recordSupporterStatusEvent(userId, "supporter_activated");
+      }
     }
   }
 
   private async updateSubscriptionStatus(
     subscriptionId: string | undefined,
-    status: string,
-  ): Promise<void> {
-    if (!subscriptionId) return;
-    await supabase
-      .from("subscriptions")
-      .update({ status: status as any, updated_at: new Date().toISOString() })
-      .eq("peach_subscription_id", subscriptionId);
-  }
+    newStatus: string,
+  ): Promise<boolean> {
+    if (!subscriptionId) return false;
 
-  private async handleFailedPayment(subscriptionId: string | undefined): Promise<void> {
-    if (!subscriptionId) return;
-    await this.updateSubscriptionStatus(subscriptionId, "past_due");
+    const { data: current } = await supabase
+      .from("subscriptions")
+      .select("status")
+      .eq("peach_subscription_id", subscriptionId)
+      .maybeSingle();
+
+    if (!current || current.status === newStatus) {
+      return false;
+    }
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({ status: newStatus as any, updated_at: new Date().toISOString() })
+      .eq("peach_subscription_id", subscriptionId);
+
+    return !error;
   }
 
   async runBillingCycle(): Promise<void> {
     const { error } = await supabase.rpc("process_recurring_billing");
     if (error) {
-        console.error("Failed to trigger DB billing cycle:", error);
-        throw error;
+      console.error("Failed to trigger DB billing cycle:", error);
+      throw error;
     }
   }
 }

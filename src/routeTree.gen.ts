@@ -19,6 +19,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InitiativesIndexRouteImport } from './routes/initiatives/index'
+import { Route as InitiativesSlugRouteImport } from './routes/initiatives/$slug'
 import { Route as InitiativesIdRouteImport } from './routes/initiatives/$id'
 import { Route as EntitiesIdRouteImport } from './routes/entities.$id'
 import { Route as AuthenticatedOrganizationRouteImport } from './routes/_authenticated/organization'
@@ -39,6 +40,7 @@ import { Route as AuthenticatedAdminDashboardLeadsRouteImport } from './routes/_
 import { Route as AuthenticatedAdminDashboardFinancesRouteImport } from './routes/_authenticated/admin-dashboard.finances'
 import { Route as AuthenticatedAdminDashboardCommunityPostsRouteImport } from './routes/_authenticated/admin-dashboard.community-posts'
 import { Route as AuthenticatedAdminDashboardAnnouncementsRouteImport } from './routes/_authenticated/admin-dashboard.announcements'
+import { Route as AuthenticatedAdminDashboardAnalyticsRouteImport } from './routes/_authenticated/admin-dashboard.analytics'
 import { Route as AuthenticatedAdminDashboardInitiativesIndexRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.index'
 import { Route as AuthenticatedAdminDashboardInitiativesNewRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.new'
 import { Route as AuthenticatedAdminDashboardInitiativesIdManageRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.$id.manage'
@@ -90,6 +92,11 @@ const IndexRoute = IndexRouteImport.update({
 const InitiativesIndexRoute = InitiativesIndexRouteImport.update({
   id: '/initiatives/',
   path: '/initiatives/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InitiativesSlugRoute = InitiativesSlugRouteImport.update({
+  id: '/initiatives/$slug',
+  path: '/initiatives/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InitiativesIdRoute = InitiativesIdRouteImport.update({
@@ -208,6 +215,12 @@ const AuthenticatedAdminDashboardAnnouncementsRoute =
     path: '/announcements',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+const AuthenticatedAdminDashboardAnalyticsRoute =
+  AuthenticatedAdminDashboardAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAdminDashboardRoute,
+  } as any)
 const AuthenticatedAdminDashboardInitiativesIndexRoute =
   AuthenticatedAdminDashboardInitiativesIndexRouteImport.update({
     id: '/initiatives/',
@@ -242,7 +255,9 @@ export interface FileRoutesByFullPath {
   '/organization': typeof AuthenticatedOrganizationRoute
   '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
+  '/initiatives/$slug': typeof InitiativesSlugRoute
   '/initiatives/': typeof InitiativesIndexRoute
+  '/admin-dashboard/analytics': typeof AuthenticatedAdminDashboardAnalyticsRoute
   '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
   '/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
@@ -275,7 +290,9 @@ export interface FileRoutesByTo {
   '/organization': typeof AuthenticatedOrganizationRoute
   '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
+  '/initiatives/$slug': typeof InitiativesSlugRoute
   '/initiatives': typeof InitiativesIndexRoute
+  '/admin-dashboard/analytics': typeof AuthenticatedAdminDashboardAnalyticsRoute
   '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
   '/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
@@ -311,7 +328,9 @@ export interface FileRoutesById {
   '/_authenticated/organization': typeof AuthenticatedOrganizationRoute
   '/entities/$id': typeof EntitiesIdRoute
   '/initiatives/$id': typeof InitiativesIdRoute
+  '/initiatives/$slug': typeof InitiativesSlugRoute
   '/initiatives/': typeof InitiativesIndexRoute
+  '/_authenticated/admin-dashboard/analytics': typeof AuthenticatedAdminDashboardAnalyticsRoute
   '/_authenticated/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/_authenticated/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
   '/_authenticated/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
@@ -347,7 +366,9 @@ export interface FileRouteTypes {
     | '/organization'
     | '/entities/$id'
     | '/initiatives/$id'
+    | '/initiatives/$slug'
     | '/initiatives/'
+    | '/admin-dashboard/analytics'
     | '/admin-dashboard/announcements'
     | '/admin-dashboard/community-posts'
     | '/admin-dashboard/finances'
@@ -380,7 +401,9 @@ export interface FileRouteTypes {
     | '/organization'
     | '/entities/$id'
     | '/initiatives/$id'
+    | '/initiatives/$slug'
     | '/initiatives'
+    | '/admin-dashboard/analytics'
     | '/admin-dashboard/announcements'
     | '/admin-dashboard/community-posts'
     | '/admin-dashboard/finances'
@@ -415,7 +438,9 @@ export interface FileRouteTypes {
     | '/_authenticated/organization'
     | '/entities/$id'
     | '/initiatives/$id'
+    | '/initiatives/$slug'
     | '/initiatives/'
+    | '/_authenticated/admin-dashboard/analytics'
     | '/_authenticated/admin-dashboard/announcements'
     | '/_authenticated/admin-dashboard/community-posts'
     | '/_authenticated/admin-dashboard/finances'
@@ -447,6 +472,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   EntitiesIdRoute: typeof EntitiesIdRoute
   InitiativesIdRoute: typeof InitiativesIdRoute
+  InitiativesSlugRoute: typeof InitiativesSlugRoute
   InitiativesIndexRoute: typeof InitiativesIndexRoute
 }
 
@@ -520,6 +546,13 @@ declare module '@tanstack/react-router' {
       path: '/initiatives'
       fullPath: '/initiatives/'
       preLoaderRoute: typeof InitiativesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/initiatives/$slug': {
+      id: '/initiatives/$slug'
+      path: '/initiatives/$slug'
+      fullPath: '/initiatives/$slug'
+      preLoaderRoute: typeof InitiativesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/initiatives/$id': {
@@ -662,6 +695,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardAnnouncementsRouteImport
       parentRoute: typeof AuthenticatedAdminDashboardRoute
     }
+    '/_authenticated/admin-dashboard/analytics': {
+      id: '/_authenticated/admin-dashboard/analytics'
+      path: '/analytics'
+      fullPath: '/admin-dashboard/analytics'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRoute
+    }
     '/_authenticated/admin-dashboard/initiatives/': {
       id: '/_authenticated/admin-dashboard/initiatives/'
       path: '/initiatives'
@@ -687,6 +727,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminDashboardRouteChildren {
+  AuthenticatedAdminDashboardAnalyticsRoute: typeof AuthenticatedAdminDashboardAnalyticsRoute
   AuthenticatedAdminDashboardAnnouncementsRoute: typeof AuthenticatedAdminDashboardAnnouncementsRoute
   AuthenticatedAdminDashboardCommunityPostsRoute: typeof AuthenticatedAdminDashboardCommunityPostsRoute
   AuthenticatedAdminDashboardFinancesRoute: typeof AuthenticatedAdminDashboardFinancesRoute
@@ -704,6 +745,8 @@ interface AuthenticatedAdminDashboardRouteChildren {
 
 const AuthenticatedAdminDashboardRouteChildren: AuthenticatedAdminDashboardRouteChildren =
   {
+    AuthenticatedAdminDashboardAnalyticsRoute:
+      AuthenticatedAdminDashboardAnalyticsRoute,
     AuthenticatedAdminDashboardAnnouncementsRoute:
       AuthenticatedAdminDashboardAnnouncementsRoute,
     AuthenticatedAdminDashboardCommunityPostsRoute:
@@ -785,6 +828,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   EntitiesIdRoute: EntitiesIdRoute,
   InitiativesIdRoute: InitiativesIdRoute,
+  InitiativesSlugRoute: InitiativesSlugRoute,
   InitiativesIndexRoute: InitiativesIndexRoute,
 }
 export const routeTree = rootRouteImport

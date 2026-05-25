@@ -36,13 +36,18 @@ FOR ALL USING (
     )
 );
 
-DROP POLICY IF EXISTS "Organization staff can manage their own reports" ON public.reports;
-CREATE POLICY "Organization staff can manage their own reports" ON public.reports
-FOR ALL USING (
-  organization_id IN (
-    SELECT organization_id FROM public.profiles
-    WHERE id = (SELECT auth.uid())
-  )
-);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reports') THEN
+        DROP POLICY IF EXISTS "Organization staff can manage their own reports" ON public.reports;
+        CREATE POLICY "Organization staff can manage their own reports" ON public.reports
+        FOR ALL USING (
+          organization_id IN (
+            SELECT organization_id FROM public.profiles
+            WHERE id = (SELECT auth.uid())
+          )
+        );
+    END IF;
+END $$;
 
 COMMIT;
