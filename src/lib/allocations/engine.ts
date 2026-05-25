@@ -40,7 +40,9 @@ export class AllocationEngine {
     for (const pref of preferences) {
       if (remainingPool <= 0) break;
 
-      const initiative = Array.isArray(pref.initiatives) ? pref.initiatives[0] : (pref.initiatives as any);
+      const initiative = Array.isArray(pref.initiatives)
+        ? pref.initiatives[0]
+        : (pref.initiatives as any);
       if (!initiative) continue;
 
       const cap = Number(initiative.goal_amount_mur) || Infinity;

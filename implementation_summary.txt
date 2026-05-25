@@ -1,0 +1,7 @@
+1. Root Cause for 'i is not defined': Minification trap where the single-letter iteration variable 'i' was being mangled or lost scope in the build. Renamed to 'initiative' and 'idx' for safety.
+2. Root Cause for 'public.reports': Migration race condition/ordering. Fixed with IF NOT EXISTS guards and patched historical migrations.
+3. Slug System: Implemented 'src/lib/slugify.ts' and enforced UNIQUE constraint via migration.
+4. Attribution: Implemented localStorage persistence with 30-day expiry in 'src/lib/attribution.ts'.
+5. Analytics: Created 'reconcile_initiative_analytics' RPC and 'initiative_events' triggers.
+6. Lead CRM: Enforced Admin-only RLS and automated 'converted'/'inactive' status transitions.
+7. Dashboards: Segregated Admin CRM data from Organization metrics.
