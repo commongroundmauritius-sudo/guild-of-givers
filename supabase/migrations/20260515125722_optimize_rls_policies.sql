@@ -22,7 +22,7 @@ END $$;
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'reports') THEN
-        DROP POLICY IF EXISTS "NGO staff can manage their own NGO reports" ON public.reports;
+        DROP POLICY IF EXISTS "Organization staff can manage their own Organization reports" ON public.reports;
         DROP POLICY IF EXISTS "Organization staff can manage their own reports" ON public.reports;
 
         CREATE POLICY "Organization staff can manage their own reports" ON public.reports
@@ -39,7 +39,7 @@ END $$;
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
-        DROP POLICY IF EXISTS "NGO staff can manage own initiatives" ON public.initiatives;
+        DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
         DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
 
         CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives

@@ -1,9 +1,9 @@
--- Final cleanup of any lingering NGO references in RLS or logic
+-- Final cleanup of any lingering Organization references in RLS or logic
 
 BEGIN;
 
 -- 1. Standards for initiative_versions
-DROP POLICY IF EXISTS "NGO staff can view own initiative versions" ON public.initiative_versions;
+DROP POLICY IF EXISTS "Organization staff can view own initiative versions" ON public.initiative_versions;
 DROP POLICY IF EXISTS "Organization staff can view own initiative versions" ON public.initiative_versions;
 CREATE POLICY "Organization staff can view own initiative versions" ON public.initiative_versions
 FOR SELECT USING (
@@ -14,7 +14,7 @@ FOR SELECT USING (
     )
 );
 
-DROP POLICY IF EXISTS "NGO staff can create initiative versions" ON public.initiative_versions;
+DROP POLICY IF EXISTS "Organization staff can create initiative versions" ON public.initiative_versions;
 DROP POLICY IF EXISTS "Organization staff can create initiative versions" ON public.initiative_versions;
 CREATE POLICY "Organization staff can create initiative versions" ON public.initiative_versions
 FOR INSERT WITH CHECK (

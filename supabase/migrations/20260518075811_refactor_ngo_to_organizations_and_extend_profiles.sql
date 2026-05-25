@@ -1,4 +1,4 @@
--- Refactor NGO references to Organization and extend profile fields
+-- Refactor Organization references to Organization and extend profile fields
 -- This migration ensures the transition to organization terminology is complete
 
 BEGIN;
@@ -43,32 +43,32 @@ ALTER TABLE public.initiatives ADD COLUMN IF NOT EXISTS is_unlimited BOOLEAN DEF
 DO $$
 BEGIN
     -- profiles
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'ngo_id') THEN
-        ALTER TABLE public.profiles RENAME COLUMN ngo_id TO organization_id;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'organization_id') THEN
+        ALTER TABLE public.profiles RENAME COLUMN organization_id TO organization_id;
     END IF;
     -- initiatives
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'initiatives' AND column_name = 'ngo_id') THEN
-        ALTER TABLE public.initiatives RENAME COLUMN ngo_id TO organization_id;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'initiatives' AND column_name = 'organization_id') THEN
+        ALTER TABLE public.initiatives RENAME COLUMN organization_id TO organization_id;
     END IF;
     -- others...
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'subscriptions' AND column_name = 'ngo_id') THEN
-        ALTER TABLE public.subscriptions RENAME COLUMN ngo_id TO organization_id;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'subscriptions' AND column_name = 'organization_id') THEN
+        ALTER TABLE public.subscriptions RENAME COLUMN organization_id TO organization_id;
     END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'member_preferences' AND column_name = 'ngo_id') THEN
-        ALTER TABLE public.member_preferences RENAME COLUMN ngo_id TO organization_id;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'member_preferences' AND column_name = 'organization_id') THEN
+        ALTER TABLE public.member_preferences RENAME COLUMN organization_id TO organization_id;
     END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reports' AND column_name = 'ngo_id') THEN
-        ALTER TABLE public.reports RENAME COLUMN ngo_id TO organization_id;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reports' AND column_name = 'organization_id') THEN
+        ALTER TABLE public.reports RENAME COLUMN organization_id TO organization_id;
     END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'allocations' AND column_name = 'ngo_id') THEN
-        ALTER TABLE public.allocations RENAME COLUMN ngo_id TO organization_id;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'allocations' AND column_name = 'organization_id') THEN
+        ALTER TABLE public.allocations RENAME COLUMN organization_id TO organization_id;
     END IF;
     -- documents table
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents') THEN
         ALTER TABLE public.ngo_documents RENAME TO organization_documents;
     END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organization_documents' AND column_name = 'ngo_id') THEN
-        ALTER TABLE public.organization_documents RENAME COLUMN ngo_id TO organization_id;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organization_documents' AND column_name = 'organization_id') THEN
+        ALTER TABLE public.organization_documents RENAME COLUMN organization_id TO organization_id;
     END IF;
 END $$;
 

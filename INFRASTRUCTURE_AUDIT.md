@@ -77,7 +77,7 @@ A major architectural flaw was identified where security migrations used conditi
 - **Resolution:**
   - Separated schema existence concerns from security policies.
   - Migrations now strictly follow the **Timeline Principle**: they only reference the schema state as it existed at the time of the migration's timestamp.
-  - The pivot point for the NGO -> Organization rename is strictly established at `20260518075811`.
+  - The pivot point for the Organization -> Organization rename is strictly established at `20260518075811`.
 - **Constraint:** Dual-branching in RLS migrations is now strictly FORBIDDEN to ensure CI stability.
 
 ### [INFRA-001] Root Infrastructure Config

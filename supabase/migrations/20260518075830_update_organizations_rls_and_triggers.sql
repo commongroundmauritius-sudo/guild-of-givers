@@ -12,7 +12,7 @@ DROP POLICY IF EXISTS "Admins can manage organizations" ON public.organizations;
 CREATE POLICY "Admins can manage organizations" ON public.organizations
 FOR ALL USING (public.has_role('admin'));
 
-DROP POLICY IF EXISTS "NGO owners can update their NGO" ON public.organizations;
+DROP POLICY IF EXISTS "Organization owners can update their Organization" ON public.organizations;
 DROP POLICY IF EXISTS "Organization owners can update their organization" ON public.organizations;
 CREATE POLICY "Organization staff can update their organization" ON public.organizations
 FOR UPDATE USING (

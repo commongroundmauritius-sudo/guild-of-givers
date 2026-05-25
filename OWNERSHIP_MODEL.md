@@ -3,7 +3,7 @@
 ## 1. Current State (Fragmentation)
 The platform currently has three competing patterns for identifying ownership and management rights:
 
-1.  **Legacy NGO Model:** `organizations.owner_user_id` (References `auth.users.id`). Used in older RLS policies.
+1.  **Legacy Organization Model:** `organizations.owner_user_id` (References `auth.users.id`). Used in older RLS policies.
 2.  **Modern Profile Model:** `profiles.organization_id` (References `organizations.id`). Links a human user to an entity.
 3.  **Initiative Tracking:** `initiatives.creator_user_id` and `initiatives.organization_id`.
 4.  **Role System:** `user_roles` table defines 'admin', 'organization', 'member'.
@@ -20,7 +20,7 @@ The platform currently has three competing patterns for identifying ownership an
     - **Reason:** Limits management to a single user. Redundant with profile-based linking.
 *   **DEPRECATED:** `initiatives.creator_user_id`
     - **Reason:** Initiatives should be owned by the *Organization* entity, not the individual staff member who clicked "Create".
-*   **DEPRECATED:** Terminology 'NGO'. All references must be updated to 'Organization'.
+*   **DEPRECATED:** Terminology 'Organization'. All references must be updated to 'Organization'.
 
 ## 4. Implementation Strategy
 1.  Update RLS policies to use `EXISTS (SELECT 1 FROM profiles WHERE profiles.organization_id = target.organization_id AND profiles.id = auth.uid())`.

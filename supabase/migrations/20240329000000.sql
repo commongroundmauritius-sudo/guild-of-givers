@@ -1,6 +1,22 @@
 -- Fix search_path security warnings for definer functions
-ALTER FUNCTION public.handle_new_user() SET search_path = public;
-ALTER FUNCTION public.has_role(public.app_role) SET search_path = public;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'handle_new_user' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.handle_new_user() SET search_path = public;
+    END IF;
+END $$;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE p.proname = 'has_role' AND n.nspname = 'public'
+    ) THEN
+        ALTER FUNCTION public.has_role(public.app_role) SET search_path = public;
+    END IF;
+END $$;
 
 -- Grant standard CRUD permissions to authenticated and anon roles
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
