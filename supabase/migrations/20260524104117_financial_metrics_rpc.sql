@@ -1,32 +1,45 @@
--- Financial metrics RPC for Admin Dashboard
-
 CREATE OR REPLACE FUNCTION public.get_admin_financial_metrics()
-RETURNS JSONB AS $$
+RETURNS jsonb AS $$
 DECLARE
-    v_total_collected NUMERIC;
-    v_platform_fees NUMERIC;
-    v_distributed_amount NUMERIC;
-    v_pending_amount NUMERIC;
+  result jsonb;
+  gross_total numeric;
+  platform_share numeric;
+  organization_pool_share numeric;
+  active_recurring numeric;
 BEGIN
-    SELECT COALESCE(SUM(amount_mur), 0) INTO v_total_collected FROM public.financial_events WHERE event_type = 'payment_received';
-    SELECT COALESCE(SUM(amount_mur), 0) INTO v_platform_fees FROM public.financial_events WHERE event_type = 'platform_share';
-    SELECT COALESCE(SUM(amount_mur), 0) INTO v_distributed_amount FROM public.financial_events WHERE event_type = 'allocation';
+  -- Check if user is admin
+  IF NOT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = auth.uid() AND role = 'admin'
+  ) THEN
+    RAISE EXCEPTION 'Unauthorized: Admin access required';
+  END IF;
 
-    -- Pending is Organization Pool balance
-    SELECT cached_balance_mur INTO v_pending_amount FROM public.financial_accounts WHERE account_type = 'organization_pool' LIMIT 1;
+  -- Calculate Gross (Success only)
+  SELECT COALESCE(SUM(amount_mur), 0) INTO gross_total
+  FROM public.payments
+  WHERE status = 'success';
 
-    RETURN jsonb_build_object(
-        'total_collected', v_total_collected,
-        'platform_fees', v_platform_fees,
-        'distributed_amount', v_distributed_amount,
-        'pending_amount', v_pending_amount
-    );
+  -- Official split calculations (CommonGround 20/80 blueprint)
+  platform_share := gross_total * 0.20;
+  organization_pool_share := gross_total * 0.80;
+
+  -- Active recurring volume pipeline
+  SELECT COALESCE(SUM(amount_mur), 0) INTO active_recurring
+  FROM public.subscriptions
+  WHERE status = 'active';
+
+  result := jsonb_build_object(
+    'gross_total', gross_total,
+    'platform_share', platform_share,
+    'organization_pool_share', organization_pool_share,
+    'monthly_recurring_forecast', active_recurring
+  );
+
+  RETURN result;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
-DO $$ BEGIN
-    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'get_admin_financial_metrics' AND n.nspname = 'public') THEN
-        REVOKE EXECUTE ON FUNCTION public.get_admin_financial_metrics() FROM PUBLIC, anon;
-        GRANT EXECUTE ON FUNCTION public.get_admin_financial_metrics() TO authenticated;
-    END IF;
-END $$;
+-- Revoke execute from public/anon/authenticated (except via proper channels if needed)
+REVOKE EXECUTE ON FUNCTION public.get_admin_financial_metrics() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_admin_financial_metrics() TO authenticated;
