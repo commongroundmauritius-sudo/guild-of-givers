@@ -113,3 +113,27 @@ Monitor:
 ### 30 days:
 * stable deployment metrics
 * no migration drift detected across environments
+
+## Dynamic Preference Allocation Engine (Phase 5 Summary)
+
+* **Unlimited Priority Logic:** VERIFIED. The allocation engine (`allocate_payment_funds`) correctly iterates through any number of member preferences ordered by `priority_level`.
+* **Multi-Selection Prioritization:** IMPLEMENTED. `process_recurring_billing` now orders subscriptions by preference count (`ORDER BY pref_count DESC`), ensuring multi-selection members are processed before single-selection members.
+* **Database Hardening:**
+  - **Verified:** Unique constraint added for `(user_id, initiative_id)`.
+  - **Verified:** Unique constraint added for `(user_id, priority_level)`.
+* **Simulation Engine:** IMPLEMENTED. `src/lib/payments/allocation-simulator.ts` provides client-side parity with the database allocation logic.
+* **Dashboard Integration:** IMPLEMENTED. `useAllocationSimulation` hook enables real-time projected impact views for members.
+
+## Dynamic Preference Allocation Implementation (Final)
+* **Status:** Fully implemented.
+* **Evidence:**
+  - Migration 20260525000011 enforced priority uniqueness and multi-selection order.
+  - Client-side simulator validated in src/lib/payments/allocation-simulator.ts.
+  - Hook for real-time preview active in src/hooks/use-allocation-simulation.tsx.
+* **Architecture:** unlimited ranking supported; Impact Pool remains fallback destination.
+
+## Dynamic Preference Allocation Engine (Phase 5 Summary)
+* **Unlimited Priority Logic:** VERIFIED. Allocation engine supports $ ranked initiatives.
+* **Multi-Selection Prioritization:** IMPLEMENTED. Recurring billing processes multi-cause members first.
+* **Idempotency & Precision:** VERIFIED. Handled via `payment_received` event check and subtraction-based split.
+* **Simulation & Preview:** IMPLEMENTED. `AllocationPreview` component and `useAllocationSimulation` hook integrated into Member Dashboard.

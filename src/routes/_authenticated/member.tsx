@@ -15,6 +15,7 @@ import {
 import { Link, useNavigate, createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { AllocationPreview } from "@/components/member/AllocationPreview";
 
 export const Route = createFileRoute("/_authenticated/member")({
   component: MemberDashboard,
@@ -282,7 +283,10 @@ export default function MemberDashboard() {
             </div>
 
             <div>
-               <h2 className="font-display text-2xl font-semibold text-primary">Membership Status</h2>
+              <div className="space-y-8">
+                <AllocationPreview amount={Number(subscription?.amount_mur || 0)} userId={user?.id} />
+                <div>
+                  <h2 className="font-display text-2xl font-semibold text-primary">Membership Status</h2>
                <div className="mt-6 p-8 rounded-3xl border border-border/40 bg-card">
                   <div className="flex items-center justify-between mb-6">
                     <div>

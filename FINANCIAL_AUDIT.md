@@ -43,3 +43,13 @@ Audit of the ledger integrity, allocation engine, and payment flows.
 - **Resolved [FIN-003]:** Rounding logic corrected to subtraction-based model.
 - **New [FIN-004]:** Historical archiving implemented via initiative_monthly_records.
 - **New [FIN-005]:** Explicit lifetime metrics added to initiatives table.
+
+### Verification (2026-05-24)
+- **Dynamic Priorities:** Confirmed unlimited ranking support in RPC.
+- **Processing Order:** Verified multi-selection prioritization in billing loop.
+- **Constraints:** Schema-level unique constraints enforced for preferences.
+
+## Dynamic Allocation Summary (2026-05-24)
+- **Resolved [FIN-006]:** Implementation of dynamic priority ranking.
+- **Resolved [FIN-007]:** Multi-selection prioritization in billing cycle.
+- **Feature:** Client-side allocation simulation for real-time impact preview.
