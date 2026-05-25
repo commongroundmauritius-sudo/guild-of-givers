@@ -53,11 +53,16 @@ function AdminLeadsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "converted": return "bg-green-100 text-green-700";
-      case "started": return "bg-blue-100 text-blue-700";
-      case "abandoned": return "bg-gray-100 text-gray-700";
-      case "inactive": return "bg-amber-100 text-amber-700";
-      default: return "bg-purple-100 text-purple-700";
+      case "converted":
+        return "bg-green-100 text-green-700";
+      case "started":
+        return "bg-blue-100 text-blue-700";
+      case "abandoned":
+        return "bg-gray-100 text-gray-700";
+      case "inactive":
+        return "bg-amber-100 text-amber-700";
+      default:
+        return "bg-purple-100 text-purple-700";
     }
   };
 

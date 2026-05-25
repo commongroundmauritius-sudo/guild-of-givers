@@ -246,7 +246,10 @@ function AdminDashboard() {
                 ) : pendingVersions && pendingVersions.length > 0 ? (
                   <div className="divide-y divide-border/40">
                     {pendingVersions.map((v) => (
-                      <div key={v.id} className="p-6 transition hover:bg-muted/50 flex items-center justify-between">
+                      <div
+                        key={v.id}
+                        className="p-6 transition hover:bg-muted/50 flex items-center justify-between"
+                      >
                         <div>
                           <p className="font-medium text-primary">{v.title}</p>
                           <p className="text-xs text-muted-foreground">

@@ -37,7 +37,7 @@ export function simulateAllocation(input: SimulationInput): SimulatedAllocation 
   const netAmount = amount - feeAmount;
 
   // 2. 20/80 Split with Rounding Protection
-  const platformShare = Math.round(netAmount * 0.20 * 100) / 100;
+  const platformShare = Math.round(netAmount * 0.2 * 100) / 100;
   const organizationPool = netAmount - platformShare;
 
   let remainingPool = organizationPool;
@@ -50,22 +50,20 @@ export function simulateAllocation(input: SimulationInput): SimulatedAllocation 
     const cycleSpace = Math.max(0, pref.monthlyTarget - pref.currentReceived);
 
     // If target is 0, it behaves as unlimited or handles all remaining in P1
-    const toAllocate = pref.monthlyTarget > 0
-      ? Math.min(remainingPool, cycleSpace)
-      : remainingPool;
+    const toAllocate = pref.monthlyTarget > 0 ? Math.min(remainingPool, cycleSpace) : remainingPool;
 
     if (toAllocate > 0) {
       allocations.push({
         initiativeId: pref.initiativeId,
         title: pref.title,
         amount: toAllocate,
-        isOverflow: false
+        isOverflow: false,
       });
       remainingPool -= toAllocate;
     }
 
     if (remainingPool > 0 && cycleSpace === 0 && pref.monthlyTarget > 0) {
-       // Documenting potential overflow path if needed
+      // Documenting potential overflow path if needed
     }
   }
 
@@ -79,6 +77,6 @@ export function simulateAllocation(input: SimulationInput): SimulatedAllocation 
     platformShare,
     organizationPool,
     allocations,
-    impactPoolAmount
+    impactPoolAmount,
   };
 }

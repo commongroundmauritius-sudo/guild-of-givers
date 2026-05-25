@@ -7,11 +7,16 @@ BEGIN
         CREATE INDEX IF NOT EXISTS idx_initiatives_organization_id ON public.initiatives(organization_id);
     END IF;
 
-    -- Organization Documents / NGO Documents
+    -- Organization Documents
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organization_documents') THEN
         CREATE INDEX IF NOT EXISTS idx_organization_documents_organization_id ON public.organization_documents(organization_id);
-    ELSIF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents') THEN
-        CREATE INDEX IF NOT EXISTS idx_ngo_documents_ngo_id ON public.ngo_documents(ngo_id);
+    END IF;
+
+    -- Legacy NGO Documents (only if table still exists)
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents') THEN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'ngo_documents' AND column_name = 'ngo_id') THEN
+            CREATE INDEX IF NOT EXISTS idx_ngo_documents_ngo_id ON public.ngo_documents(ngo_id);
+        END IF;
     END IF;
 
     -- Organizations Owner

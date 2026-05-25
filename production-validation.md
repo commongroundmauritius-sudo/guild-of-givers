@@ -1,6 +1,7 @@
 # CommonGround Production-Readiness Validation Report
 
 ## 1. Membership Lifecycle
+
 - **Flow:** Visitor -> Lead -> Mock Payment -> Account Creation.
 - **Verification:**
   - **FAIL:** Payment failure does NOT block account creation. The `signUp` call happens before subscription activation in `src/routes/signup.tsx`.
@@ -10,6 +11,7 @@
 - **Database Tables:** `leads`, `profiles`, `subscriptions`, `auth.users`
 
 ## 2. Subscription Lifecycle
+
 - **States:**
   - `payment_pending`, `success`, `failed` persisted in `payments`.
   - `active`, `cancelled`, `past_due` persisted in `subscriptions`.
@@ -19,6 +21,7 @@
 - **Status:** PASS
 
 ## 3. Allocation Engine (Scenarios)
+
 - **Scenario A (P1 Available):** PASS (Allocated 100% of net pool to P1).
 - **Scenario B (P1 Full):** PASS (Overflowed to P2).
 - **Scenario C (P1/P2 Full):** PASS (Fallback to Impact Pool).
@@ -28,33 +31,39 @@
 - **Status:** PARTIAL (Logic exists, trigger missing)
 
 ## 4. Financial Calculations
+
 - **Actual vs Potential:** PASS (Persisted in `allocations`).
 - **Overflow Tracking:** PASS (`is_overflow` flag).
 - **Integrity:** PASS (Historical records are immutable).
 
 ## 5. Organization Permissions
+
 - **Visibility:**
   - **PASS:** Organizations restricted to their own initiatives via staff RLS.
   - **PASS:** Organizations cannot see platform revenue or raw allocations for other orgs.
 - **Status:** PASS
 
 ## 6. Initiative Workflow
+
 - **Flow:** Approved -> Organization Edit -> Pending Review Version.
 - **Verification:**
   - **FAIL:** No initiative versioning exists. Edits overwrite the live record immediately once submitted (even if `is_approved` remains true, the content changes).
 - **Status:** FAIL
 
 ## 7. Recurring Execution
+
 - **Mechanism:** Missing.
 - **Status:** **CRITICAL BLOCKER** (No automated billing or allocation cycle).
 
 ## 8. Browser Validation
+
 - **Errors:** No worker or module resolution errors found after SSR hardening.
 - **Network:** Verified only non-sensitive data (names, IDs, progress) returned to Members.
 
 ---
 
 ### Final Summary
+
 - **TESTS EXECUTED:** 8 Sections
 - **PASSED:** 5
 - **FAILED:** 3

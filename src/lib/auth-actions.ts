@@ -83,14 +83,22 @@ export const convertLead = createServerFn({ method: "POST" })
 import { paymentService } from "./payments/service";
 
 export const startMembershipSubscription = createServerFn({ method: "POST" })
-  .inputValidator((data: { userId: string, amount: number, billingDate: number, coversFees: boolean, priorities: string[] }) => data)
+  .inputValidator(
+    (data: {
+      userId: string;
+      amount: number;
+      billingDate: number;
+      coversFees: boolean;
+      priorities: string[];
+    }) => data,
+  )
   .handler(async ({ data }) => {
     const result = await paymentService.subscribe({
       userId: data.userId,
       amount: data.amount,
       billingDate: data.billingDate,
       coversFees: data.coversFees,
-      priorityInitiatives: data.priorities
+      priorityInitiatives: data.priorities,
     });
 
     const { error } = await supabase.from("subscriptions").upsert({
@@ -99,7 +107,7 @@ export const startMembershipSubscription = createServerFn({ method: "POST" })
       status: result.status as any,
       peach_subscription_id: result.subscriptionId,
       next_billing_date: result.nextBillingDate,
-      covers_fees: data.coversFees
+      covers_fees: data.coversFees,
     });
 
     if (error) throw error;

@@ -12,11 +12,41 @@ BEGIN
 END $$;
 
 -- 2. Ensure organizations table exists with correct name
--- (The initial schema should already use 'organizations', but we check for 'organizations' just in case of legacy drift)
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organizations') THEN
-        ALTER TABLE public.organizations RENAME TO organizations;
+    -- Legacy table rename only if legacy table exists
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'ngo'
+    )
+    AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'organizations'
+    )
+    THEN
+        ALTER TABLE public.ngo RENAME TO organizations;
+    END IF;
+
+    -- Rename column only if old column exists
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = 'organizations'
+        AND column_name = 'name'
+    )
+    AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = 'organizations'
+        AND column_name = 'organization_name'
+    )
+    THEN
         ALTER TABLE public.organizations RENAME COLUMN name TO organization_name;
     END IF;
 END $$;
@@ -39,36 +69,19 @@ END $$;
 ALTER TABLE public.initiatives ADD COLUMN IF NOT EXISTS summary TEXT;
 ALTER TABLE public.initiatives ADD COLUMN IF NOT EXISTS is_unlimited BOOLEAN DEFAULT false;
 
--- 5. Rename columns in referencing tables if needed
+-- 5. Guarded rename for related tables if legacy versions exist
 DO $$
 BEGIN
-    -- profiles
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'organization_id') THEN
-        ALTER TABLE public.profiles RENAME COLUMN organization_id TO organization_id;
+    -- organization_documents
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'ngo_documents')
+    AND NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organization_documents') THEN
+        ALTER TABLE public.ngo_documents RENAME TO organization_documents;
     END IF;
-    -- initiatives
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'initiatives' AND column_name = 'organization_id') THEN
-        ALTER TABLE public.initiatives RENAME COLUMN organization_id TO organization_id;
-    END IF;
-    -- others...
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'subscriptions' AND column_name = 'organization_id') THEN
-        ALTER TABLE public.subscriptions RENAME COLUMN organization_id TO organization_id;
-    END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'member_preferences' AND column_name = 'organization_id') THEN
-        ALTER TABLE public.member_preferences RENAME COLUMN organization_id TO organization_id;
-    END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reports' AND column_name = 'organization_id') THEN
-        ALTER TABLE public.reports RENAME COLUMN organization_id TO organization_id;
-    END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'allocations' AND column_name = 'organization_id') THEN
-        ALTER TABLE public.allocations RENAME COLUMN organization_id TO organization_id;
-    END IF;
-    -- documents table
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organization_documents') THEN
-        ALTER TABLE public.organization_documents RENAME TO organization_documents;
-    END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organization_documents' AND column_name = 'organization_id') THEN
-        ALTER TABLE public.organization_documents RENAME COLUMN organization_id TO organization_id;
+
+    -- Update column names in organization_documents if they are still using ngo_id
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organization_documents' AND column_name = 'ngo_id')
+    AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organization_documents' AND column_name = 'organization_id') THEN
+        ALTER TABLE public.organization_documents RENAME COLUMN ngo_id TO organization_id;
     END IF;
 END $$;
 

@@ -8,8 +8,8 @@ interface AllocationResult {
 }
 
 export class AllocationEngine {
-  private readonly CG_FEE_PERCENT = 0.20;
-  private readonly Organization_POOL_PERCENT = 0.80;
+  private readonly CG_FEE_PERCENT = 0.2;
+  private readonly Organization_POOL_PERCENT = 0.8;
 
   async calculateAllocations(userId: string, netAmount: number): Promise<AllocationResult[]> {
     // 1. Get member preferences (priorities)
@@ -57,7 +57,7 @@ export class AllocationEngine {
           initiativeId: initiative.id,
           amount: toAllocate,
           potentialAmount: potential,
-          isOverflow: toAllocate < potential
+          isOverflow: toAllocate < potential,
         });
         remainingPool -= toAllocate;
       }
@@ -69,7 +69,7 @@ export class AllocationEngine {
         initiativeId: impactPoolId,
         amount: remainingPool,
         potentialAmount: 0,
-        isOverflow: true
+        isOverflow: true,
       });
     }
 
@@ -88,17 +88,19 @@ export class AllocationEngine {
         initiative_id: res.initiativeId,
         amount_mur: res.amount,
         potential_amount_mur: res.potentialAmount,
-        is_overflow: res.isOverflow
+        is_overflow: res.isOverflow,
       });
 
       // Update initiative progress
       await supabase.rpc("increment_initiative_amount", {
         initiative_id: res.initiativeId,
-        increment_by: res.amount
+        increment_by: res.amount,
       });
     }
 
-    console.log(`[AllocationEngine] Processed payment ${paymentId}. CG Share: ${cgShare}, Organization Pool: ${netAmount}`);
+    console.log(
+      `[AllocationEngine] Processed payment ${paymentId}. CG Share: ${cgShare}, Organization Pool: ${netAmount}`,
+    );
   }
 }
 

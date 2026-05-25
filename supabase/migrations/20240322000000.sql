@@ -52,6 +52,7 @@ BEGIN
         END IF;
     END IF;
 
+    -- Legacy check for NGO documents during transition phase
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'ngo_documents') THEN
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view NGO documents') THEN
             CREATE POLICY "Anyone can view NGO documents" ON public.ngo_documents FOR SELECT USING (true);

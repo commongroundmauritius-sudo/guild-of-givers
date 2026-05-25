@@ -1,10 +1,15 @@
 -- Seed Organizations
-INSERT INTO public.organizations (id, name, description, mission, category, is_verified)
-VALUES
-  ('a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d', 'Coral Guardians Mauritius', 'Protecting and restoring the coral reefs of Mauritius.', 'To achieve a sustainable marine ecosystem through active restoration and community education.', 'Environmental', true),
-  ('b2c3d4e5-f6a7-4b6c-8d7e-9f0a1b2c3d4e', 'Mauritius Education Fund', 'Providing scholarships and educational resources to underprivileged children.', 'Empowering the next generation through accessible, quality education.', 'Education', true),
-  ('c3d4e5f6-a7b8-4c7d-8e9f-0a1b2c3d4e5f', 'Eco-Farm Initiative', 'Promoting sustainable agriculture and food security in local communities.', 'Transforming agriculture through eco-friendly practices and local empowerment.', 'Sustainability', false)
-ON CONFLICT (id) DO NOTHING;
+-- Note: 'organization_name' is the modern identifying field.
+-- 'name' is handled via legacy rename migrations if it exists.
+DO $$
+BEGIN
+    INSERT INTO public.organizations (id, organization_name, description, mission, category, is_verified)
+    VALUES
+      ('a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d', 'Coral Guardians Mauritius', 'Protecting and restoring the coral reefs of Mauritius.', 'To achieve a sustainable marine ecosystem through active restoration and community education.', 'Environmental', true),
+      ('b2c3d4e5-f6a7-4b6c-8d7e-9f0a1b2c3d4e', 'Mauritius Education Fund', 'Providing scholarships and educational resources to underprivileged children.', 'Empowering the next generation through accessible, quality education.', 'Education', true),
+      ('c3d4e5f6-a7b8-4c7d-8e9f-0a1b2c3d4e5f', 'Eco-Farm Initiative', 'Promoting sustainable agriculture and food security in local communities.', 'Transforming agriculture through eco-friendly practices and local empowerment.', 'Sustainability', false)
+    ON CONFLICT (id) DO NOTHING;
+END $$;
 
 -- Seed Initiatives
 INSERT INTO public.initiatives (organization_id, title, description, goal_amount_mur, current_amount_mur, status)
