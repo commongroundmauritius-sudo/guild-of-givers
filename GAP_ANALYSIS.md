@@ -254,16 +254,19 @@ This report compares the **CommonGround Operating Blueprint** against the curren
 5.  **Versioning:** Create an `initiative_versions` table to support safe editing of live campaigns.
 
 ### Audit Sync (2026-05-24)
-* **Gap Identified:** Schema drift between local migrations and remote state (P0-004).
-* **Gap Identified:** Security hardening regression in 'anon' permissions (P0-001).
-* **Gap Identified:** Missing root-level infrastructure config (P1-007).
-* **Reference:** MASTER_AUDIT_REPORT.md
+
+- **Gap Identified:** Schema drift between local migrations and remote state (P0-004).
+- **Gap Identified:** Security hardening regression in 'anon' permissions (P0-001).
+- **Gap Identified:** Missing root-level infrastructure config (P1-007).
+- **Reference:** MASTER_AUDIT_REPORT.md
 
 ### Verification (2026-05-24)
+
 - **Migration Sync:** Confirmed local 52 vs remote 50. Extra migrations are intentional fixes.
 - **Structural Integrity:** Remote schema verified against local target state. No major drift in critical tables.
 
 ### Dynamic Allocation Verification (2026-05-24)
+
 - **Unlimited Ranking:** Tables and constraints updated for N-priority support.
 - **Member Preview:** Added real-time simulation UI to dashboard.
 - **Processing Order:** Order-by preference count active in billing logic.

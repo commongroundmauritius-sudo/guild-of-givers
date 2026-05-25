@@ -11,7 +11,10 @@ const h3Plugin = {
   setup(build) {
     // Force h3-v2 and h3 to resolve to the cloudflare entry point
     build.onResolve({ filter: /^h3(-v2)?$/ }, (args) => {
-      const cloudflareEntry = path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs");
+      const cloudflareEntry = path.resolve(
+        rootDir,
+        "node_modules/h3-v2/dist/_entries/cloudflare.mjs",
+      );
       if (fs.existsSync(cloudflareEntry)) {
         return { path: cloudflareEntry };
       }
@@ -101,6 +104,7 @@ import { Buffer } from 'node:buffer';
 import process from 'node:process';
 globalThis.Buffer = Buffer;
 globalThis.process = process;
+globalThis.setImmediate = (callback, ...args) => setTimeout(callback, 0, ...args);
 `,
       },
       logLevel: "info",
@@ -108,7 +112,9 @@ globalThis.process = process;
     });
 
     console.log("Updating wrangler.json in dist/client...");
-    const configSource = fs.existsSync(wranglerConfigRoot) ? wranglerConfigRoot : wranglerConfigDist;
+    const configSource = fs.existsSync(wranglerConfigRoot)
+      ? wranglerConfigRoot
+      : wranglerConfigDist;
 
     if (fs.existsSync(configSource)) {
       const config = JSON.parse(fs.readFileSync(configSource, "utf-8"));
@@ -170,25 +176,35 @@ async function verify() {
     console.log("Verification: No problematic external imports found in _worker.js.");
   }
 
-  const hasDefaultExport = /export\s+default\s+|export\s*\{[^}]*\bas\s+default\b/.test(executableContent);
+  const hasDefaultExport = /export\s+default\s+|export\s*\{[^}]*\bas\s+default\b/.test(
+    executableContent,
+  );
   if (!hasDefaultExport) {
     console.error("Verification failed: default export is missing in _worker.js");
     process.exit(1);
   }
 
   // 2. Check for ANY bare framework imports
-  const forbiddenPatterns = [/['"]h3(-v2)?['"]/, /['"]rou3['"]/, /['"]srvx['"]/, /['"]seroval['"]/, /['"]@tanstack/];
-  if (remainingImports.some((i) => forbiddenPatterns.some(p => p.test(i)))) {
+  const forbiddenPatterns = [
+    /['"]h3(-v2)?['"]/,
+    /['"]rou3['"]/,
+    /['"]srvx['"]/,
+    /['"]seroval['"]/,
+    /['"]@tanstack/,
+  ];
+  if (remainingImports.some((i) => forbiddenPatterns.some((p) => p.test(i)))) {
     console.error("Verification FAILED: Found forbidden framework import in _worker.js");
-    remainingImports.filter(i => forbiddenPatterns.some(p => p.test(i))).forEach(i => console.error("  ", i));
+    remainingImports
+      .filter((i) => forbiddenPatterns.some((p) => p.test(i)))
+      .forEach((i) => console.error("  ", i));
     process.exit(1);
   }
 
   // 3. Check for any assets/ imports
   const assetImport = executableContent.match(/^\s*import\s+.*?from\s+['"](\.\/)?assets\/.*?['"]/m);
   if (assetImport) {
-     console.error("Verification FAILED: Found asset import in _worker.js:", assetImport[0]);
-     process.exit(1);
+    console.error("Verification FAILED: Found asset import in _worker.js:", assetImport[0]);
+    process.exit(1);
   }
 
   console.log("Verification: SUCCESS. _worker.js is self-contained for the runtime.");

@@ -28,32 +28,43 @@ export function AllocationPreview({ amount, userId }: AllocationPreviewProps) {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-muted-foreground font-medium">Net Contribution</p>
-            <p className="text-lg font-bold text-primary">Rs {simulation.netAmount.toLocaleString()}</p>
+            <p className="text-lg font-bold text-primary">
+              Rs {simulation.netAmount.toLocaleString()}
+            </p>
           </div>
           <div className="text-right">
             <p className="text-muted-foreground font-medium">Processing Fee</p>
-            <p className="text-lg font-bold text-muted-foreground">Rs {simulation.feeAmount.toLocaleString()}</p>
+            <p className="text-lg font-bold text-muted-foreground">
+              Rs {simulation.feeAmount.toLocaleString()}
+            </p>
           </div>
         </div>
 
         <div className="space-y-3 pt-4 border-t border-border/40">
-          <p className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">Projected Distribution</p>
+          <p className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">
+            Projected Distribution
+          </p>
           {simulation.allocations.map((a) => (
             <div key={a.initiativeId} className="flex justify-between items-center">
               <span className="text-sm font-medium">{a.title}</span>
-              <span className="text-sm font-bold text-teal-600">Rs {a.amount.toLocaleString()}</span>
+              <span className="text-sm font-bold text-teal-600">
+                Rs {a.amount.toLocaleString()}
+              </span>
             </div>
           ))}
           {simulation.impactPoolAmount > 0 && (
             <div className="flex justify-between items-center italic">
               <span className="text-sm font-medium">Impact Pool (Fallback)</span>
-              <span className="text-sm font-bold text-amber-600">Rs {simulation.impactPoolAmount.toLocaleString()}</span>
+              <span className="text-sm font-bold text-amber-600">
+                Rs {simulation.impactPoolAmount.toLocaleString()}
+              </span>
             </div>
           )}
         </div>
 
         <div className="pt-4 border-t border-border/40 text-[10px] text-muted-foreground italic text-center">
-          CommonGround retains 20% (Rs {simulation.platformShare.toLocaleString()}) of net contribution for platform sustainability.
+          CommonGround retains 20% (Rs {simulation.platformShare.toLocaleString()}) of net
+          contribution for platform sustainability.
         </div>
       </CardContent>
     </Card>

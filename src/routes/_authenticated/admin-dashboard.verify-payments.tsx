@@ -30,8 +30,8 @@ function VerifyPaymentsPage() {
           type: "payment.success",
           userId: user.id,
           amount: 1000,
-          subscriptionId: "sub_" + txnId
-        }
+          subscriptionId: "sub_" + txnId,
+        },
       });
 
       // 2. Verify DB
@@ -44,13 +44,26 @@ function VerifyPaymentsPage() {
 
       const latest = payments?.[0];
       const passSplit = latest?.amount_mur === 1000;
-      const totalAllocated = latest?.allocations?.reduce((s: number, a: any) => s + Number(a.amount_mur), 0) || 0;
+      const totalAllocated =
+        latest?.allocations?.reduce((s: number, a: any) => s + Number(a.amount_mur), 0) || 0;
       const passOrganization = totalAllocated === 800; // 80%
 
       setResults([
-        { name: "20/80 Split Logic", status: passOrganization ? "PASS" : "FAIL", detail: `Allocated MUR ${totalAllocated} from MUR 1000 total.` },
-        { name: "Payment Persistence", status: latest ? "PASS" : "FAIL", detail: latest ? `Record found with ID ${latest.id}` : "No record found" },
-        { name: "Allocation records", status: latest?.allocations?.length > 0 ? "PASS" : "FAIL", detail: `Found ${latest?.allocations?.length || 0} allocation(s)` }
+        {
+          name: "20/80 Split Logic",
+          status: passOrganization ? "PASS" : "FAIL",
+          detail: `Allocated MUR ${totalAllocated} from MUR 1000 total.`,
+        },
+        {
+          name: "Payment Persistence",
+          status: latest ? "PASS" : "FAIL",
+          detail: latest ? `Record found with ID ${latest.id}` : "No record found",
+        },
+        {
+          name: "Allocation records",
+          status: latest?.allocations?.length > 0 ? "PASS" : "FAIL",
+          detail: `Found ${latest?.allocations?.length || 0} allocation(s)`,
+        },
       ]);
 
       toast.success("Verification complete");
@@ -73,7 +86,8 @@ function VerifyPaymentsPage() {
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-muted-foreground">
-              This will trigger a mock MUR 1000 payment for your account and verify the 20/80 split and database persistence.
+              This will trigger a mock MUR 1000 payment for your account and verify the 20/80 split
+              and database persistence.
             </p>
             <Button onClick={runTest} disabled={loading}>
               {loading ? "Verifying..." : "Run E2E Verification"}
@@ -89,7 +103,9 @@ function VerifyPaymentsPage() {
                   <p className="font-bold">{r.name}</p>
                   <p className="text-sm text-muted-foreground">{r.detail}</p>
                 </div>
-                <span className={`font-bold ${r.status === "PASS" ? "text-green-600" : "text-red-600"}`}>
+                <span
+                  className={`font-bold ${r.status === "PASS" ? "text-green-600" : "text-red-600"}`}
+                >
                   {r.status}
                 </span>
               </div>

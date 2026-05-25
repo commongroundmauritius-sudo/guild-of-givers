@@ -80,8 +80,8 @@ function InitiativeDetailPage() {
       const recordPageView = async () => {
         if (typeof window === "undefined") return;
 
-        const sessionId = sessionStorage.getItem("cg_session_id") ||
-                         Math.random().toString(36).substring(2, 15);
+        const sessionId =
+          sessionStorage.getItem("cg_session_id") || Math.random().toString(36).substring(2, 15);
         sessionStorage.setItem("cg_session_id", sessionId);
 
         const lastViewedKey = `last_viewed_${initiative.id}`;
@@ -333,14 +333,18 @@ function InitiativeDetailPage() {
                   <div className="grid grid-cols-2 gap-4 py-2">
                     <div className="rounded-2xl bg-muted/30 p-5 text-center">
                       <Users className="mx-auto mb-2 h-5 w-5 text-primary/40" />
-                      <span className="block text-xl font-bold text-primary">{initiative.active_supporter_count || 0}</span>
+                      <span className="block text-xl font-bold text-primary">
+                        {initiative.active_supporter_count || 0}
+                      </span>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         Active
                       </span>
                     </div>
                     <div className="rounded-2xl bg-muted/30 p-5 text-center">
                       <Heart className="mx-auto mb-2 h-5 w-5 text-primary/40" />
-                      <span className="block text-xl font-bold text-primary">{initiative.conversion_count || 0}</span>
+                      <span className="block text-xl font-bold text-primary">
+                        {initiative.conversion_count || 0}
+                      </span>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         Total Members
                       </span>

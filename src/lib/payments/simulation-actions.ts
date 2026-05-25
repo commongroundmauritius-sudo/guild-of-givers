@@ -11,7 +11,7 @@ export const simulatePaymentEvent = async (params: { data: any }) => {
       subscriptionId: data.subscriptionId,
       transactionId: data.transactionId || `sim_${Math.random().toString(36).substring(7)}`,
       amount: data.amount,
-      payload: { simulated: true, ...data }
+      payload: { simulated: true, ...data },
     });
     return { success: true };
   } catch (error: any) {
@@ -36,8 +36,8 @@ export const simulateSuccessfulPayment = async (userId: string, amount: number) 
       data: {
         type: "payment.success",
         userId,
-        amount
-      }
+        amount,
+      },
     });
     toast.success("Payment simulation successful. Check the ledger for events.");
   } catch (error: any) {
