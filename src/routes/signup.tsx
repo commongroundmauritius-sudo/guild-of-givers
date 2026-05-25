@@ -5,6 +5,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { createLead, convertLead, startMembershipSubscription } from "@/lib/auth-actions";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/signup")({
@@ -35,6 +36,19 @@ function SignupPage() {
   const [submitting, setSubmitting] = useState(false);
   const { signUp, role, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Attribution detection
+  const [sourceInitiativeId, setSourceInitiativeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("source_initiative_id");
+      if (stored) {
+        setSourceInitiativeId(stored);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (!loading && role) {
       if (role === "admin") navigate({ to: "/admin-dashboard" });
@@ -74,6 +88,7 @@ function SignupPage() {
       phone: phone,
       subscription_amount: finalAmount,
       covers_fees: coversFees,
+      source_initiative_id: sourceInitiativeId,
     });
 
     if (error) {
@@ -82,68 +97,88 @@ function SignupPage() {
       return;
     }
 
-    // After account creation, trigger the subscription via abstraction layer
+    const user = authResult?.user;
+
     try {
-      const user = authResult?.user;
       if (user) {
+        // Start subscription
         await startMembershipSubscription({
           data: {
             userId: user.id,
             amount: finalAmount,
             billingDate: 7,
             coversFees,
-            priorities: [], // Default empty, user will set in dashboard
+            priorities: sourceInitiativeId ? [sourceInitiativeId] : [],
           },
         });
+
+        // Record conversion event with idempotency check
+        const sessionId = sessionStorage.getItem("cg_session_id") || "direct-signup";
+        const convKey = `conv_recorded_${sourceInitiativeId}`;
+
+        if (sourceInitiativeId && !sessionStorage.getItem(convKey)) {
+          await supabase.from("initiative_events").insert({
+            initiative_id: sourceInitiativeId,
+            event_type: "registration_conversion",
+            user_id: user.id,
+            session_id: sessionId,
+          });
+          sessionStorage.setItem(convKey, "true");
+          localStorage.removeItem("source_initiative_id");
+        }
       }
 
       await convertLead({ data: { email: email.trim().toLowerCase() } });
-    } catch (e) {
-      console.error("Post-signup processing failed", e);
+      setStep(4);
+    } catch (err) {
+      console.error("Post-signup error:", err);
+      setStep(4);
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitting(false);
-    toast.success("Account created — check your inbox to confirm.");
-    setStep(4);
   };
 
   return (
     <SiteLayout>
-      <section>
-        <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-          <button
-            onClick={() => (step === 0 ? navigate({ to: "/" }) : setStep((s) => s - 1))}
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
-          >
-            <ArrowLeft className="h-4 w-4" /> Back
-          </button>
+      <section className="relative overflow-hidden bg-cream-deep/30 py-20 lg:py-32">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl">
+            {step < 4 && (
+              <div className="mb-12">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setStep(Math.max(0, step - 1))}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm transition hover:bg-muted"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+                  <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    Step {step + 1} of 4: {STEPS[step]}
+                  </span>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  {[0, 1, 2, 3].map((s) => (
+                    <div
+                      key={s}
+                      className={`h-1.5 flex-1 rounded-full transition-colors ${
+                        s <= step ? "bg-primary" : "bg-primary/10"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-          <ol className="mt-8 grid grid-cols-5 gap-2 text-xs">
-            {STEPS.map((label, i) => (
-              <li
-                key={label}
-                className={`flex items-center gap-2 rounded-full px-3 py-2 ${
-                  i <= step ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
-                }`}
-              >
-                <span className="font-medium">{i + 1}</span>
-                <span>{label}</span>
-              </li>
-            ))}
-          </ol>
-
-          <div className="mt-10 rounded-3xl border border-border/60 bg-card p-8">
             {step === 0 && (
               <div>
-                <span className="kicker">Become a Member</span>
-                <h1 className="mt-3 font-display text-4xl font-semibold text-primary sm:text-5xl">
-                  Make a monthly impact
-                </h1>
-                <p className="mt-3 text-muted-foreground">
-                  Support verified, long-term programs across Mauritius.
+                <h2 className="font-display text-4xl font-semibold text-primary">
+                  Start your monthly impact
+                </h2>
+                <p className="mt-4 text-lg text-muted-foreground">
+                  Your contribution goes directly to vetted initiatives across Mauritius.
                 </p>
 
-                <div className="mt-8">
+                <div className="mt-12">
                   <p className="text-sm font-medium">Choose your monthly contribution</p>
                   <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {PRESETS.map((p) => {

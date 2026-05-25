@@ -20,6 +20,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InitiativesIndexRouteImport } from './routes/initiatives/index'
 import { Route as InitiativesIdRouteImport } from './routes/initiatives/$id'
+import { Route as InitiativesSlugRouteImport } from './routes/initiatives/$slug'
 import { Route as EntitiesIdRouteImport } from './routes/entities.$id'
 import { Route as AuthenticatedOrganizationRouteImport } from './routes/_authenticated/organization'
 import { Route as AuthenticatedMemberRouteImport } from './routes/_authenticated/member'
@@ -48,178 +49,215 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+
 const PartnerRoute = PartnerRouteImport.update({
   id: '/partner',
   path: '/partner',
   getParentRoute: () => rootRouteImport,
 } as any)
+
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+
 const LegalRoute = LegalRouteImport.update({
   id: '/legal',
   path: '/legal',
   getParentRoute: () => rootRouteImport,
 } as any)
+
 const ForOrgsRoute = ForOrgsRouteImport.update({
   id: '/for-orgs',
   path: '/for-orgs',
   getParentRoute: () => rootRouteImport,
 } as any)
+
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+
 const InitiativesIndexRoute = InitiativesIndexRouteImport.update({
   id: '/initiatives/',
   path: '/initiatives/',
   getParentRoute: () => rootRouteImport,
 } as any)
+
+const InitiativesSlugRoute = InitiativesSlugRouteImport.update({
+  id: '/initiatives/$slug',
+  path: '/initiatives/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
 const InitiativesIdRoute = InitiativesIdRouteImport.update({
   id: '/initiatives/$id',
   path: '/initiatives/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+
 const EntitiesIdRoute = EntitiesIdRouteImport.update({
   id: '/entities/$id',
   path: '/entities/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedOrganizationRoute =
-  AuthenticatedOrganizationRouteImport.update({
-    id: '/organization',
-    path: '/organization',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
+
+const AuthenticatedOrganizationRoute = AuthenticatedOrganizationRouteImport.update({
+  id: '/organization',
+  path: '/organization',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+
 const AuthenticatedMemberRoute = AuthenticatedMemberRouteImport.update({
   id: '/member',
   path: '/member',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+
 const AuthenticatedAdminDashboardRoute =
   AuthenticatedAdminDashboardRouteImport.update({
     id: '/admin-dashboard',
     path: '/admin-dashboard',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+
 const AuthenticatedCommunityHubIndexRoute =
   AuthenticatedCommunityHubIndexRouteImport.update({
     id: '/community-hub/',
     path: '/community-hub/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+
 const AuthenticatedAdminDashboardIndexRoute =
   AuthenticatedAdminDashboardIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedMemberSettingsRoute =
   AuthenticatedMemberSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedMemberRoute,
+    id: '/member/settings',
+    path: '/member/settings',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
+
 const AuthenticatedMemberProfileRoute =
   AuthenticatedMemberProfileRouteImport.update({
-    id: '/profile',
-    path: '/profile',
-    getParentRoute: () => AuthenticatedMemberRoute,
+    id: '/member/profile',
+    path: '/member/profile',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
+
 const AuthenticatedCommunityHubPostIdRoute =
   AuthenticatedCommunityHubPostIdRouteImport.update({
     id: '/community-hub/$postId',
     path: '/community-hub/$postId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+
 const AuthenticatedAdminDashboardVerifyPaymentsRoute =
   AuthenticatedAdminDashboardVerifyPaymentsRouteImport.update({
     id: '/verify-payments',
     path: '/verify-payments',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardSettingsRoute =
   AuthenticatedAdminDashboardSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardProfileRoute =
   AuthenticatedAdminDashboardProfileRouteImport.update({
     id: '/profile',
     path: '/profile',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardOrganizationsRoute =
   AuthenticatedAdminDashboardOrganizationsRouteImport.update({
     id: '/organizations',
     path: '/organizations',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardMembersRoute =
   AuthenticatedAdminDashboardMembersRouteImport.update({
     id: '/members',
     path: '/members',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardLeadsRoute =
   AuthenticatedAdminDashboardLeadsRouteImport.update({
     id: '/leads',
     path: '/leads',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardFinancesRoute =
   AuthenticatedAdminDashboardFinancesRouteImport.update({
     id: '/finances',
     path: '/finances',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardCommunityPostsRoute =
   AuthenticatedAdminDashboardCommunityPostsRouteImport.update({
     id: '/community-posts',
     path: '/community-posts',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardAnnouncementsRoute =
   AuthenticatedAdminDashboardAnnouncementsRouteImport.update({
     id: '/announcements',
     path: '/announcements',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardInitiativesIndexRoute =
   AuthenticatedAdminDashboardInitiativesIndexRouteImport.update({
     id: '/initiatives/',
     path: '/initiatives/',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardInitiativesNewRoute =
   AuthenticatedAdminDashboardInitiativesNewRouteImport.update({
     id: '/initiatives/new',
     path: '/initiatives/new',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+
 const AuthenticatedAdminDashboardInitiativesIdManageRoute =
   AuthenticatedAdminDashboardInitiativesIdManageRouteImport.update({
     id: '/initiatives/$id/manage',
@@ -227,555 +265,10 @@ const AuthenticatedAdminDashboardInitiativesIdManageRoute =
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
 
-export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/faq': typeof FaqRoute
-  '/for-orgs': typeof ForOrgsRoute
-  '/legal': typeof LegalRoute
-  '/login': typeof LoginRoute
-  '/partner': typeof PartnerRoute
-  '/signup': typeof SignupRoute
-  '/admin-dashboard': typeof AuthenticatedAdminDashboardRouteWithChildren
-  '/dashboard': typeof AuthenticatedDashboardRoute
-  '/member': typeof AuthenticatedMemberRouteWithChildren
-  '/organization': typeof AuthenticatedOrganizationRoute
-  '/entities/$id': typeof EntitiesIdRoute
-  '/initiatives/$id': typeof InitiativesIdRoute
-  '/initiatives/': typeof InitiativesIndexRoute
-  '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
-  '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
-  '/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
-  '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
-  '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
-  '/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
-  '/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
-  '/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
-  '/admin-dashboard/verify-payments': typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
-  '/community-hub/$postId': typeof AuthenticatedCommunityHubPostIdRoute
-  '/member/profile': typeof AuthenticatedMemberProfileRoute
-  '/member/settings': typeof AuthenticatedMemberSettingsRoute
-  '/admin-dashboard/': typeof AuthenticatedAdminDashboardIndexRoute
-  '/community-hub/': typeof AuthenticatedCommunityHubIndexRoute
-  '/admin-dashboard/initiatives/new': typeof AuthenticatedAdminDashboardInitiativesNewRoute
-  '/admin-dashboard/initiatives/': typeof AuthenticatedAdminDashboardInitiativesIndexRoute
-  '/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
-}
-export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/faq': typeof FaqRoute
-  '/for-orgs': typeof ForOrgsRoute
-  '/legal': typeof LegalRoute
-  '/login': typeof LoginRoute
-  '/partner': typeof PartnerRoute
-  '/signup': typeof SignupRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
-  '/member': typeof AuthenticatedMemberRouteWithChildren
-  '/organization': typeof AuthenticatedOrganizationRoute
-  '/entities/$id': typeof EntitiesIdRoute
-  '/initiatives/$id': typeof InitiativesIdRoute
-  '/initiatives': typeof InitiativesIndexRoute
-  '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
-  '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
-  '/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
-  '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
-  '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
-  '/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
-  '/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
-  '/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
-  '/admin-dashboard/verify-payments': typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
-  '/community-hub/$postId': typeof AuthenticatedCommunityHubPostIdRoute
-  '/member/profile': typeof AuthenticatedMemberProfileRoute
-  '/member/settings': typeof AuthenticatedMemberSettingsRoute
-  '/admin-dashboard': typeof AuthenticatedAdminDashboardIndexRoute
-  '/community-hub': typeof AuthenticatedCommunityHubIndexRoute
-  '/admin-dashboard/initiatives/new': typeof AuthenticatedAdminDashboardInitiativesNewRoute
-  '/admin-dashboard/initiatives': typeof AuthenticatedAdminDashboardInitiativesIndexRoute
-  '/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
-}
-export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/about': typeof AboutRoute
-  '/faq': typeof FaqRoute
-  '/for-orgs': typeof ForOrgsRoute
-  '/legal': typeof LegalRoute
-  '/login': typeof LoginRoute
-  '/partner': typeof PartnerRoute
-  '/signup': typeof SignupRoute
-  '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRouteWithChildren
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/member': typeof AuthenticatedMemberRouteWithChildren
-  '/_authenticated/organization': typeof AuthenticatedOrganizationRoute
-  '/entities/$id': typeof EntitiesIdRoute
-  '/initiatives/$id': typeof InitiativesIdRoute
-  '/initiatives/': typeof InitiativesIndexRoute
-  '/_authenticated/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
-  '/_authenticated/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
-  '/_authenticated/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
-  '/_authenticated/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
-  '/_authenticated/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRoute
-  '/_authenticated/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
-  '/_authenticated/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
-  '/_authenticated/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
-  '/_authenticated/admin-dashboard/verify-payments': typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
-  '/_authenticated/community-hub/$postId': typeof AuthenticatedCommunityHubPostIdRoute
-  '/_authenticated/member/profile': typeof AuthenticatedMemberProfileRoute
-  '/_authenticated/member/settings': typeof AuthenticatedMemberSettingsRoute
-  '/_authenticated/admin-dashboard/': typeof AuthenticatedAdminDashboardIndexRoute
-  '/_authenticated/community-hub/': typeof AuthenticatedCommunityHubIndexRoute
-  '/_authenticated/admin-dashboard/initiatives/new': typeof AuthenticatedAdminDashboardInitiativesNewRoute
-  '/_authenticated/admin-dashboard/initiatives/': typeof AuthenticatedAdminDashboardInitiativesIndexRoute
-  '/_authenticated/admin-dashboard/initiatives/$id/manage': typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
-}
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/about'
-    | '/faq'
-    | '/for-orgs'
-    | '/legal'
-    | '/login'
-    | '/partner'
-    | '/signup'
-    | '/admin-dashboard'
-    | '/dashboard'
-    | '/member'
-    | '/organization'
-    | '/entities/$id'
-    | '/initiatives/$id'
-    | '/initiatives/'
-    | '/admin-dashboard/announcements'
-    | '/admin-dashboard/community-posts'
-    | '/admin-dashboard/finances'
-    | '/admin-dashboard/leads'
-    | '/admin-dashboard/members'
-    | '/admin-dashboard/organizations'
-    | '/admin-dashboard/profile'
-    | '/admin-dashboard/settings'
-    | '/admin-dashboard/verify-payments'
-    | '/community-hub/$postId'
-    | '/member/profile'
-    | '/member/settings'
-    | '/admin-dashboard/'
-    | '/community-hub/'
-    | '/admin-dashboard/initiatives/new'
-    | '/admin-dashboard/initiatives/'
-    | '/admin-dashboard/initiatives/$id/manage'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/about'
-    | '/faq'
-    | '/for-orgs'
-    | '/legal'
-    | '/login'
-    | '/partner'
-    | '/signup'
-    | '/dashboard'
-    | '/member'
-    | '/organization'
-    | '/entities/$id'
-    | '/initiatives/$id'
-    | '/initiatives'
-    | '/admin-dashboard/announcements'
-    | '/admin-dashboard/community-posts'
-    | '/admin-dashboard/finances'
-    | '/admin-dashboard/leads'
-    | '/admin-dashboard/members'
-    | '/admin-dashboard/organizations'
-    | '/admin-dashboard/profile'
-    | '/admin-dashboard/settings'
-    | '/admin-dashboard/verify-payments'
-    | '/community-hub/$postId'
-    | '/member/profile'
-    | '/member/settings'
-    | '/admin-dashboard'
-    | '/community-hub'
-    | '/admin-dashboard/initiatives/new'
-    | '/admin-dashboard/initiatives'
-    | '/admin-dashboard/initiatives/$id/manage'
-  id:
-    | '__root__'
-    | '/'
-    | '/_authenticated'
-    | '/about'
-    | '/faq'
-    | '/for-orgs'
-    | '/legal'
-    | '/login'
-    | '/partner'
-    | '/signup'
-    | '/_authenticated/admin-dashboard'
-    | '/_authenticated/dashboard'
-    | '/_authenticated/member'
-    | '/_authenticated/organization'
-    | '/entities/$id'
-    | '/initiatives/$id'
-    | '/initiatives/'
-    | '/_authenticated/admin-dashboard/announcements'
-    | '/_authenticated/admin-dashboard/community-posts'
-    | '/_authenticated/admin-dashboard/finances'
-    | '/_authenticated/admin-dashboard/leads'
-    | '/_authenticated/admin-dashboard/members'
-    | '/_authenticated/admin-dashboard/organizations'
-    | '/_authenticated/admin-dashboard/profile'
-    | '/_authenticated/admin-dashboard/settings'
-    | '/_authenticated/admin-dashboard/verify-payments'
-    | '/_authenticated/community-hub/$postId'
-    | '/_authenticated/member/profile'
-    | '/_authenticated/member/settings'
-    | '/_authenticated/admin-dashboard/'
-    | '/_authenticated/community-hub/'
-    | '/_authenticated/admin-dashboard/initiatives/new'
-    | '/_authenticated/admin-dashboard/initiatives/'
-    | '/_authenticated/admin-dashboard/initiatives/$id/manage'
-  fileRoutesById: FileRoutesById
-}
-export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  AboutRoute: typeof AboutRoute
-  FaqRoute: typeof FaqRoute
-  ForOrgsRoute: typeof ForOrgsRoute
-  LegalRoute: typeof LegalRoute
-  LoginRoute: typeof LoginRoute
-  PartnerRoute: typeof PartnerRoute
-  SignupRoute: typeof SignupRoute
-  EntitiesIdRoute: typeof EntitiesIdRoute
-  InitiativesIdRoute: typeof InitiativesIdRoute
-  InitiativesIndexRoute: typeof InitiativesIndexRoute
-}
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/partner': {
-      id: '/partner'
-      path: '/partner'
-      fullPath: '/partner'
-      preLoaderRoute: typeof PartnerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal': {
-      id: '/legal'
-      path: '/legal'
-      fullPath: '/legal'
-      preLoaderRoute: typeof LegalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/for-orgs': {
-      id: '/for-orgs'
-      path: '/for-orgs'
-      fullPath: '/for-orgs'
-      preLoaderRoute: typeof ForOrgsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faq': {
-      id: '/faq'
-      path: '/faq'
-      fullPath: '/faq'
-      preLoaderRoute: typeof FaqRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/initiatives/': {
-      id: '/initiatives/'
-      path: '/initiatives'
-      fullPath: '/initiatives/'
-      preLoaderRoute: typeof InitiativesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/initiatives/$id': {
-      id: '/initiatives/$id'
-      path: '/initiatives/$id'
-      fullPath: '/initiatives/$id'
-      preLoaderRoute: typeof InitiativesIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/entities/$id': {
-      id: '/entities/$id'
-      path: '/entities/$id'
-      fullPath: '/entities/$id'
-      preLoaderRoute: typeof EntitiesIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/organization': {
-      id: '/_authenticated/organization'
-      path: '/organization'
-      fullPath: '/organization'
-      preLoaderRoute: typeof AuthenticatedOrganizationRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/member': {
-      id: '/_authenticated/member'
-      path: '/member'
-      fullPath: '/member'
-      preLoaderRoute: typeof AuthenticatedMemberRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/admin-dashboard': {
-      id: '/_authenticated/admin-dashboard'
-      path: '/admin-dashboard'
-      fullPath: '/admin-dashboard'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/community-hub/': {
-      id: '/_authenticated/community-hub/'
-      path: '/community-hub'
-      fullPath: '/community-hub/'
-      preLoaderRoute: typeof AuthenticatedCommunityHubIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/admin-dashboard/': {
-      id: '/_authenticated/admin-dashboard/'
-      path: '/'
-      fullPath: '/admin-dashboard/'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/member/settings': {
-      id: '/_authenticated/member/settings'
-      path: '/settings'
-      fullPath: '/member/settings'
-      preLoaderRoute: typeof AuthenticatedMemberSettingsRouteImport
-      parentRoute: typeof AuthenticatedMemberRoute
-    }
-    '/_authenticated/member/profile': {
-      id: '/_authenticated/member/profile'
-      path: '/profile'
-      fullPath: '/member/profile'
-      preLoaderRoute: typeof AuthenticatedMemberProfileRouteImport
-      parentRoute: typeof AuthenticatedMemberRoute
-    }
-    '/_authenticated/community-hub/$postId': {
-      id: '/_authenticated/community-hub/$postId'
-      path: '/community-hub/$postId'
-      fullPath: '/community-hub/$postId'
-      preLoaderRoute: typeof AuthenticatedCommunityHubPostIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/admin-dashboard/verify-payments': {
-      id: '/_authenticated/admin-dashboard/verify-payments'
-      path: '/verify-payments'
-      fullPath: '/admin-dashboard/verify-payments'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardVerifyPaymentsRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/settings': {
-      id: '/_authenticated/admin-dashboard/settings'
-      path: '/settings'
-      fullPath: '/admin-dashboard/settings'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardSettingsRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/profile': {
-      id: '/_authenticated/admin-dashboard/profile'
-      path: '/profile'
-      fullPath: '/admin-dashboard/profile'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardProfileRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/organizations': {
-      id: '/_authenticated/admin-dashboard/organizations'
-      path: '/organizations'
-      fullPath: '/admin-dashboard/organizations'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardOrganizationsRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/members': {
-      id: '/_authenticated/admin-dashboard/members'
-      path: '/members'
-      fullPath: '/admin-dashboard/members'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardMembersRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/leads': {
-      id: '/_authenticated/admin-dashboard/leads'
-      path: '/leads'
-      fullPath: '/admin-dashboard/leads'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardLeadsRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/finances': {
-      id: '/_authenticated/admin-dashboard/finances'
-      path: '/finances'
-      fullPath: '/admin-dashboard/finances'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardFinancesRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/community-posts': {
-      id: '/_authenticated/admin-dashboard/community-posts'
-      path: '/community-posts'
-      fullPath: '/admin-dashboard/community-posts'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardCommunityPostsRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/announcements': {
-      id: '/_authenticated/admin-dashboard/announcements'
-      path: '/announcements'
-      fullPath: '/admin-dashboard/announcements'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardAnnouncementsRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/initiatives/': {
-      id: '/_authenticated/admin-dashboard/initiatives/'
-      path: '/initiatives'
-      fullPath: '/admin-dashboard/initiatives/'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardInitiativesIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/initiatives/new': {
-      id: '/_authenticated/admin-dashboard/initiatives/new'
-      path: '/initiatives/new'
-      fullPath: '/admin-dashboard/initiatives/new'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardInitiativesNewRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-    '/_authenticated/admin-dashboard/initiatives/$id/manage': {
-      id: '/_authenticated/admin-dashboard/initiatives/$id/manage'
-      path: '/initiatives/$id/manage'
-      fullPath: '/admin-dashboard/initiatives/$id/manage'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardInitiativesIdManageRouteImport
-      parentRoute: typeof AuthenticatedAdminDashboardRoute
-    }
-  }
-}
-
-interface AuthenticatedAdminDashboardRouteChildren {
-  AuthenticatedAdminDashboardAnnouncementsRoute: typeof AuthenticatedAdminDashboardAnnouncementsRoute
-  AuthenticatedAdminDashboardCommunityPostsRoute: typeof AuthenticatedAdminDashboardCommunityPostsRoute
-  AuthenticatedAdminDashboardFinancesRoute: typeof AuthenticatedAdminDashboardFinancesRoute
-  AuthenticatedAdminDashboardLeadsRoute: typeof AuthenticatedAdminDashboardLeadsRoute
-  AuthenticatedAdminDashboardMembersRoute: typeof AuthenticatedAdminDashboardMembersRoute
-  AuthenticatedAdminDashboardOrganizationsRoute: typeof AuthenticatedAdminDashboardOrganizationsRoute
-  AuthenticatedAdminDashboardProfileRoute: typeof AuthenticatedAdminDashboardProfileRoute
-  AuthenticatedAdminDashboardSettingsRoute: typeof AuthenticatedAdminDashboardSettingsRoute
-  AuthenticatedAdminDashboardVerifyPaymentsRoute: typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
-  AuthenticatedAdminDashboardIndexRoute: typeof AuthenticatedAdminDashboardIndexRoute
-  AuthenticatedAdminDashboardInitiativesNewRoute: typeof AuthenticatedAdminDashboardInitiativesNewRoute
-  AuthenticatedAdminDashboardInitiativesIndexRoute: typeof AuthenticatedAdminDashboardInitiativesIndexRoute
-  AuthenticatedAdminDashboardInitiativesIdManageRoute: typeof AuthenticatedAdminDashboardInitiativesIdManageRoute
-}
-
-const AuthenticatedAdminDashboardRouteChildren: AuthenticatedAdminDashboardRouteChildren =
-  {
-    AuthenticatedAdminDashboardAnnouncementsRoute:
-      AuthenticatedAdminDashboardAnnouncementsRoute,
-    AuthenticatedAdminDashboardCommunityPostsRoute:
-      AuthenticatedAdminDashboardCommunityPostsRoute,
-    AuthenticatedAdminDashboardFinancesRoute:
-      AuthenticatedAdminDashboardFinancesRoute,
-    AuthenticatedAdminDashboardLeadsRoute:
-      AuthenticatedAdminDashboardLeadsRoute,
-    AuthenticatedAdminDashboardMembersRoute:
-      AuthenticatedAdminDashboardMembersRoute,
-    AuthenticatedAdminDashboardOrganizationsRoute:
-      AuthenticatedAdminDashboardOrganizationsRoute,
-    AuthenticatedAdminDashboardProfileRoute:
-      AuthenticatedAdminDashboardProfileRoute,
-    AuthenticatedAdminDashboardSettingsRoute:
-      AuthenticatedAdminDashboardSettingsRoute,
-    AuthenticatedAdminDashboardVerifyPaymentsRoute:
-      AuthenticatedAdminDashboardVerifyPaymentsRoute,
-    AuthenticatedAdminDashboardIndexRoute:
-      AuthenticatedAdminDashboardIndexRoute,
-    AuthenticatedAdminDashboardInitiativesNewRoute:
-      AuthenticatedAdminDashboardInitiativesNewRoute,
-    AuthenticatedAdminDashboardInitiativesIndexRoute:
-      AuthenticatedAdminDashboardInitiativesIndexRoute,
-    AuthenticatedAdminDashboardInitiativesIdManageRoute:
-      AuthenticatedAdminDashboardInitiativesIdManageRoute,
-  }
-
-const AuthenticatedAdminDashboardRouteWithChildren =
-  AuthenticatedAdminDashboardRoute._addFileChildren(
-    AuthenticatedAdminDashboardRouteChildren,
-  )
-
-interface AuthenticatedMemberRouteChildren {
-  AuthenticatedMemberProfileRoute: typeof AuthenticatedMemberProfileRoute
-  AuthenticatedMemberSettingsRoute: typeof AuthenticatedMemberSettingsRoute
-}
-
-const AuthenticatedMemberRouteChildren: AuthenticatedMemberRouteChildren = {
-  AuthenticatedMemberProfileRoute: AuthenticatedMemberProfileRoute,
-  AuthenticatedMemberSettingsRoute: AuthenticatedMemberSettingsRoute,
-}
-
-const AuthenticatedMemberRouteWithChildren =
-  AuthenticatedMemberRoute._addFileChildren(AuthenticatedMemberRouteChildren)
-
-interface AuthenticatedRouteChildren {
-  AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRouteWithChildren
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedMemberRoute: typeof AuthenticatedMemberRouteWithChildren
-  AuthenticatedOrganizationRoute: typeof AuthenticatedOrganizationRoute
-  AuthenticatedCommunityHubPostIdRoute: typeof AuthenticatedCommunityHubPostIdRoute
-  AuthenticatedCommunityHubIndexRoute: typeof AuthenticatedCommunityHubIndexRoute
-}
-
-const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAdminDashboardRoute:
-    AuthenticatedAdminDashboardRouteWithChildren,
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedMemberRoute: AuthenticatedMemberRouteWithChildren,
-  AuthenticatedOrganizationRoute: AuthenticatedOrganizationRoute,
-  AuthenticatedCommunityHubPostIdRoute: AuthenticatedCommunityHubPostIdRoute,
-  AuthenticatedCommunityHubIndexRoute: AuthenticatedCommunityHubIndexRoute,
-}
-
-const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
-
+/* ROOT_ROUTE_CHILDREN_START */
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthenticatedRoute: AuthenticatedRoute,
   AboutRoute: AboutRoute,
   FaqRoute: FaqRoute,
   ForOrgsRoute: ForOrgsRoute,
@@ -785,8 +278,256 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   EntitiesIdRoute: EntitiesIdRoute,
   InitiativesIdRoute: InitiativesIdRoute,
+  InitiativesSlugRoute: InitiativesSlugRoute,
   InitiativesIndexRoute: InitiativesIndexRoute,
 }
+/* ROOT_ROUTE_CHILDREN_END */
+
+/* FILE_ROUTES_BY_PATH_START */
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-orgs': {
+      id: '/for-orgs'
+      path: '/for-orgs'
+      fullPath: '/for-orgs'
+      preLoaderRoute: typeof ForOrgsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner': {
+      id: '/partner'
+      path: '/partner'
+      fullPath: '/partner'
+      preLoaderRoute: typeof PartnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entities/$id': {
+      id: '/entities/$id'
+      path: '/entities/$id'
+      fullPath: '/entities/$id'
+      preLoaderRoute: typeof EntitiesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/initiatives/$id': {
+      id: '/initiatives/$id'
+      path: '/initiatives/$id'
+      fullPath: '/initiatives/$id'
+      preLoaderRoute: typeof InitiativesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/initiatives/$slug': {
+      id: '/initiatives/$slug'
+      path: '/initiatives/$slug'
+      fullPath: '/initiatives/$slug'
+      preLoaderRoute: typeof InitiativesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/member': {
+      id: '/_authenticated/member'
+      path: '/member'
+      fullPath: '/member'
+      preLoaderRoute: typeof AuthenticatedMemberRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/organization': {
+      id: '/_authenticated/organization'
+      path: '/organization'
+      fullPath: '/organization'
+      preLoaderRoute: typeof AuthenticatedOrganizationRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/admin-dashboard': {
+      id: '/_authenticated/admin-dashboard'
+      path: '/admin-dashboard'
+      fullPath: '/admin-dashboard'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/initiatives/': {
+      id: '/initiatives/'
+      path: '/initiatives'
+      fullPath: '/initiatives'
+      preLoaderRoute: typeof InitiativesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/community-hub/': {
+      id: '/_authenticated/community-hub/'
+      path: '/community-hub'
+      fullPath: '/community-hub'
+      preLoaderRoute: typeof AuthenticatedCommunityHubIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/admin-dashboard/': {
+      id: '/_authenticated/admin-dashboard/'
+      path: '/'
+      fullPath: '/admin-dashboard/'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/member/profile': {
+      id: '/_authenticated/member/profile'
+      path: '/member/profile'
+      fullPath: '/member/profile'
+      preLoaderRoute: typeof AuthenticatedMemberProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/member/settings': {
+      id: '/_authenticated/member/settings'
+      path: '/member/settings'
+      fullPath: '/member/settings'
+      preLoaderRoute: typeof AuthenticatedMemberSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/admin-dashboard/announcements': {
+      id: '/_authenticated/admin-dashboard/announcements'
+      path: '/announcements'
+      fullPath: '/admin-dashboard/announcements'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardAnnouncementsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/admin-dashboard/community-posts': {
+      id: '/_authenticated/admin-dashboard/community-posts'
+      path: '/community-posts'
+      fullPath: '/admin-dashboard/community-posts'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardCommunityPostsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/admin-dashboard/finances': {
+      id: '/_authenticated/admin-dashboard/finances'
+      path: '/finances'
+      fullPath: '/admin-dashboard/finances'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardFinancesRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/admin-dashboard/leads': {
+      id: '/_authenticated/admin-dashboard/leads'
+      path: '/leads'
+      fullPath: '/admin-dashboard/leads'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardLeadsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/admin-dashboard/members': {
+      id: '/_authenticated/admin-dashboard/members'
+      path: '/members'
+      fullPath: '/admin-dashboard/members'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardMembersRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/admin-dashboard/organizations': {
+      id: '/_authenticated/admin-dashboard/organizations'
+      path: '/organizations'
+      fullPath: '/admin-dashboard/organizations'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardOrganizationsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/admin-dashboard/profile': {
+      id: '/_authenticated/admin-dashboard/profile'
+      path: '/profile'
+      fullPath: '/admin-dashboard/profile'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardProfileRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/admin-dashboard/settings': {
+      id: '/_authenticated/admin-dashboard/settings'
+      path: '/settings'
+      fullPath: '/admin-dashboard/settings'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardSettingsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/admin-dashboard/verify-payments': {
+      id: '/_authenticated/admin-dashboard/verify-payments'
+      path: '/verify-payments'
+      fullPath: '/admin-dashboard/verify-payments'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardVerifyPaymentsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/community-hub/$postId': {
+      id: '/_authenticated/community-hub/$postId'
+      path: '/community-hub/$postId'
+      fullPath: '/community-hub/$postId'
+      preLoaderRoute: typeof AuthenticatedCommunityHubPostIdRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/admin-dashboard/initiatives/new': {
+      id: '/_authenticated/admin-dashboard/initiatives/new'
+      path: '/initiatives/new'
+      fullPath: '/admin-dashboard/initiatives/new'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardInitiativesNewRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/admin-dashboard/initiatives/': {
+      id: '/_authenticated/admin-dashboard/initiatives/'
+      path: '/initiatives'
+      fullPath: '/admin-dashboard/initiatives'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardInitiativesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+    '/_authenticated/admin-dashboard/initiatives/$id/manage': {
+      id: '/_authenticated/admin-dashboard/initiatives/$id/manage'
+      path: '/initiatives/$id/manage'
+      fullPath: '/admin-dashboard/initiatives/$id/manage'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardInitiativesIdManageRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRouteImport
+    }
+  }
+}
+/* FILE_ROUTES_BY_PATH_END */
+
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
