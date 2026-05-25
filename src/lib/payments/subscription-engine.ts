@@ -31,7 +31,10 @@ export class SubscriptionEngine {
     }
   }
 
-  private async recordSupporterStatusEvent(userId: string | undefined, eventType: string): Promise<void> {
+  private async recordSupporterStatusEvent(
+    userId: string | undefined,
+    eventType: string,
+  ): Promise<void> {
     if (!userId) return;
 
     const { data: profile } = await supabase
@@ -99,26 +102,26 @@ export class SubscriptionEngine {
     }
 
     const { error: allocError } = await supabase.rpc("allocate_payment_funds", {
-        p_payment_id: payment.id,
-        p_user_id: userId,
-        p_total_amount: amount
+      p_payment_id: payment.id,
+      p_user_id: userId,
+      p_total_amount: amount,
     });
 
     if (allocError) {
-        console.error("CRITICAL: Atomic financial allocation failed:", allocError);
+      console.error("CRITICAL: Atomic financial allocation failed:", allocError);
     }
 
     const { error: activateError } = await supabase.rpc("activate_membership", {
-        p_user_id: userId
+      p_user_id: userId,
     });
     if (activateError) {
-        console.error("Failed to activate membership role:", activateError);
+      console.error("Failed to activate membership role:", activateError);
     }
 
     if (subscriptionId) {
       const wasUpdated = await this.updateSubscriptionStatus(subscriptionId, "active");
       if (wasUpdated) {
-          await this.recordSupporterStatusEvent(userId, "supporter_activated");
+        await this.recordSupporterStatusEvent(userId, "supporter_activated");
       }
     }
   }
@@ -150,8 +153,8 @@ export class SubscriptionEngine {
   async runBillingCycle(): Promise<void> {
     const { error } = await supabase.rpc("process_recurring_billing");
     if (error) {
-        console.error("Failed to trigger DB billing cycle:", error);
-        throw error;
+      console.error("Failed to trigger DB billing cycle:", error);
+      throw error;
     }
   }
 }

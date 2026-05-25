@@ -28,7 +28,8 @@ function InitiativeDetailPage() {
   } = useQuery({
     queryKey: ["initiative-slug", slug],
     queryFn: async () => {
-      let { data, error } = await supabase
+      let resultData;
+      const { data, error: slugError } = await supabase
         .from("initiatives")
         .select("*, organizations!inner(*)")
         .eq("slug", slug)
@@ -37,9 +38,10 @@ function InitiativeDetailPage() {
         .eq("organizations.status", "active")
         .maybeSingle();
 
-      if (error) throw error;
+      if (slugError) throw slugError;
+      resultData = data;
 
-      if (!data) {
+      if (!resultData) {
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (uuidRegex.test(slug)) {
           const { data: byId, error: errorId } = await supabase
@@ -52,11 +54,11 @@ function InitiativeDetailPage() {
             .maybeSingle();
 
           if (errorId) throw errorId;
-          data = byId;
+          resultData = byId;
         }
       }
 
-      return data;
+      return resultData;
     },
   });
 
@@ -68,15 +70,13 @@ function InitiativeDetailPage() {
 
   useEffect(() => {
     if (initiative) {
-      // Attribution persistence with 30-day window
       if (typeof window !== "undefined") {
         const now = Date.now();
-        const expiresAt = now + 30 * 24 * 60 * 60 * 1000; // 30 days
+        const expiresAt = now + 30 * 24 * 60 * 60 * 1000;
         localStorage.setItem("source_initiative_id", initiative.id);
         localStorage.setItem("source_initiative_expires_at", expiresAt.toString());
       }
 
-      // Record analytics event (session-aware deduplication)
       const recordPageView = async () => {
         if (typeof window === "undefined") return;
 
@@ -87,16 +87,15 @@ function InitiativeDetailPage() {
         const lastViewedKey = `last_viewed_${initiative.id}`;
         const lastViewed = sessionStorage.getItem(lastViewedKey);
 
-        // Deduplicate: only record once per session and only if not too frequent
         const now = Date.now();
-        if (!lastViewed || now - parseInt(lastViewed) > 1000 * 60 * 30) { // 30 min re-view window
-          const { error } = await supabase.from("initiative_events").insert({
+        if (!lastViewed || now - parseInt(lastViewed) > 1000 * 60 * 30) {
+          const { error: insertError } = await supabase.from("initiative_events").insert({
             initiative_id: initiative.id,
             event_type: "page_view",
             session_id: sessionId,
           });
 
-          if (!error) {
+          if (!insertError) {
             sessionStorage.setItem(lastViewedKey, now.toString());
           }
         }

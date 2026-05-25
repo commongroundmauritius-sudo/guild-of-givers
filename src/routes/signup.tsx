@@ -78,7 +78,7 @@ function SignupPage() {
           phone: phone.trim(),
           amount: finalAmount,
           coversFees,
-          status: "started"
+          status: "started",
         },
       });
       setStep(2);
@@ -90,16 +90,16 @@ function SignupPage() {
   };
 
   const handlePaymentCompletion = async () => {
-     if (submitting) return;
-     setSubmitting(true);
-     try {
-       await convertLead({ data: { email: email.trim().toLowerCase(), status: "converted" } });
-       setStep(3);
-     } catch (err) {
-       toast.error("Failed to process payment status.");
-     } finally {
-       setSubmitting(false);
-     }
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await convertLead({ data: { email: email.trim().toLowerCase(), status: "converted" } });
+      setStep(3);
+    } catch (err) {
+      toast.error("Failed to process payment status.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const submitAccount = async () => {
@@ -146,7 +146,8 @@ function SignupPage() {
             session_id: sessionId,
           });
 
-          if (!eventError || eventError.code === '23505') { // Success or already exists
+          if (!eventError || eventError.code === "23505") {
+            // Success or already exists
             sessionStorage.setItem(convKey, "true");
             localStorage.removeItem("source_initiative_id");
             localStorage.removeItem("source_initiative_expires_at");
@@ -330,8 +331,8 @@ function SignupPage() {
               <div>
                 <h2 className="font-display text-3xl font-semibold text-primary">Payment</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Simulating a secure payment via our abstraction layer.
-                  Your CommonGround Member account will be activated immediately after this mock transaction.
+                  Simulating a secure payment via our abstraction layer. Your CommonGround Member
+                  account will be activated immediately after this mock transaction.
                 </p>
                 <div className="mt-8 rounded-2xl border border-teal-600/20 bg-teal-600/5 p-6">
                   <p className="text-sm font-semibold text-teal-700 uppercase">Order Summary</p>
