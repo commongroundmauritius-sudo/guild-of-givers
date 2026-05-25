@@ -37,3 +37,9 @@ Audit of the ledger integrity, allocation engine, and payment flows.
 ### Verification (2026-05-24)
 - **Idempotency [FIN-002]:** RPC now returns early if payment_id exists in financial_events. Verified by code review of migration 20260525000003.
 - **Rounding [FIN-003]:** Logic now uses subtraction for the second component to ensure total consistency. Verified.
+
+## Gap Remediation Summary (2026-05-24)
+- **Resolved [FIN-002]:** Idempotency guard implemented in allocate_payment_funds.
+- **Resolved [FIN-003]:** Rounding logic corrected to subtraction-based model.
+- **New [FIN-004]:** Historical archiving implemented via initiative_monthly_records.
+- **New [FIN-005]:** Explicit lifetime metrics added to initiatives table.
