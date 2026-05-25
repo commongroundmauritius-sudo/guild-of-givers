@@ -13,7 +13,10 @@ function DashboardRouter() {
 
   useEffect(() => {
     if (loading) return;
-    if (!role) { navigate({ to: "/signup", replace: true }); return; }
+    if (!role) {
+      navigate({ to: "/signup", replace: true });
+      return;
+    }
     if (role === "admin") navigate({ to: "/admin-dashboard", replace: true });
     else if (role === "organization") navigate({ to: "/organization", replace: true });
     else navigate({ to: "/member", replace: true });

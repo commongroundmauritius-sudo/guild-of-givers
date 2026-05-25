@@ -10,7 +10,7 @@ import {
   Plus,
   FileText,
   ExternalLink,
-  History
+  History,
 } from "lucide-react";
 import { Link, useNavigate, createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -29,11 +29,7 @@ export default function MemberDashboard() {
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user?.id)
-        .single();
+      const { data } = await supabase.from("profiles").select("*").eq("id", user?.id).single();
       return data;
     },
     enabled: !!user?.id,
@@ -98,7 +94,7 @@ export default function MemberDashboard() {
         return supabase.from("member_preferences").insert({
           user_id: user?.id,
           initiative_id: initiativeId,
-          priority_level: (preferences?.length || 0) + 1
+          priority_level: (preferences?.length || 0) + 1,
         });
       } else {
         return supabase
@@ -115,9 +111,10 @@ export default function MemberDashboard() {
   });
 
   const isSubscribed = subscription?.status === "active";
-  const lifetimeImpact = ledgerEvents
-    ?.filter(e => e.event_type === 'allocation' || e.event_type === 'impact_pool')
-    .reduce((acc, e) => acc + Number(e.amount_mur), 0) ?? 0;
+  const lifetimeImpact =
+    ledgerEvents
+      ?.filter((e) => e.event_type === "allocation" || e.event_type === "impact_pool")
+      .reduce((acc, e) => acc + Number(e.amount_mur), 0) ?? 0;
 
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "Member";
 
@@ -128,7 +125,11 @@ export default function MemberDashboard() {
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
               <div className="flex items-center gap-2">
-                <Badge className={isSubscribed ? "bg-teal-100 text-teal-700" : "bg-muted text-muted-foreground"}>
+                <Badge
+                  className={
+                    isSubscribed ? "bg-teal-100 text-teal-700" : "bg-muted text-muted-foreground"
+                  }
+                >
                   {isSubscribed ? "Active Member" : "Guest Account"}
                 </Badge>
               </div>
@@ -164,15 +165,20 @@ export default function MemberDashboard() {
                   : "—",
                 sub: subscription?.status || "Inactive",
                 icon: CreditCard,
-                color: "teal"
+                color: "teal",
               },
-              { title: "Active allocations", value: preferences?.length || 0, icon: Heart, color: "teal" },
+              {
+                title: "Active allocations",
+                value: preferences?.length || 0,
+                icon: Heart,
+                color: "teal",
+              },
               {
                 title: "Lifetime impact",
                 value: `Rs ${lifetimeImpact.toLocaleString()}`,
                 sub: "Actual funds allocated",
                 icon: LayoutDashboard,
-                color: "teal"
+                color: "teal",
               },
             ].map((c) => (
               <div
@@ -189,7 +195,9 @@ export default function MemberDashboard() {
                 </div>
                 <p className="mt-4 font-display text-3xl font-bold text-primary">{c.value}</p>
                 {"sub" in c && (
-                  <p className="mt-1 text-xs text-muted-foreground capitalize font-medium">{c.sub}</p>
+                  <p className="mt-1 text-xs text-muted-foreground capitalize font-medium">
+                    {c.sub}
+                  </p>
                 )}
               </div>
             ))}
@@ -252,7 +260,9 @@ export default function MemberDashboard() {
                 <History className="h-5 w-5" />
                 Ledger History
               </h2>
-              <p className="text-muted-foreground text-sm mt-1">Direct visibility into your fund movements.</p>
+              <p className="text-muted-foreground text-sm mt-1">
+                Direct visibility into your fund movements.
+              </p>
               <div className="mt-6 space-y-3">
                 {ledgerEvents && ledgerEvents.length > 0 ? (
                   ledgerEvents.map((e) => (
@@ -261,17 +271,24 @@ export default function MemberDashboard() {
                       className="flex items-center justify-between rounded-2xl border border-teal-600/20 bg-card p-4 transition hover:shadow-md"
                     >
                       <div className="flex gap-4">
-                        <div className={`grid h-10 w-10 place-items-center rounded-full ${e.event_type === 'allocation' ? 'bg-teal-100 text-teal-600' : 'bg-amber-100 text-amber-700'}`}>
+                        <div
+                          className={`grid h-10 w-10 place-items-center rounded-full ${e.event_type === "allocation" ? "bg-teal-100 text-teal-600" : "bg-amber-100 text-amber-700"}`}
+                        >
                           <Heart className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-primary capitalize">{e.event_type.replace('_', ' ')}</p>
+                          <p className="text-sm font-semibold text-primary capitalize">
+                            {e.event_type.replace("_", " ")}
+                          </p>
                           <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
-                            {e.initiatives?.title || 'System Pool'} • {new Date(e.created_at).toLocaleDateString()}
+                            {e.initiatives?.title || "System Pool"} •{" "}
+                            {new Date(e.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                      <p className="font-display font-bold text-teal-600">Rs {Number(e.amount_mur).toLocaleString()}</p>
+                      <p className="font-display font-bold text-teal-600">
+                        Rs {Number(e.amount_mur).toLocaleString()}
+                      </p>
                     </div>
                   ))
                 ) : (
@@ -284,27 +301,46 @@ export default function MemberDashboard() {
 
             <div>
               <div className="space-y-8">
-                <AllocationPreview amount={Number(subscription?.amount_mur || 0)} userId={user?.id} />
+                <AllocationPreview
+                  amount={Number(subscription?.amount_mur || 0)}
+                  userId={user?.id}
+                />
                 <div>
-                  <h2 className="font-display text-2xl font-semibold text-primary">Membership Status</h2>
+                  <h2 className="font-display text-2xl font-semibold text-primary">
+                    Membership Status
+                  </h2>
                   <div className="mt-6 p-8 rounded-3xl border border-border/40 bg-card">
                     <div className="flex items-center justify-between mb-6">
                       <div>
-                        <p className="text-xs font-bold text-muted-foreground uppercase">Current Plan</p>
-                        <p className="text-xl font-bold">{subscription ? `Rs ${Number(subscription.amount_mur).toLocaleString()} / mo` : 'None'}</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase">
+                          Current Plan
+                        </p>
+                        <p className="text-xl font-bold">
+                          {subscription
+                            ? `Rs ${Number(subscription.amount_mur).toLocaleString()} / mo`
+                            : "None"}
+                        </p>
                       </div>
                       <Badge variant={isSubscribed ? "default" : "secondary"}>
-                        {subscription?.status || 'Inactive'}
+                        {subscription?.status || "Inactive"}
                       </Badge>
                     </div>
                     <div className="space-y-4 pt-6 border-t border-border/40">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Next Billing Date</span>
-                        <span className="font-semibold">{subscription?.next_billing_date ? new Date(subscription.next_billing_date).toLocaleDateString() : '—'}</span>
+                        <span className="font-semibold">
+                          {subscription?.next_billing_date
+                            ? new Date(subscription.next_billing_date).toLocaleDateString()
+                            : "—"}
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Membership Since</span>
-                        <span className="font-semibold">{subscription?.created_at ? new Date(subscription.created_at).toLocaleDateString() : '—'}</span>
+                        <span className="font-semibold">
+                          {subscription?.created_at
+                            ? new Date(subscription.created_at).toLocaleDateString()
+                            : "—"}
+                        </span>
                       </div>
                     </div>
                   </div>

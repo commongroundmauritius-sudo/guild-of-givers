@@ -7,7 +7,7 @@ async function test() {
     event_type: "payment.success",
     user_id: "70d3023b-0e0a-4228-868e-5b12384a6c38", // Placeholder UUID
     transaction_id: transactionId,
-    amount: 1000
+    amount: 1000,
   };
 
   console.log("Processing first webhook...");

@@ -11,7 +11,8 @@ export function useAllocationSimulation(amount: number, userId?: string) {
       // 1. Fetch user preferences with current cycle stats
       const { data: prefs } = await supabase
         .from("member_preferences")
-        .select(`
+        .select(
+          `
           initiative_id,
           priority_level,
           initiatives (
@@ -22,7 +23,8 @@ export function useAllocationSimulation(amount: number, userId?: string) {
               received_amount_mur
             )
           )
-        `)
+        `,
+        )
         .eq("user_id", userId)
         .order("priority_level", { ascending: true });
 
@@ -34,8 +36,10 @@ export function useAllocationSimulation(amount: number, userId?: string) {
           initiativeId: p.initiative_id,
           title: p.initiatives.title,
           monthlyTarget: Number(p.initiatives.monthly_target_mur || 0),
-          currentReceived: Number(p.initiatives.initiative_funding_cycles?.[0]?.received_amount_mur || 0)
-        }))
+          currentReceived: Number(
+            p.initiatives.initiative_funding_cycles?.[0]?.received_amount_mur || 0,
+          ),
+        })),
       };
 
       return simulateAllocation(input);
