@@ -46,6 +46,10 @@ CREATE TABLE IF NOT EXISTS public.organizations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Add organization_id to profiles after organizations table exists
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES public.organizations(id) ON DELETE SET NULL;
+
+
 -- Create initiatives table
 CREATE TABLE IF NOT EXISTS public.initiatives (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
