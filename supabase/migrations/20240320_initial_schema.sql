@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS public.organizations (
   description TEXT,
   logo_url TEXT,
   website_url TEXT,
+  owner_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  monthly_target_amount NUMERIC DEFAULT 0,
+  impact_metrics TEXT,
   is_verified BOOLEAN DEFAULT false NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

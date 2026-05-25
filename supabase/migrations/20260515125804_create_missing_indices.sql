@@ -12,13 +12,27 @@ BEGIN
     END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_organizations_owner_user_id ON public.organizations(owner_user_id);
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'owner_user_id') THEN
+        CREATE INDEX IF NOT EXISTS idx_org_owner ON public.organizations(owner_user_id);
+    END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_profiles_organization_id ON public.profiles(organization_id);
 CREATE INDEX IF NOT EXISTS idx_reports_organization_id ON public.reports(organization_id);
 
 -- User lookup
 CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
-CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'email') THEN
+        CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
+    END IF;
+END $$;
+
 
 -- Financial tracking
 CREATE INDEX IF NOT EXISTS idx_payments_user_id ON public.payments(user_id);
