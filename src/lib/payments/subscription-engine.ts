@@ -7,27 +7,26 @@ export class SubscriptionEngine {
 
     switch (type) {
       case "payment.success":
-        await this.processSuccessfulPayment(userId, subscriptionId, transactionId, amount);
-        break;
-
       case "subscription.renewal":
         await this.processSuccessfulPayment(userId, subscriptionId, transactionId, amount);
         break;
 
       case "subscription.cancelled":
-        await this.updateSubscriptionStatus(subscriptionId, "cancelled");
-        await this.recordSupporterStatusEvent(userId, "supporter_deactivated");
+        if (await this.updateSubscriptionStatus(subscriptionId, "cancelled")) {
+          await this.recordSupporterStatusEvent(userId, "supporter_deactivated");
+        }
         break;
 
       case "subscription.resumed":
-        await this.updateSubscriptionStatus(subscriptionId, "active");
-        await this.recordSupporterStatusEvent(userId, "supporter_activated");
+        if (await this.updateSubscriptionStatus(subscriptionId, "active")) {
+          await this.recordSupporterStatusEvent(userId, "supporter_activated");
+        }
         break;
 
       case "payment.failed":
-        await this.handleFailedPayment(subscriptionId);
-        // Past due counts as deactivated for analytics
-        await this.recordSupporterStatusEvent(userId, "supporter_deactivated");
+        if (await this.updateSubscriptionStatus(subscriptionId, "past_due")) {
+          await this.recordSupporterStatusEvent(userId, "supporter_deactivated");
+        }
         break;
     }
   }
@@ -35,7 +34,6 @@ export class SubscriptionEngine {
   private async recordSupporterStatusEvent(userId: string | undefined, eventType: string): Promise<void> {
     if (!userId) return;
 
-    // Resolve primary initiative to record the event against
     const { data: profile } = await supabase
       .from("profiles")
       .select("primary_initiative_id")
@@ -95,28 +93,43 @@ export class SubscriptionEngine {
     }
 
     if (subscriptionId) {
-      await this.updateSubscriptionStatus(subscriptionId, "active");
+      const wasUpdated = await this.updateSubscriptionStatus(subscriptionId, "active");
+      // If it was previously cancelled or past_due and now becomes active, record activation
+      // but only if it wasn't already active (to avoid double counting on renewals)
+      // Actually updateSubscriptionStatus handles the check.
+      if (wasUpdated) {
+          // This would be a resume or a recovery from past_due
+          await this.recordSupporterStatusEvent(userId, "supporter_activated");
+      }
     }
-
-    // On first successful payment, member_acquired is handled by frontend signup,
-    // but for renewals that were previously past_due/cancelled, we might want to activate.
-    // However, the event system handles supporter_activated specifically for resumes.
   }
 
+  /**
+   * Updates subscription status and returns true if the status was actually changed.
+   */
   private async updateSubscriptionStatus(
     subscriptionId: string | undefined,
-    status: string,
-  ): Promise<void> {
-    if (!subscriptionId) return;
-    await supabase
-      .from("subscriptions")
-      .update({ status: status as any, updated_at: new Date().toISOString() })
-      .eq("peach_subscription_id", subscriptionId);
-  }
+    newStatus: string,
+  ): Promise<boolean> {
+    if (!subscriptionId) return false;
 
-  private async handleFailedPayment(subscriptionId: string | undefined): Promise<void> {
-    if (!subscriptionId) return;
-    await this.updateSubscriptionStatus(subscriptionId, "past_due");
+    // Fetch current status to check for change
+    const { data: current } = await supabase
+      .from("subscriptions")
+      .select("status")
+      .eq("peach_subscription_id", subscriptionId)
+      .maybeSingle();
+
+    if (!current || current.status === newStatus) {
+      return false;
+    }
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({ status: newStatus as any, updated_at: new Date().toISOString() })
+      .eq("peach_subscription_id", subscriptionId);
+
+    return !error;
   }
 
   async runBillingCycle(): Promise<void> {
