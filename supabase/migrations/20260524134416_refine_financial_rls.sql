@@ -3,8 +3,9 @@
 BEGIN;
 
 -- 1. Standards for initiative_versions
-DO $$ BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'initiative_versions') THEN
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiative_versions') THEN
         DROP POLICY IF EXISTS "Organization staff can view own initiative versions" ON public.initiative_versions;
         CREATE POLICY "Organization staff can view own initiative versions" ON public.initiative_versions
         FOR SELECT USING (
@@ -28,8 +29,9 @@ DO $$ BEGIN
 END $$;
 
 -- 2. Standardize organization table policies
-DO $$ BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organizations') THEN
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
         DROP POLICY IF EXISTS "Organization view policy" ON public.organizations;
         CREATE POLICY "Anyone can view verified organizations" ON public.organizations
         FOR SELECT USING (is_verified = true OR public.has_role('admin'));
@@ -40,9 +42,10 @@ DO $$ BEGIN
     END IF;
 END $$;
 
--- 3. Standardize organization documents
-DO $$ BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organization_documents') THEN
+-- 3. Standardize organization documents (Guarded)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organization_documents') THEN
         DROP POLICY IF EXISTS "Owners can manage organization documents" ON public.organization_documents;
         CREATE POLICY "Organization staff can manage their documents" ON public.organization_documents
         FOR ALL USING (
@@ -55,6 +58,12 @@ DO $$ BEGIN
 END $$;
 
 -- 4. Final Terminology Alignment
-COMMENT ON TABLE public.organizations IS 'Authoritative table for registered organizations';
+-- Update any remaining comments or metadata that might confuse the system
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
+        COMMENT ON TABLE public.organizations IS 'Authoritative table for registered organizations';
+    END IF;
+END $$;
 
 COMMIT;

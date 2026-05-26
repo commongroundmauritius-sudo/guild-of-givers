@@ -13,20 +13,27 @@ CREATE TABLE IF NOT EXISTS public.leads (
 -- Enable RLS
 ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
 
--- Allow anonymous users to insert leads (for the signup flow)
-CREATE POLICY "Anyone can insert leads"
-  ON public.leads FOR INSERT
-  WITH CHECK (true);
+-- Allow anonymous users to insert leads (for the signup flow) (Guarded)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'leads') THEN
+        DROP POLICY IF EXISTS "Anyone can insert leads" ON public.leads;
+        CREATE POLICY "Anyone can insert leads"
+          ON public.leads FOR INSERT
+          WITH CHECK (true);
 
--- Allow admins to view/manage leads
-CREATE POLICY "Admins can manage leads"
-  ON public.leads FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM user_roles
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
-  );
+        DROP POLICY IF EXISTS "Admins can manage leads" ON public.leads;
+        -- Allow admins to view/manage leads
+        CREATE POLICY "Admins can manage leads"
+          ON public.leads FOR ALL
+          USING (
+            EXISTS (
+              SELECT 1 FROM user_roles
+              WHERE user_id = auth.uid() AND role = 'admin'
+            )
+          );
+    END IF;
+END $$;
 
 -- Grant access to authenticated and anon roles
 GRANT INSERT ON public.leads TO anon, authenticated;

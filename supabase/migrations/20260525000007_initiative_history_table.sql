@@ -19,12 +19,17 @@ CREATE TABLE IF NOT EXISTS public.initiative_monthly_records (
 
 ALTER TABLE public.initiative_monthly_records ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can view initiative history" ON public.initiative_monthly_records
-FOR SELECT USING (true);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiative_monthly_records') THEN
+        CREATE POLICY "Anyone can view initiative history" ON public.initiative_monthly_records
+        FOR SELECT USING (true);
 
-CREATE POLICY "Admins can manage initiative history" ON public.initiative_monthly_records
-FOR ALL USING (public.has_role('admin'));
+        CREATE POLICY "Admins can manage initiative history" ON public.initiative_monthly_records
+        FOR ALL USING (public.has_role('admin'));
 
+    END IF;
+END $$;
 -- Function to archive and reset cycles (Monthly Rollover)
 CREATE OR REPLACE FUNCTION public.perform_monthly_rollover()
 RETURNS VOID AS $$

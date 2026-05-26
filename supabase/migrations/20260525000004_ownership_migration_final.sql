@@ -4,8 +4,9 @@
 BEGIN;
 
 -- 1. Update Organizations RLS
-DO $$ BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organizations') THEN
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
         DROP POLICY IF EXISTS "Organization view policy" ON public.organizations;
         CREATE POLICY "Anyone can view verified organizations" ON public.organizations
         FOR SELECT USING (is_verified = true OR public.has_role('admin'));
@@ -23,9 +24,10 @@ DO $$ BEGIN
     END IF;
 END $$;
 
--- 2. Update Organization Documents RLS
-DO $$ BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organization_documents') THEN
+-- 2. Update Organization Documents RLS (Guarded)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organization_documents') THEN
         DROP POLICY IF EXISTS "Owners can manage organization documents" ON public.organization_documents;
         CREATE POLICY "Organization staff can manage their documents" ON public.organization_documents
         FOR ALL USING (
@@ -52,6 +54,9 @@ DO $$ BEGIN
         END;
         $func$ LANGUAGE plpgsql;
 
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
         DROP TRIGGER IF EXISTS tr_warn_legacy_ownership ON public.organizations;
         CREATE TRIGGER tr_warn_legacy_ownership
         BEFORE INSERT OR UPDATE OF owner_user_id ON public.organizations

@@ -28,25 +28,32 @@ CREATE INDEX IF NOT EXISTS idx_initiative_events_created_at ON public.initiative
 CREATE INDEX IF NOT EXISTS idx_initiative_events_session_id ON public.initiative_events(session_id);
 CREATE INDEX IF NOT EXISTS idx_initiatives_slug ON public.initiatives(slug);
 
--- Step 5: Set up RLS for initiative_events
+-- Step 5: Set up RLS for initiative_events (Guarded)
 ALTER TABLE public.initiative_events ENABLE ROW LEVEL SECURITY;
 
--- Allow anyone to insert events (to track anonymous page views)
-CREATE POLICY "Allow public insert initiative_events"
-ON public.initiative_events FOR INSERT
-TO public
-WITH CHECK (true);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiative_events') THEN
+        DROP POLICY IF EXISTS "Allow public insert initiative_events" ON public.initiative_events;
+        -- Allow anyone to insert events (to track anonymous page views)
+        CREATE POLICY "Allow public insert initiative_events"
+        ON public.initiative_events FOR INSERT
+        TO public
+        WITH CHECK (true);
 
--- Allow admins to read all events
-CREATE POLICY "Allow admins to read initiative_events"
-ON public.initiative_events FOR SELECT
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = auth.uid() AND role = 'admin'
-  )
-);
+        DROP POLICY IF EXISTS "Allow admins to read initiative_events" ON public.initiative_events;
+        -- Allow admins to read all events
+        CREATE POLICY "Allow admins to read initiative_events"
+        ON public.initiative_events FOR SELECT
+        TO authenticated
+        USING (
+          EXISTS (
+            SELECT 1 FROM public.user_roles
+            WHERE user_id = auth.uid() AND role = 'admin'
+          )
+        );
+    END IF;
+END $$;
 
 -- Step 6: Create function and trigger to update counters
 CREATE OR REPLACE FUNCTION public.update_initiative_counters()

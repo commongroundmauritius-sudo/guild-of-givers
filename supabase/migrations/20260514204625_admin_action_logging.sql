@@ -16,23 +16,34 @@ ALTER TABLE public.admin_actions ENABLE ROW LEVEL SECURITY;
 GRANT SELECT, INSERT ON public.admin_actions TO authenticated;
 
 -- Admin-only visibility policy
-CREATE POLICY "Admins can view all actions" ON public.admin_actions
-FOR SELECT
-USING (
-    EXISTS (
-        SELECT 1 FROM public.user_roles
-        WHERE user_roles.user_id = auth.uid()
-        AND user_roles.role = 'admin'::app_role
-    )
-);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'admin_actions') THEN
+        CREATE POLICY "Admins can view all actions" ON public.admin_actions
+        FOR SELECT
+        USING (
+            EXISTS (
+                SELECT 1 FROM public.user_roles
+                WHERE user_roles.user_id = auth.uid()
+                AND user_roles.role = 'admin'::app_role
+            )
+        );
 
+    END IF;
+END $$;
 -- Policy to allow any authenticated user with admin role to insert logs
-CREATE POLICY "Admins can insert actions" ON public.admin_actions
-FOR INSERT
-WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM public.user_roles
-        WHERE user_roles.user_id = auth.uid()
-        AND user_roles.role = 'admin'::app_role
-    )
-);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'admin_actions') THEN
+        CREATE POLICY "Admins can insert actions" ON public.admin_actions
+        FOR INSERT
+        WITH CHECK (
+            EXISTS (
+                SELECT 1 FROM public.user_roles
+                WHERE user_roles.user_id = auth.uid()
+                AND user_roles.role = 'admin'::app_role
+            )
+        );
+
+    END IF;
+END $$;

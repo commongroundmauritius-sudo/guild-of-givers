@@ -48,18 +48,42 @@ BEGIN
     END IF;
 END $$;
 
--- 2. Revoke PUBLIC/anon access from sensitive business logic
--- Note: has_role needs anon/authenticated for RLS policies
--- Note: increment_initiative_amount should be internal only (called by triggers or RPC)
+-- 2. Revoke PUBLIC/anon access from sensitive business logic (Guarded)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'allocate_payment_funds' AND n.nspname = 'public') THEN
+        REVOKE EXECUTE ON FUNCTION public.allocate_payment_funds(uuid, uuid, numeric) FROM PUBLIC, anon, authenticated;
+    END IF;
+END $$;
 
-REVOKE EXECUTE ON FUNCTION public.allocate_payment_funds(uuid, uuid, numeric) FROM PUBLIC, anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.process_recurring_billing() FROM PUBLIC, anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.activate_membership(uuid) FROM PUBLIC, anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.increment_initiative_amount(uuid, numeric) FROM PUBLIC, anon, authenticated;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'process_recurring_billing' AND n.nspname = 'public') THEN
+        REVOKE EXECUTE ON FUNCTION public.process_recurring_billing() FROM PUBLIC, anon, authenticated;
+    END IF;
+END $$;
 
--- 3. Grant limited access where required
-GRANT EXECUTE ON FUNCTION public.get_admin_financial_metrics() TO authenticated;
--- Verify if get_admin_financial_metrics has its own internal role check (it should)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'activate_membership' AND n.nspname = 'public') THEN
+        REVOKE EXECUTE ON FUNCTION public.activate_membership(uuid) FROM PUBLIC, anon, authenticated;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'increment_initiative_amount' AND n.nspname = 'public') THEN
+        REVOKE EXECUTE ON FUNCTION public.increment_initiative_amount(uuid, numeric) FROM PUBLIC, anon, authenticated;
+    END IF;
+END $$;
+
+-- 3. Grant limited access where required (Guarded)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'get_admin_financial_metrics' AND n.nspname = 'public') THEN
+        GRANT EXECUTE ON FUNCTION public.get_admin_financial_metrics() TO authenticated;
+    END IF;
+END $$;
 
 -- Additional fixes from Phase 1-C deep scan
 DO $$
@@ -71,5 +95,11 @@ BEGIN
         ALTER FUNCTION public.get_ledger_summary_metrics() SET search_path = public;
     END IF;
 END $$;
-REVOKE EXECUTE ON FUNCTION public.get_ledger_summary_metrics() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.get_ledger_summary_metrics() TO authenticated;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'get_ledger_summary_metrics' AND n.nspname = 'public') THEN
+        REVOKE EXECUTE ON FUNCTION public.get_ledger_summary_metrics() FROM PUBLIC, anon;
+        GRANT EXECUTE ON FUNCTION public.get_ledger_summary_metrics() TO authenticated;
+    END IF;
+END $$;

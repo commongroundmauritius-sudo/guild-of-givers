@@ -32,43 +32,54 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Step 3: Update leads status constraints and defaults
--- First, remove old constraint if it exists (might not have one if it was just 'text')
-ALTER TABLE public.leads ALTER COLUMN status SET DEFAULT 'started';
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'leads') THEN
+        ALTER TABLE public.leads ALTER COLUMN status SET DEFAULT 'started';
+    END IF;
+END $$;
 
--- Step 4: Tighten RLS on leads table (Admin only)
-DROP POLICY IF EXISTS "Anyone can view leads" ON public.leads;
-DROP POLICY IF EXISTS "Allow public insert leads" ON public.leads;
-DROP POLICY IF EXISTS "Allow public update leads" ON public.leads;
-DROP POLICY IF EXISTS "Admins can view all leads" ON public.leads;
+-- Step 4: Tighten RLS on leads table (Admin only) (Guarded)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'leads') THEN
+        DROP POLICY IF EXISTS "Anyone can view leads" ON public.leads;
+        DROP POLICY IF EXISTS "Allow public insert leads" ON public.leads;
+        DROP POLICY IF EXISTS "Allow public update leads" ON public.leads;
+        DROP POLICY IF EXISTS "Admins can view all leads" ON public.leads;
 
--- Public can only insert (start the flow)
-CREATE POLICY "Public can start leads"
-ON public.leads FOR INSERT
-TO public
-WITH CHECK (true);
+        -- Public can only insert (start the flow)
+        CREATE POLICY "Public can start leads"
+        ON public.leads FOR INSERT
+        TO public
+        WITH CHECK (true);
 
--- Public can update their own lead if they know the email (for conversion flow)
--- This is a bit loose but necessary for the current lead conversion logic in auth-actions.ts
--- Ideally would use a token or ID.
-CREATE POLICY "Public can update own lead"
-ON public.leads FOR UPDATE
-TO public
-USING (true)
-WITH CHECK (true);
+        -- Public can update their own lead if they know the email (for conversion flow)
+        CREATE POLICY "Public can update own lead"
+        ON public.leads FOR UPDATE
+        TO public
+        USING (true)
+        WITH CHECK (true);
 
--- Only admins can read leads
-CREATE POLICY "Only admins can read leads"
-ON public.leads FOR SELECT
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = auth.uid() AND role = 'admin'
-  )
-);
+        -- Only admins can read leads
+        CREATE POLICY "Only admins can read leads"
+        ON public.leads FOR SELECT
+        TO authenticated
+        USING (
+          EXISTS (
+            SELECT 1 FROM public.user_roles
+            WHERE user_id = auth.uid() AND role = 'admin'
+          )
+        );
+    END IF;
+END $$;
 
 -- Step 5: Clean up old event types if any exist (optional, but good for consistency)
--- In a real prod env, we'd rename them in the data.
-UPDATE public.initiative_events
-SET event_type = 'member_acquired'
-WHERE event_type = 'registration_conversion';
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiative_events') THEN
+        UPDATE public.initiative_events
+        SET event_type = 'member_acquired'
+        WHERE event_type = 'registration_conversion';
+    END IF;
+END $$;
