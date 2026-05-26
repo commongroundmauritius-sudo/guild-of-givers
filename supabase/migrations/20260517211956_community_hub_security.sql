@@ -21,6 +21,7 @@ BEGIN
 
     END IF;
 END $$;
+
 -- Ensure organization staff can moderate posts for their own initiatives
 DO $$
 BEGIN
@@ -38,6 +39,7 @@ BEGIN
 
     END IF;
 END $$;
+
 -- RLS for user_trust (Admin only)
 ALTER TABLE public.user_trust ENABLE ROW LEVEL SECURITY;
 DO $$
@@ -52,6 +54,7 @@ BEGIN
 
     END IF;
 END $$;
+
 -- RLS for activity limits
 ALTER TABLE public.community_activity_limits ENABLE ROW LEVEL SECURITY;
 DO $$

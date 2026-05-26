@@ -5,15 +5,10 @@
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
-                DROP POLICY IF EXISTS "Anyone can view published initiatives" ON public.initiatives;
-                CREATE POLICY "Anyone can view published initiatives" ON public.initiatives
-                FOR SELECT
-                USING (is_approved = true AND is_published = true);
-    END IF;
-END $$;
+        DROP POLICY IF EXISTS "Anyone can view published initiatives" ON public.initiatives;
+        CREATE POLICY "Anyone can view published initiatives" ON public.initiatives
+        FOR SELECT
+        USING (is_approved = true AND is_published = true);
     END IF;
 END $$;
 
@@ -21,23 +16,18 @@ END $$;
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
-                DROP POLICY IF EXISTS "Public view policy" ON public.organizations;
-                CREATE POLICY "Organization view policy" ON public.organizations
-                FOR SELECT
-                USING (
-                    is_verified = true OR
-                    EXISTS (
-                        SELECT 1 FROM public.initiatives i
-                        WHERE i.organization_id = organizations.id
-                        AND i.is_approved = true
-                        AND i.is_published = true
-                    )
-                );
-    END IF;
-END $$;
+        DROP POLICY IF EXISTS "Public view policy" ON public.organizations;
+        CREATE POLICY "Organization view policy" ON public.organizations
+        FOR SELECT
+        USING (
+            is_verified = true OR
+            EXISTS (
+                SELECT 1 FROM public.initiatives i
+                WHERE i.organization_id = organizations.id
+                AND i.is_approved = true
+                AND i.is_published = true
+            )
+        );
     END IF;
 END $$;
 

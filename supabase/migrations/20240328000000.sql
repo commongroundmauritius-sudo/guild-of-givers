@@ -7,12 +7,7 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS organization_id UUID REFERE
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
-                DROP POLICY IF EXISTS "Organization staff can manage their own Organization initiatives" ON public.initiatives;
-    END IF;
-END $$;
+        DROP POLICY IF EXISTS "Organization staff can manage their own Organization initiatives" ON public.initiatives;
         CREATE POLICY "Organization staff can manage their own Organization initiatives"
           ON public.initiatives FOR ALL
           USING (
@@ -23,12 +18,7 @@ END $$;
     END IF;
 
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'reports') THEN
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'reports') THEN
-                DROP POLICY IF EXISTS "Organization staff can manage their own Organization reports" ON public.reports;
-    END IF;
-END $$;
+        DROP POLICY IF EXISTS "Organization staff can manage their own Organization reports" ON public.reports;
         CREATE POLICY "Organization staff can manage their own Organization reports"
           ON public.reports FOR ALL
           USING (

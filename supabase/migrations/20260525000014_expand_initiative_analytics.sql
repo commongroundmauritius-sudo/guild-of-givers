@@ -32,7 +32,6 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Step 3: Update leads status constraints and defaults
--- First, remove old constraint if it exists (might not have one if it was just 'text')
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'leads') THEN
@@ -44,16 +43,11 @@ END $$;
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'leads') THEN
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'leads') THEN
-                DROP POLICY IF EXISTS "Anyone can view leads" ON public.leads;
-                DROP POLICY IF EXISTS "Allow public insert leads" ON public.leads;
-                DROP POLICY IF EXISTS "Allow public update leads" ON public.leads;
-                DROP POLICY IF EXISTS "Admins can view all leads" ON public.leads;
+        DROP POLICY IF EXISTS "Anyone can view leads" ON public.leads;
+        DROP POLICY IF EXISTS "Allow public insert leads" ON public.leads;
+        DROP POLICY IF EXISTS "Allow public update leads" ON public.leads;
+        DROP POLICY IF EXISTS "Admins can view all leads" ON public.leads;
 
-    END IF;
-END $$;
         -- Public can only insert (start the flow)
         CREATE POLICY "Public can start leads"
         ON public.leads FOR INSERT

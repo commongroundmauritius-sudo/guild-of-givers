@@ -33,39 +33,29 @@ $$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiatives') THEN
-                DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
-                CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives
-                FOR ALL USING (
-                    EXISTS (
-                        SELECT 1 FROM public.profiles
-                        WHERE profiles.id = auth.uid()
-                        AND profiles.organization_id = initiatives.organization_id
-                    )
-                );
-    END IF;
-END $$;
+        DROP POLICY IF EXISTS "Organization staff can manage own initiatives" ON public.initiatives;
+        CREATE POLICY "Organization staff can manage own initiatives" ON public.initiatives
+        FOR ALL USING (
+            EXISTS (
+                SELECT 1 FROM public.profiles
+                WHERE profiles.id = auth.uid()
+                AND profiles.organization_id = initiatives.organization_id
+            )
+        );
     END IF;
 END $$;
 
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reports') THEN
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'reports') THEN
-                DROP POLICY IF EXISTS "Organization staff can manage their own reports" ON public.reports;
-                CREATE POLICY "Organization staff can manage their own reports" ON public.reports
-                FOR ALL USING (
-                  organization_id IN (
-                    SELECT organization_id FROM public.profiles
-                    WHERE id = (SELECT auth.uid())
-                  )
-                );
-    END IF;
-END $$;
+        DROP POLICY IF EXISTS "Organization staff can manage their own reports" ON public.reports;
+        CREATE POLICY "Organization staff can manage their own reports" ON public.reports
+        FOR ALL USING (
+          organization_id IN (
+            SELECT organization_id FROM public.profiles
+            WHERE id = (SELECT auth.uid())
+          )
+        );
     END IF;
 END $$;
 

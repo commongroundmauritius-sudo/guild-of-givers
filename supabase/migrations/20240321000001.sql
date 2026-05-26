@@ -14,36 +14,27 @@ ALTER TABLE public.member_preferences ENABLE ROW LEVEL SECURITY;
 -- Using subqueries for auth.uid() as recommended for performance and to match manual adjustment
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can manage own preferences') THEN
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'member_preferences') THEN
-                CREATE POLICY "Users can manage own preferences" ON public.member_preferences
-                FOR ALL USING ((SELECT auth.uid()) = user_id);
-    END IF;
-END $$;
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'member_preferences') THEN
+            CREATE POLICY "Users can manage own preferences" ON public.member_preferences
+            FOR ALL USING ((SELECT auth.uid()) = user_id);
+        END IF;
     END IF;
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert their own preferences') THEN
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'member_preferences') THEN
-                CREATE POLICY "Users can insert their own preferences" ON public.member_preferences
-                FOR INSERT WITH CHECK ((SELECT auth.uid()) = user_id);
-    END IF;
-END $$;
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'member_preferences') THEN
+            CREATE POLICY "Users can insert their own preferences" ON public.member_preferences
+            FOR INSERT WITH CHECK ((SELECT auth.uid()) = user_id);
+        END IF;
     END IF;
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins can view all preferences') THEN
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'member_preferences') THEN
-                CREATE POLICY "Admins can view all preferences" ON public.member_preferences
-                FOR SELECT USING (public.has_role('admin'));
-    END IF;
-END $$;
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'member_preferences') THEN
+            CREATE POLICY "Admins can view all preferences" ON public.member_preferences
+            FOR SELECT USING (public.has_role('admin'));
+        END IF;
     END IF;
 EXCEPTION WHEN duplicate_object THEN null; END $$;

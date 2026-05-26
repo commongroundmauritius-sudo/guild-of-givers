@@ -209,6 +209,7 @@ BEGIN
                 )
             );
     ELSIF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'ngo_documents') THEN
+        -- Safely handle legacy if it exists
         DROP POLICY IF EXISTS "Owners can manage organization documents" ON public.ngo_documents;
     END IF;
 END $$;
