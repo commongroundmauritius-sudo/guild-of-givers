@@ -15,6 +15,9 @@ import {
   X,
   Loader2,
   Building,
+  Target,
+  Sparkles,
+  Link as LinkIcon
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/new")({
@@ -28,20 +31,21 @@ function InitiativeCreatePage() {
 
   const [formData, setFormData] = useState({
     title: "",
+    slug: "",
     caption: "",
     summary: "",
     description: "",
     content: "",
     image_url: "",
     gallery_urls: [] as string[],
-    goal_amount_mur: 0,
+    goal_amount_mur: 100000,
     impact_pool_target: 0,
     impact_pool_current: 0,
     short_term_goals: "",
     long_term_goals: "",
     target_milestones: "",
     expected_outcomes: "",
-    category: "",
+    category: "Environment",
     organization_id: "",
     is_published: false,
   });
@@ -74,6 +78,10 @@ function InitiativeCreatePage() {
           ...formData,
           is_published: publish,
           is_approved: true,
+          initiative_source: "admin_created",
+          creator_user_id: user?.id,
+          creator_role: "admin",
+          slug: formData.slug || undefined
         })
         .select()
         .single();
@@ -83,7 +91,7 @@ function InitiativeCreatePage() {
     },
     onSuccess: (data) => {
       toast.success("Initiative created successfully");
-      queryClient.invalidateQueries({ queryKey: ["admin-all-initiatives"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-initiatives"] });
       navigate({ to: "/admin-dashboard/initiatives/$id/manage", params: { id: data.id } });
     },
     onError: (error: any) => {
@@ -148,18 +156,21 @@ function InitiativeCreatePage() {
 
           <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
             <div>
-              <h1 className="font-display text-4xl font-semibold text-primary">
-                Create New Initiative
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-amber-500" />
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-600">
+                  New Initiative
+                </span>
+              </div>
+              <h1 className="mt-3 font-display text-4xl font-semibold text-primary">
+                Create Impact Program
               </h1>
-              <p className="mt-2 text-muted-foreground">
-                Set up a new social impact program directly as an administrator.
-              </p>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => createMutation.mutate(false)}
                 disabled={createMutation.isPending}
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-2.5 text-sm font-bold text-primary transition hover:bg-muted disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-primary transition hover:bg-muted"
               >
                 <Save className="h-4 w-4" />
                 Save as Draft
@@ -167,17 +178,16 @@ function InitiativeCreatePage() {
               <button
                 onClick={() => createMutation.mutate(true)}
                 disabled={createMutation.isPending}
-                className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-amber-600 shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary/90"
               >
                 <Globe className="h-4 w-4" />
-                {createMutation.isPending ? "Creating..." : "Publish Now"}
+                Publish Directly
               </button>
             </div>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-8">
-              {/* Core Information */}
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div className="space-y-8">
               <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
                 <h2 className="mb-6 font-display text-xl font-semibold text-primary">
                   Core Information
@@ -191,52 +201,74 @@ function InitiativeCreatePage() {
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      placeholder="Enter a compelling title"
+                      placeholder="e.g. Coral Reef Restoration"
                       className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      Category
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <LinkIcon className="h-3 w-3" /> Custom Slug (Optional)
                     </label>
                     <input
-                      name="category"
-                      value={formData.category}
+                      name="slug"
+                      value={formData.slug}
                       onChange={handleInputChange}
-                      placeholder="e.g. Environment, Education, Health"
-                      className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      placeholder="e.g. reef-restoration"
+                      className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     />
                   </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      Associated Organization (Optional)
-                    </label>
-                    <div className="relative">
-                      <Building className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                        Organization
+                      </label>
                       <select
                         name="organization_id"
                         value={formData.organization_id}
                         onChange={handleInputChange}
-                        className="w-full rounded-2xl border border-border/40 bg-muted/30 py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 appearance-none"
+                        className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                       >
-                        <option value="">Select an Organization</option>
-                        {organizations?.map((organization) => (
-                          <option key={organization.id} value={organization.id}>
-                            {organization.organization_name}
+                        <option value="">Select Partner</option>
+                        {organizations?.map((org) => (
+                          <option key={org.id} value={org.id}>
+                            {org.organization_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                        Category
+                      </label>
+                      <select
+                        name="category"
+                        value={formData.category}
+                        onChange={handleInputChange}
+                        className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      >
+                        {["Environment", "Education", "Community", "Health", "Animals"].map((c) => (
+                          <option key={c} value={c}>
+                            {c}
                           </option>
                         ))}
                       </select>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
+                <h2 className="mb-6 font-display text-xl font-semibold text-primary">Content</h2>
+                <div className="space-y-6">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      Caption (Short tagline)
+                      Tagline / Caption
                     </label>
                     <input
                       name="caption"
                       value={formData.caption}
                       onChange={handleInputChange}
-                      placeholder="e.g. Protecting Mauritius' coastal ecosystems"
+                      placeholder="Short catchy one-liner"
                       className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     />
                   </div>
@@ -249,148 +281,86 @@ function InitiativeCreatePage() {
                       value={formData.summary}
                       onChange={handleInputChange}
                       rows={3}
-                      placeholder="A brief overview for listings"
+                      placeholder="Brief overview for listings"
                       className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     />
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      Detailed Story
+                      Full Story
                     </label>
                     <textarea
                       name="content"
                       value={formData.content}
                       onChange={handleInputChange}
                       rows={8}
-                      placeholder="The full story and impact of this initiative..."
+                      placeholder="The full narrative and impact of this initiative..."
                       className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     />
                   </div>
                 </div>
               </div>
-
-              {/* Impact Pool & Goals */}
-              <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
-                <h2 className="mb-6 font-display text-xl font-semibold text-primary">
-                  Goals & Impact
-                </h2>
-                <div className="space-y-6">
-                  <div className="grid gap-6 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">
-                        Short-term Goals
-                      </label>
-                      <textarea
-                        name="short_term_goals"
-                        value={formData.short_term_goals}
-                        onChange={handleInputChange}
-                        rows={3}
-                        className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">
-                        Long-term Goals
-                      </label>
-                      <textarea
-                        name="long_term_goals"
-                        value={formData.long_term_goals}
-                        onChange={handleInputChange}
-                        rows={3}
-                        className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid gap-6 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">
-                        Target Milestones
-                      </label>
-                      <textarea
-                        name="target_milestones"
-                        value={formData.target_milestones}
-                        onChange={handleInputChange}
-                        rows={3}
-                        className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">
-                        Expected Outcomes
-                      </label>
-                      <textarea
-                        name="expected_outcomes"
-                        value={formData.expected_outcomes}
-                        onChange={handleInputChange}
-                        rows={3}
-                        className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            <div className="space-y-8">
-              {/* Media */}
-              <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
-                <h2 className="mb-6 font-display text-xl font-semibold text-primary">Media</h2>
-                <div className="space-y-6">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      Main Image URL
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border/40 bg-muted">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                      </div>
+            <div className="mt-8 grid gap-8 lg:grid-cols-2">
+              <div className="space-y-8">
+                <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
+                  <h2 className="mb-6 font-display text-xl font-semibold text-primary flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5 text-primary" /> Media
+                  </h2>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                        Main Image URL
+                      </label>
                       <input
                         name="image_url"
                         value={formData.image_url}
                         onChange={handleInputChange}
-                        placeholder="https://..."
+                        placeholder="https://images.unsplash.com/..."
                         className="w-full rounded-xl border border-border/40 bg-muted/30 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                       />
                     </div>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      Gallery Images
-                    </label>
-                    <div className="space-y-3">
-                      {formData.gallery_urls.map((url, index) => (
-                        <div key={index} className="flex gap-2">
-                          <input
-                            value={url}
-                            onChange={(e) => handleGalleryUrlChange(index, e.target.value)}
-                            placeholder="https://..."
-                            className="w-full rounded-xl border border-border/40 bg-muted/30 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveGalleryUrl(index)}
-                            className="p-2 text-muted-foreground transition hover:text-red-500"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={handleAddGalleryUrl}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-2 text-xs font-medium text-muted-foreground transition hover:bg-muted/50"
-                      >
-                        <Plus className="h-3 w-3" /> Add Image
-                      </button>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                        Gallery
+                      </label>
+                      <div className="space-y-3">
+                        {formData.gallery_urls.map((url, idx) => (
+                          <div key={idx} className="flex gap-2">
+                            <input
+                              value={url}
+                              onChange={(e) => handleGalleryUrlChange(idx, e.target.value)}
+                              placeholder="https://..."
+                              className="w-full rounded-xl border border-border/40 bg-muted/30 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveGalleryUrl(idx)}
+                              className="text-red-500 hover:text-red-600"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={handleAddGalleryUrl}
+                          className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-2 text-xs font-medium text-muted-foreground hover:bg-muted/50"
+                        >
+                          <Plus className="h-3 w-3" /> Add Image
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Financials */}
-              <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
-                <h2 className="mb-6 font-display text-xl font-semibold text-primary">Financials</h2>
-                <div className="space-y-6">
+              <div className="space-y-8">
+                <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
+                  <h2 className="mb-6 font-display text-xl font-semibold text-primary flex items-center gap-2">
+                    <Target className="h-5 w-5 text-primary" /> Financials
+                  </h2>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Campaign Goal (MUR)
@@ -403,33 +373,36 @@ function InitiativeCreatePage() {
                       className="w-full rounded-xl border border-border/40 bg-muted/30 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     />
                   </div>
-                  <div className="pt-4 border-t border-border/40">
-                    <h3 className="mb-4 text-xs font-bold uppercase text-amber-600">Impact Pool</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                          Target Amount
-                        </label>
-                        <input
-                          name="impact_pool_target"
-                          type="number"
-                          value={formData.impact_pool_target}
-                          onChange={handleInputChange}
-                          className="w-full rounded-xl border border-border/40 bg-muted/30 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                          Current Amount
-                        </label>
-                        <input
-                          name="impact_pool_current"
-                          type="number"
-                          value={formData.impact_pool_current}
-                          onChange={handleInputChange}
-                          className="w-full rounded-xl border border-border/40 bg-muted/30 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                        />
-                      </div>
+                </div>
+
+                <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
+                  <h2 className="mb-6 font-display text-xl font-semibold text-primary flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" /> Goals & Outcomes
+                  </h2>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">
+                        Short-term Goals
+                      </label>
+                      <textarea
+                        name="short_term_goals"
+                        value={formData.short_term_goals}
+                        onChange={handleInputChange}
+                        rows={3}
+                        className="w-full rounded-xl border border-border/40 bg-muted/30 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground text-xs uppercase">
+                        Long-term Vision
+                      </label>
+                      <textarea
+                        name="long_term_goals"
+                        value={formData.long_term_goals}
+                        onChange={handleInputChange}
+                        rows={3}
+                        className="w-full rounded-xl border border-border/40 bg-muted/30 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      />
                     </div>
                   </div>
                 </div>

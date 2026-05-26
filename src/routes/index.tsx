@@ -5,7 +5,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import heroRoom from "@/assets/hero-room.jpg";
 import orgsBoardroom from "@/assets/orgs-boardroom.jpg";
-import { UserPlus, BookOpen, Split, LineChart, Sparkles, Eye, Target, Repeat } from "lucide-react";
+import { UserPlus, Sparkles, Eye, Target, Repeat } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/accordion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getJoinedField } from "@/lib/utils";
+import { InitiativeCard } from "@/components/InitiativeCard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,20 +25,21 @@ export const Route = createFileRoute("/")({
         content:
           "Turn one monthly membership into predictable funding for vetted, long-term social impact programs.",
       },
+      { property: "og:title", content: "CommonGround — One Membership. Long-term Impact." },
+      { property: "og:description", content: " predictable funding for vetted, long-term social impact programs." },
+      { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1200" },
     ],
   }),
   component: Home,
 });
 
 function Home() {
-  const queryKeys = useMemo(() => [["homepage-initiatives"]], []);
-  useRealtimeSync("initiatives", queryKeys);
   return (
     <SiteLayout>
       <Hero />
-      <Process />
-      <Why />
-      <Initiatives />
+      <ValueProps />
+      <InitiativesList />
       <ForOrgs />
       <FAQ />
       <FinalCTA />
@@ -47,170 +48,93 @@ function Home() {
 }
 
 function Kicker({ children }: { children: React.ReactNode }) {
-  return <span className="kicker block text-muted-foreground">{children}</span>;
+  return (
+    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+      {children}
+    </span>
+  );
 }
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-28">
-        <div className="flex flex-col justify-center">
-          <Kicker>Impact, simplified</Kicker>
-          <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.1] text-primary sm:text-7xl">
-            One membership. <br />
-            <span className="text-teal-600">Long-term impact.</span>
+    <section className="relative flex min-h-[90vh] flex-col justify-center overflow-hidden bg-[#faf8f6]">
+      <div className="absolute inset-0 z-0">
+        <img
+          src={heroRoom}
+          alt="Modern interior with natural light"
+          width={1920}
+          height={1080}
+          className="h-full w-full object-cover opacity-[0.08] grayscale"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#faf8f6]/50 to-[#faf8f6]" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="max-w-4xl">
+          <Kicker>The New Standard for Giving</Kicker>
+          <h1 className="mt-8 font-display text-6xl font-bold tracking-tight text-primary sm:text-7xl lg:text-8xl">
+            One Membership. <br />
+            <span className="text-primary/40 italic font-medium">Long-term Impact.</span>
           </h1>
-          <p className="mt-8 max-w-lg text-lg leading-relaxed text-muted-foreground sm:text-xl">
-            Join the Guild of Givers. We turn monthly contributions into predictable funding for
-            Mauritius' most effective social initiatives.
+          <p className="mt-8 max-w-2xl text-xl leading-relaxed text-muted-foreground sm:text-2xl">
+            Turn one monthly membership into predictable, structured funding for vetted social
+            programs in Mauritius. No more one-off donations. Just lasting change.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
-              to="/initiatives/$slug"
-              params={{ slug: i.slug }}
-              className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90"
+              to="/signup"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition hover:bg-primary/90 hover:shadow-2xl active:scale-95"
             >
               Become a Member
             </Link>
             <Link
               to="/initiatives"
-              className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-background px-8 py-4 text-sm font-semibold text-primary transition hover:bg-muted"
+              className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white/50 px-8 py-4 text-sm font-bold text-primary backdrop-blur-sm transition hover:bg-white hover:shadow-lg"
             >
               Explore Initiatives
             </Link>
           </div>
         </div>
-        <div className="relative">
-          <div className="aspect-[4/5] overflow-hidden rounded-[3rem] border border-border/60 bg-muted sm:aspect-square lg:aspect-[4/5]">
-            <img
-              src={heroRoom}
-              alt="Community impact"
-              width={1280}
-              height={1600}
-              loading="eager"
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <div className="absolute -bottom-6 -left-6 rounded-3xl border border-border/40 bg-background p-6 shadow-xl sm:p-8">
-            <div className="flex items-center gap-4">
-              <div className="flex -space-x-3">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-10 w-10 rounded-full border-2 border-background bg-teal-100"
-                  />
-                ))}
-              </div>
-              <div>
-                <p className="text-sm font-bold text-primary">Join 240+ members</p>
-                <p className="text-xs text-muted-foreground">Growing every day</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
 }
 
-const STEPS = [
+const PROPS = [
   {
-    n: "01",
     icon: UserPlus,
-    title: "Join",
-    desc: "Pick a monthly contribution amount that fits your budget.",
-  },
-  {
-    n: "02",
-    icon: BookOpen,
-    title: "Choose",
-    desc: "Browse through our library of vetted, high-impact social initiatives.",
-  },
-  {
-    n: "03",
-    icon: Split,
-    title: "Allocate",
-    desc: "Decide how your contribution is split between your selected organizations.",
-  },
-  {
-    n: "04",
-    icon: LineChart,
-    title: "Track",
-    desc: "Receive unified impact reports detailing exactly how your money is used.",
-  },
-];
-
-function Process() {
-  return (
-    <section className="border-t border-border/60 bg-card">
-      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <Kicker>Process</Kicker>
-          <h2 className="mt-4 font-display text-4xl font-semibold text-primary sm:text-5xl">
-            How It Works
-          </h2>
-        </div>
-        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((s) => (
-            <div
-              key={s.n}
-              className="group relative rounded-3xl border border-border/60 bg-background p-7 transition hover:border-primary/30 hover:shadow-lg"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cream-deep">
-                <s.icon className="h-5 w-5 text-primary" />
-              </div>
-              <div className="mt-6 font-display text-xs font-medium tracking-widest text-muted-foreground">
-                {s.n}
-              </div>
-              <h3 className="mt-1 font-display text-2xl font-semibold text-primary">{s.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-const REASONS = [
-  {
-    icon: Sparkles,
-    title: "Simplicity",
-    desc: "Managing multiple donations is complex. We consolidate everything into one clean dashboard with a single monthly transaction.",
-  },
-  {
-    icon: Eye,
-    title: "Transparency",
-    desc: "Every dollar is tracked. We provide audited reports and direct updates from the field.",
-  },
-  {
-    icon: Target,
-    title: "Real Impact",
-    desc: "We focus on vetted, results-driven initiatives that solve systemic problems at the root.",
+    title: "Vetted Partners",
+    desc: "We perform deep due-diligence on every organization to ensure your support reaches the most effective teams.",
   },
   {
     icon: Repeat,
-    title: "Consistency",
-    desc: "Non-profits need predictable funding to grow. CommonGround ensures steady support through recurring monthly memberships.",
+    title: "Predictable Funding",
+    desc: "Monthly memberships allow organizations to plan years ahead, focusing on systemic solutions rather than fundraising.",
+  },
+  {
+    icon: Eye,
+    title: "Full Transparency",
+    desc: "Track exactly where your contribution goes with unified impact reports and real-time dashboard updates.",
+  },
+  {
+    icon: Target,
+    title: "Root Cause Focus",
+    desc: "We prioritize long-horizon programs in restoration, education, and resilience that solve problems at the source.",
   },
 ];
 
-function Why() {
+function ValueProps() {
   return (
-    <section className="border-t border-border/60">
-      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="max-w-2xl">
-          <Kicker>Why CommonGround</Kicker>
-          <h2 className="mt-4 font-display text-4xl font-semibold text-primary sm:text-5xl">
-            Built for trust, transparency and the long-haul.
-          </h2>
-        </div>
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
-          {REASONS.map((r) => (
-            <div key={r.title} className="rounded-3xl bg-card p-8 border border-border/40">
-              <r.icon className="h-6 w-6 text-primary" />
-              <h3 className="mt-5 font-display text-2xl font-semibold text-primary">{r.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{r.desc}</p>
+    <section className="bg-white py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          {PROPS.map((p) => (
+            <div key={p.title} className="flex flex-col items-start">
+              <div className="mb-6 rounded-2xl bg-primary/5 p-4 text-primary">
+                <p.icon className="h-6 w-6" />
+              </div>
+              <h3 className="font-display text-xl font-semibold text-primary">{p.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
             </div>
           ))}
         </div>
@@ -219,10 +143,9 @@ function Why() {
   );
 }
 
-function Initiatives() {
+function InitiativesList() {
   const queryKeys = useMemo(() => [["homepage-initiatives"]], []);
   useRealtimeSync("initiatives", queryKeys);
-
   const {
     data: initiatives,
     isLoading,
@@ -232,11 +155,11 @@ function Initiatives() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*, organizations!inner(organization_name, status)")
+        .select("*, organizations(organization_name)")
         .eq("is_approved", true)
         .eq("is_published", true)
-        .eq("organizations.status", "active")
-        .limit(3);
+        .limit(3)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data;
@@ -244,7 +167,7 @@ function Initiatives() {
   });
 
   return (
-    <section id="initiatives" className="border-t border-border/60 bg-cream-deep/40">
+    <section className="bg-cream-deep/40">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
@@ -286,57 +209,7 @@ function Initiatives() {
         ) : initiatives && initiatives.length > 0 ? (
           <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {initiatives.map((i) => (
-              <div
-                key={i.id}
-                className="group overflow-hidden rounded-3xl border border-border/40 bg-card transition hover:border-primary/40 shadow-sm"
-              >
-                <div className="aspect-video bg-muted overflow-hidden">
-                  {i.image_url ? (
-                    <img
-                      src={i.image_url}
-                      alt={i.title}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-muted/60 flex items-center justify-center">
-                      <Sparkles className="h-8 w-8 text-primary/20" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-8">
-                  <span className="text-xs font-medium uppercase text-muted-foreground">
-                    {getJoinedField(i.organizations, "organization_name")}
-                  </span>
-                  <h3 className="mt-2 font-display text-2xl font-semibold text-primary">
-                    {i.title}
-                  </h3>
-                  <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                    {i.summary || i.description}
-                  </p>
-                  <div className="mt-8 flex items-center justify-between">
-                    <div className="text-xs font-medium text-primary">
-                      Rs{" "}
-                      {Math.round(
-                        Math.min(
-                          100,
-                          (Number(i.current_amount_mur || 0) /
-                            Math.max(1, Number(i.goal_amount_mur || 0))) *
-                            100,
-                        ),
-                      )}
-                      % Funded • Rs
-                      {Number(i.goal_amount_mur || 0).toLocaleString()}
-                    </div>
-                    <Link
-                      to="/initiatives/$slug"
-                      params={{ slug: i.slug }}
-                      className="text-sm font-semibold text-primary hover:underline"
-                    >
-                      Support →
-                    </Link>
-                  </div>
-                </div>
-              </div>
+              <InitiativeCard key={i.id} initiative={i} />
             ))}
           </div>
         ) : (
@@ -465,8 +338,7 @@ function FinalCTA() {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
-            to="/initiatives/$slug"
-            params={{ slug: i.slug }}
+            to="/signup"
             className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             Become a Member

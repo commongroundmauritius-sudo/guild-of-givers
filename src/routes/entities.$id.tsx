@@ -1,74 +1,117 @@
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
-  MapPin,
-  Calendar,
-  Users,
-  Heart,
   Share2,
-  ShieldCheck,
   Globe,
   Target,
-  BarChart3,
-  FileText,
+  Users,
   MessageSquare,
+  MapPin,
+  FileText,
+  BarChart3
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { InitiativeCard } from "@/components/InitiativeCard";
 
 export const Route = createFileRoute("/entities/$id")({
-  component: EntityProfilePage,
+  head: (ctx: any) => {
+    const org = ctx.loaderData?.organization;
+    const title = org?.organization_name ? `${org.organization_name} — CommonGround` : "Organization Profile — CommonGround";
+    const description = org?.description || "Explore high-impact social programs making a difference in Mauritius.";
+    const canonical = typeof window !== "undefined" ? window.location.href : "";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { rel: "canonical", href: canonical }
+      ],
+    };
+  },
+  loader: async ({ params }: { params: any }) => {
+    const { id } = params;
+    const { data: organization } = await supabase
+      .from("organizations")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    return { organization };
+  },
+  component: OrganizationProfilePage,
 });
 
-function EntityProfilePage() {
+function OrganizationProfilePage() {
   const { id } = Route.useParams();
+  const queryKeys = useMemo(() => [["organization", id], ["public-initiatives"]], [id]);
+  useRealtimeSync("organizations", queryKeys);
+  useRealtimeSync("initiatives", queryKeys);
 
   const {
     data: organization,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["organization-entity", id],
+    queryKey: ["organization", id],
     queryFn: async () => {
-      if (!id) throw new Error("No Entity ID provided");
       const { data, error } = await supabase
         .from("organizations")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
+
       if (error) throw error;
       return data;
     },
   });
 
   const { data: initiatives } = useQuery({
-    queryKey: ["organization-initiatives", id],
+    queryKey: ["org-initiatives", id],
+    enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("*")
+        .select("*, organizations(organization_name)")
         .eq("organization_id", id)
         .eq("is_approved", true)
-        .eq("is_published", true);
+        .eq("is_published", true)
+        .order("created_at", { ascending: false });
+
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
   });
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success("Link copied to clipboard!");
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Profile link copied!");
+    }
   };
 
   if (isLoading) {
     return (
       <SiteLayout>
-        <div className="mx-auto max-w-7xl px-4 py-20">
-          <Skeleton className="h-[400px] w-full rounded-[3rem]" />
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="space-y-8">
+            <Skeleton className="h-48 w-full rounded-[3rem]" />
+            <div className="grid gap-12 lg:grid-cols-3">
+              <div className="space-y-6 lg:col-span-2">
+                <Skeleton className="h-12 w-2/3" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+              <Skeleton className="h-[400px] w-full rounded-[2.5rem]" />
+            </div>
+          </div>
         </div>
       </SiteLayout>
     );
@@ -77,64 +120,53 @@ function EntityProfilePage() {
   if (error || !organization) {
     return (
       <SiteLayout>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-          <h1 className="text-2xl font-bold text-primary">Entity not found</h1>
-          <Link to="/initiatives" className="mt-4 text-forest hover:underline">
-            Back to Initiatives
-          </Link>
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <p className="text-muted-foreground">Organization not found.</p>
         </div>
       </SiteLayout>
     );
   }
 
-  const progress =
-    organization.monthly_target_amount && organization.monthly_target_amount > 0
-      ? (Number(organization.current_collected_amount || 0) /
-          Number(organization.monthly_target_amount)) *
-        100
-      : 0;
+  const target = Number(organization.monthly_target_amount) || 1;
+  const current = Number(organization.current_collected_amount) || 0;
+  const progress = Math.min(100, (current / target) * 100);
 
   return (
     <SiteLayout>
-      <article className="min-h-screen bg-cream-soft/30 font-inter pb-20">
-        {/* Hero Section */}
-        <div className="relative h-[40vh] min-h-[400px] w-full overflow-hidden bg-primary/5">
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-            <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl">
-              {organization.logo_url ? (
-                <img
-                  src={organization.logo_url}
-                  alt={organization.organization_name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-primary/10 text-4xl font-bold text-primary uppercase">
-                  {organization.organization_name.charAt(0)}
+      <article className="pb-24">
+        {/* Banner Area */}
+        <div className="h-64 w-full bg-gradient-to-br from-primary/10 to-primary/5">
+          <div className="mx-auto h-full max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex h-full items-end pb-12">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-end">
+                <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-[2.5rem] border-4 border-white bg-white shadow-2xl shadow-primary/10">
+                  {organization.logo_url ? (
+                    <img
+                      src={organization.logo_url}
+                      alt={organization.organization_name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-primary text-4xl font-bold text-white uppercase">
+                      {organization.organization_name.charAt(0)}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
-
-          <div className="absolute bottom-0 left-0 w-full p-6 sm:p-12">
-            <div className="mx-auto max-w-7xl">
-              <Link
-                to="/initiatives"
-                className="inline-flex items-center gap-2 rounded-full bg-black/10 px-4 py-2 text-sm font-medium text-primary backdrop-blur-md transition hover:bg-black/20"
-              >
-                <ArrowLeft className="h-4 w-4" /> Back
-              </Link>
-              <h1 className="mt-6 font-display text-4xl font-bold text-primary sm:text-5xl lg:text-6xl">
-                {organization.organization_name}
-              </h1>
-              <div className="mt-4 flex flex-wrap gap-4">
-                <span className="rounded-full bg-forest/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-forest">
-                  {organization.category || "Social Entity"}
-                </span>
-                {organization.is_verified && (
-                  <span className="flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-blue-600">
-                    <ShieldCheck className="h-3.5 w-3.5" /> Vetted Partner
-                  </span>
-                )}
+                <div className="mb-2">
+                  <h1 className="font-display text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+                    {organization.organization_name}
+                  </h1>
+                  <div className="mt-3 flex items-center gap-4 text-sm font-medium text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4 text-primary/40" /> Mauritius
+                    </span>
+                    {organization.category && (
+                      <span className="rounded-full bg-primary/5 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-primary">
+                        {organization.category}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -220,30 +252,7 @@ function EntityProfilePage() {
                   </h2>
                   <div className="mt-6 grid gap-6 sm:grid-cols-2">
                     {initiatives.map((i) => (
-                      <Link
-                        key={i.id}
-                        to="/initiatives/$id"
-                        params={{ id: i.id }}
-                        className="group overflow-hidden rounded-[2rem] border border-border/40 bg-card transition hover:border-primary/40"
-                      >
-                        <div className="aspect-video bg-muted">
-                          {i.image_url && (
-                            <img
-                              src={i.image_url}
-                              alt={i.title}
-                              className="h-full w-full object-cover"
-                            />
-                          )}
-                        </div>
-                        <div className="p-6">
-                          <h3 className="font-display text-lg font-bold text-primary group-hover:text-forest transition">
-                            {i.title}
-                          </h3>
-                          <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                            {i.summary || i.caption}
-                          </p>
-                        </div>
-                      </Link>
+                      <InitiativeCard key={i.id} initiative={i} />
                     ))}
                   </div>
                 </section>

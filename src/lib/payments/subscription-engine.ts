@@ -8,7 +8,9 @@ export class SubscriptionEngine {
     switch (type) {
       case "payment.success":
       case "subscription.renewal":
-        await this.processSuccessfulPayment(userId, subscriptionId, transactionId, amount);
+        if (userId && transactionId && typeof amount === "number") {
+          await this.processSuccessfulPayment(userId, subscriptionId, transactionId, amount);
+        }
         break;
 
       case "subscription.cancelled":
@@ -33,13 +35,11 @@ export class SubscriptionEngine {
   }
 
   private async processSuccessfulPayment(
-    userId: string | undefined,
+    userId: string,
     subscriptionId: string | undefined,
     transactionId: string,
     amount: number,
   ): Promise<void> {
-    if (!userId) return;
-
     // 1. Allocate funds via RPC (idempotent)
     const { error: allocError } = await supabase.rpc("allocate_payment_funds", {
       p_payment_id: transactionId,
@@ -96,6 +96,10 @@ export class SubscriptionEngine {
         user_id: userId,
       });
     }
+  }
+
+  async runBillingCycle() {
+    return await supabase.rpc("process_recurring_billing");
   }
 }
 
