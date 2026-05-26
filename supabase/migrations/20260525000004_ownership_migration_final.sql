@@ -42,16 +42,17 @@ BEGIN
 END $$;
 
 -- 3. Mark legacy columns as deprecated (Stop new writes - Phase A)
--- We will enforce this via a trigger to prevent insertion into legacy columns
-CREATE OR REPLACE FUNCTION public.check_legacy_ownership_usage()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.owner_user_id IS NOT NULL THEN
-        RAISE WARNING 'Column owner_user_id is deprecated and should not be used. Use profiles.organization_id instead.';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organizations') THEN
+        CREATE OR REPLACE FUNCTION public.check_legacy_ownership_usage()
+        RETURNS TRIGGER AS $func$
+        BEGIN
+            IF NEW.owner_user_id IS NOT NULL THEN
+                RAISE WARNING 'Column owner_user_id is deprecated and should not be used. Use profiles.organization_id instead.';
+            END IF;
+            RETURN NEW;
+        END;
+        $func$ LANGUAGE plpgsql;
 
 DO $$
 BEGIN

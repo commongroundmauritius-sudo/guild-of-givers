@@ -13,9 +13,9 @@ DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
-        WHERE p.proname = 'check_initiative_status_permissions' AND n.nspname = 'public'
+        WHERE p.proname = 'check_initiative_permissions' AND n.nspname = 'public'
     ) THEN
-        ALTER FUNCTION public.check_initiative_status_permissions() SET search_path = public;
+        ALTER FUNCTION public.check_initiative_permissions() SET search_path = public;
     END IF;
 END $$;
 
@@ -130,9 +130,7 @@ BEGIN
         REVOKE EXECUTE ON FUNCTION public.handle_comment_creation() FROM PUBLIC, anon, authenticated;
     END IF;
 END $$;
-
-DO $$
-BEGIN
+DO $$ BEGIN
     IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'handle_new_user' AND n.nspname = 'public') THEN
         REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
     END IF;

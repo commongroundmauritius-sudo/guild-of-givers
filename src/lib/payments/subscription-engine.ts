@@ -13,6 +13,7 @@ export class SubscriptionEngine {
 
       case "subscription.cancelled":
         if (await this.updateSubscriptionStatus(subscriptionId, "cancelled")) {
+          // The database trigger will now handle lead inactivation
           await this.recordSupporterStatusEvent(userId, "supporter_deactivated");
         }
         break;
@@ -31,6 +32,51 @@ export class SubscriptionEngine {
     }
   }
 
+  private async processSuccessfulPayment(
+    userId: string | undefined,
+    subscriptionId: string | undefined,
+    transactionId: string,
+    amount: number,
+  ): Promise<void> {
+    if (!userId) return;
+
+    // 1. Allocate funds via RPC (idempotent)
+    const { error: allocError } = await supabase.rpc("allocate_payment_funds", {
+      p_payment_id: transactionId,
+      p_user_id: userId,
+      p_total_amount: amount,
+    });
+
+    if (allocError) {
+      console.error("Fund allocation failed:", allocError);
+    }
+
+    // 2. Update subscription status
+    if (subscriptionId) {
+      await this.updateSubscriptionStatus(subscriptionId, "active");
+    }
+
+    // 3. The database trigger tr_handle_lead_conversion on profiles will handle lead status
+    // when source_initiative_id is set during signup.
+  }
+
+  private async updateSubscriptionStatus(
+    subscriptionId: string | undefined,
+    status: "active" | "cancelled" | "past_due" | "pending",
+  ): Promise<boolean> {
+    if (!subscriptionId) return false;
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", subscriptionId);
+
+    return !error;
+  }
+
   private async recordSupporterStatusEvent(
     userId: string | undefined,
     eventType: string,
@@ -44,117 +90,11 @@ export class SubscriptionEngine {
       .maybeSingle();
 
     if (profile?.primary_initiative_id) {
-      // For status events, we don't have a unique constraint, but we can check existence
-      // of a very recent event to prevent double-firing from simultaneous webhooks.
-      const { data: recent } = await supabase
-        .from("initiative_events")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("initiative_id", profile.primary_initiative_id)
-        .eq("event_type", eventType)
-        .gt("created_at", new Date(Date.now() - 1000 * 60).toISOString()) // Last 1 minute
-        .maybeSingle();
-
-      if (!recent) {
-        await supabase.from("initiative_events").insert({
-          initiative_id: profile.primary_initiative_id,
-          event_type: eventType,
-          user_id: userId,
-        });
-      }
-    }
-  }
-
-  private async processSuccessfulPayment(
-    userId: string,
-    subscriptionId: string | undefined,
-    transactionId: string | undefined,
-    amount: number | undefined,
-  ): Promise<void> {
-    if (!amount) return;
-
-    // Idempotency check: does this transaction ID already exist?
-    if (transactionId) {
-      const { data: existing } = await supabase
-        .from("payments")
-        .select("id")
-        .eq("peach_payment_id", transactionId)
-        .maybeSingle();
-      if (existing) return;
-    }
-
-    const { data: payment, error: pError } = await supabase
-      .from("payments")
-      .insert({
+      await supabase.from("initiative_events").insert({
+        initiative_id: profile.primary_initiative_id,
+        event_type: eventType,
         user_id: userId,
-        subscription_id: null,
-        amount_mur: amount,
-        status: "success",
-        peach_payment_id: transactionId || null,
-        paid_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (pError) {
-      console.error("Error recording payment:", pError);
-      return;
-    }
-
-    const { error: allocError } = await supabase.rpc("allocate_payment_funds", {
-      p_payment_id: payment.id,
-      p_user_id: userId,
-      p_total_amount: amount,
-    });
-
-    if (allocError) {
-      console.error("CRITICAL: Atomic financial allocation failed:", allocError);
-    }
-
-    const { error: activateError } = await supabase.rpc("activate_membership", {
-      p_user_id: userId,
-    });
-    if (activateError) {
-      console.error("Failed to activate membership role:", activateError);
-    }
-
-    if (subscriptionId) {
-      const wasUpdated = await this.updateSubscriptionStatus(subscriptionId, "active");
-      if (wasUpdated) {
-        await this.recordSupporterStatusEvent(userId, "supporter_activated");
-      }
-    }
-  }
-
-  private async updateSubscriptionStatus(
-    subscriptionId: string | undefined,
-    newStatus: string,
-  ): Promise<boolean> {
-    if (!subscriptionId) return false;
-
-    const { data: current } = await supabase
-      .from("subscriptions")
-      .select("status")
-      .eq("peach_subscription_id", subscriptionId)
-      .maybeSingle();
-
-    if (!current || current.status === newStatus) {
-      return false;
-    }
-
-    const { error } = await supabase
-      .from("subscriptions")
-      .update({ status: newStatus as any, updated_at: new Date().toISOString() })
-      .eq("peach_subscription_id", subscriptionId);
-
-    return !error;
-  }
-
-  async runBillingCycle(): Promise<void> {
-    const { error } = await supabase.rpc("process_recurring_billing");
-    if (error) {
-      console.error("Failed to trigger DB billing cycle:", error);
-      throw error;
+      });
     }
   }
 }

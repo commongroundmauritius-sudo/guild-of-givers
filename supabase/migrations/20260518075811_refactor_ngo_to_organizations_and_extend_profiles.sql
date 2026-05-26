@@ -1,5 +1,5 @@
--- Refactor Organization references to Organization and extend profile fields
--- This migration ensures the transition to organization terminology is complete
+-- Refactor NGO references to Organization and extend profile fields
+-- This migration ensures the transition to organization terminology is complete with idempotency guards
 
 BEGIN;
 
@@ -56,8 +56,7 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS bio TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS address TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS age INTEGER;
 
--- Ensure age check constraint is handled in security_hardening migration
--- or add it here if not present
+-- Ensure age check constraint is handled
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'age_check') THEN
