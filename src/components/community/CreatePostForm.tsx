@@ -90,9 +90,9 @@ export function CreatePostForm() {
   if (role === "organization" || !role) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Share with the Community</CardTitle>
+    <Card className="border-border/40 shadow-sm rounded-3xl">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl font-display font-bold text-primary">Share with the Community</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -100,11 +100,12 @@ export function CreatePostForm() {
             placeholder="Post Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            className="rounded-xl border-border/40 bg-muted/30 focus-visible:ring-primary/20"
             required
           />
 
           <select
-            className="w-full h-10 px-3 py-2 rounded-md border border-input bg-transparent text-sm"
+            className="w-full h-11 px-3 py-2 rounded-xl border border-border/40 bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
             value={initiativeId || "none"}
             onChange={(e) => setInitiativeId(e.target.value)}
           >
@@ -117,20 +118,20 @@ export function CreatePostForm() {
           </select>
 
           <Textarea
-            placeholder="What's on your mind?"
+            placeholder="What's on your mind? Share your impact story..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[120px]"
+            className="min-h-[120px] rounded-xl border-border/40 bg-muted/30 focus-visible:ring-primary/20"
             required
           />
 
           {previewUrl && (
-            <div className="relative">
-              <img src={previewUrl} alt="Preview" className="w-full h-48 object-cover rounded-md" />
+            <div className="relative overflow-hidden rounded-2xl border border-border/40">
+              <img src={previewUrl} alt="Preview" className="w-full h-48 object-cover" />
               <Button
                 variant="destructive"
                 size="icon"
-                className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg"
                 onClick={removeImage}
                 type="button"
               >
@@ -139,7 +140,7 @@ export function CreatePostForm() {
             </div>
           )}
         </CardContent>
-        <CardFooter className="flex justify-between border-t pt-4">
+        <CardFooter className="flex justify-between border-t border-border/40 pt-4">
           <div className="relative">
             <input
               type="file"
@@ -149,17 +150,17 @@ export function CreatePostForm() {
               onChange={handleImageChange}
             />
             <label htmlFor="post-image">
-              <Button variant="outline" type="button" asChild>
-                <span className="cursor-pointer gap-2">
+              <Button variant="ghost" type="button" className="rounded-full hover:bg-primary/5 text-primary" asChild>
+                <span className="cursor-pointer gap-2 font-bold text-xs uppercase tracking-widest">
                   <ImagePlus className="h-4 w-4" />
-                  Add Image
+                  Add Photo
                 </span>
               </Button>
             </label>
           </div>
-          <Button type="submit" disabled={uploading || mutation.isPending}>
-            <Send className="h-4 w-4 mr-2" />
-            {uploading ? "Uploading..." : "Post"}
+          <Button type="submit" className="rounded-full px-8 font-bold shadow-lg shadow-primary/20" disabled={uploading || mutation.isPending}>
+            {uploading ? "Uploading..." : "Post to Hub"}
+            {!uploading && <Send className="h-4 w-4 ml-2" />}
           </Button>
         </CardFooter>
       </form>

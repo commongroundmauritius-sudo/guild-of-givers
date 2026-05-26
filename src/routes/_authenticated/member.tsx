@@ -1,35 +1,50 @@
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { useMemo } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import {
-  CreditCard,
   Heart,
+  CreditCard,
   LayoutDashboard,
-  Check,
-  Plus,
-  FileText,
-  ExternalLink,
   History,
+  Plus,
+  Check,
+  ChevronRight,
+  ExternalLink
 } from "lucide-react";
-import { Link, useNavigate, createFileRoute } from "@tanstack/react-router";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import { AllocationPreview } from "@/components/member/AllocationPreview";
 
 export const Route = createFileRoute("/_authenticated/member")({
   component: MemberDashboard,
 });
 
-export default function MemberDashboard() {
-  const { user, signOut, loading: authLoading } = useAuth();
+function MemberDashboard() {
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const subSyncKeys = useMemo(() => user?.id ? [["member-subscription", user.id]] : [], [user?.id]);
+  const prefSyncKeys = useMemo(() => user?.id ? [["member-preferences", user.id]] : [], [user?.id]);
+  const ledgerSyncKeys = useMemo(() => user?.id ? [["member-ledger", user.id]] : [], [user?.id]);
+
+  useRealtimeSync("subscriptions", subSyncKeys);
+  useRealtimeSync("member_preferences", prefSyncKeys);
+  useRealtimeSync("financial_events", ledgerSyncKeys);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("*").eq("id", user?.id).single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user?.id as string)
+        .single();
+      if (error) throw error;
       return data;
     },
     enabled: !!user?.id,
@@ -38,27 +53,26 @@ export default function MemberDashboard() {
   const { data: subscription } = useQuery({
     queryKey: ["member-subscription", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
-        .eq("user_id", user?.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
+        .eq("user_id", user?.id as string)
         .maybeSingle();
+      if (error) throw error;
       return data;
     },
     enabled: !!user?.id,
   });
 
-  const { data: ledgerEvents } = useQuery({
-    queryKey: ["member-ledger", user?.id],
+  const { data: preferences } = useQuery({
+    queryKey: ["member-preferences", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("financial_events")
-        .select("*, initiatives(title)")
-        .eq("user_id", user?.id)
-        .order("created_at", { ascending: false });
-      return data;
+      const { data, error } = await supabase
+        .from("member_preferences")
+        .select("initiative_id")
+        .eq("user_id", user?.id as string);
+      if (error) throw error;
+      return data.map(p => p.initiative_id);
     },
     enabled: !!user?.id,
   });
@@ -66,70 +80,70 @@ export default function MemberDashboard() {
   const { data: initiatives } = useQuery({
     queryKey: ["public-initiatives"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("initiatives")
         .select("*, organizations(organization_name)")
         .eq("is_approved", true)
         .eq("is_published", true)
-        .eq("status", "active");
+        .order("title");
+      if (error) throw error;
       return data;
     },
   });
 
-  const { data: preferences } = useQuery({
-    queryKey: ["member-preferences", user?.id],
+  const { data: ledgerEvents } = useQuery({
+    queryKey: ["member-ledger", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("member_preferences")
-        .select("initiative_id")
-        .eq("user_id", user?.id);
-      return data?.map((p) => p.initiative_id) || [];
+      const { data, error } = await supabase
+        .from("financial_events")
+        .select("*, initiatives(title)")
+        .eq("user_id", user?.id as string)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data;
     },
     enabled: !!user?.id,
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ initiativeId, selected }: { initiativeId: string; selected: boolean }) => {
+    mutationFn: async ({ initiativeId, selected }: { initiativeId: string, selected: boolean }) => {
+      if (!user?.id) return;
       if (selected) {
-        return supabase.from("member_preferences").insert({
-          user_id: user?.id,
-          initiative_id: initiativeId,
-          priority_level: (preferences?.length || 0) + 1,
-        });
+        const { error } = await supabase
+          .from("member_preferences")
+          .insert({ user_id: user.id, initiative_id: initiativeId });
+        if (error) throw error;
       } else {
-        return supabase
+        const { error } = await supabase
           .from("member_preferences")
           .delete()
-          .eq("user_id", user?.id)
+          .eq("user_id", user.id)
           .eq("initiative_id", initiativeId);
+        if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["member-preferences", user?.id] });
       toast.success("Preferences updated");
     },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update preferences");
+    }
   });
 
   const isSubscribed = subscription?.status === "active";
-  const lifetimeImpact =
-    ledgerEvents
-      ?.filter((e) => e.event_type === "allocation" || e.event_type === "impact_pool")
-      .reduce((acc, e) => acc + Number(e.amount_mur), 0) ?? 0;
-
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "Member";
+  const lifetimeImpact = ledgerEvents?.filter(e => e.event_type === "allocation").reduce((sum, e) => sum + Number(e.amount_mur), 0) || 0;
 
   return (
     <SiteLayout>
-      <section className="bg-muted/30 min-h-screen">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-6">
+      <section className="min-h-screen bg-[#faf8f6] py-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-6">
             <div>
               <div className="flex items-center gap-2">
-                <Badge
-                  className={
-                    isSubscribed ? "bg-teal-100 text-teal-700" : "bg-muted text-muted-foreground"
-                  }
-                >
+                <Badge variant="outline" className={isSubscribed ? "bg-teal-100 text-teal-700" : "bg-muted text-muted-foreground"}>
                   {isSubscribed ? "Active Member" : "Guest Account"}
                 </Badge>
               </div>
@@ -142,10 +156,10 @@ export default function MemberDashboard() {
             </div>
             <div className="flex gap-3">
               <Link
-                to="/member/profile"
+                to="/member/settings"
                 className="rounded-full border border-teal-600/20 bg-card px-5 py-2.5 text-sm font-semibold text-teal-700 hover:bg-teal-50 transition-colors"
               >
-                My Profile
+                Settings
               </Link>
               <button
                 onClick={() => signOut().then(() => navigate({ to: "/login" }))}
@@ -160,52 +174,38 @@ export default function MemberDashboard() {
             {[
               {
                 title: "Monthly contribution",
-                value: subscription
-                  ? `Rs ${Number(subscription.amount_mur).toLocaleString()}`
-                  : "—",
+                value: subscription ? `Rs ${Number(subscription.amount_mur).toLocaleString()}` : "—",
                 sub: subscription?.status || "Inactive",
                 icon: CreditCard,
-                color: "teal",
               },
               {
                 title: "Active allocations",
                 value: preferences?.length || 0,
                 icon: Heart,
-                color: "teal",
               },
               {
                 title: "Lifetime impact",
                 value: `Rs ${lifetimeImpact.toLocaleString()}`,
-                sub: "Actual funds allocated",
+                sub: "Allocated funds",
                 icon: LayoutDashboard,
-                color: "teal",
               },
             ].map((c) => (
-              <div
-                key={c.title}
-                className="rounded-3xl border border-teal-600/20 bg-card p-6 shadow-sm"
-              >
+              <div key={c.title} className="rounded-3xl border border-teal-600/20 bg-card p-6 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="grid h-8 w-8 place-items-center rounded-xl bg-teal-100 text-teal-600">
                     <c.icon className="h-4 w-4" />
                   </div>
-                  <p className="text-[10px] text-teal-600 font-bold uppercase tracking-wider">
-                    {c.title}
-                  </p>
+                  <p className="text-[10px] text-teal-600 font-bold uppercase tracking-wider">{c.title}</p>
                 </div>
                 <p className="mt-4 font-display text-3xl font-bold text-primary">{c.value}</p>
-                {"sub" in c && (
-                  <p className="mt-1 text-xs text-muted-foreground capitalize font-medium">
-                    {c.sub}
-                  </p>
-                )}
+                {"sub" in c && <p className="mt-1 text-xs text-muted-foreground capitalize font-medium">{c.sub}</p>}
               </div>
             ))}
           </div>
 
           <div className="mt-16">
             <h2 className="font-display text-2xl font-semibold text-primary">
-              Choose your initiatives
+              Your Impact Portfolio
             </h2>
             <p className="mt-2 text-muted-foreground">
               Select the programs where you want your monthly contribution to be allocated.
@@ -217,10 +217,8 @@ export default function MemberDashboard() {
                 return (
                   <div
                     key={i.id}
-                    className={`relative overflow-hidden rounded-3xl border p-6 transition ${
-                      isSelected
-                        ? "border-teal-600 bg-teal-600/5 shadow-sm"
-                        : "border-border/40 bg-card"
+                    className={`relative flex flex-col overflow-hidden rounded-3xl border p-6 transition ${
+                      isSelected ? "border-teal-600 bg-teal-600/5 shadow-sm" : "border-border/40 bg-card"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -233,21 +231,29 @@ export default function MemberDashboard() {
                         </h3>
                       </div>
                       <button
-                        onClick={() =>
-                          toggleMutation.mutate({ initiativeId: i.id, selected: !isSelected })
-                        }
+                        onClick={() => toggleMutation.mutate({ initiativeId: i.id, selected: !isSelected })}
                         className={`grid h-8 w-8 place-items-center rounded-full transition ${
-                          isSelected
-                            ? "bg-teal-600 text-white"
-                            : "bg-muted text-muted-foreground hover:bg-teal-100"
+                          isSelected ? "bg-teal-600 text-white" : "bg-muted text-muted-foreground hover:bg-teal-100"
                         }`}
                       >
                         {isSelected ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                       </button>
                     </div>
-                    <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                      {i.description}
+                    <p className="mt-3 line-clamp-2 text-sm text-muted-foreground flex-1">
+                      {i.summary || i.description}
                     </p>
+                    <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4">
+                      <Link
+                        to="/initiatives/$slug"
+                        params={{ slug: i.slug || i.id }}
+                        className="text-xs font-bold text-teal-600 hover:underline flex items-center gap-1"
+                      >
+                        View Page <ExternalLink className="h-3 w-3" />
+                      </Link>
+                      {isSelected && (
+                        <span className="text-[10px] font-bold text-teal-600 uppercase">Active</span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -257,38 +263,24 @@ export default function MemberDashboard() {
           <div className="mt-16 grid gap-12 lg:grid-cols-2">
             <div>
               <h2 className="font-display text-2xl font-semibold text-teal-600 flex items-center gap-2">
-                <History className="h-5 w-5" />
-                Ledger History
+                <History className="h-5 w-5" /> Ledger History
               </h2>
-              <p className="text-muted-foreground text-sm mt-1">
-                Direct visibility into your fund movements.
-              </p>
               <div className="mt-6 space-y-3">
                 {ledgerEvents && ledgerEvents.length > 0 ? (
                   ledgerEvents.map((e) => (
-                    <div
-                      key={e.id}
-                      className="flex items-center justify-between rounded-2xl border border-teal-600/20 bg-card p-4 transition hover:shadow-md"
-                    >
+                    <div key={e.id} className="flex items-center justify-between rounded-2xl border border-teal-600/20 bg-card p-4 transition hover:shadow-md">
                       <div className="flex gap-4">
-                        <div
-                          className={`grid h-10 w-10 place-items-center rounded-full ${e.event_type === "allocation" ? "bg-teal-100 text-teal-600" : "bg-amber-100 text-amber-700"}`}
-                        >
+                        <div className={`grid h-10 w-10 place-items-center rounded-full ${e.event_type === "allocation" ? "bg-teal-100 text-teal-600" : "bg-amber-100 text-amber-700"}`}>
                           <Heart className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-primary capitalize">
-                            {e.event_type.replace("_", " ")}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
-                            {e.initiatives?.title || "System Pool"} •{" "}
-                            {new Date(e.created_at).toLocaleDateString()}
+                          <p className="text-sm font-semibold text-primary capitalize">{e.event_type.replace("_", " ")}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase">
+                            {e.initiatives?.title || "System Pool"} • {new Date(e.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                      <p className="font-display font-bold text-teal-600">
-                        Rs {Number(e.amount_mur).toLocaleString()}
-                      </p>
+                      <p className="font-display font-bold text-teal-600">Rs {Number(e.amount_mur).toLocaleString()}</p>
                     </div>
                   ))
                 ) : (
@@ -299,50 +291,18 @@ export default function MemberDashboard() {
               </div>
             </div>
 
-            <div>
-              <div className="space-y-8">
-                <AllocationPreview
-                  amount={Number(subscription?.amount_mur || 0)}
-                  userId={user?.id}
-                />
-                <div>
-                  <h2 className="font-display text-2xl font-semibold text-primary">
-                    Membership Status
-                  </h2>
-                  <div className="mt-6 p-8 rounded-3xl border border-border/40 bg-card">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <p className="text-xs font-bold text-muted-foreground uppercase">
-                          Current Plan
-                        </p>
-                        <p className="text-xl font-bold">
-                          {subscription
-                            ? `Rs ${Number(subscription.amount_mur).toLocaleString()} / mo`
-                            : "None"}
-                        </p>
-                      </div>
-                      <Badge variant={isSubscribed ? "default" : "secondary"}>
-                        {subscription?.status || "Inactive"}
-                      </Badge>
-                    </div>
-                    <div className="space-y-4 pt-6 border-t border-border/40">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Next Billing Date</span>
-                        <span className="font-semibold">
-                          {subscription?.next_billing_date
-                            ? new Date(subscription.next_billing_date).toLocaleDateString()
-                            : "—"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Membership Since</span>
-                        <span className="font-semibold">
-                          {subscription?.created_at
-                            ? new Date(subscription.created_at).toLocaleDateString()
-                            : "—"}
-                        </span>
-                      </div>
-                    </div>
+            <div className="space-y-8">
+              <AllocationPreview amount={Number(subscription?.amount_mur || 0)} userId={user?.id} />
+              <div className="rounded-3xl border border-border/40 bg-card p-8">
+                <h3 className="font-display text-xl font-bold text-primary mb-6">Membership Details</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Status</span>
+                    <Badge>{subscription?.status || "Inactive"}</Badge>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Next Billing</span>
+                    <span className="font-semibold">{subscription?.next_billing_date ? new Date(subscription.next_billing_date).toLocaleDateString() : "—"}</span>
                   </div>
                 </div>
               </div>
