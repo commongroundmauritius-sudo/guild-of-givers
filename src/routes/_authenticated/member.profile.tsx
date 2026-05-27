@@ -20,7 +20,7 @@ function MemberProfile() {
       const { data } = await supabase
         .from("subscriptions")
         .select("*")
-        .eq("user_id", user?.id)
+        .eq("user_id", user?.id ?? "")
         .order("created_at", { ascending: false })
         .limit(1);
       return data?.[0];
@@ -34,7 +34,7 @@ function MemberProfile() {
       const { data } = await supabase
         .from("member_preferences")
         .select("*, initiatives(*, organizations(organization_name))")
-        .eq("user_id", user?.id);
+        .eq("user_id", user?.id ?? "");
       return data;
     },
     enabled: !!user?.id,

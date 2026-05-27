@@ -2,7 +2,8 @@ import { getJoinedField, getJoinedData } from "@/lib/utils";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, type Tables } from "@/integrations/supabase/client";
+import { type Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -42,7 +43,28 @@ function InitiativeEditPage() {
     },
   });
 
-  const [formData, setFormData] = useState<any>(null);
+  interface InitiativeFormData {
+    title: string;
+    caption: string;
+    summary: string;
+    description: string;
+    content: string;
+    goal_amount_mur: number;
+    image_url: string;
+    gallery_urls: string[];
+    is_approved: boolean;
+    is_published: boolean;
+    short_term_goals: string;
+    long_term_goals: string;
+    target_milestones: string;
+    expected_outcomes: string;
+    impact_pool_target: number;
+    impact_pool_current: number;
+    category: string;
+    organization_id: string;
+  }
+
+  const [formData, setFormData] = useState<InitiativeFormData | null>(null);
 
   useEffect(() => {
     if (!authLoading && role && role !== "admin") {
@@ -98,7 +120,7 @@ function InitiativeEditPage() {
   }, [initiative]);
 
   const updateMutation = useMutation({
-    mutationFn: async (updatedData: Record<string, unknown>) => {
+    mutationFn: async (updatedData: Partial<Tables<"initiatives">>) => {
       const { error } = await supabase.from("initiatives").update(updatedData).eq("id", id);
       if (error) throw error;
 
@@ -110,9 +132,9 @@ function InitiativeEditPage() {
           target_id: id,
           target_type: "initiative",
           details: {
-            is_published: updatedData.is_published,
+            is_published: updatedData.is_published ?? false,
             fields_updated: Object.keys(updatedData),
-          },
+          } as Json,
         });
       }
     },
@@ -214,13 +236,13 @@ function InitiativeEditPage() {
   };
 
   const handleRemoveGalleryUrl = (index: number) => {
-    const newUrls = formData.gallery_urls.filter((_: unknown, i: number) => i !== index);
+    const newUrls = formData.gallery_urls.filter((_: any, i: number) => i !== index);
     setFormData((prev: any) => ({ ...prev, gallery_urls: newUrls }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate(formData);
+    if (formData) updateMutation.mutate(formData);
   };
 
   return (

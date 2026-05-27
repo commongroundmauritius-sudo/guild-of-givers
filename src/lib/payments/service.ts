@@ -13,7 +13,11 @@ class PaymentService {
     this.provider = provider;
   }
 
-  async startPayment(amount: number, currency: string = "MUR", metadata: Record<string, any> = {}) {
+  async startPayment(
+    amount: number,
+    currency: string = "MUR",
+    metadata: Record<string, unknown> = {},
+  ) {
     return this.provider.initializePayment(amount, currency, metadata);
   }
 

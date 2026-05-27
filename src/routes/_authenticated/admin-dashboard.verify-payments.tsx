@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin-dashboard/verify-pay
 function VerifyPaymentsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<{ name: string; status: string; detail: string }[]>([]);
 
   const runTest = async () => {
     if (!user) return;
@@ -61,7 +61,7 @@ function VerifyPaymentsPage() {
         },
         {
           name: "Allocation records",
-          status: latest?.allocations?.length > 0 ? "PASS" : "FAIL",
+          status: (latest?.allocations?.length ?? 0) > 0 ? "PASS" : "FAIL",
           detail: `Found ${latest?.allocations?.length || 0} allocation(s)`,
         },
       ]);

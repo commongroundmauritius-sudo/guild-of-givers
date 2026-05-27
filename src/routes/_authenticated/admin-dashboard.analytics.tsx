@@ -199,7 +199,7 @@ function AdminAnalyticsPage() {
                     {events?.map((e) => (
                       <TableRow key={e.id} className="text-xs">
                         <TableCell className="text-muted-foreground whitespace-nowrap font-mono">
-                          {new Date(e.created_at).toLocaleString()}
+                          {e.created_at ? new Date(e.created_at).toLocaleString() : "-"}
                         </TableCell>
                         <TableCell>
                           <Badge

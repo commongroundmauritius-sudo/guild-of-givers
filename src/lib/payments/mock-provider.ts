@@ -13,7 +13,7 @@ export class MockPaymentProvider implements PaymentProvider {
   async initializePayment(
     amount: number,
     currency: string,
-    metadata: Record<string, any>,
+    metadata: Record<string, unknown>,
   ): Promise<{ checkoutUrl: string; transactionId: string }> {
     console.log(`[MockProvider] Initializing payment of ${amount} ${currency}`);
     const transactionId = `mock_txn_${Math.random().toString(36).substr(2, 9)}`;
@@ -29,7 +29,7 @@ export class MockPaymentProvider implements PaymentProvider {
 
     // Set next billing date to the next occurrence of billingDate
     const now = new Date();
-    let nextBilling = new Date(now.getFullYear(), now.getMonth(), request.billingDate);
+    const nextBilling = new Date(now.getFullYear(), now.getMonth(), request.billingDate);
     if (nextBilling <= now) {
       nextBilling.setMonth(nextBilling.getMonth() + 1);
     }
@@ -55,20 +55,23 @@ export class MockPaymentProvider implements PaymentProvider {
     return "active";
   }
 
-  async handleWebhook(payload: any): Promise<PaymentEvent> {
+  async handleWebhook(payload: Record<string, unknown>): Promise<PaymentEvent> {
     const type = payload.event_type as PaymentEventType;
     return {
       type,
-      userId: payload.user_id,
-      subscriptionId: payload.subscription_id,
-      transactionId: payload.transaction_id,
-      amount: payload.amount,
+      userId: payload.user_id as string,
+      subscriptionId: payload.subscription_id as string,
+      transactionId: payload.transaction_id as string,
+      amount: payload.amount as number,
       payload,
     };
   }
 
   // Helper for simulation
-  static generateMockEvent(type: PaymentEventType, data: Partial<PaymentEvent>): any {
+  static generateMockEvent(
+    type: PaymentEventType,
+    data: Partial<PaymentEvent>,
+  ): Record<string, unknown> {
     return {
       event_type: type,
       user_id: data.userId || "mock_user",

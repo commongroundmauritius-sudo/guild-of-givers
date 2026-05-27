@@ -1,11 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
+export interface Database {
   public: {
     Tables: {
       admin_actions: {
@@ -44,24 +39,30 @@ export type Database = {
           created_at: string;
           id: string;
           initiative_id: string;
+          is_overflow: boolean | null;
           organization_id: string | null;
           payment_id: string;
+          potential_amount_mur: number | null;
         };
         Insert: {
           amount_mur: number;
           created_at?: string;
           id?: string;
           initiative_id: string;
+          is_overflow?: boolean | null;
           organization_id?: string | null;
           payment_id: string;
+          potential_amount_mur?: number | null;
         };
         Update: {
           amount_mur?: number;
           created_at?: string;
           id?: string;
           initiative_id?: string;
+          is_overflow?: boolean | null;
           organization_id?: string | null;
           payment_id?: string;
+          potential_amount_mur?: number | null;
         };
         Relationships: [
           {
@@ -178,6 +179,63 @@ export type Database = {
           },
         ];
       };
+      billing_cycles: {
+        Row: {
+          end_date: string;
+          id: string;
+          is_closed: boolean | null;
+          month: number;
+          start_date: string;
+          year: number;
+        };
+        Insert: {
+          end_date: string;
+          id?: string;
+          is_closed?: boolean | null;
+          month: number;
+          start_date: string;
+          year: number;
+        };
+        Update: {
+          end_date?: string;
+          id?: string;
+          is_closed?: boolean | null;
+          month?: number;
+          start_date?: string;
+          year?: number;
+        };
+        Relationships: [];
+      };
+      billing_runs: {
+        Row: {
+          created_at: string;
+          error_log: string | null;
+          id: string;
+          run_date: string;
+          status: string | null;
+          subscriptions_processed: number | null;
+          total_amount_mur: number | null;
+        };
+        Insert: {
+          created_at?: string;
+          error_log?: string | null;
+          id?: string;
+          run_date?: string;
+          status?: string | null;
+          subscriptions_processed?: number | null;
+          total_amount_mur?: number | null;
+        };
+        Update: {
+          created_at?: string;
+          error_log?: string | null;
+          id?: string;
+          run_date?: string;
+          status?: string | null;
+          subscriptions_processed?: number | null;
+          total_amount_mur?: number | null;
+        };
+        Relationships: [];
+      };
       community_activity_limits: {
         Row: {
           daily_posts: number;
@@ -279,6 +337,235 @@ export type Database = {
           },
         ];
       };
+      fee_configurations: {
+        Row: {
+          active: boolean | null;
+          created_at: string;
+          fee_type: Database["public"]["Enums"]["fee_type"];
+          fixed_amount_mur: number | null;
+          id: string;
+          percentage_value: number | null;
+        };
+        Insert: {
+          active?: boolean | null;
+          created_at?: string;
+          fee_type: Database["public"]["Enums"]["fee_type"];
+          fixed_amount_mur?: number | null;
+          id?: string;
+          percentage_value?: number | null;
+        };
+        Update: {
+          active?: boolean | null;
+          created_at?: string;
+          fee_type?: Database["public"]["Enums"]["fee_type"];
+          fixed_amount_mur?: number | null;
+          id?: string;
+          percentage_value?: number | null;
+        };
+        Relationships: [];
+      };
+      financial_accounts: {
+        Row: {
+          account_type: Database["public"]["Enums"]["financial_account_type"];
+          cached_balance_mur: number;
+          created_at: string;
+          id: string;
+          is_system: boolean;
+          reference_id: string | null;
+        };
+        Insert: {
+          account_type: Database["public"]["Enums"]["financial_account_type"];
+          cached_balance_mur?: number;
+          created_at?: string;
+          id?: string;
+          is_system?: boolean;
+          reference_id?: string | null;
+        };
+        Update: {
+          account_type?: Database["public"]["Enums"]["financial_account_type"];
+          cached_balance_mur?: number;
+          created_at?: string;
+          id?: string;
+          is_system?: boolean;
+          reference_id?: string | null;
+        };
+        Relationships: [];
+      };
+      financial_events: {
+        Row: {
+          account_id: string;
+          amount_mur: number;
+          billing_cycle_id: string | null;
+          created_at: string;
+          event_type: Database["public"]["Enums"]["financial_event_type"];
+          id: string;
+          initiative_id: string | null;
+          metadata: Json | null;
+          payment_id: string | null;
+          previous_balance: number;
+          resulting_balance: number;
+          user_id: string | null;
+        };
+        Insert: {
+          account_id: string;
+          amount_mur: number;
+          billing_cycle_id?: string | null;
+          created_at?: string;
+          event_type: Database["public"]["Enums"]["financial_event_type"];
+          id?: string;
+          initiative_id?: string | null;
+          metadata?: Json | null;
+          payment_id?: string | null;
+          previous_balance: number;
+          resulting_balance: number;
+          user_id?: string | null;
+        };
+        Update: {
+          account_id?: string;
+          amount_mur?: number;
+          billing_cycle_id?: string | null;
+          created_at?: string;
+          event_type?: Database["public"]["Enums"]["financial_event_type"];
+          id?: string;
+          initiative_id?: string | null;
+          metadata?: Json | null;
+          payment_id?: string | null;
+          previous_balance?: number;
+          resulting_balance?: number;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "financial_events_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "financial_accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "financial_events_billing_cycle_id_fkey";
+            columns: ["billing_cycle_id"];
+            isOneToOne: false;
+            referencedRelation: "billing_cycles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "financial_events_initiative_id_fkey";
+            columns: ["initiative_id"];
+            isOneToOne: false;
+            referencedRelation: "initiatives";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "financial_events_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      initiative_events: {
+        Row: {
+          created_at: string | null;
+          event_type: string;
+          id: string;
+          initiative_id: string | null;
+          metadata: Json | null;
+          session_id: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          event_type: string;
+          id?: string;
+          initiative_id?: string | null;
+          metadata?: Json | null;
+          session_id?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          event_type?: string;
+          id?: string;
+          initiative_id?: string | null;
+          metadata?: Json | null;
+          session_id?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "initiative_events_initiative_id_fkey";
+            columns: ["initiative_id"];
+            isOneToOne: false;
+            referencedRelation: "initiatives";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      initiative_funding_cycles: {
+        Row: {
+          billing_cycle_id: string;
+          closed_at: string | null;
+          created_at: string;
+          id: string;
+          initiative_id: string;
+          month: number;
+          overflow_amount_mur: number;
+          received_amount_mur: number;
+          remaining_amount_mur: number;
+          status: Database["public"]["Enums"]["funding_cycle_status"];
+          supporter_count: number;
+          target_amount_mur: number;
+          year: number;
+        };
+        Insert: {
+          billing_cycle_id: string;
+          closed_at?: string | null;
+          created_at?: string;
+          id?: string;
+          initiative_id: string;
+          month: number;
+          overflow_amount_mur?: number;
+          received_amount_mur?: number;
+          remaining_amount_mur?: number;
+          status?: Database["public"]["Enums"]["funding_cycle_status"];
+          supporter_count?: number;
+          target_amount_mur?: number;
+          year: number;
+        };
+        Update: {
+          billing_cycle_id?: string;
+          closed_at?: string | null;
+          created_at?: string;
+          id?: string;
+          initiative_id?: string;
+          month?: number;
+          overflow_amount_mur?: number;
+          received_amount_mur?: number;
+          remaining_amount_mur?: number;
+          status?: Database["public"]["Enums"]["funding_cycle_status"];
+          supporter_count?: number;
+          target_amount_mur?: number;
+          year?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "initiative_funding_cycles_billing_cycle_id_fkey";
+            columns: ["billing_cycle_id"];
+            isOneToOne: false;
+            referencedRelation: "billing_cycles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "initiative_funding_cycles_initiative_id_fkey";
+            columns: ["initiative_id"];
+            isOneToOne: false;
+            referencedRelation: "initiatives";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       initiative_updates: {
         Row: {
           content: string;
@@ -314,14 +601,100 @@ export type Database = {
           },
         ];
       };
+      initiative_versions: {
+        Row: {
+          admin_feedback: string | null;
+          category: string | null;
+          content: string | null;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          expected_outcomes: string | null;
+          goal_amount_mur: number | null;
+          id: string;
+          image_url: string | null;
+          impact_pool_target: number | null;
+          initiative_id: string;
+          long_term_goals: string | null;
+          media_url: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          short_term_goals: string | null;
+          status: string;
+          summary: string | null;
+          target_milestones: string | null;
+          title: string | null;
+          version_number: number;
+        };
+        Insert: {
+          admin_feedback?: string | null;
+          category?: string | null;
+          content?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          expected_outcomes?: string | null;
+          goal_amount_mur?: number | null;
+          id?: string;
+          image_url?: string | null;
+          impact_pool_target?: number | null;
+          initiative_id: string;
+          long_term_goals?: string | null;
+          media_url?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          short_term_goals?: string | null;
+          status?: string;
+          summary?: string | null;
+          target_milestones?: string | null;
+          title?: string | null;
+          version_number: number;
+        };
+        Update: {
+          admin_feedback?: string | null;
+          category?: string | null;
+          content?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          expected_outcomes?: string | null;
+          goal_amount_mur?: number | null;
+          id?: string;
+          image_url?: string | null;
+          impact_pool_target?: number | null;
+          initiative_id?: string;
+          long_term_goals?: string | null;
+          media_url?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          short_term_goals?: string | null;
+          status?: string;
+          summary?: string | null;
+          target_milestones?: string | null;
+          title?: string | null;
+          version_number?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "initiative_versions_initiative_id_fkey";
+            columns: ["initiative_id"];
+            isOneToOne: false;
+            referencedRelation: "initiatives";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       initiatives: {
         Row: {
+          active_supporter_count: number | null;
           cap_amount_mur: number | null;
           caption: string | null;
           category: string | null;
           content: string | null;
+          conversion_count: number | null;
           created_at: string;
           creator_role: Database["public"]["Enums"]["app_role"] | null;
+          creator_user_id: string | null;
           current_amount_mur: number | null;
           description: string | null;
           expected_outcomes: string | null;
@@ -333,26 +706,36 @@ export type Database = {
           impact_pool_current: number | null;
           impact_pool_progress: number | null;
           impact_pool_target: number | null;
+          inactive_supporter_count: number | null;
           initiative_source: string | null;
           is_approved: boolean;
           is_impact_pool: boolean | null;
           is_published: boolean;
+          is_system_owned: boolean | null;
+          is_unlimited: boolean | null;
           long_term_goals: string | null;
           media_url: string | null;
+          monthly_target_mur: number | null;
           organization_id: string | null;
           short_term_goals: string | null;
+          slug: string;
           status: string | null;
           summary: string | null;
           target_milestones: string | null;
           title: string;
+          updated_at: string | null;
+          view_count: number | null;
         };
         Insert: {
+          active_supporter_count?: number | null;
           cap_amount_mur?: number | null;
           caption?: string | null;
           category?: string | null;
           content?: string | null;
+          conversion_count?: number | null;
           created_at?: string;
           creator_role?: Database["public"]["Enums"]["app_role"] | null;
+          creator_user_id?: string | null;
           current_amount_mur?: number | null;
           description?: string | null;
           expected_outcomes?: string | null;
@@ -364,26 +747,36 @@ export type Database = {
           impact_pool_current?: number | null;
           impact_pool_progress?: number | null;
           impact_pool_target?: number | null;
+          inactive_supporter_count?: number | null;
           initiative_source?: string | null;
           is_approved?: boolean;
           is_impact_pool?: boolean | null;
           is_published?: boolean;
+          is_system_owned?: boolean | null;
+          is_unlimited?: boolean | null;
           long_term_goals?: string | null;
           media_url?: string | null;
+          monthly_target_mur?: number | null;
           organization_id?: string | null;
           short_term_goals?: string | null;
+          slug: string;
           status?: string | null;
           summary?: string | null;
           target_milestones?: string | null;
           title: string;
+          updated_at?: string | null;
+          view_count?: number | null;
         };
         Update: {
+          active_supporter_count?: number | null;
           cap_amount_mur?: number | null;
           caption?: string | null;
           category?: string | null;
           content?: string | null;
+          conversion_count?: number | null;
           created_at?: string;
           creator_role?: Database["public"]["Enums"]["app_role"] | null;
+          creator_user_id?: string | null;
           current_amount_mur?: number | null;
           description?: string | null;
           expected_outcomes?: string | null;
@@ -395,18 +788,25 @@ export type Database = {
           impact_pool_current?: number | null;
           impact_pool_progress?: number | null;
           impact_pool_target?: number | null;
+          inactive_supporter_count?: number | null;
           initiative_source?: string | null;
           is_approved?: boolean;
           is_impact_pool?: boolean | null;
           is_published?: boolean;
+          is_system_owned?: boolean | null;
+          is_unlimited?: boolean | null;
           long_term_goals?: string | null;
           media_url?: string | null;
+          monthly_target_mur?: number | null;
           organization_id?: string | null;
           short_term_goals?: string | null;
+          slug?: string;
           status?: string | null;
           summary?: string | null;
           target_milestones?: string | null;
           title?: string;
+          updated_at?: string | null;
+          view_count?: number | null;
         };
         Relationships: [
           {
@@ -418,38 +818,105 @@ export type Database = {
           },
         ];
       };
+      lead_status_history: {
+        Row: {
+          changed_at: string | null;
+          changed_by: string | null;
+          id: string;
+          lead_id: string;
+          new_status: string;
+          old_status: string | null;
+        };
+        Insert: {
+          changed_at?: string | null;
+          changed_by?: string | null;
+          id?: string;
+          lead_id: string;
+          new_status: string;
+          old_status?: string | null;
+        };
+        Update: {
+          changed_at?: string | null;
+          changed_by?: string | null;
+          id?: string;
+          lead_id?: string;
+          new_status?: string;
+          old_status?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_status_history_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       leads: {
         Row: {
+          acquisition_channel: string | null;
           amount_mur: number;
+          campaign_id: string | null;
+          converted_at: string | null;
           covers_fees: boolean;
           created_at: string;
           email: string;
-          full_organization_name: string;
+          first_seen_at: string | null;
+          full_name: string;
           id: string;
+          last_activity_at: string | null;
+          metadata: Json | null;
+          notes: string | null;
           phone: string | null;
+          source_initiative_id: string | null;
           status: string;
         };
         Insert: {
+          acquisition_channel?: string | null;
           amount_mur: number;
+          campaign_id?: string | null;
+          converted_at?: string | null;
           covers_fees?: boolean;
           created_at?: string;
           email: string;
-          full_organization_name: string;
+          first_seen_at?: string | null;
+          full_name: string;
           id?: string;
+          last_activity_at?: string | null;
+          metadata?: Json | null;
+          notes?: string | null;
           phone?: string | null;
+          source_initiative_id?: string | null;
           status?: string;
         };
         Update: {
+          acquisition_channel?: string | null;
           amount_mur?: number;
+          campaign_id?: string | null;
+          converted_at?: string | null;
           covers_fees?: boolean;
           created_at?: string;
           email?: string;
+          first_seen_at?: string | null;
           full_name?: string;
           id?: string;
+          last_activity_at?: string | null;
+          metadata?: Json | null;
+          notes?: string | null;
           phone?: string | null;
+          source_initiative_id?: string | null;
           status?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "leads_source_initiative_id_fkey";
+            columns: ["source_initiative_id"];
+            isOneToOne: false;
+            referencedRelation: "initiatives";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       member_preferences: {
         Row: {
@@ -458,6 +925,7 @@ export type Database = {
           id: string;
           initiative_id: string;
           organization_id: string | null;
+          priority_level: number | null;
           user_id: string;
         };
         Insert: {
@@ -466,6 +934,7 @@ export type Database = {
           id?: string;
           initiative_id: string;
           organization_id?: string | null;
+          priority_level?: number | null;
           user_id: string;
         };
         Update: {
@@ -474,6 +943,7 @@ export type Database = {
           id?: string;
           initiative_id?: string;
           organization_id?: string | null;
+          priority_level?: number | null;
           user_id?: string;
         };
         Relationships: [
@@ -489,6 +959,44 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notifications: {
+        Row: {
+          bundle_count: number;
+          created_at: string;
+          entity_id: string;
+          id: string;
+          read: boolean;
+          type: string;
+          user_id: string;
+        };
+        Insert: {
+          bundle_count?: number;
+          created_at?: string;
+          entity_id: string;
+          id?: string;
+          read?: boolean;
+          type: string;
+          user_id: string;
+        };
+        Update: {
+          bundle_count?: number;
+          created_at?: string;
+          entity_id?: string;
+          id?: string;
+          read?: boolean;
+          type?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -530,25 +1038,26 @@ export type Database = {
       };
       organizations: {
         Row: {
+          address: string | null;
+          allocation_summary: string | null;
           category: string | null;
+          contact_email: string | null;
           contact_info: string | null;
+          contact_phone: string | null;
           created_at: string;
           current_collected_amount: number | null;
           description: string | null;
+          expected_outcomes: string | null;
           goals: string | null;
           id: string;
           impact_metrics: string | null;
           is_verified: boolean;
           logo_url: string | null;
+          milestones: string | null;
           mission: string | null;
           monthly_target_amount: number | null;
           organization_name: string;
-          address: string | null;
-          contact_email: string | null;
-          contact_phone: string | null;
-          milestones: string | null;
-          expected_outcomes: string | null;
-          allocation_summary: string | null;
+          owner_user_id: string | null;
           status: string | null;
           supporters_count: number | null;
           transparency_content: string | null;
@@ -556,19 +1065,26 @@ export type Database = {
           website_url: string | null;
         };
         Insert: {
+          address?: string | null;
+          allocation_summary?: string | null;
           category?: string | null;
+          contact_email?: string | null;
           contact_info?: string | null;
+          contact_phone?: string | null;
           created_at?: string;
           current_collected_amount?: number | null;
           description?: string | null;
+          expected_outcomes?: string | null;
           goals?: string | null;
           id?: string;
           impact_metrics?: string | null;
           is_verified?: boolean;
           logo_url?: string | null;
+          milestones?: string | null;
           mission?: string | null;
           monthly_target_amount?: number | null;
           organization_name: string;
+          owner_user_id?: string | null;
           status?: string | null;
           supporters_count?: number | null;
           transparency_content?: string | null;
@@ -576,18 +1092,26 @@ export type Database = {
           website_url?: string | null;
         };
         Update: {
+          address?: string | null;
+          allocation_summary?: string | null;
           category?: string | null;
+          contact_email?: string | null;
           contact_info?: string | null;
+          contact_phone?: string | null;
           created_at?: string;
           current_collected_amount?: number | null;
           description?: string | null;
+          expected_outcomes?: string | null;
           goals?: string | null;
           id?: string;
           impact_metrics?: string | null;
           is_verified?: boolean;
           logo_url?: string | null;
+          milestones?: string | null;
           mission?: string | null;
           monthly_target_amount?: number | null;
+          organization_name?: string;
+          owner_user_id?: string | null;
           status?: string | null;
           supporters_count?: number | null;
           transparency_content?: string | null;
@@ -595,44 +1119,6 @@ export type Database = {
           website_url?: string | null;
         };
         Relationships: [];
-      };
-      notifications: {
-        Row: {
-          bundle_count: number;
-          created_at: string;
-          entity_id: string;
-          id: string;
-          read: boolean;
-          type: string;
-          user_id: string;
-        };
-        Insert: {
-          bundle_count?: number;
-          created_at?: string;
-          entity_id: string;
-          id?: string;
-          read?: boolean;
-          type: string;
-          user_id: string;
-        };
-        Update: {
-          bundle_count?: number;
-          created_at?: string;
-          entity_id?: string;
-          id?: string;
-          read?: boolean;
-          type?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "notifications_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       payment_events: {
         Row: {
@@ -719,6 +1205,47 @@ export type Database = {
             columns: ["subscription_id"];
             isOneToOne: false;
             referencedRelation: "subscriptions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payouts: {
+        Row: {
+          amount_mur: number;
+          created_at: string;
+          id: string;
+          organization_id: string;
+          paid_date: string | null;
+          reference: string | null;
+          scheduled_date: string | null;
+          status: Database["public"]["Enums"]["payout_status"];
+        };
+        Insert: {
+          amount_mur: number;
+          created_at?: string;
+          id?: string;
+          organization_id: string;
+          paid_date?: string | null;
+          reference?: string | null;
+          scheduled_date?: string | null;
+          status?: Database["public"]["Enums"]["payout_status"];
+        };
+        Update: {
+          amount_mur?: number;
+          created_at?: string;
+          id?: string;
+          organization_id?: string;
+          paid_date?: string | null;
+          reference?: string | null;
+          scheduled_date?: string | null;
+          status?: Database["public"]["Enums"]["payout_status"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payouts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
@@ -830,6 +1357,8 @@ export type Database = {
           id: string;
           organization_id: string | null;
           phone: string | null;
+          primary_initiative_id: string | null;
+          source_initiative_id: string | null;
           status: string | null;
           updated_at: string;
         };
@@ -845,6 +1374,8 @@ export type Database = {
           id: string;
           organization_id?: string | null;
           phone?: string | null;
+          primary_initiative_id?: string | null;
+          source_initiative_id?: string | null;
           status?: string | null;
           updated_at?: string;
         };
@@ -860,6 +1391,8 @@ export type Database = {
           id?: string;
           organization_id?: string | null;
           phone?: string | null;
+          primary_initiative_id?: string | null;
+          source_initiative_id?: string | null;
           status?: string | null;
           updated_at?: string;
         };
@@ -869,6 +1402,20 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "profiles_primary_initiative_id_fkey";
+            columns: ["primary_initiative_id"];
+            isOneToOne: false;
+            referencedRelation: "initiatives";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "profiles_source_initiative_id_fkey";
+            columns: ["source_initiative_id"];
+            isOneToOne: false;
+            referencedRelation: "initiatives";
             referencedColumns: ["id"];
           },
         ];
@@ -1070,47 +1617,89 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      activate_membership: { Args: { p_user_id: string }; Returns: undefined };
+      allocate_payment_funds: {
+        Args: {
+          p_payment_id: string;
+          p_total_amount: number;
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
+      approve_initiative_version: {
+        Args: { p_admin_id: string; p_version_id: string };
+        Returns: undefined;
+      };
+      get_admin_financial_metrics: { Args: never; Returns: Json };
+      get_ledger_summary_metrics: { Args: never; Returns: Json };
       has_role: {
         Args: { requested_role: Database["public"]["Enums"]["app_role"] };
         Returns: boolean;
       };
+      increment_initiative_amount: {
+        Args: { increment_by: number; initiative_id: string };
+        Returns: undefined;
+      };
+      mark_abandoned_leads: {
+        Args: { p_timeout_hours?: number };
+        Returns: number;
+      };
+      process_recurring_billing: { Args: never; Returns: undefined };
+      reconcile_initiative_analytics: {
+        Args: { p_initiative_id?: string };
+        Returns: undefined;
+      };
     };
     Enums: {
-      app_role: "admin" | "organization" | "member";
+      app_role: "admin" | "ngo" | "member" | "organization";
+      fee_type: "percentage" | "fixed" | "hybrid";
+      financial_account_type:
+        | "platform"
+        | "organization_pool"
+        | "impact_pool"
+        | "fee"
+        | "initiative";
+      financial_event_type:
+        | "payment_received"
+        | "transaction_fee"
+        | "platform_share"
+        | "organization_pool"
+        | "allocation"
+        | "overflow"
+        | "impact_pool"
+        | "refund"
+        | "subscription_change"
+        | "payout";
+      funding_cycle_status: "active" | "completed" | "underfunded" | "overflowed";
       payment_status: "success" | "failed" | "pending";
+      payout_status: "pending" | "processing" | "paid" | "failed";
       subscription_status: "active" | "pending" | "cancelled" | "past_due";
     };
     CompositeTypes: {
       [_ in never]: never;
     };
   };
-};
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
+}
 
 export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+  PublicTableNameOrOptions extends
+    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R;
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
+        Database["public"]["Views"])
+    ? (Database["public"]["Tables"] &
+        Database["public"]["Views"])[PublicTableNameOrOptions] extends {
         Row: infer R;
       }
       ? R
@@ -1118,24 +1707,18 @@ export type Tables<
     : never;
 
 export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  PublicTableNameOrOptions extends keyof Database["public"]["Tables"] | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I;
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
         Insert: infer I;
       }
       ? I
@@ -1143,24 +1726,18 @@ export type TablesInsert<
     : never;
 
 export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  PublicTableNameOrOptions extends keyof Database["public"]["Tables"] | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U;
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
         Update: infer U;
       }
       ? U
@@ -1168,45 +1745,12 @@ export type TablesUpdate<
     : never;
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+  PublicEnumNameOrOptions extends keyof Database["public"]["Enums"] | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
+    ? Database["public"]["Enums"][PublicEnumNameOrOptions]
     : never;
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never;
-
-export const Constants = {
-  public: {
-    Enums: {
-      app_role: ["admin", "organization", "member"],
-      payment_status: ["success", "failed", "pending"],
-      subscription_status: ["active", "pending", "cancelled", "past_due"],
-    },
-  },
-} as const;

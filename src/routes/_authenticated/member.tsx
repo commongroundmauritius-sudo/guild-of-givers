@@ -48,10 +48,6 @@ function MemberDashboard() {
       return data;
     },
     enabled: !!user?.id,
-  });
-
-  const { data: subscription } = useQuery({
-    queryKey: ["member-subscription", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("subscriptions")
@@ -309,7 +305,7 @@ function MemberDashboard() {
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </SiteLayout>
   );
 }

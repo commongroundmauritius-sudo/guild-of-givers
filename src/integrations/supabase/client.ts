@@ -6,7 +6,9 @@ const SUPABASE_ANON_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6c2lmaWdjb3d1c2FiZm1udWRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNTE0MDIsImV4cCI6MjA5MzkyNzQwMn0.LY3_GeQbj1-9VfV_872pVh6pyb6cXiaJ9-FLdOAQQ4I";
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+import type { Database } from "./types";
+
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -14,4 +16,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
-export type AppRole = "admin" | "organization" | "member";
+export type AppRole = Database["public"]["Enums"]["app_role"];
+
+export type Tables<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Row"];
+export type Enums<T extends keyof Database["public"]["Enums"]> = Database["public"]["Enums"][T];

@@ -34,11 +34,16 @@ export class SubscriptionEngine {
     }
   }
 
+  async runBillingCycle(): Promise<void> {
+    const { error } = await supabase.rpc("process_recurring_billing");
+    if (error) throw error;
+  }
+
   private async processSuccessfulPayment(
     userId: string,
     subscriptionId: string | undefined,
-    transactionId: string,
-    amount: number,
+    transactionId: string | undefined,
+    amount: number | undefined,
   ): Promise<void> {
     // 1. Allocate funds via RPC (idempotent)
     const { error: allocError } = await supabase.rpc("allocate_payment_funds", {
