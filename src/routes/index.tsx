@@ -66,8 +66,7 @@ function Hero() {
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
-              to="/initiatives/$slug"
-              params={{ slug: i.slug }}
+              to="/signup"
               className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90"
             >
               Become a Member
@@ -465,8 +464,7 @@ function FinalCTA() {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
-            to="/initiatives/$slug"
-            params={{ slug: i.slug }}
+            to="/signup"
             className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             Become a Member

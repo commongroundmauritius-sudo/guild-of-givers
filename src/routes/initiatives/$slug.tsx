@@ -31,7 +31,7 @@ function InitiativeDetailPage() {
       let resultData;
       const { data, error: slugError } = await supabase
         .from("initiatives")
-        .select("*, organizations!inner(*)")
+        .select("*, organizations(*)")
         .eq("slug", slug)
         .eq("is_approved", true)
         .eq("is_published", true)
@@ -46,7 +46,7 @@ function InitiativeDetailPage() {
         if (uuidRegex.test(slug)) {
           const { data: byId, error: errorId } = await supabase
             .from("initiatives")
-            .select("*, organizations!inner(*)")
+            .select("*, organizations(*)")
             .eq("id", slug)
             .eq("is_approved", true)
             .eq("is_published", true)

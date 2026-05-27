@@ -40,7 +40,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
           setReplyTo(null);
           toast.success("Comment posted!");
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
           toast.error(error.message || "Failed to post comment");
         },
       },

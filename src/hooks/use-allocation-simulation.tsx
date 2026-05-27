@@ -32,12 +32,12 @@ export function useAllocationSimulation(amount: number, userId?: string) {
 
       const input: SimulationInput = {
         amount,
-        preferences: prefs.map((p: any) => ({
+        preferences: (prefs || []).map((p: any) => ({
           initiativeId: p.initiative_id,
-          title: p.initiatives.title,
-          monthlyTarget: Number(p.initiatives.monthly_target_mur || 0),
+          title: p.initiatives?.title || "Unknown Initiative",
+          monthlyTarget: Number(p.initiatives?.monthly_target_mur || 0),
           currentReceived: Number(
-            p.initiatives.initiative_funding_cycles?.[0]?.received_amount_mur || 0,
+            p.initiatives?.initiative_funding_cycles?.[0]?.received_amount_mur || 0,
           ),
         })),
       };

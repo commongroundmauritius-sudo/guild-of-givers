@@ -210,7 +210,8 @@ function AdminInitiativesPage() {
                         </span>
                       </div>
                       <Link
-                        to={`/admin-dashboard/initiatives/${i.id}/manage`}
+                        to="/admin-dashboard/initiatives/$id/manage"
+                        params={{ id: i.id }}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 text-amber-600 transition group-hover:bg-amber-600 group-hover:text-white shadow-sm"
                       >
                         <Edit3 className="h-4 w-4" />

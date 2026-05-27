@@ -40,7 +40,7 @@ export class AllocationEngine {
     for (const pref of preferences) {
       if (remainingPool <= 0) break;
 
-      const initiative = pref.initiatives as any;
+      const initiative = pref.initiatives as Record<string, unknown>;
       if (!initiative) continue;
 
       const cap = Number(initiative.goal_amount_mur) || Infinity;
@@ -54,7 +54,7 @@ export class AllocationEngine {
 
       if (toAllocate > 0) {
         allocations.push({
-          initiativeId: initiative.id,
+          initiativeId: (initiative as any).id,
           amount: toAllocate,
           potentialAmount: potential,
           isOverflow: toAllocate < potential,

@@ -1,355 +1,216 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
+import { useQuery } from "@tanstack/react-query";
+import { supabase, type Tables } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  CreditCard,
   Heart,
-  LayoutDashboard,
-  Check,
-  Plus,
-  FileText,
-  ExternalLink,
-  History,
+  Target,
+  TrendingUp,
+  ChevronRight,
+  Zap,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
-import { Link, useNavigate, createFileRoute } from "@tanstack/react-router";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { AllocationPreview } from "@/components/member/AllocationPreview";
+import { format } from "date-fns";
+import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/member")({
   component: MemberDashboard,
 });
 
-export default function MemberDashboard() {
-  const { user, signOut, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+interface SubscriptionWithOrg extends Tables<"subscriptions"> {
+  organizations: (Tables<"organizations"> & { initiatives: Tables<"initiatives">[] }) | null;
+}
 
-  const { data: profile } = useQuery({
-    queryKey: ["profile", user?.id],
-    queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("*").eq("id", user?.id).single();
-      return data;
-    },
+interface AllocationWithInitiative extends Tables<"allocations"> {
+  initiatives: Tables<"initiatives"> | null;
+}
+
+function MemberDashboard() {
+  const { user } = useAuth();
+
+  const { data: memberData, isLoading, error } = useQuery({
+    queryKey: ["member-dashboard-data", user?.id],
     enabled: !!user?.id,
-  });
-
-  const { data: subscription } = useQuery({
-    queryKey: ["member-subscription", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
+      // Get subscriptions and joined organization details, including initiatives for that organization
+      const { data: subscriptions, error: subError } = await supabase
         .from("subscriptions")
-        .select("*")
-        .eq("user_id", user?.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-
-  const { data: ledgerEvents } = useQuery({
-    queryKey: ["member-ledger", user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("financial_events")
-        .select("*, initiatives(title)")
-        .eq("user_id", user?.id)
-        .order("created_at", { ascending: false });
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-
-  const { data: initiatives } = useQuery({
-    queryKey: ["public-initiatives"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("initiatives")
-        .select("*, organizations(organization_name)")
-        .eq("is_approved", true)
-        .eq("is_published", true)
+        .select(`
+          *,
+          organizations (*, initiatives (*))
+        `)
+        .eq("user_id", user!.id)
         .eq("status", "active");
-      return data;
-    },
+
+      if (subError) throw subError;
+
+      // Get recent allocations for this user
+      const { data: allocations, error: allocError } = await supabase
+        .from("allocations")
+        .select(`
+          *,
+          initiatives (*),
+          payments!inner (user_id)
+        `)
+        .eq("payments.user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (allocError) throw allocError;
+
+      const totalMonthlyContribution = (subscriptions || [])?.reduce((sum, sub) => sum + (Number(sub.amount_mur) || 0), 0) || 0;
+
+      return {
+        subscriptions: (subscriptions || []) as unknown as SubscriptionWithOrg[],
+        allocations: (allocations || []) as unknown as AllocationWithInitiative[],
+        totalMonthlyContribution,
+        impactCount: subscriptions?.length || 0
+      };
+    }
   });
 
-  const { data: preferences } = useQuery({
-    queryKey: ["member-preferences", user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("member_preferences")
-        .select("initiative_id")
-        .eq("user_id", user?.id);
-      return data?.map((p) => p.initiative_id) || [];
-    },
-    enabled: !!user?.id,
-  });
+  if (isLoading) {
+    return (
+      <SiteLayout>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+          <p className="mt-4 text-muted-foreground">Loading your impact dashboard...</p>
+        </div>
+      </SiteLayout>
+    );
+  }
 
-  const toggleMutation = useMutation({
-    mutationFn: async ({ initiativeId, selected }: { initiativeId: string; selected: boolean }) => {
-      if (selected) {
-        return supabase.from("member_preferences").insert({
-          user_id: user?.id,
-          initiative_id: initiativeId,
-          priority_level: (preferences?.length || 0) + 1,
-        });
-      } else {
-        return supabase
-          .from("member_preferences")
-          .delete()
-          .eq("user_id", user?.id)
-          .eq("initiative_id", initiativeId);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["member-preferences", user?.id] });
-      toast.success("Preferences updated");
-    },
-  });
-
-  const isSubscribed = subscription?.status === "active";
-  const lifetimeImpact =
-    ledgerEvents
-      ?.filter((e) => e.event_type === "allocation" || e.event_type === "impact_pool")
-      .reduce((acc, e) => acc + Number(e.amount_mur), 0) ?? 0;
-
-  const displayName = profile?.full_name || user?.email?.split("@")[0] || "Member";
+  if (error) {
+    return (
+      <SiteLayout>
+        <div className="mx-auto max-w-4xl px-4 py-20 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+          <h1 className="mt-4 text-2xl font-bold">Failed to load dashboard</h1>
+          <p className="mt-2 text-muted-foreground">There was an error retrieving your data.</p>
+        </div>
+      </SiteLayout>
+    );
+  }
 
   return (
     <SiteLayout>
-      <section className="bg-muted/30 min-h-screen">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-6">
+      <div className="min-h-screen bg-cream-soft/30 font-inter">
+        <div className="mx-auto max-w-7xl px-4 py-12">
+          <div className="mb-12 flex flex-wrap items-center justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2">
-                <Badge
-                  className={
-                    isSubscribed ? "bg-teal-100 text-teal-700" : "bg-muted text-muted-foreground"
-                  }
-                >
-                  {isSubscribed ? "Active Member" : "Guest Account"}
-                </Badge>
-              </div>
-              <h1 className="mt-3 font-display text-4xl font-semibold text-teal-600 sm:text-5xl">
-                Welcome, {displayName}
-              </h1>
-              <p className="mt-2 text-muted-foreground font-medium">
-                Your monthly contribution overview and real impact.
-              </p>
+              <h1 className="font-display text-4xl font-bold text-primary">Welcome back</h1>
+              <p className="mt-2 text-muted-foreground">Tracking your impact across Mauritius</p>
             </div>
-            <div className="flex gap-3">
-              <Link
-                to="/member/profile"
-                className="rounded-full border border-teal-600/20 bg-card px-5 py-2.5 text-sm font-semibold text-teal-700 hover:bg-teal-50 transition-colors"
-              >
-                My Profile
-              </Link>
-              <button
-                onClick={() => signOut().then(() => navigate({ to: "/login" }))}
-                className="rounded-full border border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted transition-colors"
-              >
-                Sign out
-              </button>
+            <div className="flex items-center gap-4 rounded-3xl bg-white p-2 shadow-sm border border-border/40">
+              <div className="rounded-2xl bg-amber-500 px-6 py-3 text-center text-white">
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Monthly Impact</p>
+                <p className="text-xl font-bold">Rs {memberData?.totalMonthlyContribution.toLocaleString()}</p>
+              </div>
+              <div className="px-6 py-3 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Initiatives</p>
+                <p className="text-xl font-bold text-primary">{memberData?.impactCount}</p>
+              </div>
             </div>
           </div>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {[
-              {
-                title: "Monthly contribution",
-                value: subscription
-                  ? `Rs ${Number(subscription.amount_mur).toLocaleString()}`
-                  : "—",
-                sub: subscription?.status || "Inactive",
-                icon: CreditCard,
-                color: "teal",
-              },
-              {
-                title: "Active allocations",
-                value: preferences?.length || 0,
-                icon: Heart,
-                color: "teal",
-              },
-              {
-                title: "Lifetime impact",
-                value: `Rs ${lifetimeImpact.toLocaleString()}`,
-                sub: "Actual funds allocated",
-                icon: LayoutDashboard,
-                color: "teal",
-              },
-            ].map((c) => (
-              <div
-                key={c.title}
-                className="rounded-3xl border border-teal-600/20 bg-card p-6 shadow-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-teal-100 text-teal-600">
-                    <c.icon className="h-4 w-4" />
-                  </div>
-                  <p className="text-[10px] text-teal-600 font-bold uppercase tracking-wider">
-                    {c.title}
-                  </p>
+          <div className="grid gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-8">
+              <section>
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="font-display text-2xl font-bold text-primary">Your Activity</h2>
+                  <Zap className="h-5 w-5 text-amber-500" />
                 </div>
-                <p className="mt-4 font-display text-3xl font-bold text-primary">{c.value}</p>
-                {"sub" in c && (
-                  <p className="mt-1 text-xs text-muted-foreground capitalize font-medium">
-                    {c.sub}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
 
-          <div className="mt-16">
-            <h2 className="font-display text-2xl font-semibold text-primary">
-              Choose your initiatives
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              Select the programs where you want your monthly contribution to be allocated.
-            </p>
+                <div className="grid gap-6 sm:grid-cols-2">
+                  {memberData?.subscriptions?.map((sub) => {
+                    const org = sub.organizations;
+                    // For display, we might pick the primary initiative of the organization
+                    const initiative = org?.initiatives?.[0];
+                    if (!initiative) return null;
 
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {initiatives?.map((i) => {
-                const isSelected = preferences?.includes(i.id);
-                return (
-                  <div
-                    key={i.id}
-                    className={`relative overflow-hidden rounded-3xl border p-6 transition ${
-                      isSelected
-                        ? "border-teal-600 bg-teal-600/5 shadow-sm"
-                        : "border-border/40 bg-card"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">
-                          {(i.organizations as any)?.organization_name}
-                        </span>
-                        <h3 className="mt-1 font-display text-lg font-semibold text-primary">
-                          {i.title}
-                        </h3>
+                    const progress = initiative.goal_amount_mur ? (Number(initiative.current_amount_mur) / Number(initiative.goal_amount_mur)) * 100 : 0;
+
+                    return (
+                      <div key={sub.id} className="rounded-[2rem] border border-border/40 bg-card p-6 shadow-sm transition hover:shadow-md">
+                        <div className="mb-4 flex items-center justify-between">
+                          <span className="rounded-full bg-teal-50 px-3 py-1 text-[10px] font-bold text-teal-600 uppercase">
+                            Impact
+                          </span>
+                          <span className="text-xs font-bold text-primary">Rs {Number(sub.amount_mur).toLocaleString()}/mo</span>
+                        </div>
+                        <h3 className="font-display text-lg font-bold text-primary mb-2">{initiative.title}</h3>
+                        <div className="mt-6 space-y-2">
+                          <div className="flex justify-between text-[10px] font-bold uppercase text-muted-foreground">
+                            <span>Progress</span>
+                            <span>{Math.round(progress)}%</span>
+                          </div>
+                          <Progress value={progress} className="h-1.5" />
+                        </div>
                       </div>
-                      <button
-                        onClick={() =>
-                          toggleMutation.mutate({ initiativeId: i.id, selected: !isSelected })
-                        }
-                        className={`grid h-8 w-8 place-items-center rounded-full transition ${
-                          isSelected
-                            ? "bg-teal-600 text-white"
-                            : "bg-muted text-muted-foreground hover:bg-teal-100"
-                        }`}
-                      >
-                        {isSelected ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                      {i.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                    );
+                  })}
+                </div>
 
-          <div className="mt-16 grid gap-12 lg:grid-cols-2">
-            <div>
-              <h2 className="font-display text-2xl font-semibold text-teal-600 flex items-center gap-2">
-                <History className="h-5 w-5" />
-                Ledger History
-              </h2>
-              <p className="text-muted-foreground text-sm mt-1">
-                Direct visibility into your fund movements.
-              </p>
-              <div className="mt-6 space-y-3">
-                {ledgerEvents && ledgerEvents.length > 0 ? (
-                  ledgerEvents.map((e) => (
-                    <div
-                      key={e.id}
-                      className="flex items-center justify-between rounded-2xl border border-teal-600/20 bg-card p-4 transition hover:shadow-md"
-                    >
-                      <div className="flex gap-4">
-                        <div
-                          className={`grid h-10 w-10 place-items-center rounded-full ${e.event_type === "allocation" ? "bg-teal-100 text-teal-600" : "bg-amber-100 text-amber-700"}`}
-                        >
-                          <Heart className="h-5 w-5" />
+                {memberData?.subscriptions?.length === 0 && (
+                  <div className="rounded-[3rem] border-2 border-dashed border-border/40 py-24 text-center">
+                    <Heart className="mx-auto h-12 w-12 text-muted-foreground/30" />
+                    <h3 className="mt-4 text-xl font-bold text-primary">Start your impact journey</h3>
+                    <p className="mt-2 text-muted-foreground">You haven't backed any initiatives yet.</p>
+                    <Link to="/initiatives" className="mt-8 inline-block rounded-full bg-primary px-8 py-3 font-bold text-white transition hover:bg-primary/90">
+                      Explore Initiatives
+                    </Link>
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-[2.5rem] bg-forest text-white p-10 shadow-xl overflow-hidden relative">
+                <div className="relative z-10">
+                  <h2 className="font-display text-3xl font-bold mb-4">Transparent Giving</h2>
+                  <p className="text-forest-light leading-relaxed mb-8 max-w-md">
+                    Every rupee you contribute is tracked. We ensure your funds reach the verified projects you choose to support.
+                  </p>
+                  <Link to="/initiatives" className="inline-flex items-center gap-2 font-bold text-amber-400 hover:text-amber-300 transition">
+                    Explore more projects <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+              </section>
+            </div>
+
+            <div className="space-y-8">
+              <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
+                <h3 className="font-display text-xl font-bold mb-6">Recent Allocations</h3>
+                <div className="space-y-6">
+                  {memberData?.allocations?.map((alloc) => {
+                    const initiative = alloc.initiatives;
+                    return (
+                      <div key={alloc.id} className="flex gap-4">
+                        <div className="h-10 w-10 shrink-0 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                          <TrendingUp className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-primary capitalize">
-                            {e.event_type.replace("_", " ")}
+                          <p className="text-sm font-semibold text-primary">
+                            Allocated Rs {Number(alloc.amount_mur).toLocaleString()}
                           </p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
-                            {e.initiatives?.title || "System Pool"} •{" "}
-                            {new Date(e.created_at).toLocaleDateString()}
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
+                            to {initiative?.title || "Initiative"} • {format(new Date(alloc.created_at), 'MMM d')}
                           </p>
                         </div>
                       </div>
-                      <p className="font-display font-bold text-teal-600">
-                        Rs {Number(e.amount_mur).toLocaleString()}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground italic bg-card border border-border/40 p-12 rounded-3xl text-center">
-                    No ledger activity recorded yet.
-                  </p>
-                )}
-              </div>
-            </div>
+                    );
+                  })}
 
-            <div>
-              <div className="space-y-8">
-                <AllocationPreview
-                  amount={Number(subscription?.amount_mur || 0)}
-                  userId={user?.id}
-                />
-                <div>
-                  <h2 className="font-display text-2xl font-semibold text-primary">
-                    Membership Status
-                  </h2>
-                  <div className="mt-6 p-8 rounded-3xl border border-border/40 bg-card">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <p className="text-xs font-bold text-muted-foreground uppercase">
-                          Current Plan
-                        </p>
-                        <p className="text-xl font-bold">
-                          {subscription
-                            ? `Rs ${Number(subscription.amount_mur).toLocaleString()} / mo`
-                            : "None"}
-                        </p>
-                      </div>
-                      <Badge variant={isSubscribed ? "default" : "secondary"}>
-                        {subscription?.status || "Inactive"}
-                      </Badge>
-                    </div>
-                    <div className="space-y-4 pt-6 border-t border-border/40">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Next Billing Date</span>
-                        <span className="font-semibold">
-                          {subscription?.next_billing_date
-                            ? new Date(subscription.next_billing_date).toLocaleDateString()
-                            : "—"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Membership Since</span>
-                        <span className="font-semibold">
-                          {subscription?.created_at
-                            ? new Date(subscription.created_at).toLocaleDateString()
-                            : "—"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  {memberData?.allocations?.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </SiteLayout>
   );
 }

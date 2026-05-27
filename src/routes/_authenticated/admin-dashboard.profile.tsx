@@ -20,7 +20,7 @@ function AdminProfile() {
       const { data } = await supabase
         .from("admin_actions")
         .select("*")
-        .eq("admin_id", user?.id)
+        .eq("admin_id", user?.id ?? "")
         .order("created_at", { ascending: false })
         .limit(10);
       return data;

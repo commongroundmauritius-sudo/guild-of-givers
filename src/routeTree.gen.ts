@@ -19,9 +19,9 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InitiativesIndexRouteImport } from './routes/initiatives/index'
+import { Route as EntitiesIndexRouteImport } from './routes/entities/index'
 import { Route as InitiativesSlugRouteImport } from './routes/initiatives/$slug'
-import { Route as InitiativesIdRouteImport } from './routes/initiatives/$id'
-import { Route as EntitiesIdRouteImport } from './routes/entities.$id'
+import { Route as EntitiesIdRouteImport } from './routes/entities/$id'
 import { Route as AuthenticatedOrganizationRouteImport } from './routes/_authenticated/organization'
 import { Route as AuthenticatedMemberRouteImport } from './routes/_authenticated/member'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -94,14 +94,14 @@ const InitiativesIndexRoute = InitiativesIndexRouteImport.update({
   path: '/initiatives/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EntitiesIndexRoute = EntitiesIndexRouteImport.update({
+  id: '/entities/',
+  path: '/entities/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InitiativesSlugRoute = InitiativesSlugRouteImport.update({
   id: '/initiatives/$slug',
   path: '/initiatives/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InitiativesIdRoute = InitiativesIdRouteImport.update({
-  id: '/initiatives/$id',
-  path: '/initiatives/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EntitiesIdRoute = EntitiesIdRouteImport.update({
@@ -254,8 +254,8 @@ export interface FileRoutesByFullPath {
   '/member': typeof AuthenticatedMemberRouteWithChildren
   '/organization': typeof AuthenticatedOrganizationRoute
   '/entities/$id': typeof EntitiesIdRoute
-  '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/$slug': typeof InitiativesSlugRoute
+  '/entities/': typeof EntitiesIndexRoute
   '/initiatives/': typeof InitiativesIndexRoute
   '/admin-dashboard/analytics': typeof AuthenticatedAdminDashboardAnalyticsRoute
   '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
@@ -289,8 +289,8 @@ export interface FileRoutesByTo {
   '/member': typeof AuthenticatedMemberRouteWithChildren
   '/organization': typeof AuthenticatedOrganizationRoute
   '/entities/$id': typeof EntitiesIdRoute
-  '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/$slug': typeof InitiativesSlugRoute
+  '/entities': typeof EntitiesIndexRoute
   '/initiatives': typeof InitiativesIndexRoute
   '/admin-dashboard/analytics': typeof AuthenticatedAdminDashboardAnalyticsRoute
   '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
@@ -327,8 +327,8 @@ export interface FileRoutesById {
   '/_authenticated/member': typeof AuthenticatedMemberRouteWithChildren
   '/_authenticated/organization': typeof AuthenticatedOrganizationRoute
   '/entities/$id': typeof EntitiesIdRoute
-  '/initiatives/$id': typeof InitiativesIdRoute
   '/initiatives/$slug': typeof InitiativesSlugRoute
+  '/entities/': typeof EntitiesIndexRoute
   '/initiatives/': typeof InitiativesIndexRoute
   '/_authenticated/admin-dashboard/analytics': typeof AuthenticatedAdminDashboardAnalyticsRoute
   '/_authenticated/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
@@ -365,8 +365,8 @@ export interface FileRouteTypes {
     | '/member'
     | '/organization'
     | '/entities/$id'
-    | '/initiatives/$id'
     | '/initiatives/$slug'
+    | '/entities/'
     | '/initiatives/'
     | '/admin-dashboard/analytics'
     | '/admin-dashboard/announcements'
@@ -400,8 +400,8 @@ export interface FileRouteTypes {
     | '/member'
     | '/organization'
     | '/entities/$id'
-    | '/initiatives/$id'
     | '/initiatives/$slug'
+    | '/entities'
     | '/initiatives'
     | '/admin-dashboard/analytics'
     | '/admin-dashboard/announcements'
@@ -437,8 +437,8 @@ export interface FileRouteTypes {
     | '/_authenticated/member'
     | '/_authenticated/organization'
     | '/entities/$id'
-    | '/initiatives/$id'
     | '/initiatives/$slug'
+    | '/entities/'
     | '/initiatives/'
     | '/_authenticated/admin-dashboard/analytics'
     | '/_authenticated/admin-dashboard/announcements'
@@ -471,8 +471,8 @@ export interface RootRouteChildren {
   PartnerRoute: typeof PartnerRoute
   SignupRoute: typeof SignupRoute
   EntitiesIdRoute: typeof EntitiesIdRoute
-  InitiativesIdRoute: typeof InitiativesIdRoute
   InitiativesSlugRoute: typeof InitiativesSlugRoute
+  EntitiesIndexRoute: typeof EntitiesIndexRoute
   InitiativesIndexRoute: typeof InitiativesIndexRoute
 }
 
@@ -548,18 +548,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InitiativesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/entities/': {
+      id: '/entities/'
+      path: '/entities'
+      fullPath: '/entities/'
+      preLoaderRoute: typeof EntitiesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/initiatives/$slug': {
       id: '/initiatives/$slug'
       path: '/initiatives/$slug'
       fullPath: '/initiatives/$slug'
       preLoaderRoute: typeof InitiativesSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/initiatives/$id': {
-      id: '/initiatives/$id'
-      path: '/initiatives/$id'
-      fullPath: '/initiatives/$id'
-      preLoaderRoute: typeof InitiativesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/entities/$id': {
@@ -827,8 +827,8 @@ const rootRouteChildren: RootRouteChildren = {
   PartnerRoute: PartnerRoute,
   SignupRoute: SignupRoute,
   EntitiesIdRoute: EntitiesIdRoute,
-  InitiativesIdRoute: InitiativesIdRoute,
   InitiativesSlugRoute: InitiativesSlugRoute,
+  EntitiesIndexRoute: EntitiesIndexRoute,
   InitiativesIndexRoute: InitiativesIndexRoute,
 }
 export const routeTree = rootRouteImport

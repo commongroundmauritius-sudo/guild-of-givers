@@ -42,11 +42,11 @@ export function useReactions(postId: string) {
   });
 }
 
-export function useCommunityRealtime(queryKey: any[], table: string, filter?: string) {
+export function useCommunityRealtime(queryKey: unknown[], table: string, filter?: string) {
   const queryClient = useQueryClient();
 
   // Memoize queryKey to prevent unnecessary re-subscriptions
-  const memoizedQueryKey = useMemo(() => queryKey, [...queryKey]);
+  const memoizedQueryKey = useMemo(() => queryKey, [queryKey]);
 
   useEffect(() => {
     const channel = supabase

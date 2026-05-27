@@ -29,7 +29,7 @@ interface AuthContextValue {
     email: string,
     password: string,
     metadata?: Record<string, unknown>,
-  ) => Promise<{ error: any | null; data?: any }>;
+  ) => Promise<{ error: Error | null; data?: unknown }>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;

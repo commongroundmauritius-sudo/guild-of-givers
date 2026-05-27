@@ -127,7 +127,9 @@ function AdminLeadsPage() {
                       {format(new Date(lead.created_at), "MMM d, HH:mm")}
                     </td>
                     <td className="px-6 py-4 text-muted-foreground text-xs">
-                      {format(new Date(lead.last_activity_at), "MMM d, HH:mm")}
+                      {lead.last_activity_at
+                        ? format(new Date(lead.last_activity_at), "MMM d, HH:mm")
+                        : "-"}
                     </td>
                   </tr>
                 ))}

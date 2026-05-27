@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { supabase } from "@/integrations/supabase/client";
+import { generateUniqueInitiativeSlug } from "@/lib/slugify";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -68,12 +70,14 @@ function InitiativeCreatePage() {
 
   const createMutation = useMutation({
     mutationFn: async (publish: boolean) => {
+      const slug = await generateUniqueInitiativeSlug(formData.title);
       const { data, error } = await supabase
         .from("initiatives")
         .insert({
           ...formData,
           is_published: publish,
           is_approved: true,
+          slug,
         })
         .select()
         .single();

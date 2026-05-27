@@ -29,13 +29,13 @@ export interface PaymentProvider {
   initializePayment(
     amount: number,
     currency: string,
-    metadata: Record<string, any>,
+    metadata: Record<string, unknown>,
   ): Promise<{ checkoutUrl: string; transactionId: string }>;
   createSubscription(request: SubscriptionRequest): Promise<SubscriptionResult>;
   cancelSubscription(subscriptionId: string): Promise<boolean>;
   resumeSubscription(subscriptionId: string): Promise<boolean>;
   getSubscriptionStatus(subscriptionId: string): Promise<SubscriptionStatus>;
-  handleWebhook(payload: any): Promise<PaymentEvent>;
+  handleWebhook(payload: Record<string, unknown>): Promise<PaymentEvent>;
 }
 
 export type PaymentEventType =
@@ -52,5 +52,5 @@ export interface PaymentEvent {
   subscriptionId?: string;
   transactionId?: string;
   amount?: number;
-  payload: any;
+  payload: Record<string, unknown>;
 }

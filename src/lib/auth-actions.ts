@@ -59,7 +59,7 @@ export const createLead = createServerFn({ method: "POST" })
       amount_mur: amount,
       covers_fees: coversFees,
       status: status,
-      source_initiative_id: sourceInitiativeId || null,
+      source_initiative_id: sourceInitiativeId as any,
       last_activity_at: new Date().toISOString(),
     });
 
@@ -70,7 +70,7 @@ export const createLead = createServerFn({ method: "POST" })
           .from("leads")
           .update({ last_activity_at: new Date().toISOString() })
           .eq("email", trimmedEmail)
-          .eq("source_initiative_id", sourceInitiativeId || null);
+          .eq("source_initiative_id", sourceInitiativeId as any);
         return { success: true, message: "Lead activity updated" };
       }
       console.error("Error creating lead:", error);

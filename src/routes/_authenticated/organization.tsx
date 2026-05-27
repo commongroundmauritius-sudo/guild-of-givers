@@ -19,7 +19,7 @@ function OrganizationDashboard() {
       const { data, error } = await supabase
         .from("profiles")
         .select("organization_id")
-        .eq("id", user?.id)
+        .eq("id", user?.id ?? "")
         .single();
       if (error) throw error;
       return data;
@@ -33,7 +33,7 @@ function OrganizationDashboard() {
       const { data, error } = await supabase
         .from("initiatives")
         .select("*")
-        .eq("organization_id", profile?.organization_id);
+        .eq("organization_id", profile?.organization_id ?? "");
       if (error) throw error;
       return data;
     },

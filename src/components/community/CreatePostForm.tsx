@@ -80,8 +80,8 @@ export function CreatePostForm() {
       setImage(null);
       setPreviewUrl(null);
       setInitiativeId(null);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to create post");
+    } catch (error) {
+      toast.error((error as Error).message || "Failed to create post");
     } finally {
       setUploading(false);
     }

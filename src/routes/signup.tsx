@@ -122,7 +122,7 @@ function SignupPage() {
       return;
     }
 
-    const user = authResult?.user;
+    const user = (authResult as any)?.user;
 
     try {
       if (user) {
