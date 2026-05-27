@@ -305,7 +305,7 @@ function MemberDashboard() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </SiteLayout>
   );
 }
