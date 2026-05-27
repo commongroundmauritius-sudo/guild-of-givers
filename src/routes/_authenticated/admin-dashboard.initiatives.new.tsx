@@ -84,7 +84,7 @@ function InitiativeCreatePage() {
           initiative_source: "admin_created",
           creator_user_id: user?.id,
           creator_role: "admin",
-          slug: formData.slug || null
+          slug: formData.slug || slug
         })
         .select()
         .single();
