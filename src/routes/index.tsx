@@ -1,20 +1,26 @@
-import { useRealtimeSync } from "@/hooks/use-realtime-sync";
-import { useMemo } from "react";
-
 import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  Repeat,
+  Eye,
+  Target,
+  UserPlus,
+  Sparkles,
+  AlertCircle,
+  TrendingUp,
+  Clock
+} from "lucide-react";
+import { InitiativeCard } from "@/components/InitiativeCard";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import heroRoom from "@/assets/hero-room.jpg";
-import orgsBoardroom from "@/assets/orgs-boardroom.jpg";
-import { UserPlus, Sparkles, Eye, Target, Repeat } from "lucide-react";
+import { Kicker } from "@/components/Kicker";
+import { useCuratedInitiatives } from "@/hooks/initiatives/use-curated-initiatives";
+import { useActivityTracker } from "@/hooks/activities/use-activity-tracker";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
+  AccordionTrigger
 } from "@/components/ui/accordion";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { InitiativeCard } from "@/components/InitiativeCard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,24 +28,66 @@ export const Route = createFileRoute("/")({
       { title: "CommonGround — One Membership. Long-term Impact." },
       {
         name: "description",
-        content:
-          "Turn one monthly membership into predictable funding for vetted, long-term social impact programs.",
+        content: "Turn one monthly membership into predictable funding for vetted, long-term social impact programs.",
       },
       { property: "og:title", content: "CommonGround — One Membership. Long-term Impact." },
-      { property: "og:description", content: " predictable funding for vetted, long-term social impact programs." },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1200" },
     ],
   }),
-  component: Home,
+  component: Index,
 });
 
-function Home() {
+function Index() {
+  useActivityTracker({ eventType: 'homepage_view' });
+  const { featured, urgent, trending, newest } = useCuratedInitiatives();
+
   return (
     <SiteLayout>
       <Hero />
       <ValueProps />
-      <InitiativesList />
+
+      {/* Featured Section */}
+      <CuratedSection
+        title="Featured Initiatives"
+        subtitle="Vetted programs making a significant impact right now."
+        initiatives={featured.data}
+        isLoading={featured.isLoading}
+        icon={Sparkles}
+        kicker="Handpicked"
+      />
+
+      {/* Urgent Section */}
+      <CuratedSection
+        title="Urgent Funding Gaps"
+        subtitle="These programs need immediate support to maintain their vital operations."
+        initiatives={urgent.data}
+        isLoading={urgent.isLoading}
+        icon={AlertCircle}
+        kicker="Critical"
+        bgClassName="bg-cream-deep/30"
+      />
+
+      {/* Trending Section */}
+      <CuratedSection
+        title="Trending Programs"
+        subtitle="Initiatives seeing the most growth in our community."
+        initiatives={trending.data}
+        isLoading={trending.isLoading}
+        icon={TrendingUp}
+        kicker="Active"
+      />
+
+      {/* Newest Section */}
+      <CuratedSection
+        title="Recently Onboarded"
+        subtitle="New partners joining the CommonGround network."
+        initiatives={newest.data}
+        isLoading={newest.isLoading}
+        icon={Clock}
+        kicker="New"
+        bgClassName="bg-cream-deep/30"
+      />
+
       <ForOrgs />
       <FAQ />
       <FinalCTA />
@@ -47,49 +95,30 @@ function Home() {
   );
 }
 
-function Kicker({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
-      {children}
-    </span>
-  );
-}
-
 function Hero() {
   return (
-    <section className="relative flex min-h-[90vh] flex-col justify-center overflow-hidden bg-[#faf8f6]">
-      <div className="absolute inset-0 z-0">
-        <img
-          src={heroRoom}
-          alt="Modern interior with natural light"
-          width={1920}
-          height={1080}
-          className="h-full w-full object-cover opacity-[0.08] grayscale"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#faf8f6]/50 to-[#faf8f6]" />
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-cream-deep pb-20 pt-32 lg:pt-48">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl">
-          <Kicker>The New Standard for Giving</Kicker>
-          <h1 className="mt-8 font-display text-6xl font-bold tracking-tight text-primary sm:text-7xl lg:text-8xl">
-            One Membership. <br />
-            <span className="text-primary/40 italic font-medium">Long-term Impact.</span>
+          <Kicker>Systemic Change, Simplified.</Kicker>
+          <h1 className="mt-8 font-display text-5xl font-bold tracking-tight text-primary sm:text-7xl lg:text-8xl">
+            Support the people <br />
+            <span className="text-forest">doing the work.</span>
           </h1>
-          <p className="mt-8 max-w-2xl text-xl leading-relaxed text-muted-foreground sm:text-2xl">
-            Turn one monthly membership into predictable, structured funding for vetted social
-            programs in Mauritius. No more one-off donations. Just lasting change.
+          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+            CommonGround connects you directly to vetted social impact programs through simple,
+            recurring monthly memberships. No one-off projects. Just predictable, lasting impact.
           </p>
-          <div className="mt-10 flex flex-wrap gap-4">
+          <div className="mt-12 flex flex-wrap gap-4">
             <Link
               to="/signup"
-              className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition hover:bg-primary/90 hover:shadow-2xl active:scale-95"
+              className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-8 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-2xl active:scale-[0.98]"
             >
-              Become a Member
+              Start Supporting
             </Link>
             <Link
               to="/initiatives"
-              className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white/50 px-8 py-4 text-sm font-bold text-primary backdrop-blur-sm transition hover:bg-white hover:shadow-lg"
+              className="inline-flex h-14 items-center justify-center rounded-full border border-primary/10 bg-white/50 px-8 text-sm font-bold text-primary backdrop-blur-sm transition hover:bg-white hover:shadow-lg"
             >
               Explore Initiatives
             </Link>
@@ -143,80 +172,70 @@ function ValueProps() {
   );
 }
 
-function InitiativesList() {
-  const queryKeys = useMemo(() => [["homepage-initiatives"]], []);
-  useRealtimeSync("initiatives", queryKeys);
-  const {
-    data: initiatives,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["homepage-initiatives"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("initiatives")
-        .select("*, organizations(organization_name)")
-        .eq("is_approved", true)
-        .eq("is_published", true)
-        .limit(3)
-        .order("created_at", { ascending: false });
+interface CuratedSectionProps {
+  title: string;
+  subtitle: string;
+  initiatives?: any[];
+  isLoading: boolean;
+  icon: any;
+  kicker: string;
+  bgClassName?: string;
+}
 
-      if (error) throw error;
-      return data;
-    },
-  });
+function CuratedSection({
+  title,
+  subtitle,
+  initiatives,
+  isLoading,
+  icon: Icon,
+  kicker,
+  bgClassName = "bg-white"
+}: CuratedSectionProps) {
+  if (!isLoading && (!initiatives || initiatives.length === 0)) return null;
 
   return (
-    <section className="bg-cream-deep/40">
+    <section className={bgClassName}>
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
-            <Kicker>A Growing Network</Kicker>
-            <h2 className="mt-4 font-display text-4xl font-semibold text-primary sm:text-5xl">
-              Long-term Programs You Can Support
+            <div className="flex items-center gap-2">
+              <div className="rounded-full bg-primary/10 p-2 text-primary">
+                <Icon className="h-4 w-4" />
+              </div>
+              <Kicker>{kicker}</Kicker>
+            </div>
+            <h2 className="mt-4 font-display text-4xl font-semibold text-primary">
+              {title}
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Starting with a vetted set of partners and expanding continuously. Each program is a
-              multi-year commitment restoration, education, community resilience not a one-off
-              project.
+              {subtitle}
             </p>
           </div>
           <Link
             to="/initiatives"
-            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="group inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
           >
-            Explore All
+            View More <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((n) => (
+          <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((n) => (
               <div key={n} className="space-y-4">
-                <div className="aspect-video w-full animate-pulse rounded-3xl bg-muted" />
+                <div className="aspect-video w-full animate-pulse rounded-[2rem] bg-muted" />
                 <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-                <div className="h-8 w-full animate-pulse rounded bg-muted" />
-                <div className="h-12 w-full animate-pulse rounded bg-muted" />
+                <div className="h-6 w-full animate-pulse rounded bg-muted" />
               </div>
             ))}
           </div>
-        ) : error ? (
-          <div className="mt-10 rounded-3xl border border-dashed border-red-200 bg-red-50/30 p-12 text-center">
-            <p className="text-red-600 font-medium">
-              Failed to load initiatives. Please try again later.
-            </p>
-          </div>
-        ) : initiatives && initiatives.length > 0 ? (
-          <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {initiatives.map((i) => (
-              <InitiativeCard key={i.id} initiative={i} />
-            ))}
-          </div>
         ) : (
-          <div className="mt-10 rounded-3xl border border-dashed border-border bg-card/60 p-12 text-center">
-            <p className="text-muted-foreground">
-              New initiatives are being onboarded — check back soon.
-            </p>
+          <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            {initiatives?.map((i) => (
+              <div key={i.id} className="scale-[0.95] origin-top">
+                <InitiativeCard initiative={i} />
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -226,14 +245,12 @@ function InitiativesList() {
 
 function ForOrgs() {
   return (
-    <section className="border-t border-border/60">
+    <section className="border-t border-border/60 bg-white">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-8">
-        <div className="overflow-hidden rounded-3xl border border-border/60">
+        <div className="overflow-hidden rounded-3xl border border-border/60 aspect-[16/10] bg-muted">
           <img
-            src={orgsBoardroom}
-            alt="Organization boardroom"
-            width={1280}
-            height={896}
+            src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=1280"
+            alt="Organization collaboration"
             loading="lazy"
             className="h-full w-full object-cover"
           />
@@ -244,8 +261,8 @@ function ForOrgs() {
           </h2>
           <p className="mt-4 text-muted-foreground">
             Spend less time chasing donors and more time on the work itself. CommonGround delivers
-            structured, recurring funding designed for long-horizon programs restoration,
-            conservation, education the kind of work that takes years, not quarters.
+            structured, recurring funding designed for long-horizon programs—restoration,
+            conservation, education—the kind of work that takes years, not quarters.
           </p>
           <ul className="mt-6 space-y-3 text-sm">
             {[
@@ -261,7 +278,7 @@ function ForOrgs() {
           </ul>
           <div className="mt-8">
             <Link
-              to="/partner"
+              to="/signup"
               className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
               Partner With Us
@@ -276,7 +293,7 @@ function ForOrgs() {
 const FAQS = [
   {
     q: "How does CommonGround membership work?",
-    a: "You pick a monthly contribution, choose one or more vetted initiatives, and we handle the rest recurring billing, allocation, receipts, and impact updates.",
+    a: "You pick a monthly contribution, choose one or more vetted initiatives, and we handle the rest—recurring billing, allocation, receipts, and impact updates.",
   },
   {
     q: "How are initiatives vetted?",
@@ -298,7 +315,7 @@ const FAQS = [
 
 function FAQ() {
   return (
-    <section id="faq" className="border-t border-border/60 bg-card">
+    <section id="faq" className="border-t border-border/60 bg-white">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_2fr] lg:px-8">
         <div>
           <Kicker>FAQ</Kicker>
@@ -327,7 +344,7 @@ function FAQ() {
 
 function FinalCTA() {
   return (
-    <section className="border-t border-border/60">
+    <section className="border-t border-border/60 bg-cream-deep/20">
       <div className="mx-auto max-w-5xl px-4 py-24 text-center sm:px-6 lg:px-8">
         <h2 className="font-display text-4xl font-semibold text-primary sm:text-6xl">
           Start Supporting Today
@@ -344,7 +361,7 @@ function FinalCTA() {
             Become a Member
           </Link>
           <Link
-            to="/partner"
+            to="/signup"
             className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-card px-7 py-3.5 text-sm font-medium text-primary hover:bg-cream-deep"
           >
             I represent an Organization
