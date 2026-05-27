@@ -96,10 +96,10 @@ function InitiativeDetailPage() {
       const { data } = await supabase
         .from("initiatives")
         .select("*, organizations(*)")
-        .eq("organization_id", initiative.organization_id as string)
+        .eq("organization_id", initiative!.organization_id as string)
         .eq("is_approved", true)
         .eq("is_published", true)
-        .neq("id", initiative.id)
+        .neq("id", initiative!.id)
         .limit(3);
       return data;
     },

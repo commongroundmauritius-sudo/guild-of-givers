@@ -45,12 +45,14 @@ export class SubscriptionEngine {
     transactionId: string | undefined,
     amount: number | undefined,
   ): Promise<void> {
+    if (!transactionId || amount === undefined) return;
     // 1. Allocate funds via RPC (idempotent)
     const { error: allocError } = await supabase.rpc("allocate_payment_funds", {
       p_payment_id: transactionId,
       p_user_id: userId,
       p_total_amount: amount,
     });
+
 
     if (allocError) {
       console.error("Fund allocation failed:", allocError);
@@ -103,9 +105,7 @@ export class SubscriptionEngine {
     }
   }
 
-  async runBillingCycle() {
-    return await supabase.rpc("process_recurring_billing");
-  }
 }
+
 
 export const subscriptionEngine = new SubscriptionEngine();
