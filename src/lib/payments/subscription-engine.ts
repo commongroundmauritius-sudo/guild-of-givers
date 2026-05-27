@@ -103,9 +103,7 @@ export class SubscriptionEngine {
     }
   }
 
-  async runBillingCycle() {
-    return await supabase.rpc("process_recurring_billing");
-  }
 }
+
 
 export const subscriptionEngine = new SubscriptionEngine();
