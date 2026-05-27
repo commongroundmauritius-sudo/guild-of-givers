@@ -5,8 +5,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Info, Heart } from "lucide-react";
+import { InitiativeCard } from "@/components/InitiativeCard";
 
 export const Route = createFileRoute("/initiatives/")({
+  head: () => ({
+    meta: [
+      { title: "Initiatives — CommonGround" },
+      {
+        name: "description",
+        content: "Browse long-term, vetted programs you can support with one monthly membership.",
+      },
+      { property: "og:title", content: "Vetted Initiatives — CommonGround" },
+      { property: "og:description", content: "Explore high-impact social programs making a difference in Mauritius." },
+      { property: "og:type", content: "website" },
+    ],
+  }),
   component: InitiativesPage,
 });
 
@@ -36,14 +50,37 @@ function InitiativesPage() {
                 params={{ slug: i.slug || i.id }}
                 className="group block rounded-3xl border border-border/40 p-8 hover:shadow-xl transition"
               >
-                <h3 className="font-display text-2xl font-bold group-hover:text-teal-600">{i.title}</h3>
-                <div className="mt-auto pt-8 flex items-center justify-between border-t border-border/40">
-                  <span className="font-bold text-primary">Rs {Number(i.current_amount_mur).toLocaleString()}</span>
-                  <ArrowRight className="h-5 w-5" />
-                </div>
-              </Link>
-            ))
-          }
+                Retry
+              </button>
+            </div>
+          ) : initiatives && initiatives.length > 0 ? (
+            <div className="mt-16 grid gap-10 md:grid-cols-2 lg:grid-cols-3">
+              {initiatives.map((i) => (
+                <InitiativeCard key={i.id} initiative={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-16 rounded-[3rem] border border-dashed border-border/60 bg-muted/30 p-12 text-center sm:p-20">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/5 text-primary">
+                <Heart className="h-10 w-10" />
+              </div>
+              <h2 className="mt-6 font-display text-2xl font-semibold text-primary">
+                No active initiatives found
+              </h2>
+              <p className="mx-auto mt-3 max-w-sm text-muted-foreground leading-relaxed">
+                We're currently vetting new high-impact programs. Join our community to be the first
+                to know when they go live.
+              </p>
+              <div className="mt-10">
+                <Link
+                  to="/signup"
+                  className="inline-flex items-center justify-center rounded-full bg-primary px-10 py-4 text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-xl active:scale-95"
+                >
+                  Become a Member
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </SiteLayout>

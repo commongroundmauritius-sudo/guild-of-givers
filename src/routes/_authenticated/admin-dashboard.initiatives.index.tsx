@@ -1,27 +1,38 @@
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, Search, Globe, Edit3, ArrowRight, Info, Plus, Filter } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import {
+  Plus,
+  Search,
+  Filter,
+  Heart,
+  Edit3,
+  Info
+} from "lucide-react";
 import { getJoinedField } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/")({
-  component: AdminInitiativesPage,
+  component: InitiativesAdminPage,
 });
 
-function AdminInitiativesPage() {
+function InitiativesAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
+
+  const queryKeys = useMemo(() => [["admin-initiatives"]], []);
+  useRealtimeSync("initiatives", queryKeys);
 
   const {
     data: initiatives,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["admin-all-initiatives"],
+    queryKey: ["admin-initiatives"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
