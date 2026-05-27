@@ -1,7 +1,18 @@
 -- Migration: CI Alignment
--- Purpose: Ensure columns used in 2026 logic migrations are present.
--- This prevents SQLSTATE 42703 in CI environments starting from older snapshots.
+-- Purpose: Ensure tables and columns used in 2026 logic migrations are present.
+-- This prevents SQLSTATE 42703 (column not found) and 42P01 (relation not found)
+-- in CI environments starting from older snapshots.
 
+-- 1. Ensure member_preferences exists
+CREATE TABLE IF NOT EXISTS public.member_preferences (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  initiative_id UUID REFERENCES public.initiatives ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(user_id, initiative_id)
+);
+
+-- 2. Ensure critical initiative columns exist
 DO $$
 BEGIN
     -- is_impact_pool
