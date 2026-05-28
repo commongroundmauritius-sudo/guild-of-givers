@@ -16,7 +16,8 @@ import {
   Users,
   AlertCircle,
   ExternalLink,
-  Lightbulb
+  Lightbulb,
+  CheckCircle2
 } from "lucide-react";
 import { toast } from "sonner";
 import { getJoinedData } from "@/lib/utils";
@@ -251,6 +252,14 @@ function InitiativeDetailPage() {
   const gallery = Array.isArray(initiative.gallery_urls) ? initiative.gallery_urls : [];
   const progress = (Number(initiative.current_amount_mur || 0) / Number(initiative.goal_amount_mur || 1)) * 100;
   const organization = getJoinedData(initiative.organizations);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Project",
+    name: initiative.title,
+    description: initiative.summary || initiative.description,
+    image: initiative.image_url,
+    funder: organization?.organization_name,
+  };
 
   return (
     <SiteLayout>
@@ -301,6 +310,7 @@ function InitiativeDetailPage() {
           </div>
         </div>
 
+        <div className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-3">
             <div className="lg:col-span-2">
               {/* Hero Image */}
