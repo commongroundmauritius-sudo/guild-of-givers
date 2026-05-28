@@ -71,7 +71,7 @@ globalThis.clearImmediate = (id) => clearTimeout(id);
       const config = JSON.parse(fs.readFileSync(wranglerConfigRoot, "utf-8"));
       if (!config.compatibility_flags) config.compatibility_flags = [];
       if (!config.compatibility_flags.includes("nodejs_compat")) config.compatibility_flags.push("nodejs_compat");
-      delete config.main;
+      config.main = "_worker.js";
       fs.writeFileSync(wranglerConfigDist, JSON.stringify(config, null, 2));
     }
     console.log("Build worker completed successfully.");
