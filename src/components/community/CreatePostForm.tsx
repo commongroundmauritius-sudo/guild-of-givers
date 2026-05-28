@@ -25,8 +25,10 @@ export function CreatePostForm() {
     queryKey: ["initiatives-list"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("public_visible_initiatives" as any)
+        .from("initiatives")
         .select("id, title")
+        .eq("is_approved", true)
+        .eq("is_published", true)
         .order("title", { ascending: true });
       return (data as any[]) || [];
     },

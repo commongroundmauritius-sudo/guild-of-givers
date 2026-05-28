@@ -26,15 +26,29 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/finances")({
   component: AdminFinancesPage,
 });
 
-function AdminFinancesPage() {
+interface JoinedFinancialEvent extends Tables<"financial_events"> {
+  profiles: { full_name: string | null } | null;
+  initiatives: { title: string } | null;
+  financial_accounts: { account_type: string } | null;
+}
+
+interface FundingCycleWithInitiative extends Tables<"initiative_funding_cycles"> {
+  initiatives: { title: string } | null;
+}
+
+function FinancesDashboardPage() {
   const { user, role } = useAuth();
+  const [selectedInitiativeId, setSelectedInitiativeId] = useState<string | null>(null);
 
   const { data: metrics } = useQuery({
     queryKey: ["admin-financial-metrics"],
@@ -219,5 +233,103 @@ function AdminFinancesPage() {
         </div>
       </section>
     </SiteLayout>
+  );
+}
+
+function MasterLedgerTable() {
+  const { user, role } = useAuth();
+
+  const { data: events, isLoading } = useQuery({
+    queryKey: ["admin-master-ledger"],
+    enabled: !!user && role === "admin",
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("financial_events")
+        .select("*, profiles(full_name), initiatives(title), financial_accounts(account_type)")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data as unknown as JoinedFinancialEvent[];
+    }
+  });
+
+  if (isLoading) return (
+    <div className="p-12 text-center">
+      <Skeleton className="h-64 w-full rounded-2xl" />
+    </div>
+  );
+
+  return (
+    <Table>
+      <TableHeader className="bg-muted/50">
+        <TableRow>
+          <TableHead className="w-[180px]">Timestamp</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Account</TableHead>
+          <TableHead>Entity/User</TableHead>
+          <TableHead className="text-right">Previous</TableHead>
+          <TableHead className="text-right">Amount</TableHead>
+          <TableHead className="text-right">Resulting</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {events?.map((e) => (
+          <TableRow key={e.id} className="hover:bg-muted/30 transition-colors">
+            <TableCell className="text-xs text-muted-foreground">
+              {new Date(e.created_at).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+              })}
+            </TableCell>
+            <TableCell>
+              <Badge variant="outline" className="capitalize text-[10px] font-bold">
+                {e.event_type.replace('_', ' ')}
+              </Badge>
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${e.financial_accounts?.account_type === 'platform' ? 'bg-amber-500' : 'bg-teal-500'}`} />
+                <span className="text-xs capitalize font-medium">{e.financial_accounts?.account_type.replace('_', ' ')}</span>
+              </div>
+            </TableCell>
+            <TableCell>
+              <div className="text-xs">
+                <p className="font-semibold truncate max-w-[150px]">{e.initiatives?.title || e.profiles?.full_name || 'System'}</p>
+              </div>
+            </TableCell>
+            <TableCell className="text-right text-xs text-muted-foreground font-mono">
+              Rs {Number(e.previous_balance).toLocaleString()}
+            </TableCell>
+            <TableCell className="text-right font-display font-bold text-primary whitespace-nowrap">
+              Rs {Number(e.amount_mur).toLocaleString()}
+            </TableCell>
+            <TableCell className="text-right font-display font-bold text-teal-600 whitespace-nowrap">
+              Rs {Number(e.resulting_balance).toLocaleString()}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+function FinCard({ title, value, sub, icon: Icon, color }: { title: string, value: string, sub: string, icon: any, color: 'amber' | 'teal' }) {
+  const colorCls = color === 'amber' ? 'text-amber-600 bg-amber-50' : 'text-teal-600 bg-teal-50';
+  return (
+    <div className="rounded-3xl border border-border/40 bg-card p-6 shadow-sm">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`p-2 rounded-xl ${colorCls}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{title}</p>
+      </div>
+      <p className="text-2xl font-display font-bold text-primary">{value}</p>
+      <div className="flex items-center gap-1.5 mt-1">
+        <Info className="h-3 w-3 text-muted-foreground/60" />
+        <p className="text-[10px] text-muted-foreground leading-relaxed font-medium uppercase tracking-tight">{sub}</p>
+      </div>
+    </div>
   );
 }

@@ -27,25 +27,12 @@ function InitiativesPage() {
   const { data: initiatives, isLoading } = useQuery({
     queryKey: ["public-initiatives", searchTerm, category, sortBy],
     queryFn: async () => {
-      let query = supabase
-        .from("public_visible_initiatives" as any)
-        .select("*");
-
-      if (searchTerm) {
-        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
-      }
-
-      if (category !== "All") {
-        query = query.eq("category", category);
-      }
-
-      if (sortBy === "newest") {
-        query = query.order("created_at", { ascending: false });
-      } else if (sortBy === "goal_progress") {
-        query = query.order("current_amount_mur", { ascending: false });
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await supabase
+        .from("initiatives")
+        .select("*")
+        .eq("is_approved", true)
+        .eq("is_published", true)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data as any[];
     },

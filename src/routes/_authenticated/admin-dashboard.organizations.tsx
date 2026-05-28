@@ -7,12 +7,14 @@ import { toast } from "sonner";
 import { Shield, ExternalLink, CheckCircle2, XCircle, Search, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/organizations")({
   component: AdminOrganizationsPage,
 });
 
-function AdminOrganizationsPage() { const { user, role } = useAuth();
+function AdminOrganizationsPage() {
+  const { user, role } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
 
