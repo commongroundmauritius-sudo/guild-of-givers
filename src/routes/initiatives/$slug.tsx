@@ -14,17 +14,15 @@ import {
   MapPin,
   Calendar,
   Users,
-  Target,
   AlertCircle,
-  CheckCircle2,
   ExternalLink,
-  Flag,
   Lightbulb
 } from "lucide-react";
 import { toast } from "sonner";
 import { getJoinedData } from "@/lib/utils";
 import { InitiativeCard } from "@/components/InitiativeCard";
 import { setAttribution } from "@/lib/attribution";
+import { attributionService } from "@/lib/attribution-service";
 
 export const Route = createFileRoute("/initiatives/$slug")({
   head: (ctx: any) => {
@@ -92,7 +90,7 @@ function InitiativeDetailPage() {
 
       const { data, error } = await query.maybeSingle();
       if (error) throw error;
-      return data;
+      return data as any;
     },
   });
 
@@ -108,7 +106,7 @@ function InitiativeDetailPage() {
         .eq("organization_id", initiative!.organization_id as string)
         .neq("id", initiative!.id)
         .limit(3);
-      return data;
+      return data as any[];
     },
   });
 
@@ -132,13 +130,29 @@ function InitiativeDetailPage() {
         const now = Date.now();
 
         if (!lastViewed || now - parseInt(lastViewed) > 1000 * 60 * 30) {
-          await supabase.from("initiative_events").insert({
+          const attribution = attributionService.getStored();
+          let campaignLinkId = null;
+
+          if (attribution?.tracking_code) {
+             const { data: linkData } = await supabase
+               .from('campaign_links' as any)
+               .select('id')
+               .eq('tracking_code', attribution.tracking_code)
+               .maybeSingle();
+             campaignLinkId = (linkData as any)?.id;
+          }
+
+          await supabase.from("initiative_events" as any).insert({
             initiative_id: initiative.id,
             event_type: "page_view",
             session_id: sessionId,
+            campaign_link_id: campaignLinkId,
             metadata: {
               referrer: document.referrer,
-              userAgent: navigator.userAgent
+              userAgent: navigator.userAgent,
+              utm_source: attribution?.utm_source,
+              utm_medium: attribution?.utm_medium,
+              utm_campaign: attribution?.utm_campaign
             }
           });
           sessionStorage.setItem(lastViewedKey, now.toString());
@@ -160,7 +174,7 @@ function InitiativeDetailPage() {
     try {
       if (navigator.share && navigator.canShare(shareData)) {
         await navigator.share(shareData);
-        await supabase.from("initiative_events").insert({
+        await supabase.from("initiative_events" as any).insert({
           initiative_id: initiative?.id,
           event_type: "share",
           metadata: { method: "native" }
@@ -168,7 +182,7 @@ function InitiativeDetailPage() {
       } else {
         await navigator.clipboard.writeText(window.location.href);
         toast.success("Link copied to clipboard!");
-        await supabase.from("initiative_events").insert({
+        await supabase.from("initiative_events" as any).insert({
           initiative_id: initiative?.id,
           event_type: "share",
           metadata: { method: "clipboard" }
@@ -181,7 +195,7 @@ function InitiativeDetailPage() {
 
   const trackCtaClick = async () => {
     if (!initiative) return;
-    await supabase.from("initiative_events").insert({
+    await supabase.from("initiative_events" as any).insert({
       initiative_id: initiative.id,
       event_type: "cta_click",
       metadata: {
@@ -191,37 +205,21 @@ function InitiativeDetailPage() {
     });
   };
 
-  const structuredData = useMemo(() => {
-    if (!initiative) return null;
-    const org = getJoinedData(initiative.organizations);
-    return {
-      "@context": "https://schema.org",
-      "@type": "NGO",
-      "name": initiative.title,
-      "description": initiative.summary || initiative.description,
-      "image": initiative.image_url,
-      "url": typeof window !== "undefined" ? window.location.href : "",
-      "parentOrganization": {
-        "@type": "Organization",
-        "name": org?.organization_name
-      }
-    };
-  }, [initiative]);
-
   if (isLoading) {
     return (
       <SiteLayout>
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="space-y-8">
-            <Skeleton className="h-[40vh] w-full rounded-[3rem]" />
-            <div className="grid gap-12 lg:grid-cols-3">
-              <div className="space-y-6 lg:col-span-2">
-                <Skeleton className="h-12 w-2/3" />
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-64 w-full" />
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-8">
+              <Skeleton className="h-[400px] w-full rounded-[3rem]" />
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-3/4" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-2/3" />
               </div>
-              <Skeleton className="h-[500px] w-full rounded-[2.5rem]" />
             </div>
+            <Skeleton className="h-[600px] rounded-[3rem]" />
           </div>
         </div>
       </SiteLayout>
@@ -231,30 +229,28 @@ function InitiativeDetailPage() {
   if (error || !initiative) {
     return (
       <SiteLayout>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
-          <div className="rounded-full bg-red-50 p-6 text-red-500">
-            <AlertCircle className="h-12 w-12" />
+        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center px-4">
+          <div className="h-16 w-16 bg-red-50 rounded-full flex items-center justify-center mb-6">
+            <AlertCircle className="h-8 w-8 text-red-500" />
           </div>
-          <h1 className="mt-6 font-display text-3xl font-bold text-primary">Initiative Not Found</h1>
-          <p className="mt-2 text-muted-foreground">
-            The initiative you're looking for doesn't exist or is no longer active.
+          <h1 className="text-3xl font-display font-bold text-primary mb-2">Initiative Not Found</h1>
+          <p className="text-muted-foreground max-w-md mb-8">
+            The initiative you're looking for might have been archived or the link is incorrect.
           </p>
           <Link
             to="/initiatives"
-            className="mt-8 rounded-full bg-primary px-8 py-3 font-semibold text-white transition hover:bg-primary/90"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 font-bold text-white transition hover:bg-primary/90"
           >
-            Browse All Initiatives
+            <ArrowLeft className="h-4 w-4" /> Explore Other Initiatives
           </Link>
         </div>
       </SiteLayout>
     );
   }
 
+  const gallery = Array.isArray(initiative.gallery_urls) ? initiative.gallery_urls : [];
+  const progress = (Number(initiative.current_amount_mur || 0) / Number(initiative.goal_amount_mur || 1)) * 100;
   const organization = getJoinedData(initiative.organizations);
-  const goal = Math.max(1, Number(initiative.goal_amount_mur) || 0);
-  const current = Number(initiative.current_amount_mur) || 0;
-  const progress = Math.min(100, (current / goal) * 100);
-  const gallery = initiative.gallery_urls || [];
 
   return (
     <SiteLayout>
@@ -305,109 +301,78 @@ function InitiativeDetailPage() {
           </div>
         </div>
 
-        <div className="mx-auto mt-12 max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-12">
-              {/* Org Header */}
-              <div className="flex flex-wrap items-center gap-6 border-b border-border/60 pb-8">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 overflow-hidden rounded-full bg-muted border border-border/40">
-                    {organization?.logo_url ? (
-                      <img
-                        src={organization.logo_url}
-                        alt={organization.organization_name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold uppercase">
-                        {organization?.organization_name?.charAt(0) || "O"}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Managed by
+            <div className="lg:col-span-2">
+              {/* Hero Image */}
+              <div className="relative aspect-[16/9] overflow-hidden rounded-[3rem] shadow-2xl shadow-primary/10">
+                <img
+                  src={initiative.image_url || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1200"}
+                  alt={initiative.title}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-8 left-8 right-8">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="flex items-center gap-2 rounded-full bg-forest/20 px-4 py-1 text-xs font-bold uppercase tracking-widest text-forest-light backdrop-blur-sm border border-forest/30">
+                      <MapPin className="h-3 w-3" /> Mauritius
                     </span>
-                    <Link
-                      to="/entities/$id"
-                      params={{ id: organization?.id || "" }}
-                      className="text-sm font-semibold text-primary hover:underline"
-                    >
-                      {organization?.organization_name || "Organization Partner"}
-                    </Link>
+                    <span className="rounded-full bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-sm border border-white/20">
+                      {initiative.category || "Social Impact"}
+                    </span>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <MapPin className="h-4 w-4 text-primary/40" />
-                  <span>Mauritius</span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <Calendar className="h-4 w-4 text-primary/40" />
-                  <span>
-                    Launched{" "}
-                    {initiative.created_at ? new Date(initiative.created_at).toLocaleDateString("en-MU", {
-                      month: "long",
-                      year: "numeric",
-                    }) : "Recently"}
-                  </span>
                 </div>
               </div>
 
-              {/* Description */}
-              <div className="max-w-none">
-                <h3 className="font-display text-2xl font-semibold text-primary mb-6">About this Initiative</h3>
-                {initiative.caption && (
-                  <p className="text-xl font-medium leading-relaxed text-primary/80">
-                    {initiative.caption}
-                  </p>
-                )}
-                <p className="mt-6 text-lg leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                  {initiative.summary || initiative.description || "No description provided."}
-                </p>
+              {/* Title & Metadata */}
+              <div className="mt-12 space-y-6">
+                <h1 className="font-display text-4xl font-extrabold tracking-tight text-primary sm:text-5xl lg:text-6xl leading-[1.1]">
+                  {initiative.title}
+                </h1>
 
-                <div className="mt-12 space-y-8 border-t border-border/40 pt-10 text-primary/90">
-                  <div>
-                    <h4 className="flex items-center gap-2 font-display text-xl font-semibold text-primary mb-4">
-                      <Target className="h-5 w-5 text-forest" /> The Challenge & Solution
-                    </h4>
-                    <div className="text-base leading-relaxed space-y-4">
-                      {initiative.content ? (
-                        initiative.content.split("\n").map((para: string, idx: number) => (
-                          <p key={idx}>{para}</p>
-                        ))
-                      ) : (
-                        <p>{initiative.description || "Join us in supporting this vital initiative for the community."}</p>
-                      )}
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-4 py-4 border-y border-border/40">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted/50">
+                      <Users className="h-5 w-5 text-primary/60" />
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Partnership</span>
+                      <span className="text-sm font-bold text-primary">{organization?.organization_name || "CommonGround Verified"}</span>
                     </div>
                   </div>
-
-                  {(initiative.short_term_goals || initiative.long_term_goals) && (
-                    <div className="grid gap-8 sm:grid-cols-2">
-                      {initiative.short_term_goals && (
-                        <div>
-                          <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Short-term Goals</h5>
-                          <p className="text-sm leading-relaxed text-muted-foreground">{initiative.short_term_goals}</p>
-                        </div>
-                      )}
-                      {initiative.long_term_goals && (
-                        <div>
-                          <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Long-term Vision</h5>
-                          <p className="text-sm leading-relaxed text-muted-foreground">{initiative.long_term_goals}</p>
-                        </div>
-                      )}
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted/50">
+                      <Calendar className="h-5 w-5 text-primary/60" />
                     </div>
-                  )}
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Launched</span>
+                      <span className="text-sm font-bold text-primary">{new Date(initiative.created_at).toLocaleDateString('en-MU', { month: 'long', year: 'numeric' })}</span>
+                    </div>
+                  </div>
+                </div>
 
-                  {(initiative.target_milestones || initiative.expected_outcomes) && (
-                    <div className="grid gap-8 sm:grid-cols-2">
-                      {initiative.target_milestones && (
-                        <div className="rounded-3xl bg-primary/5 p-6 border border-primary/10">
-                          <h5 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary mb-3">
-                            <Flag className="h-3 w-3" /> Milestones
-                          </h5>
-                          <p className="text-sm leading-relaxed text-primary/80 whitespace-pre-wrap">{initiative.target_milestones}</p>
+                {/* Content Sections */}
+                <div className="prose prose-forest max-w-none pt-6">
+                  <div className="text-xl font-medium leading-relaxed text-muted-foreground mb-12">
+                    {initiative.summary || initiative.caption}
+                  </div>
+
+                  <h3 className="font-display text-2xl font-semibold text-primary mb-6">About the Initiative</h3>
+                  <div className="text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                    {initiative.description}
+                  </div>
+
+                  {(initiative.short_term_goals || initiative.long_term_vision || initiative.expected_outcomes) && (
+                    <div className="mt-12 grid gap-6 sm:grid-cols-2">
+                      {initiative.short_term_goals && (
+                        <div className="rounded-3xl bg-muted/30 p-6 border border-border/40">
+                          <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Short-term Goals</h5>
+                          <p className="text-sm leading-relaxed text-primary/80 whitespace-pre-wrap">{initiative.short_term_goals}</p>
+                        </div>
+                      )}
+                      {initiative.long_term_vision && (
+                        <div className="rounded-3xl bg-muted/30 p-6 border border-border/40">
+                          <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Long-term Vision</h5>
+                          <p className="text-sm leading-relaxed text-primary/80 whitespace-pre-wrap">{initiative.long_term_vision}</p>
                         </div>
                       )}
                       {initiative.expected_outcomes && (
@@ -449,7 +414,7 @@ function InitiativeDetailPage() {
 
               {/* Organization Profile Summary */}
               {organization && (
-                <div className="rounded-[2.5rem] border border-border/40 bg-muted/30 p-8 sm:p-12">
+                <div className="rounded-[2.5rem] border border-border/40 bg-muted/30 p-8 sm:p-12 mt-16">
                   <div className="flex flex-col sm:flex-row gap-8 items-start">
                     <div className="h-24 w-24 shrink-0 overflow-hidden rounded-3xl border-4 border-white shadow-xl bg-white">
                       {organization.logo_url ? (
@@ -487,20 +452,6 @@ function InitiativeDetailPage() {
                         )}
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Related Initiatives */}
-              {relatedInitiatives && relatedInitiatives.length > 0 && (
-                <div className="pt-12 border-t border-border/40">
-                  <h3 className="font-display text-2xl font-semibold text-primary">
-                    More from {organization?.organization_name || "this Partner"}
-                  </h3>
-                  <div className="mt-8 grid gap-6 sm:grid-cols-2">
-                    {relatedInitiatives.map(rel => (
-                      <InitiativeCard key={rel.id} initiative={rel} />
-                    ))}
                   </div>
                 </div>
               )}

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,11 +39,11 @@ function AdminPostsPage() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Post[];
+      return data as any[];
     },
   });
 
-  const moderateMutation = useMutation({
+  const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase.from("community_posts").update({ status }).eq("id", id);
       if (error) throw error;
@@ -69,151 +70,101 @@ function AdminPostsPage() {
 
   return (
     <SiteLayout>
-      <section className="bg-muted/30 py-12">
+      <section className="bg-muted/30 py-12 min-h-screen">
         <div className="mx-auto max-w-7xl px-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-12">
+          <div className="flex items-center justify-between gap-4 mb-8">
             <div>
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-amber-500" />
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-600">
-                  Administration
-                </span>
-              </div>
-              <h1 className="mt-3 font-display text-4xl font-semibold text-primary">
-                Community Moderation
-              </h1>
-              <p className="mt-2 text-muted-foreground">
-                Approve, reject, or remove community posts.
-              </p>
+              <h1 className="font-display text-4xl font-semibold text-primary">Community Moderation</h1>
+              <p className="text-muted-foreground mt-2">Manage posts and ensure healthy discussions.</p>
             </div>
+          </div>
 
-            <div className="flex gap-2 bg-muted p-1 rounded-lg">
-              {(["all", "pending", "published", "rejected"] as const).map((f) => (
-                <Button
-                  key={f}
-                  variant={filter === f ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => setFilter(f)}
-                  className="capitalize h-8 text-xs"
-                >
-                  {f}
-                </Button>
-              ))}
-            </div>
+          <div className="flex gap-2 mb-8">
+            {["all", "pending", "published", "rejected"].map((f) => (
+              <Button
+                key={f}
+                variant={filter === f ? "default" : "outline"}
+                onClick={() => setFilter(f as any)}
+                className="capitalize rounded-xl"
+              >
+                {f}
+              </Button>
+            ))}
           </div>
 
           <div className="grid gap-6">
             {isLoading ? (
-              Array(3)
-                .fill(0)
-                .map((_, i) => <Card key={i} className="h-48 w-full animate-pulse bg-muted" />)
+              Array(3).fill(0).map((_, i) => <Card key={i} className="h-40 animate-pulse bg-muted rounded-3xl" />)
             ) : posts.length > 0 ? (
-              posts.map((post) => (
-                <Card key={post.id} className="overflow-hidden">
-                  <CardContent className="p-0 flex flex-col md:flex-row">
-                    {post.image_url && (
-                      <div className="md:w-48 h-48 bg-muted shrink-0">
-                        <img
-                          src={post.image_url}
-                          alt={post.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="p-6 flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={post.profiles?.avatar_url || ""} />
-                              <AvatarFallback>{post.profiles?.full_name?.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm font-medium">{post.profiles?.full_name}</span>
-                            <span className="text-[10px] text-muted-foreground">
-                              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                            </span>
-                          </div>
-                          <span
-                            className={cn(
-                              "text-[10px] font-bold uppercase px-2 py-0.5 rounded",
-                              post.status === "published"
-                                ? "bg-green-100 text-green-700"
-                                : post.status === "pending"
-                                  ? "bg-amber-100 text-amber-700"
-                                  : "bg-red-100 text-red-700",
-                            )}
-                          >
-                            {post.status}
-                          </span>
+              posts.map((post: any) => (
+                <Card key={post.id} className="rounded-3xl border-border/40 overflow-hidden">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <Avatar>
+                        <AvatarImage src={post.profiles?.avatar_url} />
+                        <AvatarFallback>{post.profiles?.full_name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold">{post.profiles?.full_name}</span>
+                          <span className="text-xs text-muted-foreground">• {formatDistanceToNow(new Date(post.created_at))} ago</span>
+                          <Badge variant="outline" className="text-[10px] uppercase">{post.status}</Badge>
                         </div>
-                        <h3 className="font-bold text-lg">{post.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                          {post.content}
-                        </p>
+                        {post.initiatives?.title && (
+                          <div className="text-xs text-primary font-medium mb-2 flex items-center gap-1">
+                            <Eye className="h-3 w-3" /> {post.initiatives.title}
+                          </div>
+                        )}
+                        <h3 className="font-bold text-lg mb-2">{post.title}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{post.content}</p>
+
+                        <div className="flex items-center gap-6 text-muted-foreground">
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <Heart className="h-4 w-4" /> {post.reactions_count}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <MessageCircle className="h-4 w-4" /> {post.comments_count}
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="flex items-center justify-between mt-4">
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Heart className="h-3 w-3" /> {post.reactions_count}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MessageCircle className="h-3 w-3" /> {post.comments_count}
-                          </div>
-                          {post.initiatives && (
-                            <span className="bg-muted px-2 py-0.5 rounded">
-                              {post.initiatives.title}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <Link to="/community-hub/$postId" params={{ postId: post.id }}>
-                              <Eye className="h-4 w-4 mr-2" /> View
-                            </Link>
-                          </Button>
-                          {post.status !== "published" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                              onClick={() =>
-                                moderateMutation.mutate({ id: post.id, status: "published" })
-                              }
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {post.status === "pending" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                              onClick={() =>
-                                moderateMutation.mutate({ id: post.id, status: "rejected" })
-                              }
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          )}
+                      <div className="flex flex-col gap-2">
+                        {post.status !== 'published' && (
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            className="text-red-500"
-                            onClick={() => deleteMutation.mutate(post.id)}
+                            className="rounded-xl border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                            onClick={() => updateStatusMutation.mutate({ id: post.id, status: 'published' })}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <CheckCircle className="h-4 w-4 mr-2" /> Approve
                           </Button>
-                        </div>
+                        )}
+                        {post.status !== 'rejected' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50"
+                            onClick={() => updateStatusMutation.mutate({ id: post.id, status: 'rejected' })}
+                          >
+                            <XCircle className="h-4 w-4 mr-2" /> Reject
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-xl text-red-500 hover:bg-red-50"
+                          onClick={() => deleteMutation.mutate(post.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ))
             ) : (
-              <div className="text-center py-20 bg-card rounded-3xl border border-dashed">
-                <p className="text-muted-foreground">No posts matching filter.</p>
+              <div className="text-center py-20 border-2 border-dashed rounded-[2.5rem]">
+                <p className="text-muted-foreground">No posts matching this filter.</p>
               </div>
             )}
           </div>
@@ -222,3 +173,5 @@ function AdminPostsPage() {
     </SiteLayout>
   );
 }
+
+import { Badge } from "@/components/ui/badge";

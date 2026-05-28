@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: smoke.spec.ts >> Public Smoke Tests >> initiatives list loads
-- Location: tests/smoke.spec.ts:9:3
+- Name: growth/notifications.spec.ts >> Notification System >> Notification page route is accessible
+- Location: tests/growth/notifications.spec.ts:10:3
 
 # Error details
 

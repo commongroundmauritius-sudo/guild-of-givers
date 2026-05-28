@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: smoke.spec.ts >> Public Smoke Tests >> homepage loads successfully
-- Location: tests/smoke.spec.ts:4:3
+- Name: growth/analytics.spec.ts >> Growth & Engagement Analytics >> Admin dashboard contains updated modular dashboard tabs
+- Location: tests/growth/analytics.spec.ts:4:3
 
 # Error details
 

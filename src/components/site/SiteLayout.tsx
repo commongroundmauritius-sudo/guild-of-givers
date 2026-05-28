@@ -1,8 +1,18 @@
-import type { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
+import { attributionService } from "@/lib/attribution-service";
 
-export function SiteLayout({ children }: { children: ReactNode }) {
+interface SiteLayoutProps {
+  children: ReactNode;
+}
+
+export function SiteLayout({ children }: SiteLayoutProps) {
+  useEffect(() => {
+    // Capture attribution on every layout mount
+    attributionService.captureFromUrl();
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
