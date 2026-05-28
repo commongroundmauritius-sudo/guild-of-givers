@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as PartnerRouteImport } from './routes/partner'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as ForOrgsRouteImport } from './routes/for-orgs'
@@ -53,6 +54,11 @@ const SignupRoute = SignupRouteImport.update({
 const PartnerRoute = PartnerRouteImport.update({
   id: '/partner',
   path: '/partner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -247,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/for-orgs': typeof ForOrgsRoute
   '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/partner': typeof PartnerRoute
   '/signup': typeof SignupRoute
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRouteWithChildren
@@ -283,6 +290,7 @@ export interface FileRoutesByTo {
   '/for-orgs': typeof ForOrgsRoute
   '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/partner': typeof PartnerRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -320,6 +328,7 @@ export interface FileRoutesById {
   '/for-orgs': typeof ForOrgsRoute
   '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/partner': typeof PartnerRoute
   '/signup': typeof SignupRoute
   '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRouteWithChildren
@@ -358,6 +367,7 @@ export interface FileRouteTypes {
     | '/for-orgs'
     | '/legal'
     | '/login'
+    | '/notifications'
     | '/partner'
     | '/signup'
     | '/admin-dashboard'
@@ -394,6 +404,7 @@ export interface FileRouteTypes {
     | '/for-orgs'
     | '/legal'
     | '/login'
+    | '/notifications'
     | '/partner'
     | '/signup'
     | '/dashboard'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/for-orgs'
     | '/legal'
     | '/login'
+    | '/notifications'
     | '/partner'
     | '/signup'
     | '/_authenticated/admin-dashboard'
@@ -468,6 +480,7 @@ export interface RootRouteChildren {
   ForOrgsRoute: typeof ForOrgsRoute
   LegalRoute: typeof LegalRoute
   LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   PartnerRoute: typeof PartnerRoute
   SignupRoute: typeof SignupRoute
   EntitiesIdRoute: typeof EntitiesIdRoute
@@ -490,6 +503,13 @@ declare module '@tanstack/react-router' {
       path: '/partner'
       fullPath: '/partner'
       preLoaderRoute: typeof PartnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -824,6 +844,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForOrgsRoute: ForOrgsRoute,
   LegalRoute: LegalRoute,
   LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   PartnerRoute: PartnerRoute,
   SignupRoute: SignupRoute,
   EntitiesIdRoute: EntitiesIdRoute,

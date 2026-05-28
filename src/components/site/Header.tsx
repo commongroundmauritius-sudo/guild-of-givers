@@ -1,23 +1,8 @@
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import {
-  Menu,
-  X,
-  User,
-  LogOut,
-  LayoutDashboard,
-  Settings,
-  Heart,
-  FileText,
-  Shield,
-  Users,
-  MessageCircle,
-  Megaphone,
-  TrendingUp,
-  ChevronDown,
-} from "lucide-react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "./Logo";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,23 +12,32 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import {
+  Menu,
+  X,
+  User,
+  LogOut,
+  LayoutDashboard,
+  Settings,
+  Heart,
+  FileText,
+  MessageCircle,
+  TrendingUp,
+  ChevronDown,
+  Users
+} from "lucide-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const GUEST_NAV = [
-  { label: "About", to: "/about" },
-  { label: "Initiatives", to: "/initiatives" },
-  { label: "For Orgs", to: "/for-orgs" },
-  { label: "Partner", to: "/partner" },
+  { label: "About Us", to: "/about" },
+  { label: "Partner with Us", to: "/partner" },
   { label: "FAQ", to: "/faq" },
 ] as const;
 
 const ADMIN_NAV = [
   { label: "Dashboard", to: "/admin-dashboard", icon: LayoutDashboard },
-  { label: "Community Hub", to: "/community-hub", icon: MessageCircle },
-  { label: "Announcements", to: "/admin-dashboard/announcements", icon: Megaphone },
-  { label: "Moderation", to: "/admin-dashboard/community-posts", icon: MessageCircle },
+  { label: "Analytics", to: "/admin-dashboard/analytics", icon: TrendingUp },
   { label: "Initiatives", to: "/admin-dashboard/initiatives", icon: Heart },
-  { label: "Organizations", to: "/admin-dashboard/organizations", icon: Shield },
   { label: "Members", to: "/admin-dashboard/members", icon: User },
   { label: "Leads", to: "/admin-dashboard/leads", icon: Users },
   { label: "Finances", to: "/admin-dashboard/finances", icon: TrendingUp },
@@ -91,8 +85,8 @@ export function Header() {
           <nav className="hidden items-center gap-6 lg:flex">
             {navItems.map((item) => (
               <Link
-                key={item.to + item.label}
-                to={item.to}
+                key={item.label + item.to}
+                to={item.to as any}
                 className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
                 activeOptions={item.to === "/admin-dashboard" ? { exact: true } : {}}
                 activeProps={{ className: "text-primary font-bold" }}
@@ -129,6 +123,8 @@ export function Header() {
                   Complete Membership
                 </Link>
               )}
+
+              <NotificationBell />
 
               <div className="flex items-center gap-3 pr-2">
                 <span className="text-sm font-medium text-foreground/70">{displayName}</span>
@@ -228,8 +224,8 @@ export function Header() {
           <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-6">
             {navItems.map((item) => (
               <Link
-                key={item.to + item.label}
-                to={item.to}
+                key={item.label + item.to}
+                to={item.to as any}
                 onClick={() => setOpen(false)}
                 className="rounded-xl px-4 py-3 text-base font-medium text-foreground/80 hover:bg-muted"
               >

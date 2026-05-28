@@ -25,10 +25,10 @@ export function CreatePostForm() {
     queryKey: ["initiatives-list"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("public_visible_initiatives")
+        .from("public_visible_initiatives" as any)
         .select("id, title")
         .order("title", { ascending: true });
-      return data || [];
+      return (data as any[]) || [];
     },
   });
 
@@ -110,7 +110,7 @@ export function CreatePostForm() {
             onChange={(e) => setInitiativeId(e.target.value)}
           >
             <option value="none">Link to an Initiative (Optional)</option>
-            {initiatives.map((i) => (
+            {initiatives.map((i: any) => (
               <option key={i.id} value={i.id}>
                 {i.title}
               </option>

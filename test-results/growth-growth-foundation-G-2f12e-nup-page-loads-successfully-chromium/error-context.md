@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: smoke.spec.ts >> Public Smoke Tests >> signup page renders first step
-- Location: tests/smoke.spec.ts:14:3
+- Name: growth/growth-foundation.spec.ts >> Growth & Attribution Foundation >> signup page loads successfully
+- Location: tests/growth/growth-foundation.spec.ts:14:3
 
 # Error details
 

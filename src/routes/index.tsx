@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -99,20 +100,23 @@ function Hero() {
   return (
     <section className="relative overflow-hidden bg-cream-deep pb-20 pt-32 lg:pt-48">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl">
-          <Kicker>Systemic Change, Simplified.</Kicker>
-          <h1 className="mt-8 font-display text-5xl font-bold tracking-tight text-primary sm:text-7xl lg:text-8xl">
-            Support the people <br />
-            <span className="text-forest">doing the work.</span>
+        <div className="relative z-10 max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+            <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+            Vetted. Stable. Long-term.
+          </div>
+          <h1 className="mt-8 font-display text-5xl font-extrabold tracking-tight text-primary sm:text-7xl lg:text-8xl leading-[0.9]">
+            One Membership. <br />
+            <span className="text-forest">Endless Impact.</span>
           </h1>
-          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-            CommonGround connects you directly to vetted social impact programs through simple,
-            recurring monthly memberships. No one-off projects. Just predictable, lasting impact.
+          <p className="mt-8 text-xl leading-relaxed text-muted-foreground sm:text-2xl max-w-2xl">
+            We turn predictable monthly contributions into reliable funding for Mauritius' most effective
+            long-horizon social programs.
           </p>
           <div className="mt-12 flex flex-wrap gap-4">
             <Link
               to="/signup"
-              className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-8 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-2xl active:scale-[0.98]"
+              className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-10 text-sm font-bold text-white shadow-xl shadow-primary/20 transition hover:bg-primary/90 hover:shadow-2xl active:scale-95"
             >
               Start Supporting
             </Link>
@@ -181,21 +185,6 @@ interface CuratedSectionProps {
   kicker: string;
   bgClassName?: string;
 }
-function InitiativesList() {
-  const queryKeys = useMemo(() => [["homepage-initiatives"]], []);
-  useRealtimeSync("initiatives", queryKeys);
-  const {
-    data: initiatives,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["homepage-initiatives"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("public_visible_initiatives")
-        .select("*")
-        .limit(3)
-        .order("created_at", { ascending: false });
 
 function CuratedSection({
   title,
