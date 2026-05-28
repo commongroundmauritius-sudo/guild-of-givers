@@ -30,14 +30,14 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { getJoinedField } from "@/lib/utils";
-import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/")({
   component: AdminInitiativesPage,
 });
 
-function InitiativesAdminPage() {
+function AdminInitiativesPage() {
   const { user, role } = useAuth();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data: initiatives = [], isLoading } = useQuery({
