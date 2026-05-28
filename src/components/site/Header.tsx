@@ -24,7 +24,7 @@ import {
   MessageCircle,
   TrendingUp,
   ChevronDown,
-  Users
+  Users, Shield
 } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
