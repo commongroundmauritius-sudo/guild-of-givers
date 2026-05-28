@@ -36,6 +36,8 @@ const GUEST_NAV = [
 
 const ADMIN_NAV = [
   { label: "Dashboard", to: "/admin-dashboard", icon: LayoutDashboard },
+  { label: "Community Hub", to: "/community-hub", icon: MessageCircle },
+  { label: "Moderation", to: "/admin-dashboard/community-posts", icon: Shield },
   { label: "Analytics", to: "/admin-dashboard/analytics", icon: TrendingUp },
   { label: "Initiatives", to: "/admin-dashboard/initiatives", icon: Heart },
   { label: "Members", to: "/admin-dashboard/members", icon: User },
