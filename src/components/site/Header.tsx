@@ -24,7 +24,7 @@ import {
   MessageCircle,
   TrendingUp,
   ChevronDown,
-  Users
+  Users, Shield
 } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
@@ -40,6 +40,8 @@ const ADMIN_NAV = [
   { label: "Initiatives", to: "/admin-dashboard/initiatives", icon: Heart },
   { label: "Members", to: "/admin-dashboard/members", icon: User },
   { label: "Leads", to: "/admin-dashboard/leads", icon: Users },
+  { label: "Community Hub", to: "/community-hub", icon: MessageCircle },
+  { label: "Moderation", to: "/admin-dashboard/community-posts", icon: Shield },
   { label: "Finances", to: "/admin-dashboard/finances", icon: TrendingUp },
 ] as const;
 
