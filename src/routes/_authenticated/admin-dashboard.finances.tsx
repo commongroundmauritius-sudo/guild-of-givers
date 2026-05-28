@@ -12,7 +12,8 @@ import {
   Filter,
   CheckCircle2,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Info
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -27,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
@@ -46,7 +48,7 @@ interface FundingCycleWithInitiative extends Tables<"initiative_funding_cycles">
   initiatives: { title: string } | null;
 }
 
-function FinancesDashboardPage() {
+function AdminFinancesPage() {
   const { user, role } = useAuth();
   const [selectedInitiativeId, setSelectedInitiativeId] = useState<string | null>(null);
 
