@@ -317,6 +317,8 @@ function FinancesDashboardPage() {
 }
 
 function MasterLedgerTable() {
+  const { user, role } = useAuth();
+
   const { data: events, isLoading } = useQuery({
     queryKey: ["admin-master-ledger"],
     enabled: !!user && role === "admin",

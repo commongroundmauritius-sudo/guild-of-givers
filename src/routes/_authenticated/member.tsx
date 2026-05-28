@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { AllocationPreview } from "@/components/member/AllocationPreview";
+import { getJoinedField } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/member")({
   component: MemberDashboard,
@@ -225,7 +226,7 @@ function MemberDashboard() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">
-                          {i.organization_name}
+                          {getJoinedField(i.organizations, "organization_name") || "Organization Partner"}
                         </span>
                         <h3 className="mt-1 font-display text-lg font-semibold text-primary">
                           {i.title}

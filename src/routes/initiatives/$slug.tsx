@@ -268,7 +268,7 @@ function InitiativeDetailPage() {
         <div className="relative h-[50vh] min-h-[400px] w-full overflow-hidden bg-primary/5">
           {initiative.image_url ? (
             <img
-              src={initiative.banner_image_url || initiative.image_url}
+              src={initiative.image_url}
               alt={initiative.title}
               className="h-full w-full object-cover"
               loading="eager"
