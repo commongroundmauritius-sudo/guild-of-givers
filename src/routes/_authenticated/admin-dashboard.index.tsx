@@ -23,12 +23,27 @@ export const Route = createFileRoute("/_authenticated/admin-dashboard/")({
 });
 
 function AdminDashboard() {
-  const { user, profile, role, signOut } = useAuth();
+    const { user, profile, role, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  useEffect(() => {
+    if (!loading && role !== 'admin') {
+      navigate({ to: '/dashboard' });
+    }
+  }, [loading, role, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Skeleton className="h-32 w-32 rounded-full" />
+      </div>
+    );
+  }
+
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["admin-stats"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const [init, initPending, organizations, members, reports, leads] = await Promise.all([
         supabase.from("initiatives").select("id", { count: "exact", head: true }),
@@ -63,6 +78,7 @@ function AdminDashboard() {
 
   const { data: adminActions, isLoading: actionsLoading } = useQuery({
     queryKey: ["admin-actions"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data } = await supabase
         .from("admin_actions")
@@ -75,6 +91,7 @@ function AdminDashboard() {
 
   const { data: pendingReports, isLoading: reportsLoading } = useQuery({
     queryKey: ["pending-reports"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data } = await supabase
         .from("reports")
@@ -87,6 +104,7 @@ function AdminDashboard() {
 
   const { data: recentEvents, isLoading: eventsLoading } = useQuery({
     queryKey: ["webhook-events"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data } = await supabase
         .from("payment_events")
@@ -99,6 +117,7 @@ function AdminDashboard() {
 
   const { data: pendingVersions, isLoading: versionsLoading } = useQuery({
     queryKey: ["pending-initiative-versions"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data } = await supabase
         .from("initiative_versions")

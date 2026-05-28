@@ -53,6 +53,7 @@ function FinancesDashboardPage() {
 
   const { data: metrics, isLoading: metricsLoading } = useQuery({
     queryKey: ["admin-financial-metrics"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_financial_metrics");
       if (error) throw error;
@@ -68,6 +69,7 @@ function FinancesDashboardPage() {
 
   const { data: initiatives } = useQuery({
     queryKey: ["admin-initiatives-list"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
@@ -80,7 +82,7 @@ function FinancesDashboardPage() {
 
   const { data: initiativeHistory } = useQuery({
     queryKey: ["admin-initiative-history", selectedInitiativeId],
-    enabled: !!selectedInitiativeId,
+    enabled: !!user && role === "admin" && !!selectedInitiativeId,
     queryFn: async () => {
       const [cyclesRes, eventsRes] = await Promise.all([
         supabase
@@ -315,6 +317,7 @@ function FinancesDashboardPage() {
 function MasterLedgerTable() {
   const { data: events, isLoading } = useQuery({
     queryKey: ["admin-master-ledger"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_events")

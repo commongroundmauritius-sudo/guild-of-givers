@@ -33,6 +33,7 @@ function InitiativesAdminPage() {
     error,
   } = useQuery({
     queryKey: ["admin-initiatives"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")

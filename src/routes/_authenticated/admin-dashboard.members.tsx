@@ -16,6 +16,7 @@ function AdminMembersPage() {
 
   const { data: members, isLoading } = useQuery({
     queryKey: ["admin-members"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       // First get member user IDs from user_roles
       const { data: memberRoles } = await supabase

@@ -21,6 +21,7 @@ function AdminOrganizationsPage() {
     error,
   } = useQuery({
     queryKey: ["admin-organizations"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organizations")

@@ -29,10 +29,8 @@ function InitiativesPage() {
     queryKey: ["public-initiatives"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("initiatives")
+        .from("public_visible_initiatives")
         .select("*")
-        .eq("is_published", true)
-        .eq("is_approved", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];
