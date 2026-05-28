@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Search, Mail, Calendar, MapPin, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/admin-dashboard/members")(
 function AdminMembersPage() {
   const { user, role } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   const { data: members, isLoading } = useQuery({
     queryKey: ["admin-members"],
@@ -109,7 +111,7 @@ function AdminMembersPage() {
                   </thead>
                   <tbody className="divide-y divide-border/40">
                     {filteredMembers.map((member) => (
-                      <tr key={member.id} className="transition hover:bg-muted/30">
+                      <tr key={member.id} className="transition hover:bg-muted/30 cursor-pointer" onClick={() => navigate({ to: `/admin-dashboard/members/${member.id}` })}>
                         <td className="px-8 py-5">
                           <div className="flex items-center gap-4">
                             <Avatar className="h-10 w-10 border border-border/60">
