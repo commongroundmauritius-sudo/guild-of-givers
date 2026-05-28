@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PaymentEvent } from "./types";
+import { automationService } from "@/lib/automation/automation-service";
 
 export class SubscriptionEngine {
   async handlePaymentEvent(event: PaymentEvent): Promise<void> {
@@ -16,12 +17,18 @@ export class SubscriptionEngine {
       case "subscription.cancelled":
         if (await this.updateSubscriptionStatus(subscriptionId, "cancelled")) {
           await this.recordSupporterStatusEvent(userId, "supporter_deactivated");
+          if (userId) {
+            automationService.processTrigger('event', { event_name: 'subscription_cancelled', user_id: userId }).catch(console.error);
+          }
         }
         break;
 
       case "subscription.resumed":
         if (await this.updateSubscriptionStatus(subscriptionId, "active")) {
           await this.recordSupporterStatusEvent(userId, "supporter_activated");
+          if (userId) {
+            automationService.processTrigger('event', { event_name: 'supporter_returned', user_id: userId }).catch(console.error);
+          }
         }
         break;
 
@@ -117,6 +124,15 @@ export class SubscriptionEngine {
 
       await this.recordSupporterStatusEvent(userId, "supporter_deactivated");
     }
+
+    if (userId) {
+      automationService.processTrigger('event', {
+        event_name: 'payment_failed',
+        user_id: userId,
+        amount,
+        failure_reason: failureReason
+      }).catch(console.error);
+    }
   }
 
   private async updateSubscriptionStatus(
@@ -144,16 +160,23 @@ export class SubscriptionEngine {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("primary_initiative_id" as any)
+      .select("primary_initiative_id, organization_id" as any)
       .eq("id", userId)
       .maybeSingle();
 
-    if ((profile as any)?.primary_initiative_id) {
-      await supabase.from("initiative_events").insert({
+    if (profile) {
+      const { data, error } = await supabase.from("initiative_events").insert({
         initiative_id: (profile as any).primary_initiative_id,
         event_type: eventType,
         user_id: userId,
-      });
+      } as any).select().single();
+
+      if (!error && data) {
+        automationService.processTrigger('activity', {
+          ...data,
+          organization_id: (profile as any).organization_id
+        }).catch(console.error);
+      }
     }
   }
 }

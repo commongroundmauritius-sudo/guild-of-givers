@@ -1,10 +1,15 @@
+import React, { useState } from "react";
 import { useCrmSummary } from "../hooks/use-crm-summary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListTodo, MessageSquare, Clock, Users, AlertCircle } from "lucide-react";
+import { ListTodo, MessageSquare, Clock, Users, AlertCircle, BarChart3, Filter, CheckSquare } from "lucide-react";
 import { SupporterIntelligence } from "./SupporterIntelligence";
+import { SegmentationView } from "./SegmentationView";
+import { TaskModule } from "./TaskModule";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function CrmModule({ organizationId }: { organizationId?: string }) {
   const { data, isLoading, isError, error } = useCrmSummary();
+  const [activeTab, setActiveTab] = useState("intelligence");
 
   if (isLoading) return <div className="h-64 animate-pulse bg-muted rounded-3xl" />;
 
@@ -81,7 +86,31 @@ export function CrmModule({ organizationId }: { organizationId?: string }) {
         </Card>
       </div>
 
-      {organizationId && <SupporterIntelligence organizationId={organizationId} />}
+      <Tabs defaultValue="intelligence" onValueChange={setActiveTab} className="w-full">
+        <TabsList className="bg-muted/50 p-1 rounded-2xl mb-6">
+          <TabsTrigger value="intelligence" className="rounded-xl flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" /> Intelligence
+          </TabsTrigger>
+          <TabsTrigger value="segments" className="rounded-xl flex items-center gap-2">
+            <Filter className="h-4 w-4" /> Segments
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="rounded-xl flex items-center gap-2">
+            <CheckSquare className="h-4 w-4" /> Tasks
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="intelligence">
+          {organizationId && <SupporterIntelligence organizationId={organizationId} />}
+        </TabsContent>
+
+        <TabsContent value="segments">
+          {organizationId && <SegmentationView organizationId={organizationId} />}
+        </TabsContent>
+
+        <TabsContent value="tasks">
+          {organizationId && <TaskModule organizationId={organizationId} />}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
