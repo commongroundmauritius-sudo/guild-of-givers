@@ -22,6 +22,7 @@ function AdminAnnouncementsPage() {
 
   const { data: announcements = [], isLoading } = useQuery({
     queryKey: ["admin-announcements"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")

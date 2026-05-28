@@ -22,6 +22,7 @@ function AdminPostsPage() {
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["admin-posts", filter],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       let query = supabase
         .from("community_posts")

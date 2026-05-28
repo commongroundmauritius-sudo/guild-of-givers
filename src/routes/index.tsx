@@ -154,10 +154,8 @@ function InitiativesList() {
     queryKey: ["homepage-initiatives"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("initiatives")
-        .select("*, organizations(organization_name)")
-        .eq("is_approved", true)
-        .eq("is_published", true)
+        .from("public_visible_initiatives")
+        .select("*")
         .limit(3)
         .order("created_at", { ascending: false });
 

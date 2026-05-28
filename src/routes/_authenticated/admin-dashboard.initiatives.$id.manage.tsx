@@ -32,6 +32,7 @@ function InitiativeEditPage() {
   const { role, user, loading: authLoading } = useAuth();
   const { data: organizations } = useQuery({
     queryKey: ["all-organizations"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organizations")
@@ -79,6 +80,7 @@ function InitiativeEditPage() {
     error: queryError,
   } = useQuery({
     queryKey: ["initiative", id],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       if (!id) throw new Error("No initiative ID provided");
 

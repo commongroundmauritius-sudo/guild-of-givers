@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION public.allocate_payment_funds(p_payment_id uuid, p_user_id uuid, p_total_amount numeric)
 RETURNS void AS $$
 DECLARE
-    v_fee_config public.fee_config;
+    v_fee_config RECORD;
     v_fee_amount numeric;
     v_net_amount numeric;
     v_cg_share numeric;
@@ -25,7 +25,7 @@ DECLARE
     v_cycle_space numeric;
 BEGIN
     -- 1. Configuration & Context
-    SELECT * INTO v_fee_config FROM public.fee_config LIMIT 1;
+    SELECT * INTO v_fee_config FROM public.fee_configurations WHERE active = true LIMIT 1;
     IF v_fee_config IS NULL THEN
         RAISE EXCEPTION 'Fee configuration not found';
     END IF;

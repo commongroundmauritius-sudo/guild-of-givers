@@ -225,7 +225,7 @@ function MemberDashboard() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">
-                          {(i.organizations as any)?.organization_name}
+                          {i.organization_name}
                         </span>
                         <h3 className="mt-1 font-display text-lg font-semibold text-primary">
                           {i.title}
