@@ -18,7 +18,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { AllocationPreview } from "@/components/member/AllocationPreview";
-import { getJoinedField } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/member")({
   component: MemberDashboard,
@@ -148,38 +147,12 @@ function MemberDashboard() {
                     {subscription?.status || "No Active Plan"}
                   </Badge>
                 </div>
-                <p className="mt-4 font-display text-3xl font-bold text-primary">{c.value}</p>
-                {"sub" in c && <p className="mt-1 text-xs text-muted-foreground capitalize font-medium">{c.sub}</p>}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-16">
-            <h2 className="font-display text-2xl font-semibold text-primary">
-              Your Impact Portfolio
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              Select the programs where you want your monthly contribution to be allocated.
-            </p>
-
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {initiatives?.map((i) => {
-                const isSelected = preferences?.includes(i.id);
-                return (
-                  <div
-                    key={i.id}
-                    className={`relative flex flex-col overflow-hidden rounded-3xl border p-6 transition ${
-                      isSelected ? "border-teal-600 bg-teal-600/5 shadow-sm" : "border-border/40 bg-card"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">
-                          {getJoinedField(i.organizations, "organization_name") || "Organization Partner"}
-                        </span>
-                        <h3 className="mt-1 font-display text-lg font-semibold text-primary">
-                          {i.title}
-                        </h3>
+                <CardContent className="p-8">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                      <div className="text-4xl font-bold text-primary">
+                        Rs {subscription?.amount_mur?.toLocaleString() || "0"}
+                        <span className="text-lg font-medium text-muted-foreground ml-2">/ month</span>
                       </div>
                       <p className="mt-2 text-muted-foreground text-sm">
                         Your next contribution will be processed on {subscription?.next_billing_date ? new Date(subscription.next_billing_date).toLocaleDateString() : 'N/A'}.

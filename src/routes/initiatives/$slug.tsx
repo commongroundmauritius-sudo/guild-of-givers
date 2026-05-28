@@ -51,11 +51,9 @@ export const Route = createFileRoute("/initiatives/$slug")({
   loader: async ({ params }: { params: any }) => {
     const { slug } = params;
     const { data: initiative } = await supabase
-      .from("initiatives")
+      .from("public_visible_initiatives" as any)
       .select("*")
       .eq("slug", slug)
-      .eq("is_approved", true)
-      .eq("is_published", true)
       .maybeSingle();
 
     return { initiative };
@@ -77,10 +75,8 @@ function InitiativeDetailPage() {
     queryKey: ["initiative-slug", slug],
     queryFn: async () => {
       let query = supabase
-        .from("initiatives")
-        .select("*, organizations(*)")
-        .eq("is_approved", true)
-        .eq("is_published", true);
+        .from("public_visible_initiatives" as any)
+        .select("*");
 
       if (isUUID(slug)) {
         query = query.eq("id", slug);
@@ -99,10 +95,8 @@ function InitiativeDetailPage() {
     enabled: !!initiative?.organization_id,
     queryFn: async () => {
       const { data } = await supabase
-        .from("initiatives")
-        .select("*, organizations(*)")
-        .eq("is_approved", true)
-        .eq("is_published", true)
+        .from("public_visible_initiatives" as any)
+        .select("*")
         .eq("organization_id", initiative!.organization_id as string)
         .neq("id", initiative!.id)
         .limit(3);
@@ -254,52 +248,18 @@ function InitiativeDetailPage() {
 
   return (
     <SiteLayout>
-      {structuredData && (
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      )}
-      <article className="pb-24">
-        {/* Top Hero Section */}
-        <div className="relative h-[50vh] min-h-[400px] w-full overflow-hidden bg-primary/5">
-          {initiative.image_url ? (
-            <img
-              src={initiative.image_url}
-              alt={initiative.title}
-              className="h-full w-full object-cover"
-              loading="eager"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-              <Heart className="h-24 w-24 text-primary/10" />
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-          <div className="absolute bottom-0 left-0 w-full p-6 sm:p-12">
-            <div className="mx-auto max-w-7xl">
-              <Link
-                to="/initiatives"
-                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/20"
-              >
-                <ArrowLeft className="h-4 w-4" /> Back to Initiatives
-              </Link>
-              <h1 className="mt-6 font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
-                {initiative.title || "Untitled Initiative"}
-              </h1>
-              <div className="mt-6 flex flex-wrap items-center gap-4 text-white/90">
-                <span className="flex items-center gap-2 rounded-full bg-forest/20 px-4 py-1 text-xs font-bold uppercase tracking-widest text-forest-light backdrop-blur-sm border border-forest/30">
-                  <CheckCircle2 className="h-3 w-3" /> Active Initiative
-                </span>
-                {initiative.category && (
-                  <span className="rounded-full bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-widest backdrop-blur-sm border border-white/20">
-                    {initiative.category}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+      <article className="pb-24 pt-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumbs */}
+          <nav className="mb-10">
+            <Link
+              to="/initiatives"
+              className="group inline-flex items-center gap-2 text-sm font-bold text-muted-foreground transition hover:text-primary"
+            >
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              Back to Discover
+            </Link>
+          </nav>
 
           <div className="grid gap-12 lg:grid-cols-3">
             <div className="lg:col-span-2">

@@ -33,10 +33,12 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
         DROP POLICY IF EXISTS "Organization view policy" ON public.organizations;
+        DROP POLICY IF EXISTS "Anyone can view verified organizations" ON public.organizations;
         CREATE POLICY "Anyone can view verified organizations" ON public.organizations
         FOR SELECT USING (is_verified = true OR public.has_role('admin'));
 
         DROP POLICY IF EXISTS "Organization management policy" ON public.organizations;
+        DROP POLICY IF EXISTS "Admins can manage organizations" ON public.organizations;
         CREATE POLICY "Admins can manage organizations" ON public.organizations
         FOR ALL USING (public.has_role('admin'));
     END IF;

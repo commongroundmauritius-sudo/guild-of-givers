@@ -15,14 +15,12 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
-import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/leads")({
   component: AdminLeadsPage,
 });
 
-function AdminLeadsPage() {
-  const { user, role } = useAuth();
+function AdminLeadsPage() { const { user, role } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { data: leads, isLoading } = useQuery({
