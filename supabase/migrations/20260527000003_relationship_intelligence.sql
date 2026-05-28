@@ -34,7 +34,7 @@ DECLARE
     v_total_health INTEGER;
     v_stats RECORD;
 BEGIN
-    -- Get latest stats (last 7 days average vs previous 7 days)
+    -- Get latest stats (last 7 days average)
     SELECT
         COALESCE(AVG(view_count), 0) as avg_views,
         COALESCE(AVG(registration_count), 0) as avg_reg,
@@ -45,20 +45,16 @@ BEGIN
     WHERE initiative_id = p_initiative_id
     AND date >= CURRENT_DATE - INTERVAL '7 days';
 
-    -- Simple Growth Score (0-100) based on supporter count growth
     v_growth_score := 70; -- Baseline
 
-    -- Conversion Score: registration_count / view_count
     IF v_stats.avg_views > 0 THEN
         v_conversion_score := LEAST((v_stats.avg_reg * 100.0 / v_stats.avg_views) * 5, 100);
     ELSE
         v_conversion_score := 50;
     END IF;
 
-    -- Engagement Score: based on activity density
     v_engagement_score := 65;
 
-    -- Retention Score: Based on recurring contributors ratio
     SELECT
         CASE
             WHEN COUNT(*) = 0 THEN 0
@@ -69,10 +65,8 @@ BEGIN
     JOIN public.member_preferences mp ON s.user_id = mp.user_id
     WHERE mp.initiative_id = p_initiative_id;
 
-    -- Revenue Score: consistency
     v_revenue_score := 75;
 
-    -- Weighted Total
     v_total_health := (
         v_growth_score * 0.2 +
         v_conversion_score * 0.2 +
@@ -128,16 +122,21 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 -- 5. RLS for Health Scores
 ALTER TABLE public.initiative_health_scores ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Staff can view own initiative health"
-ON public.initiative_health_scores FOR SELECT
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1 FROM public.initiatives i
-        JOIN public.profiles p ON i.organization_id = p.organization_id
-        WHERE i.id = initiative_health_scores.initiative_id AND p.id = auth.uid()
-    ) OR public.has_role('admin')
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Staff can view own initiative health') THEN
+        CREATE POLICY "Staff can view own initiative health"
+        ON public.initiative_health_scores FOR SELECT
+        TO authenticated
+        USING (
+            EXISTS (
+                SELECT 1 FROM public.initiatives i
+                JOIN public.profiles p ON i.organization_id = p.organization_id
+                WHERE i.id = initiative_health_scores.initiative_id AND p.id = auth.uid()
+            ) OR (SELECT public.has_role('admin'))
+        );
+    END IF;
+END $$;
 
 -- 6. Trigger to update last_engagement_at
 CREATE OR REPLACE FUNCTION public.update_last_engagement()
@@ -150,20 +149,26 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- Cleanup existing if any to avoid errors
-DROP TRIGGER IF EXISTS trigger_update_last_engagement_activities ON public.activities;
-CREATE TRIGGER trigger_update_last_engagement_activities
-AFTER INSERT ON public.activities
-FOR EACH ROW
-EXECUTE FUNCTION public.update_last_engagement();
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'activities') THEN
+        DROP TRIGGER IF EXISTS trigger_update_last_engagement_activities ON public.activities;
+        CREATE TRIGGER trigger_update_last_engagement_activities
+        AFTER INSERT ON public.activities
+        FOR EACH ROW
+        EXECUTE FUNCTION public.update_last_engagement();
+    END IF;
 
-DROP TRIGGER IF EXISTS trigger_update_last_engagement_events ON public.initiative_events;
-CREATE TRIGGER trigger_update_last_engagement_events
-AFTER INSERT ON public.initiative_events
-FOR EACH ROW
-EXECUTE FUNCTION public.update_last_engagement();
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'initiative_events') THEN
+        DROP TRIGGER IF EXISTS trigger_update_last_engagement_events ON public.initiative_events;
+        CREATE TRIGGER trigger_update_last_engagement_events
+        AFTER INSERT ON public.initiative_events
+        FOR EACH ROW
+        EXECUTE FUNCTION public.update_last_engagement();
+    END IF;
+END $$;
 
 
 -- 7. Add lifecycle fields to leads
@@ -172,7 +177,7 @@ ADD COLUMN IF NOT EXISTS lead_stage TEXT DEFAULT 'Visitor',
 ADD COLUMN IF NOT EXISTS utm_parameters JSONB DEFAULT '{}'::jsonb;
 
 -- 8. Retention Analysis View
-CREATE OR REPLACE VIEW public.supporter_retention_stats AS
+CREATE OR REPLACE VIEW public.supporter_retention_stats WITH (security_invoker = true) AS
 SELECT
     p.organization_id,
     p.id as profile_id,
@@ -212,7 +217,7 @@ BEGIN
     ORDER BY score DESC
     LIMIT p_limit;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 
 -- 10. Enhance Aggregation Tables with Failed Payments
@@ -236,8 +241,6 @@ BEGIN
         COUNT(CASE WHEN e.event_type = 'subscription_started' THEN 1 END),
         COUNT(CASE WHEN e.event_type = 'payment_completed' THEN 1 END),
         COALESCE(SUM(CASE WHEN e.event_type = 'payment_completed' THEN (e.metadata->>'amount_mur')::NUMERIC ELSE 0 END), 0),
-        -- We infer failures from the payments table linked to the initiative via allocations or direct metadata if available
-        -- For now, we'll look for 'payment_failed' events in initiative_events if they exist
         COUNT(CASE WHEN e.event_type = 'payment_failed' THEN 1 END)
     FROM public.initiatives i
     LEFT JOIN public.initiative_events e ON i.id = e.initiative_id AND e.created_at::DATE = p_date
@@ -272,7 +275,7 @@ BEGIN
         total_revenue_mur = EXCLUDED.total_revenue_mur,
         failed_payment_count = EXCLUDED.failed_payment_count;
 
-    -- Revenue Stats (Preserved from 20260527000001)
+    -- Revenue Stats
     INSERT INTO public.daily_revenue_stats (date, total_revenue_mur, total_payments, failed_payments, active_subscriptions)
     SELECT
         p_date,

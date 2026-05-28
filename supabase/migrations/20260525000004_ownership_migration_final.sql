@@ -8,10 +8,16 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') THEN
         DROP POLICY IF EXISTS "Organization view policy" ON public.organizations;
+        DROP POLICY IF EXISTS "Anyone can view verified organizations" ON public.organizations;
         CREATE POLICY "Anyone can view verified organizations" ON public.organizations
         FOR SELECT USING (is_verified = true OR public.has_role('admin'));
 
         DROP POLICY IF EXISTS "Organization management policy" ON public.organizations;
+        DROP POLICY IF EXISTS "Admins can manage organizations" ON public.organizations;
+        DROP POLICY IF EXISTS "Admins can read all organizations" ON public.organizations;
+        DROP POLICY IF EXISTS "Organization owners can manage their organization" ON public.organizations;
+        DROP POLICY IF EXISTS "Organization staff can manage their organization" ON public.organizations;
+        DROP POLICY IF EXISTS "Organization staff can update their organization" ON public.organizations;
         CREATE POLICY "Organization staff can manage their organization" ON public.organizations
         FOR ALL USING (
             public.has_role('admin') OR
@@ -29,6 +35,7 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organization_documents') THEN
         DROP POLICY IF EXISTS "Owners can manage organization documents" ON public.organization_documents;
+        DROP POLICY IF EXISTS "Organization staff can manage their documents" ON public.organization_documents;
         CREATE POLICY "Organization staff can manage their documents" ON public.organization_documents
         FOR ALL USING (
             public.has_role('admin') OR
@@ -42,8 +49,9 @@ BEGIN
 END $$;
 
 -- 3. Mark legacy columns as deprecated (Stop new writes - Phase A)
-DO $$ BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organizations') THEN
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'check_legacy_ownership_usage') THEN
         CREATE OR REPLACE FUNCTION public.check_legacy_ownership_usage()
         RETURNS TRIGGER AS $func$
         BEGIN
@@ -53,6 +61,8 @@ DO $$ BEGIN
             RETURN NEW;
         END;
         $func$ LANGUAGE plpgsql;
+    END IF;
+END $$;
 
 DO $$
 BEGIN
