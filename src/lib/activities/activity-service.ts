@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { automationService } from "@/lib/automation/automation-service";
 
 export type ActivityEventType =
   | 'homepage_view' | 'initiative_view' | 'share_click' | 'signup_started'
@@ -16,7 +17,8 @@ export const activityService = {
     const { eventType, initiativeId, organizationId, metadata = {}, source = 'frontend' } = params;
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
-    await supabase.from("activities").insert({
+
+    const activityData = {
       event_type: eventType,
       user_id: userId,
       initiative_id: initiativeId,
@@ -28,7 +30,17 @@ export const activityService = {
         referrer: typeof document !== 'undefined' ? document.referrer : undefined,
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
       }
-    });
+    };
+
+    const { data, error } = await supabase.from("activities").insert(activityData).select().single();
+
+    if (!error && data) {
+      // Trigger automation system
+      // We don't await this to keep the frontend responsive
+      automationService.processTrigger('activity', data).catch(err => {
+        console.error('Automation trigger failed:', err);
+      });
+    }
   },
 
   /**
@@ -56,7 +68,6 @@ export const activityService = {
     }
     if (organizationId) {
       activityQuery = activityQuery.eq('organization_id', organizationId);
-      // initiative_events doesn't have organization_id directly, would need join or filter by initiative
     }
 
     const [activitiesRes, eventsRes] = await Promise.all([activityQuery, eventQuery]);

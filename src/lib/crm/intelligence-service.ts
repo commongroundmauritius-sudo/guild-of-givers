@@ -33,6 +33,37 @@ export const intelligenceService = {
   },
 
   /**
+   * Fetch latest engagement score for a supporter
+   */
+  async getLatestEngagementScore(userId: string) {
+    const { data, error } = await supabase
+      .from('supporter_engagement_scores' as any)
+      .select('*')
+      .eq('user_id', userId)
+      .order('calculated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  },
+
+  /**
+   * Fetch engagement history for a supporter
+   */
+  async getEngagementHistory(userId: string, limit = 12) {
+    const { data, error } = await supabase
+      .from('supporter_engagement_scores' as any)
+      .select('*')
+      .eq('user_id', userId)
+      .order('calculated_at', { ascending: true })
+      .limit(limit);
+
+    if (error) throw error;
+    return data;
+  },
+
+  /**
    * Fetch retention stats for an organization
    */
   async getRetentionStats(organizationId: string) {
@@ -82,5 +113,20 @@ export const intelligenceService = {
     }
 
     return [];
+  },
+
+  /**
+   * Fetch top supporters for an organization based on engagement
+   */
+  async getTopSupporters(organizationId: string, limit = 10) {
+    const { data, error } = await supabase
+      .from('supporter_engagement_scores' as any)
+      .select('*, profiles!inner(*)')
+      .eq('profiles.organization_id', organizationId)
+      .order('engagement_score', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data;
   }
 };

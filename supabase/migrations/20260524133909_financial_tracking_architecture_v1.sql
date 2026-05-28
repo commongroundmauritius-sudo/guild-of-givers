@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.financial_events (
     user_id UUID REFERENCES auth.users(id),
     initiative_id UUID REFERENCES public.initiatives(id),
     account_id UUID NOT NULL REFERENCES public.financial_accounts(id),
-    event_type TEXT NOT NULL, -- payment_received, transaction_fee, platform_share, organization_pool, allocation, impact_pool, overflow, payout
+    event_type public.financial_event_type NOT NULL, -- payment_received, transaction_fee, platform_share, organization_pool, allocation, impact_pool, overflow, payout
     amount_mur NUMERIC NOT NULL,
     previous_balance NUMERIC NOT NULL,
     resulting_balance NUMERIC NOT NULL,

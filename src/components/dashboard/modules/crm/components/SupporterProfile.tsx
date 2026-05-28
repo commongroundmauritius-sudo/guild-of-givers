@@ -1,4 +1,5 @@
 import { useSupporterProfile } from "@/hooks/crm/use-supporter-profile";
+import { EngagementBadge } from "./EngagementBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SupporterTimeline } from "./SupporterTimeline";
 import { User, Mail, Phone, Calendar, Target, Award } from "lucide-react";
@@ -26,6 +27,10 @@ export function SupporterProfile({ profileId }: { profileId: string }) {
             <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
             <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest">
               {profile?.lifecycle_stage || 'Registered User'}
+            </div>
+
+            <div className="mt-3 flex justify-center">
+              <EngagementBadge userId={profileId} />
             </div>
 
             <div className="mt-8 space-y-4 text-left">
