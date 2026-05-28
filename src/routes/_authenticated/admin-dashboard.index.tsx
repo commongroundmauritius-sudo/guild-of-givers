@@ -159,7 +159,10 @@ function AdminDashboard() {
   });
 
   return (
-    <div className="space-y-10">
+    <SiteLayout>
+      <section className="bg-muted/30 min-h-screen py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="space-y-10">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-4xl font-bold text-primary">Admin Control</h1>
@@ -300,7 +303,10 @@ function AdminDashboard() {
           </div>
         </div>
       </div>
-    </div>
+          </div>
+        </div>
+      </section>
+    </SiteLayout>
   );
 }
 

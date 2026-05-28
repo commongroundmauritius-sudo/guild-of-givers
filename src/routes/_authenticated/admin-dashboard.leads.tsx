@@ -59,7 +59,10 @@ function AdminLeadsPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <SiteLayout>
+      <section className="bg-muted/30 min-h-screen py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-3xl font-bold text-primary">Lead CRM</h1>
@@ -145,6 +148,9 @@ function AdminLeadsPage() {
           </div>
         )}
       </div>
-    </div>
+          </div>
+        </div>
+      </section>
+    </SiteLayout>
   );
 }
