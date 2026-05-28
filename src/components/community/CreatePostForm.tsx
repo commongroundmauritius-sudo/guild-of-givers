@@ -25,9 +25,9 @@ export function CreatePostForm() {
     queryKey: ["initiatives-list"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("initiatives")
+        .from("public_visible_initiatives")
         .select("id, title")
-        .eq("status", "active");
+        .order("title", { ascending: true });
       return data || [];
     },
   });

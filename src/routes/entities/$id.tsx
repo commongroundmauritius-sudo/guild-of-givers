@@ -1,3 +1,4 @@
+import { isUUID } from '@/lib/identifiers';
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -14,6 +15,7 @@ function OrganizationProfilePage() {
   const { data: organization, isLoading } = useQuery({
     queryKey: ["organization", id],
     queryFn: async () => {
+      if (!isUUID(id)) return null;
       const { data, error } = await supabase
         .from("organizations")
         .select("*, initiatives(*)")

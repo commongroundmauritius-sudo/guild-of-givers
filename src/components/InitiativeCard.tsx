@@ -11,7 +11,7 @@ export function InitiativeCard({ initiative }: InitiativeCardProps) {
   const current = Number(initiative.current_amount_mur) || 0;
   const progress = Math.min(100, Math.round((current / goal) * 100));
 
-  const organizationName = getJoinedField(initiative.organizations, "organization_name");
+  const organizationName = initiative.organization_name || getJoinedField(initiative.organizations, "organization_name");
 
   return (
     <Link
@@ -20,9 +20,9 @@ export function InitiativeCard({ initiative }: InitiativeCardProps) {
       className="group flex flex-col overflow-hidden rounded-[2.5rem] border border-border/40 bg-card transition-all duration-300 hover:-translate-y-2 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5"
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-        {initiative.image_url ? (
+        {initiative.banner_image_url || initiative.image_url ? (
           <img
-            src={initiative.image_url}
+            src={initiative.banner_image_url || initiative.image_url}
             alt={initiative.title}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
             loading="lazy"

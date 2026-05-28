@@ -1,3 +1,4 @@
+import { isUUID } from '@/lib/identifiers';
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 import { useMemo, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -52,8 +53,8 @@ export const Route = createFileRoute("/initiatives/$slug")({
   loader: async ({ params }: { params: any }) => {
     const { slug } = params;
     const { data: initiative } = await supabase
-      .from("initiatives")
-      .select("*, organizations!inner(*)")
+      .from("public_visible_initiatives")
+      .select("*")
       .eq("slug", slug)
       .maybeSingle();
 
@@ -75,15 +76,17 @@ function InitiativeDetailPage() {
   } = useQuery({
     queryKey: ["initiative-slug", slug],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("initiatives")
-        .select("*, organizations!inner(*)")
-        .or(`slug.eq.${slug},id.eq.${slug}`)
-        .eq("is_approved", true)
-        .eq("is_published", true)
-        .eq("organizations.status", "active")
-        .maybeSingle();
+      let query = supabase
+        .from("public_visible_initiatives")
+        .select("*");
 
+      if (isUUID(slug)) {
+        query = query.eq("id", slug);
+      } else {
+        query = query.eq("slug", slug);
+      }
+
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -94,11 +97,9 @@ function InitiativeDetailPage() {
     enabled: !!initiative?.organization_id,
     queryFn: async () => {
       const { data } = await supabase
-        .from("initiatives")
-        .select("*, organizations(*)")
+        .from("public_visible_initiatives")
+        .select("*")
         .eq("organization_id", initiative!.organization_id as string)
-        .eq("is_approved", true)
-        .eq("is_published", true)
         .neq("id", initiative!.id)
         .limit(3);
       return data;
@@ -261,7 +262,7 @@ function InitiativeDetailPage() {
         <div className="relative h-[50vh] min-h-[400px] w-full overflow-hidden bg-primary/5">
           {initiative.image_url ? (
             <img
-              src={initiative.image_url}
+              src={initiative.banner_image_url || initiative.image_url}
               alt={initiative.title}
               className="h-full w-full object-cover"
               loading="eager"

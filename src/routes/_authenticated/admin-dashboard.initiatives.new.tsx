@@ -61,6 +61,7 @@ function InitiativeCreatePage() {
 
   const { data: organizations } = useQuery({
     queryKey: ["all-organizations"],
+    enabled: !!user && role === "admin",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organizations")

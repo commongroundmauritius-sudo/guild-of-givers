@@ -60,9 +60,9 @@ BEGIN
     -- 1. Setup & Validation
     SELECT * INTO v_fee_config FROM public.fee_configurations WHERE active = true LIMIT 1;
 
-    SELECT id INTO v_cg_account_id FROM public.financial_accounts WHERE account_type = 'platform' AND is_system = true LIMIT 1;
-    SELECT id INTO v_org_pool_account_id FROM public.financial_accounts WHERE account_type = 'organization_pool' AND is_system = true LIMIT 1;
-    SELECT id INTO v_fee_account_id FROM public.financial_accounts WHERE account_type = 'fee' AND is_system = true LIMIT 1;
+    SELECT id INTO v_cg_account_id FROM public.financial_accounts WHERE account_type = 'platform'  LIMIT 1;
+    SELECT id INTO v_org_pool_account_id FROM public.financial_accounts WHERE account_type = 'organization_pool'  LIMIT 1;
+    SELECT id INTO v_fee_account_id FROM public.financial_accounts WHERE account_type = 'fee'  LIMIT 1;
 
     SELECT id INTO v_impact_pool_initiative_id FROM public.initiatives WHERE is_impact_pool = true AND is_system_owned = true LIMIT 1;
     SELECT id INTO v_impact_pool_account_id FROM public.financial_accounts WHERE reference_id = v_impact_pool_initiative_id LIMIT 1;
