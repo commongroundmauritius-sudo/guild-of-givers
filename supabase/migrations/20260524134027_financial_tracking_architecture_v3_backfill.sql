@@ -16,9 +16,9 @@ DECLARE
     v_cg_share NUMERIC;
     v_allocated_total NUMERIC;
 BEGIN
-    SELECT id INTO v_cg_account_id FROM public.financial_accounts WHERE account_type = 'platform' AND is_system = true LIMIT 1;
-    SELECT id INTO v_fee_account_id FROM public.financial_accounts WHERE account_type = 'fee' AND is_system = true LIMIT 1;
-    SELECT id INTO v_org_pool_account_id FROM public.financial_accounts WHERE account_type = 'organization_pool' AND is_system = true LIMIT 1;
+    SELECT id INTO v_cg_account_id FROM public.financial_accounts WHERE account_type = 'platform'  LIMIT 1;
+    SELECT id INTO v_fee_account_id FROM public.financial_accounts WHERE account_type = 'fee'  LIMIT 1;
+    SELECT id INTO v_org_pool_account_id FROM public.financial_accounts WHERE account_type = 'organization_pool'  LIMIT 1;
 
     -- 1. Create billing cycles for all historical payments
     FOR v_p_month, v_p_year IN
