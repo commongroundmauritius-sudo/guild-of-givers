@@ -53,9 +53,11 @@ export const Route = createFileRoute("/initiatives/$slug")({
   loader: async ({ params }: { params: any }) => {
     const { slug } = params;
     const { data: initiative } = await supabase
-      .from("public_visible_initiatives")
+      .from("initiatives")
       .select("*")
       .eq("slug", slug)
+      .eq("is_approved", true)
+      .eq("is_published", true)
       .maybeSingle();
 
     return { initiative };
@@ -77,8 +79,10 @@ function InitiativeDetailPage() {
     queryKey: ["initiative-slug", slug],
     queryFn: async () => {
       let query = supabase
-        .from("public_visible_initiatives")
-        .select("*");
+        .from("initiatives")
+        .select("*, organizations(*)")
+        .eq("is_approved", true)
+        .eq("is_published", true);
 
       if (isUUID(slug)) {
         query = query.eq("id", slug);
@@ -97,8 +101,10 @@ function InitiativeDetailPage() {
     enabled: !!initiative?.organization_id,
     queryFn: async () => {
       const { data } = await supabase
-        .from("public_visible_initiatives")
-        .select("*")
+        .from("initiatives")
+        .select("*, organizations(*)")
+        .eq("is_approved", true)
+        .eq("is_published", true)
         .eq("organization_id", initiative!.organization_id as string)
         .neq("id", initiative!.id)
         .limit(3);
