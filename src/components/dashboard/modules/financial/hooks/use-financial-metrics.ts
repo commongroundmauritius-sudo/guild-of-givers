@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function useFinancialMetrics() {
   return useQuery({
+    retry: false,
     queryKey: ["dashboard", "financial", "metrics"],
     queryFn: async () => {
       // 1. Fetch successful payments

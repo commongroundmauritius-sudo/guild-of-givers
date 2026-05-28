@@ -9,12 +9,22 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
+import { AlertCircle } from "lucide-react";
 
 export function FinancialTraceTable() {
-  const { data: trace, isLoading } = useFinancialTrace();
+  const { data: trace, isLoading, isError, error } = useFinancialTrace();
 
   if (isLoading) {
     return <div className="h-64 animate-pulse bg-muted rounded-3xl" />;
+  }
+
+  if (isError) {
+    return (
+      <div className="p-12 text-center border-2 border-dashed rounded-3xl mt-8">
+        <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-4" />
+        <p className="text-muted-foreground">Traceability details unavailable: {(error as any)?.message}</p>
+      </div>
+    );
   }
 
   return (
@@ -37,7 +47,7 @@ export function FinancialTraceTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {trace?.length === 0 ? (
+              {(!trace || trace?.length === 0) ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No transactions found.
@@ -47,22 +57,22 @@ export function FinancialTraceTable() {
                 trace?.map((row) => (
                   <TableRow key={row.paymentId}>
                     <TableCell className="font-medium">
-                      {format(new Date(row.createdAt), "MMM d, HH:mm")}
+                      {row.createdAt ? format(new Date(row.createdAt), "MMM d, HH:mm") : '-'}
                     </TableCell>
-                    <TableCell>{row.userName}</TableCell>
-                    <TableCell className="text-right font-semibold">Rs {row.grossAmount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">Rs {row.feeAmount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right text-amber-600">Rs {row.platformAmount.toFixed(2)}</TableCell>
+                    <TableCell>{row.userName || 'Unknown'}</TableCell>
+                    <TableCell className="text-right font-semibold">Rs {Number(row.grossAmount || 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">Rs {Number(row.feeAmount || 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right text-amber-600">Rs {Number(row.platformAmount || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        {row.allocations.map((alloc, idx) => (
+                        {row.allocations?.map((alloc: any, idx: number) => (
                           <div key={idx} className="flex justify-between gap-4 text-xs">
                             <span className="text-muted-foreground truncate max-w-[150px]">
                               {alloc.initiativeName}
                               {alloc.type === 'impact_pool' && " (Impact Pool)"}
                             </span>
                             <span className="font-medium text-emerald-600">
-                              Rs {alloc.amount.toFixed(2)}
+                              Rs {Number(alloc.amount || 0).toFixed(2)}
                             </span>
                           </div>
                         ))}

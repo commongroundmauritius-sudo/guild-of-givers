@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function useAcquisitionMetrics() {
   return useQuery({
+    retry: false,
     queryKey: ["dashboard", "acquisition", "metrics"],
     queryFn: async () => {
       // 1. Fetch total visits from activities

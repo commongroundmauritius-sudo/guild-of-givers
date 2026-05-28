@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function useCrmSummary() {
   return useQuery({
+    retry: false,
     queryKey: ["dashboard", "crm", "summary"],
     queryFn: async () => {
       // Fetch lead stage distribution

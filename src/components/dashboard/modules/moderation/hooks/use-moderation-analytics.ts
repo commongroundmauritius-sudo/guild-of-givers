@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function useModerationAnalytics() {
   return useQuery({
+    retry: false,
     queryKey: ["dashboard", "moderation", "analytics"],
     queryFn: async () => {
       // 1. Fetch growth rate (placeholder calculation)

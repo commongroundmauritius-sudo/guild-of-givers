@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function useEngagementMetrics() {
   return useQuery({
+    retry: false,
     queryKey: ["dashboard", "engagement", "metrics"],
     queryFn: async () => {
       // 1. Fetch share clicks

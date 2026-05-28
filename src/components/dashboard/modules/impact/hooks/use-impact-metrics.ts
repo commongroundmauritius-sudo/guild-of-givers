@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function useImpactMetrics() {
   return useQuery({
+    retry: false,
     queryKey: ["dashboard", "impact", "metrics"],
     queryFn: async () => {
       // Fetch active supporters (from profiles + active subscription)
