@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import {
@@ -21,58 +20,6 @@ export const Route = createFileRoute("/_authenticated/admin-dashboard/analytics"
 });
 
 function AdminAnalyticsPage() {
-  const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const { data: initiatives } = useQuery({
-    queryKey: ["admin-initiatives-stats"],
-    enabled: !!user && role === "admin",
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("initiatives")
-        .select(
-          "id, title, view_count, conversion_count, active_supporter_count, inactive_supporter_count, organizations(organization_name)",
-        )
-        .order("conversion_count", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: events, isLoading: eventsLoading } = useQuery({
-    queryKey: ["admin-recent-events"],
-    enabled: !!user && role === "admin",
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("initiative_events")
-        .select("*, initiatives(title)")
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const reconcileMutation = useMutation({
-    mutationFn: async (initiativeId: string) => {
-      const { error } = await supabase.rpc("reconcile_initiative_analytics", {
-        p_initiative_id: initiativeId,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Analytics reconciled successfully");
-      queryClient.invalidateQueries({ queryKey: ["admin-initiatives-stats"] });
-    },
-    onError: (err: Error) => {
-      toast.error("Reconciliation failed: " + err.message);
-    },
-  });
-
-  const filteredInitiatives = initiatives?.filter((i) =>
-    i.title.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
   return (
     <SiteLayout>
       <section className="bg-muted/30 min-h-screen py-16">

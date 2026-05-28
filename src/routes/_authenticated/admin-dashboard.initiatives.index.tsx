@@ -14,12 +14,14 @@ import {
   Info
 } from "lucide-react";
 import { getJoinedField } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/")({
   component: InitiativesAdminPage,
 });
 
 function InitiativesAdminPage() {
+  const { user, role } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");

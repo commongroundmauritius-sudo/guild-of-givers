@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/finances")({
   component: FinancesDashboardPage,
@@ -49,6 +50,7 @@ interface FundingCycleWithInitiative extends Tables<"initiative_funding_cycles">
 }
 
 function FinancesDashboardPage() {
+  const { user, role } = useAuth();
   const [selectedInitiativeId, setSelectedInitiativeId] = useState<string | null>(null);
 
   const { data: metrics, isLoading: metricsLoading } = useQuery({
@@ -315,6 +317,8 @@ function FinancesDashboardPage() {
 }
 
 function MasterLedgerTable() {
+  const { user, role } = useAuth();
+
   const { data: events, isLoading } = useQuery({
     queryKey: ["admin-master-ledger"],
     enabled: !!user && role === "admin",

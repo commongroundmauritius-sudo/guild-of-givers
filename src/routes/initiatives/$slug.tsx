@@ -53,9 +53,11 @@ export const Route = createFileRoute("/initiatives/$slug")({
   loader: async ({ params }: { params: any }) => {
     const { slug } = params;
     const { data: initiative } = await supabase
-      .from("public_visible_initiatives")
+      .from("initiatives")
       .select("*")
       .eq("slug", slug)
+      .eq("is_approved", true)
+      .eq("is_published", true)
       .maybeSingle();
 
     return { initiative };
@@ -77,8 +79,10 @@ function InitiativeDetailPage() {
     queryKey: ["initiative-slug", slug],
     queryFn: async () => {
       let query = supabase
-        .from("public_visible_initiatives")
-        .select("*");
+        .from("initiatives")
+        .select("*, organizations(*)")
+        .eq("is_approved", true)
+        .eq("is_published", true);
 
       if (isUUID(slug)) {
         query = query.eq("id", slug);
@@ -97,8 +101,10 @@ function InitiativeDetailPage() {
     enabled: !!initiative?.organization_id,
     queryFn: async () => {
       const { data } = await supabase
-        .from("public_visible_initiatives")
-        .select("*")
+        .from("initiatives")
+        .select("*, organizations(*)")
+        .eq("is_approved", true)
+        .eq("is_published", true)
         .eq("organization_id", initiative!.organization_id as string)
         .neq("id", initiative!.id)
         .limit(3);
@@ -262,7 +268,7 @@ function InitiativeDetailPage() {
         <div className="relative h-[50vh] min-h-[400px] w-full overflow-hidden bg-primary/5">
           {initiative.image_url ? (
             <img
-              src={initiative.banner_image_url || initiative.image_url}
+              src={initiative.image_url}
               alt={initiative.title}
               className="h-full w-full object-cover"
               loading="eager"
