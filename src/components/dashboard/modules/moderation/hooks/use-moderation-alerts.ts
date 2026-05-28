@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function useModerationAlerts() {
   return useQuery({
+    retry: false,
     queryKey: ["dashboard", "moderation", "alerts"],
     queryFn: async () => {
       const oneHourAgo = new Date(Date.now() - 3600000).toISOString();

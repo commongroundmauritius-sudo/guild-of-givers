@@ -1,12 +1,26 @@
 import { useImpactMetrics } from "../hooks/use-impact-metrics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Target, Shield, Activity } from "lucide-react";
+import { Heart, Target, Shield, Activity, AlertCircle } from "lucide-react";
 import { InitiativeHealth } from "./InitiativeHealth";
 
 export function ImpactModule({ initiativeId }: { initiativeId?: string }) {
-  const { data, isLoading } = useImpactMetrics();
+  const { data, isLoading, isError, error } = useImpactMetrics();
 
   if (isLoading) return <div className="h-64 animate-pulse bg-muted rounded-3xl" />;
+
+  if (isError) {
+    return (
+      <Card className="rounded-3xl border-destructive/20 bg-destructive/5">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <AlertCircle className="h-10 w-10 text-destructive mb-4" />
+          <h3 className="text-lg font-bold text-destructive">Impact Metrics Unavailable</h3>
+          <p className="text-sm text-muted-foreground mt-2 max-w-md">
+            {(error as any)?.message || "Failed to load impact data."}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -17,7 +31,7 @@ export function ImpactModule({ initiativeId }: { initiativeId?: string }) {
             <Heart className="h-4 w-4 text-rose-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{data?.totalImpact.toLocaleString()}</div>
+            <div className="text-3xl font-bold">{Number(data?.totalImpact || 0).toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">Estimated direct impact</p>
           </CardContent>
         </Card>
@@ -28,7 +42,7 @@ export function ImpactModule({ initiativeId }: { initiativeId?: string }) {
             <Target className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{data?.activeCount}</div>
+            <div className="text-3xl font-bold">{Number(data?.activeCount || 0).toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">Currently running campaigns</p>
           </CardContent>
         </Card>
@@ -39,7 +53,7 @@ export function ImpactModule({ initiativeId }: { initiativeId?: string }) {
             <Shield className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{data?.verifiedOrgs}</div>
+            <div className="text-3xl font-bold">{Number(data?.verifiedOrgs || 0).toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">Trust-vetted organizations</p>
           </CardContent>
         </Card>
@@ -50,7 +64,7 @@ export function ImpactModule({ initiativeId }: { initiativeId?: string }) {
             <Activity className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{data?.engagementScore}%</div>
+            <div className="text-3xl font-bold">{Number(data?.engagementScore || 0)}%</div>
             <p className="text-xs text-muted-foreground mt-1">Supporter activity rate</p>
           </CardContent>
         </Card>

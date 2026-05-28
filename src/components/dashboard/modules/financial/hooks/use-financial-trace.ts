@@ -17,6 +17,7 @@ export interface FinancialTrace {
 
 export function useFinancialTrace() {
   return useQuery({
+    retry: false,
     queryKey: ["dashboard", "financial", "trace"],
     queryFn: async () => {
       const { data: events, error } = await supabase

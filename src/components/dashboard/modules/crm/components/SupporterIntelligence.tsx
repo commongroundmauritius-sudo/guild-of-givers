@@ -8,9 +8,9 @@ export function SupporterIntelligence({ organizationId }: { organizationId: stri
   if (isLoading) return <div className="h-64 animate-pulse bg-muted rounded-3xl" />;
 
   const chartData = [
-    { name: 'Active', value: data?.summary.active || 0, color: '#10b981' },
-    { name: 'Dormant', value: data?.summary.dormant || 0, color: '#f59e0b' },
-    { name: 'Inactive', value: data?.summary.inactive || 0, color: '#ef4444' },
+    { name: 'Active', value: data?.summary?.active || 0, color: '#10b981' },
+    { name: 'Dormant', value: data?.summary?.dormant || 0, color: '#f59e0b' },
+    { name: 'Inactive', value: data?.summary?.inactive || 0, color: '#ef4444' },
   ].filter(d => d.value > 0);
 
   return (
@@ -30,7 +30,7 @@ export function SupporterIntelligence({ organizationId }: { organizationId: stri
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {chartData.map((entry, index) => (
+                  {chartData?.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -52,16 +52,16 @@ export function SupporterIntelligence({ organizationId }: { organizationId: stri
         <CardContent className="space-y-4">
           <div className="flex justify-between items-center border-b pb-2">
             <span className="text-sm text-muted-foreground">Total Supporters</span>
-            <span className="text-xl font-bold">{data?.summary.totalSupporters}</span>
+            <span className="text-xl font-bold">{Number(data?.summary?.totalSupporters || 0).toLocaleString()}</span>
           </div>
           <div className="flex justify-between items-center border-b pb-2">
             <span className="text-sm text-muted-foreground">Lifetime Revenue</span>
-            <span className="text-xl font-bold">MUR {data?.summary.totalLifetimeRevenue.toLocaleString()}</span>
+            <span className="text-xl font-bold">MUR {Number(data?.summary?.totalLifetimeRevenue || 0).toLocaleString()}</span>
           </div>
           <div className="flex justify-between items-center border-b pb-2">
             <span className="text-sm text-muted-foreground">Retention Rate</span>
             <span className="text-xl font-bold">
-              {data?.summary.totalSupporters ? Math.round((data.summary.active / data.summary.totalSupporters) * 100) : 0}%
+              {data?.summary?.totalSupporters ? Math.round((data.summary.active / data.summary.totalSupporters) * 100) : 0}%
             </span>
           </div>
         </CardContent>

@@ -7,10 +7,12 @@ export function SupporterJourney() {
 
   if (isLoading) return <div className="h-64 animate-pulse bg-muted rounded-3xl" />;
 
+  const subsCount = data?.campaignLinks?.reduce((acc: number, curr: any) => acc + (Number(curr.conversions || 0)), 0) || 0;
+
   const steps = [
-    { label: "Visits", value: data?.visits, icon: <ArrowRight className="h-4 w-4" />, color: "bg-blue-500" },
-    { label: "Registrations", value: data?.registrations, icon: <UserPlus className="h-4 w-4" />, color: "bg-indigo-500" },
-    { label: "Subscriptions", value: data?.campaignLinks.reduce((acc: number, curr: any) => acc + (curr.conversions || 0), 0), icon: <CreditCard className="h-4 w-4" />, color: "bg-violet-500" },
+    { label: "Visits", value: data?.visits || 0, icon: <ArrowRight className="h-4 w-4" />, color: "bg-blue-500" },
+    { label: "Registrations", value: data?.registrations || 0, icon: <UserPlus className="h-4 w-4" />, color: "bg-indigo-500" },
+    { label: "Subscriptions", value: subsCount, icon: <CreditCard className="h-4 w-4" />, color: "bg-violet-500" },
     { label: "Ambassadors", value: 0, icon: <Heart className="h-4 w-4" />, color: "bg-pink-500" },
   ];
 
@@ -21,14 +23,14 @@ export function SupporterJourney() {
       </CardHeader>
       <CardContent className="pt-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-2">
-          {steps.map((step, idx) => (
+          {steps?.map((step, idx) => (
             <div key={step.label} className="flex-1 w-full relative">
               <div className="flex flex-col items-center text-center space-y-2">
                 <div className={`p-3 rounded-2xl ${step.color} text-white shadow-lg`}>
                   {step.icon}
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{step.value?.toLocaleString() || 0}</p>
+                  <p className="text-2xl font-bold">{Number(step.value || 0).toLocaleString()}</p>
                   <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{step.label}</p>
                 </div>
               </div>
@@ -48,11 +50,11 @@ export function SupporterJourney() {
           />
           <ConversionStat
             label="Reg to Sub"
-            value={data?.registrations ? (((data.campaignLinks.reduce((acc: number, curr: any) => acc + (curr.conversions || 0), 0)) / data.registrations) * 100).toFixed(1) : 0}
+            value={data?.registrations ? ((subsCount / data.registrations) * 100).toFixed(1) : 0}
           />
           <ConversionStat
             label="Overall"
-            value={data?.visits ? (((data.campaignLinks.reduce((acc: number, curr: any) => acc + (curr.conversions || 0), 0)) / data.visits) * 100).toFixed(1) : 0}
+            value={data?.visits ? ((subsCount / data.visits) * 100).toFixed(1) : 0}
           />
         </div>
       </CardContent>
