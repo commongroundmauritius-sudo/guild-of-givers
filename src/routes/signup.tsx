@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Check } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { createLead, convertLead, startMembershipSubscription } from "@/lib/auth-actions";
+import { attributionService } from "@/lib/attribution-service";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -34,43 +34,24 @@ function SignupPage() {
   const [phone, setPhone] = useState("");
   const [coversFees, setCoversFees] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { signUp, role, loading } = useAuth();
+  const { signUp } = useAuth();
   const navigate = useNavigate();
 
-  // Attribution detection
   const [sourceInitiativeId, setSourceInitiativeId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("source_initiative_id");
-      const expiresAt = localStorage.getItem("source_initiative_expires_at");
-
-      if (stored && expiresAt) {
-        if (Date.now() < parseInt(expiresAt)) {
-          setSourceInitiativeId(stored);
-        } else {
-          // Expired attribution
-          localStorage.removeItem("source_initiative_id");
-          localStorage.removeItem("source_initiative_expires_at");
-        }
-      }
-    }
+    attributionService.captureFromUrl();
+    const stored = localStorage.getItem("source_initiative_id");
+    if (stored) setSourceInitiativeId(stored);
   }, []);
 
-  useEffect(() => {
-    if (!loading && role) {
-      if (role === "admin") navigate({ to: "/admin-dashboard" });
-      else if (role === "organization") navigate({ to: "/organization" });
-      else if (role === "member") navigate({ to: "/member" });
-    }
-  }, [role, loading, navigate]);
-
-  const finalAmount = customAmount ? Number(customAmount) || 0 : amount;
+  const finalAmount = customAmount ? parseInt(customAmount) : amount;
 
   const submitDetails = async () => {
     if (submitting) return;
     setSubmitting(true);
     try {
+      const attribution = attributionService.getStored();
       await createLead({
         data: {
           email: email.trim().toLowerCase(),
@@ -80,6 +61,7 @@ function SignupPage() {
           coversFees,
           status: "started",
           sourceInitiativeId,
+          attribution,
         },
       });
       setStep(2);
@@ -108,7 +90,7 @@ function SignupPage() {
   const submitAccount = async () => {
     if (submitting) return;
     setSubmitting(true);
-    const { error, data: authResult } = await signUp(email.trim().toLowerCase(), password, {
+    const { error } = await signUp(email.trim().toLowerCase(), password, {
       full_name: fullName,
       phone: phone,
       subscription_amount: finalAmount,
@@ -122,94 +104,45 @@ function SignupPage() {
       return;
     }
 
-    const user = (authResult as any)?.user;
-
-    try {
-      if (user) {
-        // Start subscription
-        await startMembershipSubscription({
-          data: {
-            userId: user.id,
-            amount: finalAmount,
-            billingDate: 7,
-            coversFees,
-            priorities: sourceInitiativeId ? [sourceInitiativeId] : [],
-          },
-        });
-
-        // Record member_acquired event with idempotency check
-        const sessionId = sessionStorage.getItem("cg_session_id") || "direct-signup";
-        const convKey = `member_acquired_recorded_${sourceInitiativeId}`;
-
-        if (sourceInitiativeId && !sessionStorage.getItem(convKey)) {
-          const { error: eventError } = await supabase.from("initiative_events").insert({
-            initiative_id: sourceInitiativeId,
-            event_type: "member_acquired",
-            user_id: user.id,
-            session_id: sessionId,
-          });
-
-          if (!eventError || eventError.code === "23505") {
-            // Success or already exists
-            sessionStorage.setItem(convKey, "true");
-            localStorage.removeItem("source_initiative_id");
-            localStorage.removeItem("source_initiative_expires_at");
-          }
-        }
-      }
-
-      setStep(4);
-    } catch (err) {
-      console.error("Post-signup error:", err);
-      setStep(4);
-    } finally {
-      setSubmitting(false);
-    }
+    setStep(4);
+    setSubmitting(false);
   };
 
   return (
     <SiteLayout>
-      <section className="relative overflow-hidden bg-cream-deep/30 py-20 lg:py-32">
+      <section className="bg-cream-deep/40 py-20 lg:py-32 min-h-screen">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl">
-            {step < 4 && (
-              <div className="mb-12">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setStep(Math.max(0, step - 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm transition hover:bg-muted"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </button>
-                  <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                    Step {step + 1} of 4: {STEPS[step]}
-                  </span>
-                </div>
-                <div className="mt-4 flex gap-2">
-                  {[0, 1, 2, 3].map((s) => (
-                    <div
-                      key={s}
-                      className={`h-1.5 flex-1 rounded-full transition-colors ${
-                        s <= step ? "bg-primary" : "bg-primary/10"
-                      }`}
-                    />
-                  ))}
-                </div>
+          <div className="mx-auto max-w-2xl bg-white rounded-[3rem] p-8 sm:p-16 shadow-2xl shadow-primary/5">
+            <div className="mb-12">
+              <div className="flex gap-2 mb-8">
+                {STEPS.map((s, i) => (
+                  <div
+                    key={s}
+                    className={`h-1.5 flex-1 rounded-full ${
+                      i <= step ? "bg-primary" : "bg-primary/10"
+                    }`}
+                  />
+                ))}
               </div>
-            )}
+              {step > 0 && step < 4 && (
+                <button
+                  onClick={() => setStep(step - 1)}
+                  className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition"
+                >
+                  <ArrowLeft className="h-4 w-4" /> Back
+                </button>
+              )}
+            </div>
 
             {step === 0 && (
               <div>
-                <h2 className="font-display text-4xl font-semibold text-primary">
-                  Start your monthly impact
-                </h2>
-                <p className="mt-4 text-lg text-muted-foreground">
-                  Your contribution goes directly to vetted initiatives across Mauritius.
+                <h2 className="font-display text-4xl font-bold text-primary">Monthly Contribution</h2>
+                <p className="mt-4 text-muted-foreground">
+                  Pick an amount that reflects the impact you want to make. You can adjust this anytime.
                 </p>
 
-                <div className="mt-12">
-                  <p className="text-sm font-medium">Choose your monthly contribution</p>
-                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="mt-10">
+                  <div className="grid gap-3 sm:grid-cols-3">
                     {PRESETS.map((p) => {
                       const active = !customAmount && p === amount;
                       return (
@@ -275,7 +208,7 @@ function SignupPage() {
                 <button
                   disabled={finalAmount <= 0}
                   onClick={() => setStep(1)}
-                  className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
+                  className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
                 >
                   Start my monthly impact
                 </button>
@@ -284,8 +217,8 @@ function SignupPage() {
 
             {step === 1 && (
               <div>
-                <h2 className="font-display text-3xl font-semibold text-primary">Your details</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <h2 className="font-display text-4xl font-bold text-primary">Your details</h2>
+                <p className="mt-4 text-muted-foreground">
                   Contributing Rs {finalAmount.toLocaleString()} / month.
                 </p>
                 <form
@@ -293,7 +226,7 @@ function SignupPage() {
                     e.preventDefault();
                     submitDetails();
                   }}
-                  className="mt-8 space-y-4"
+                  className="mt-10 space-y-5"
                 >
                   <Field label="Full name">
                     <input
@@ -322,7 +255,7 @@ function SignupPage() {
                   </Field>
                   <button
                     disabled={submitting}
-                    className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
+                    className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
                   >
                     {submitting ? "Saving details…" : "Continue to payment"}
                   </button>
@@ -332,22 +265,25 @@ function SignupPage() {
 
             {step === 2 && (
               <div>
-                <h2 className="font-display text-3xl font-semibold text-primary">Payment</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Simulating a secure payment via our abstraction layer. Your CommonGround Member
-                  account will be activated immediately after this mock transaction.
+                <h2 className="font-display text-4xl font-bold text-primary">Secure Payment</h2>
+                <p className="mt-4 text-muted-foreground">
+                  Complete your checkout via our secure payment gateway.
                 </p>
-                <div className="mt-8 rounded-2xl border border-teal-600/20 bg-teal-600/5 p-6">
-                  <p className="text-sm font-semibold text-teal-700 uppercase">Order Summary</p>
+                <div className="mt-10 rounded-3xl border border-primary/10 bg-primary/5 p-8">
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Order Summary</p>
+                  <div className="mt-6 flex justify-between border-b border-primary/10 pb-4">
+                    <span className="text-muted-foreground">Contribution</span>
+                    <span className="font-bold text-primary">Rs {finalAmount.toLocaleString()}</span>
+                  </div>
                   <div className="mt-4 flex justify-between">
-                    <span className="text-muted-foreground">Monthly Contribution</span>
-                    <span className="font-bold">Rs {finalAmount.toLocaleString()}</span>
+                    <span className="font-bold text-primary">Total Recurring</span>
+                    <span className="font-bold text-primary text-xl">Rs {finalAmount.toLocaleString()}</span>
                   </div>
                 </div>
                 <button
                   onClick={handlePaymentCompletion}
                   disabled={submitting}
-                  className="mt-8 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                  className="mt-10 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
                 >
                   {submitting ? "Processing..." : "Complete Checkout (Mock)"}
                 </button>
@@ -356,10 +292,8 @@ function SignupPage() {
 
             {step === 3 && (
               <div>
-                <h2 className="font-display text-3xl font-semibold text-primary">
-                  Create your account
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <h2 className="font-display text-4xl font-bold text-primary">Create your account</h2>
+                <p className="mt-4 text-muted-foreground">
                   Set a password to manage your membership and track your impact.
                 </p>
                 <form
@@ -367,7 +301,7 @@ function SignupPage() {
                     e.preventDefault();
                     submitAccount();
                   }}
-                  className="mt-8 space-y-4"
+                  className="mt-10 space-y-5"
                 >
                   <Field label="Password">
                     <input
@@ -381,14 +315,14 @@ function SignupPage() {
                   </Field>
                   <button
                     disabled={submitting}
-                    className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
+                    className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
                   >
                     {submitting ? "Setting up…" : "Complete setup"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setStep(4)}
-                    className="mt-4 block w-full text-center text-sm text-muted-foreground hover:text-primary"
+                    className="mt-6 block w-full text-center text-sm font-bold text-primary hover:underline"
                   >
                     I'll set it up later via email
                   </button>
@@ -397,21 +331,21 @@ function SignupPage() {
             )}
 
             {step === 4 && (
-              <div className="text-center">
-                <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground">
-                  <Check className="h-7 w-7" />
+              <div className="text-center py-10">
+                <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-forest/10 text-forest mb-8">
+                  <Check className="h-12 w-12" />
                 </div>
-                <h2 className="mt-5 font-display text-3xl font-semibold text-primary">
-                  You're in.
+                <h2 className="font-display text-4xl font-bold text-primary">
+                  Welcome to CommonGround
                 </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Welcome to CommonGround. Check your email to confirm your account.
+                <p className="mt-4 text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                  Your monthly impact has started. Check your email for your receipt and account confirmation.
                 </p>
                 <button
                   onClick={() => navigate({ to: "/dashboard" })}
-                  className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  className="mt-10 inline-flex items-center justify-center rounded-full bg-primary px-10 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
                 >
-                  Go to dashboard
+                  Go to my Dashboard
                 </button>
               </div>
             )}
@@ -423,12 +357,12 @@ function SignupPage() {
 }
 
 const inputCls =
-  "w-full rounded-xl border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-2xl border border-input bg-background px-5 py-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-sm transition-all";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium text-foreground">{label}</span>
+      <span className="text-xs font-bold text-primary uppercase tracking-widest">{label}</span>
       <div className="mt-2">{children}</div>
     </label>
   );
