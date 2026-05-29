@@ -1,13 +1,10 @@
--- Robust enforcement of initiative slugs and missing columns
+-- Robust enforcement of initiative slugs
 -- Ensures the column exists, is populated, and has the required constraints.
 
 -- 1. Ensure slug column exists
 ALTER TABLE public.initiatives ADD COLUMN IF NOT EXISTS slug TEXT;
 
--- 2. Ensure category column exists (required by downstream views like public_visible_initiatives)
-ALTER TABLE public.initiatives ADD COLUMN IF NOT EXISTS category TEXT;
-
--- 3. Backfill existing initiatives with slugs if they are NULL
+-- 2. Backfill existing initiatives with slugs if they are NULL
 DO $$
 DECLARE
     rec RECORD;
@@ -39,7 +36,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4. Ensure unique constraint exists
+-- 3. Ensure unique constraint exists
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -57,5 +54,5 @@ BEGIN
     END IF;
 END $$;
 
--- 5. Enforce NOT NULL
+-- 4. Enforce NOT NULL
 ALTER TABLE public.initiatives ALTER COLUMN slug SET NOT NULL;
