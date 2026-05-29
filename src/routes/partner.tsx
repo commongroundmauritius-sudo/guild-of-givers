@@ -4,6 +4,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { submitPartnerApplication } from "@/lib/partner/actions";
+import { partnerApplicationSchema } from "@/lib/security/validators";
 
 export const Route = createFileRoute("/partner")({
   head: () => ({
@@ -36,7 +37,6 @@ function PartnerPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitting(true);
 
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -51,6 +51,13 @@ function PartnerPage() {
       message: formData.get("message") as string,
     };
 
+    const validation = partnerApplicationSchema.safeParse(payload);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
+    setSubmitting(true);
     try {
       await submitPartnerApplication({ data: payload });
       toast.success("Application received. Our team will be in touch.");
