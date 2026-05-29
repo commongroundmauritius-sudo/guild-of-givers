@@ -49,20 +49,32 @@ function PartnerPage() {
       message: formData.get("message") as string,
     };
 
-    try {
-      await submitPartnerApplication({ data: payload });
-      toast.success("Application received. Our team will be in touch.");
-      (e.target as HTMLFormElement).reset();
-    } catch (error: unknown) {
-      console.error("Submission error:", error);
-      toast.error(
-        (error as Error).message || "Failed to submit application. Please try again.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
+   try {
+    t(true);
 
+    await tge({
+        data: i
+    });
+
+    Ke.success("Application received. Our team will be in touch.");
+
+    n.target.reset();
+
+} catch (s) {
+    console.error("Submission error:", s);
+
+    let message =
+        "Failed to submit application. Please try again.";
+
+    if (s instanceof Error) {
+        message = s.message;
+    }
+
+    Ke.error(message);
+
+} finally {
+    t(false);
+};
   return (
     <SiteLayout>
       <section>
