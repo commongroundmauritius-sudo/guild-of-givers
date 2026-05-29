@@ -45,7 +45,7 @@ BEGIN
         WHERE conrelid = 'public.initiatives'::regclass
         AND contype = 'u'
         AND (
-            SELECT array_agg(a.attname ORDER BY x.n)
+            SELECT array_agg(a.attname::text ORDER BY x.n)
             FROM unnest(conkey) WITH ORDINALITY AS x(attnum, n)
             JOIN pg_attribute a ON a.attnum = x.attnum AND a.attrelid = conrelid
         ) = ARRAY['slug']
