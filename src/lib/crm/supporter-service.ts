@@ -14,7 +14,7 @@ export const supporterService = {
    */
   async transitionStage(profileId: string, stage: LifecycleStage) {
     const { error } = await supabase
-      .from('profiles')
+      .from('profiles' as any)
       .update({ lifecycle_stage: stage })
       .eq('id', profileId);
 
@@ -27,9 +27,9 @@ export const supporterService = {
   /**
    * Fetch a unified supporter profile
    */
-  async getSupporterProfile(profileId: string) {
+  async getSupporterProfile(profileId: string): Promise<any> {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('profiles' as any)
       .select(`
         *,
         organizations(organization_name, logo_url),
@@ -40,7 +40,7 @@ export const supporterService = {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as any;
   },
 
   /**
@@ -70,7 +70,7 @@ export const supporterService = {
     const merged = [
       ...(activitiesRes.data || []).map(a => ({ ...a, source_table: 'activities' })),
       ...(eventsRes.data || []).map(e => ({ ...e, source_table: 'initiative_events' }))
-    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    ].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
     return merged.slice(0, limit);
   },

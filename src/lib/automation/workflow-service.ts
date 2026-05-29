@@ -46,7 +46,7 @@ export const workflowService = {
       channels: ['email', 'in_app'],
       templateKey: step.templateKey,
       payload: { ...payload, step_id: step.id },
-      recipientEmail: profile?.email
+      recipientEmail: profile?.email ?? undefined
     });
   },
 

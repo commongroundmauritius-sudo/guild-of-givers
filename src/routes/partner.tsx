@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { toast } from "sonner";
 import { submitPartnerApplication } from "@/lib/partner/actions";
@@ -34,16 +34,20 @@ const ORG_TYPES = [
 function PartnerPage() {
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const payload = {
-      organization_name: (formData.get("organization_name") as string).trim(),
-      organization_type: (formData.get("organization_type") as string).trim(),
-      registration_number: (formData.get("registration_number") as string).trim(),
-      email: (formData.get("email") as string).trim(),
-      message: (formData.get("message") as string).trim(),
+      organization_name: formData.get("organization_name") as string,
+      organization_type: formData.get("organization_type") as string,
+      registration_number: formData.get("registration_number") as string,
+      contact_name: formData.get("contact_name") as string,
+      email: formData.get("email") as string,
+      phone: formData.get("phone") as string,
+      website: formData.get("website") as string,
+      message: formData.get("message") as string,
     };
 
     const validation = partnerApplicationSchema.safeParse(payload);
@@ -56,10 +60,10 @@ function PartnerPage() {
     try {
       await submitPartnerApplication({ data: payload });
       toast.success("Application received. Our team will be in touch.");
-      (e.target as HTMLFormElement).reset();
-    } catch (error: any) {
+      form.reset();
+    } catch (error) {
       console.error("Submission error:", error);
-      toast.error(error.message || "Failed to submit application. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to submit application. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -98,9 +102,14 @@ function PartnerPage() {
             className="mt-10 space-y-5 rounded-3xl border border-border/60 bg-card p-8"
             onSubmit={handleSubmit}
           >
-            <Field label="Organization name" required>
-              <input required name="organization_name" className={inputCls} />
-            </Field>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label="Organization name" required>
+                <input required name="organization_name" className={inputCls} />
+              </Field>
+              <Field label="Registration number" required>
+                <input required name="registration_number" className={inputCls} />
+              </Field>
+            </div>
 
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Organization type" required>
@@ -113,14 +122,29 @@ function PartnerPage() {
                   ))}
                 </select>
               </Field>
-              <Field label="Registration number" required>
-                <input required name="registration_number" className={inputCls} />
+              <Field label="Website URL">
+                <input type="url" name="website" placeholder="https://..." className={inputCls} />
               </Field>
             </div>
 
-            <Field label="Email address" required>
-              <input required type="email" name="email" className={inputCls} />
-            </Field>
+            <div className="border-t border-border/40 pt-5 mt-5">
+              <h3 className="text-sm font-bold text-primary uppercase tracking-wider">
+                Contact Person
+              </h3>
+              <div className="grid gap-5 sm:grid-cols-2 mt-4">
+                <Field label="Full name" required>
+                  <input required name="contact_name" className={inputCls} />
+                </Field>
+                <Field label="Email address" required>
+                  <input required type="email" name="email" className={inputCls} />
+                </Field>
+              </div>
+              <div className="mt-5">
+                <Field label="Phone number">
+                  <input type="tel" name="phone" className={inputCls} />
+                </Field>
+              </div>
+            </div>
 
             <Field label="Write to us" required>
               <textarea
@@ -129,6 +153,7 @@ function PartnerPage() {
                 maxLength={2000}
                 rows={6}
                 name="message"
+                placeholder="Tell us about your mission and what you hope to achieve..."
                 className={inputCls}
               />
               <p className="mt-1 text-xs text-muted-foreground">
@@ -142,6 +167,7 @@ function PartnerPage() {
 
             <button
               disabled={submitting}
+              type="submit"
               className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
             >
               {submitting ? "Submitting…" : "Submit application"}
@@ -163,7 +189,7 @@ function Field({
 }: {
   label: string;
   required?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <label className="block">
