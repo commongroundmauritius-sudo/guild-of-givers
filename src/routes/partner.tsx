@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { toast } from "sonner";
 import { submitPartnerApplication } from "@/lib/partner/actions";
+import { partnerApplicationSchema } from "@/lib/security/validators";
 
 export const Route = createFileRoute("/partner")({
   head: () => ({
@@ -35,17 +36,23 @@ function PartnerPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
     const payload = {
-      organization_name: formData.get("organization_name") as string,
-      organization_type: formData.get("organization_type") as string,
-      registration_number: formData.get("registration_number") as string,
-      email: formData.get("email") as string,
-      message: formData.get("message") as string,
+      organization_name: (formData.get("organization_name") as string).trim(),
+      organization_type: (formData.get("organization_type") as string).trim(),
+      registration_number: (formData.get("registration_number") as string).trim(),
+      email: (formData.get("email") as string).trim(),
+      message: (formData.get("message") as string).trim(),
     };
 
+    const validation = partnerApplicationSchema.safeParse(payload);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
+    setSubmitting(true);
     try {
       await submitPartnerApplication({ data: payload });
       toast.success("Application received. Our team will be in touch.");

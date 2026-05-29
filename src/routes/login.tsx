@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { emailSchema } from "@/lib/security/validators";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -23,6 +24,14 @@ function LoginPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Client-side validation
+    const validation = emailSchema.safeParse(email);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
     if (submitting) return;
     setSubmitting(true);
     const { error } = await signIn(email.trim().toLowerCase(), password);

@@ -2,9 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { paymentService } from "./payments/service";
 import { activityService } from "./activities/activity-service";
+import { z } from "zod";
+import { uuidSchema, emailSchema, nameSchema } from "./security/validators";
 
 export const toggleInitiativePreference = createServerFn({ method: "POST" })
-  .inputValidator((data: { userId: string; initiativeId: string; selected: boolean }) => data)
+  .inputValidator(z.object({
+    userId: uuidSchema,
+    initiativeId: uuidSchema,
+    selected: z.boolean()
+  }))
   .handler(async ({ data }) => {
     const { userId, initiativeId, selected } = data;
     if (selected) {
@@ -21,12 +27,16 @@ export const toggleInitiativePreference = createServerFn({ method: "POST" })
   });
 
 export const createLead = createServerFn({ method: "POST" })
-  .inputValidator(
-    (data: {
-      email: string; fullName: string; phone?: string; amount: number; coversFees: boolean;
-      status?: string; sourceInitiativeId?: string | null; attribution?: any;
-    }) => data,
-  )
+  .inputValidator(z.object({
+    email: emailSchema,
+    fullName: nameSchema,
+    phone: z.string().max(20).optional().nullable(),
+    amount: z.number().positive(),
+    coversFees: z.boolean(),
+    status: z.string().optional(),
+    sourceInitiativeId: uuidSchema.optional().nullable(),
+    attribution: z.any().optional(),
+  }))
   .handler(async ({ data }) => {
     const { email, fullName, phone, amount, coversFees, status = "started", sourceInitiativeId, attribution } = data;
     const trimmedEmail = email.trim().toLowerCase();
@@ -53,9 +63,11 @@ export const createLead = createServerFn({ method: "POST" })
   });
 
 export const convertLead = createServerFn({ method: "POST" })
-  .inputValidator(
-    (data: { email: string; status?: string; sourceInitiativeId?: string | null }) => data,
-  )
+  .inputValidator(z.object({
+    email: emailSchema,
+    status: z.string().optional(),
+    sourceInitiativeId: uuidSchema.optional().nullable(),
+  }))
   .handler(async ({ data }) => {
     const { email, status = "converted", sourceInitiativeId } = data;
     const query = supabase.from("leads").update({
@@ -68,9 +80,13 @@ export const convertLead = createServerFn({ method: "POST" })
   });
 
 export const startMembershipSubscription = createServerFn({ method: "POST" })
-  .inputValidator(
-    (data: { userId: string; amount: number; billingDate: number; coversFees: boolean; priorities: string[]; }) => data,
-  )
+  .inputValidator(z.object({
+    userId: uuidSchema,
+    amount: z.number().positive(),
+    billingDate: z.number().int().min(1).max(31),
+    coversFees: z.boolean(),
+    priorities: z.array(uuidSchema),
+  }))
   .handler(async ({ data }) => {
     const result = await paymentService.subscribe({
       userId: data.userId, amount: data.amount, billingDate: data.billingDate, coversFees: data.coversFees, priorityInitiatives: data.priorities,

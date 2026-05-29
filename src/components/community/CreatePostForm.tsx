@@ -10,6 +10,8 @@ import { ImagePlus, X, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { communityPostSchema } from "@/lib/security/validators";
+import { validateFile, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "@/lib/security/fileValidation";
 
 export function CreatePostForm() {
   const { user, role } = useAuth();
@@ -37,13 +39,9 @@ export function CreatePostForm() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const validTypes = ["image/jpeg", "image/jpg", "image/webp"];
-      if (!validTypes.includes(file.type)) {
-        toast.error("Only JPG, JPEG, and WEBP formats are allowed");
-        return;
-      }
-      if (file.size > 3 * 1024 * 1024) {
-        toast.error("Image size must be less than 3MB");
+      const validation = validateFile(file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
+      if (!validation.isValid) {
+        toast.error(validation.error);
         return;
       }
       setImage(file);
@@ -59,7 +57,18 @@ export function CreatePostForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!title.trim() || !content.trim()) return;
+
+    const postData = {
+      title,
+      content,
+      initiative_id: initiativeId === "none" || !initiativeId ? null : initiativeId,
+    };
+
+    const validation = communityPostSchema.safeParse(postData);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
 
     setUploading(true);
     try {
@@ -70,10 +79,8 @@ export function CreatePostForm() {
 
       await mutation.mutateAsync({
         user_id: user.id,
-        title,
-        content,
+        ...postData,
         image_url: imageUrl,
-        initiative_id: initiativeId === "none" ? null : initiativeId,
       });
 
       toast.success("Post submitted!");
@@ -148,7 +155,7 @@ export function CreatePostForm() {
               type="file"
               id="post-image"
               className="hidden"
-              accept="image/jpeg,image/jpg,image/webp"
+              accept={ALLOWED_IMAGE_TYPES.join(",")}
               onChange={handleImageChange}
             />
             <label htmlFor="post-image">

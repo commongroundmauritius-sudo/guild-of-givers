@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import imageCompression from "browser-image-compression";
+import { validateFile, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "./security/fileValidation";
 
 export type Post = Database["public"]["Tables"]["community_posts"]["Row"] & {
   profiles: {
@@ -26,6 +27,12 @@ export type Comment = Database["public"]["Tables"]["post_comments"]["Row"] & {
 };
 
 export async function compressAndUploadImage(file: File, bucket: string, path: string) {
+  // Defensive check
+  const validation = validateFile(file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
+  if (!validation.isValid) {
+    throw new Error(validation.error);
+  }
+
   const options = {
     maxSizeMB: 3,
     maxWidthOrHeight: 1200,
@@ -34,7 +41,9 @@ export async function compressAndUploadImage(file: File, bucket: string, path: s
 
   try {
     const compressedFile = await imageCompression(file, options);
-    const fileName = `${path}/${Date.now()}-${file.name}`;
+    // Sanitize filename by removing potentially dangerous characters
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const fileName = `${path}/${Date.now()}-${safeFileName}`;
 
     const { data, error } = await supabase.storage.from(bucket).upload(fileName, compressedFile);
 

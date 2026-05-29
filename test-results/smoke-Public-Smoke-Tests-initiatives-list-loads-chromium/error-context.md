@@ -12,23 +12,10 @@
 # Error details
 
 ```
-Error: expect(locator).toContainText(expected) failed
-
-Locator: locator('h1')
-Expected pattern: /Vetted Initiatives/i
-Received string:  "Find Your Impact Focus."
-Timeout: 5000ms
-
+Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8788/initiatives
 Call log:
-  - Expect "toContainText" with timeout 5000ms
-  - waiting for locator('h1')
-    14 × locator resolved to <h1 class="font-display text-5xl font-bold text-primary sm:text-6xl lg:text-7xl">…</h1>
-       - unexpected value "Find Your Impact Focus."
+  - navigating to "http://localhost:8788/initiatives", waiting until "load"
 
-```
-
-```yaml
-- heading "Find Your Impact Focus." [level=1]
 ```
 
 # Test source
@@ -43,9 +30,9 @@ Call log:
   7  |   });
   8  |
   9  |   test('initiatives list loads', async ({ page }) => {
-  10 |     await page.goto('/initiatives');
-> 11 |     await expect(page.locator('h1')).toContainText(/Vetted Initiatives/i);
-     |                                      ^ Error: expect(locator).toContainText(expected) failed
+> 10 |     await page.goto('/initiatives');
+     |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8788/initiatives
+  11 |     await expect(page.locator('h1')).toContainText(/Vetted Initiatives/i);
   12 |   });
   13 |
   14 |   test('signup page renders first step', async ({ page }) => {
