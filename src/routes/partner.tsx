@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { toast } from "sonner";
 import { submitPartnerApplication } from "@/lib/partner/actions";
@@ -33,11 +33,12 @@ const ORG_TYPES = [
 function PartnerPage() {
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const payload = {
       organization_name: formData.get("organization_name") as string,
       organization_type: formData.get("organization_type") as string,
@@ -49,32 +50,18 @@ function PartnerPage() {
       message: formData.get("message") as string,
     };
 
-   try {
-    t(true);
-
-    await tge({
-        data: i
-    });
-
-    Ke.success("Application received. Our team will be in touch.");
-
-    n.target.reset();
-
-} catch (s) {
-    console.error("Submission error:", s);
-
-    let message =
-        "Failed to submit application. Please try again.";
-
-    if (s instanceof Error) {
-        message = s.message;
+    try {
+      await submitPartnerApplication({ data: payload });
+      toast.success("Application received. Our team will be in touch.");
+      form.reset();
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to submit application. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
+  };
 
-    Ke.error(message);
-
-} finally {
-    t(false);
-};
   return (
     <SiteLayout>
       <section>
@@ -195,7 +182,7 @@ function Field({
 }: {
   label: string;
   required?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <label className="block">

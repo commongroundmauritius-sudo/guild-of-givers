@@ -55,17 +55,19 @@ export function useFinancialTrace() {
 
         const group = groups[pId];
 
-        if (event.event_type === 'payment_received') {
+        const eventType = event.event_type as string;
+
+        if (eventType === 'payment_received') {
           group.grossAmount = Number(event.amount_mur);
-        } else if (event.event_type === 'transaction_fee') {
+        } else if (eventType === 'transaction_fee') {
           group.feeAmount = Number(event.amount_mur);
-        } else if (event.event_type === 'platform_share') {
+        } else if (eventType === 'platform_share') {
           group.platformAmount = Number(event.amount_mur);
-        } else if (event.event_type === 'initiative_allocation' || event.event_type === 'impact_pool') {
+        } else if (eventType === 'initiative_allocation' || eventType === 'allocation' || eventType === 'impact_pool') {
           group.allocations.push({
-            initiativeName: (event.initiatives as any)?.title || (event.event_type === 'impact_pool' ? 'Impact Pool' : 'Unknown'),
+            initiativeName: (event.initiatives as any)?.title || (eventType === 'impact_pool' ? 'Impact Pool' : 'Unknown'),
             amount: Number(event.amount_mur),
-            type: event.event_type === 'impact_pool' ? 'impact_pool' : 'allocation',
+            type: eventType === 'impact_pool' ? 'impact_pool' : 'allocation',
           });
         }
       });

@@ -24,7 +24,7 @@ export const softDeleteApplication = createServerFn({ method: "POST" })
   .inputValidator((data: { applicationId: string; actorId: string }) => data)
   .handler(async ({ data }) => {
     const { error } = await supabase
-      .from('partner_applications')
+      .from('partner_applications' as any)
       .update({
         is_deleted: true,
         deleted_at: new Date().toISOString()
