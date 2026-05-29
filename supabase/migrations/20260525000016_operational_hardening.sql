@@ -6,9 +6,14 @@ ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMPTZ DEFAULT now();
 
 -- Step 2: Ensure critical events are unique per user/initiative to prevent duplication
 -- We allow multiple page_views but only one member_acquired per user/initiative
-CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_member_acquisition
-ON public.initiative_events (user_id, initiative_id)
-WHERE event_type = 'member_acquired';
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'initiative_events') THEN
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_member_acquisition
+        ON public.initiative_events (user_id, initiative_id)
+        WHERE event_type = 'member_acquired';
+    END IF;
+END $$;
 
 -- Step 3: Implement robust reconciliation function
 CREATE OR REPLACE FUNCTION public.reconcile_initiative_analytics(p_initiative_id UUID)
@@ -19,18 +24,17 @@ DECLARE
     v_active INTEGER;
     v_inactive INTEGER;
 BEGIN
-    -- Count Views (deduplicated by session_id in this context if desired, but here we take raw count)
+    -- Count Views
     SELECT count(*) INTO v_views
     FROM public.initiative_events
     WHERE initiative_id = p_initiative_id AND event_type = 'page_view';
 
-    -- Count Members Acquired (historical total)
+    -- Count Members Acquired
     SELECT count(*) INTO v_acquired
     FROM public.initiative_events
     WHERE initiative_id = p_initiative_id AND event_type = 'member_acquired';
 
-    -- Count Active Supporters (from ground truth subscriptions)
-    -- We join profiles to reach the primary_initiative_id attribution
+    -- Count Active Supporters
     SELECT count(*) INTO v_active
     FROM public.subscriptions s
     JOIN public.profiles p ON s.user_id = p.id
