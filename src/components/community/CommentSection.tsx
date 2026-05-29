@@ -8,6 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { MessageSquare, Reply } from "lucide-react";
 import { toast } from "sonner";
+import { commentSchema } from "@/lib/security/validators";
 
 interface CommentSectionProps {
   postId: string;
@@ -25,7 +26,16 @@ export function CommentSection({ postId }: CommentSectionProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!newComment.trim()) return;
+
+    const validation = commentSchema.safeParse({
+      post_id: postId,
+      content: newComment,
+    });
+
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
 
     mutation.mutate(
       {

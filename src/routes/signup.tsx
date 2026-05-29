@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Check } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
-import { createLead, convertLead, startMembershipSubscription } from "@/lib/auth-actions";
+import { createLead, convertLead } from "@/lib/auth-actions";
 import { attributionService } from "@/lib/attribution-service";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { emailSchema, nameSchema } from "@/lib/security/validators";
+import { z } from "zod";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -49,6 +50,23 @@ function SignupPage() {
 
   const submitDetails = async () => {
     if (submitting) return;
+
+    // Client-side validation
+    const validation = z.object({
+      email: emailSchema,
+      fullName: nameSchema,
+      amount: z.number().positive(),
+    }).safeParse({
+      email,
+      fullName,
+      amount: finalAmount,
+    });
+
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const attribution = attributionService.getStored();
@@ -89,10 +107,16 @@ function SignupPage() {
 
   const submitAccount = async () => {
     if (submitting) return;
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
     setSubmitting(true);
     const { error } = await signUp(email.trim().toLowerCase(), password, {
-      full_name: fullName,
-      phone: phone,
+      full_name: fullName.trim(),
+      phone: phone.trim(),
       subscription_amount: finalAmount,
       covers_fees: coversFees,
       source_initiative_id: sourceInitiativeId,
@@ -148,7 +172,6 @@ function SignupPage() {
                       return (
                         <button
                           key={p}
-                          type="button"
                           onClick={() => {
                             setAmount(p);
                             setCustomAmount("");
