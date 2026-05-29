@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isUUID } from "@/lib/identifiers";
+import { isAdmin } from "@/lib/security/auth";
 
 export const crmService = {
   async addNote(params: {
@@ -14,6 +15,16 @@ export const crmService = {
     if (!isUUID(organizationId)) throw new Error("Invalid organization ID");
 
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    // Check if user has access to this organization
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
+    const userIsAdmin = await isAdmin(user.id);
+
+    if (!userIsAdmin && profile?.organization_id !== organizationId) {
+      throw new Error("Unauthorized access to organization CRM");
+    }
+
     const { data, error } = await supabase.from('crm_notes').insert({
       organization_id: organizationId,
       author_id: user?.id,
@@ -46,6 +57,16 @@ export const crmService = {
   async ensureTag(organizationId: string, name: string, color?: string) {
     if (!isUUID(organizationId)) throw new Error("Invalid organization ID");
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
+    const userIsAdmin = await isAdmin(user.id);
+
+    if (!userIsAdmin && profile?.organization_id !== organizationId) {
+      throw new Error("Unauthorized");
+    }
+
     const { data, error } = await supabase.from('crm_tags').upsert({
       organization_id: organizationId,
       name,
@@ -69,6 +90,16 @@ export const crmService = {
     priority?: 'low' | 'medium' | 'high' | 'urgent';
   }) {
     if (!isUUID(params.organizationId)) throw new Error("Invalid organization ID");
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
+    const userIsAdmin = await isAdmin(user.id);
+
+    if (!userIsAdmin && profile?.organization_id !== params.organizationId) {
+      throw new Error("Unauthorized");
+    }
 
     const { data, error } = await supabase
       .from('crm_tasks' as any)

@@ -14,9 +14,38 @@ function isWebhookPayload(payload: unknown): payload is WebhookPayload {
   return typeof payload === "object" && payload !== null;
 }
 
-export async function handlePaymentWebhook(payload: unknown): Promise<{ success: boolean }> {
+/**
+ * PRODUCTION NOTE: Webhook signature validation should be implemented here
+ * using the provider's specific signing secret.
+ */
+async function validateWebhookSignature(payload: unknown, signature?: string): Promise<boolean> {
+  // Mock implementation for development
+  if (import.meta.env.DEV) return true;
+
+  // In production, fetch secret from env and use crypto to verify
+  const secret = import.meta.env.VITE_PAYMENT_WEBHOOK_SECRET;
+  if (!secret) {
+    console.error("Critical: Webhook secret not configured in production");
+    return false;
+  }
+
+  // Placeholder for real verification logic
+  return !!signature;
+}
+
+export async function handlePaymentWebhook(
+  payload: unknown,
+  signature?: string
+): Promise<{ success: boolean }> {
   if (!isWebhookPayload(payload)) {
     console.error("Invalid webhook payload received");
+    return { success: false };
+  }
+
+  // 0. Validate authenticity
+  const isValid = await validateWebhookSignature(payload, signature);
+  if (!isValid) {
+    console.error("Invalid webhook signature rejected");
     return { success: false };
   }
 

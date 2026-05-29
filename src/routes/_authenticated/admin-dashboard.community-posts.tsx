@@ -1,9 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Post } from "@/lib/community";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,7 +10,8 @@ import { CheckCircle, XCircle, Trash2, MessageCircle, Heart, Eye } from "lucide-
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { updatePostStatus, deletePost } from "@/lib/security/auth-actions";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/community-posts")({
   component: AdminPostsPage,
@@ -24,7 +24,7 @@ function AdminPostsPage() {
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["admin-posts", filter],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       let query = supabase
         .from("community_posts")
@@ -43,28 +43,29 @@ function AdminPostsPage() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("community_posts").update({ status }).eq("id", id);
-      if (error) throw error;
+    mutationFn: async ({ id, status }: { id: string; status: any }) => {
+      await updatePostStatus({ data: { id, status } });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
       toast.success("Post status updated");
     },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("community_posts")
-        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
-        .eq("id", id);
-      if (error) throw error;
+      await deletePost({ data: { id } });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
       toast.success("Post deleted");
     },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
   });
 
   return (
@@ -172,5 +173,3 @@ function AdminPostsPage() {
     </SiteLayout>
   );
 }
-
-import { Badge } from "@/components/ui/badge";

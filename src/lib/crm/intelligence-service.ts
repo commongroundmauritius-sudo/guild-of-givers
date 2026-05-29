@@ -4,9 +4,9 @@ export const intelligenceService = {
   /**
    * Fetch latest health score for an initiative
    */
-  async getLatestHealthScore(initiativeId: string): Promise<any | null> {
+  async getLatestHealthScore(initiativeId: string) {
     const { data, error } = await supabase
-      .from('initiative_health_scores' as any)
+      .from('initiative_health_scores')
       .select('*')
       .eq('initiative_id', initiativeId)
       .order('calculated_at', { ascending: false })
@@ -14,28 +14,28 @@ export const intelligenceService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data as any | null;
+    return data;
   },
 
   /**
    * Fetch health history for trends
    */
-  async getHealthHistory(initiativeId: string, limit = 30): Promise<any[]> {
+  async getHealthHistory(initiativeId: string, limit = 30) {
     const { data, error } = await supabase
-      .from('initiative_health_scores' as any)
+      .from('initiative_health_scores')
       .select('*')
       .eq('initiative_id', initiativeId)
       .order('calculated_at', { ascending: true })
       .limit(limit);
 
     if (error) throw error;
-    return (data as any[]) || [];
+    return data;
   },
 
   /**
    * Fetch latest engagement score for a supporter
    */
-  async getLatestEngagementScore(userId: string): Promise<any | null> {
+  async getLatestEngagementScore(userId: string) {
     const { data, error } = await supabase
       .from('supporter_engagement_scores' as any)
       .select('*')
@@ -45,13 +45,13 @@ export const intelligenceService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data as any | null;
+    return data;
   },
 
   /**
    * Fetch engagement history for a supporter
    */
-  async getEngagementHistory(userId: string, limit = 12): Promise<any[]> {
+  async getEngagementHistory(userId: string, limit = 12) {
     const { data, error } = await supabase
       .from('supporter_engagement_scores' as any)
       .select('*')
@@ -60,7 +60,7 @@ export const intelligenceService = {
       .limit(limit);
 
     if (error) throw error;
-    return (data as any[]) || [];
+    return data;
   },
 
   /**
@@ -90,16 +90,14 @@ export const intelligenceService = {
    * Fetch trending initiatives based on momentum
    */
   async getTrendingInitiatives(limit = 6) {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .rpc('get_trending_initiatives', { p_limit: limit });
 
     if (error) throw error;
 
     // Hydrate with initiative details
-    const rows = (data as unknown as any[]) || [];
-
-    if (rows.length > 0) {
-      const ids = rows.map((d: any) => d.initiative_id);
+    if (data && (data as any[]).length > 0) {
+      const ids = (data as any[]).map((d: any) => d.initiative_id);
       const { data: initiatives, error: initError } = await supabase
         .from('initiatives')
         .select('*, organizations(organization_name, logo_url)')
@@ -108,7 +106,7 @@ export const intelligenceService = {
       if (initError) throw initError;
 
       // Maintain trending order
-      return rows.map((d: any) => ({
+      return (data as any[]).map((d: any) => ({
         ...d,
         initiative: initiatives?.find(i => i.id === d.initiative_id)
       }));

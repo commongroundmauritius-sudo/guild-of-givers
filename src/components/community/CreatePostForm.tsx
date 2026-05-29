@@ -36,10 +36,10 @@ export function CreatePostForm() {
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const validation = validateFile(file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
+      const validation = await validateFile(file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
       if (!validation.isValid) {
         toast.error(validation.error);
         return;
@@ -51,6 +51,7 @@ export function CreatePostForm() {
 
   const removeImage = () => {
     setImage(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
   };
 
@@ -87,6 +88,7 @@ export function CreatePostForm() {
       setTitle("");
       setContent("");
       setImage(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
       setInitiativeId(null);
     } catch (error) {

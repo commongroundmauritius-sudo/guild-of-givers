@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pin, Trash2, Edit, Save, X, Megaphone } from "lucide-react";
+import { Plus, Pin, Trash2, Edit, Megaphone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { updateAnnouncement, deleteAnnouncement } from "@/lib/security/auth-actions";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/announcements")({
   component: AdminAnnouncementsPage,
@@ -24,7 +25,7 @@ function AdminAnnouncementsPage() {
 
   const { data: announcements = [], isLoading } = useQuery({
     queryKey: ["admin-announcements"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
@@ -38,26 +39,27 @@ function AdminAnnouncementsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("announcements")
-        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
-        .eq("id", id);
-      if (error) throw error;
+      await deleteAnnouncement({ data: { id } });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-announcements"] });
       toast.success("Announcement deleted");
     },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
   });
 
   const pinMutation = useMutation({
-    mutationFn: async ({ id, pinned }: { id: string; pinned: boolean }) => {
-      const { error } = await supabase.from("announcements").update({ pinned }).eq("id", id);
-      if (error) throw error;
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      await updateAnnouncement({ data: { id, data } });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-announcements"] });
     },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
   });
 
   return (
@@ -124,7 +126,10 @@ function AdminAnnouncementsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => pinMutation.mutate({ id: a.id, pinned: !a.pinned })}
+                            onClick={() => pinMutation.mutate({
+                              id: a.id,
+                              data: { title: a.title, content: a.content, category: a.category, pinned: !a.pinned }
+                            })}
                             title={a.pinned ? "Unpin" : "Pin to top"}
                           >
                             <Pin
@@ -183,16 +188,12 @@ function AnnouncementForm({
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
-      if (initialData) {
-        const { error } = await supabase
-          .from("announcements")
-          .update(data)
-          .eq("id", initialData.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("announcements").insert(data);
-        if (error) throw error;
-      }
+      await updateAnnouncement({
+        data: {
+          id: initialData?.id,
+          data
+        }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-announcements"] });
@@ -200,6 +201,9 @@ function AnnouncementForm({
       toast.success(initialData ? "Updated" : "Created");
       onSuccess();
     },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
   });
 
   return (

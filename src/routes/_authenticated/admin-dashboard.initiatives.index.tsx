@@ -12,7 +12,6 @@ import {
   Settings,
   Eye,
   Heart,
-  BarChart3,
   Globe,
   Loader2,
   Trash2
@@ -29,7 +28,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { getJoinedField } from "@/lib/utils";
+import { deleteInitiative } from "@/lib/security/auth-actions";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/")({
   component: AdminInitiativesPage,
@@ -42,7 +41,7 @@ function AdminInitiativesPage() {
 
   const { data: initiatives = [], isLoading } = useQuery({
     queryKey: ["admin-initiatives"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
@@ -55,8 +54,7 @@ function AdminInitiativesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("initiatives").delete().eq("id", id);
-      if (error) throw error;
+      await deleteInitiative({ data: { id } });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-initiatives"] });

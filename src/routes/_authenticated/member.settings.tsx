@@ -3,12 +3,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Settings as SettingsIcon, Save, User, Phone, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { updateProfile } from "@/lib/security/auth-actions";
 
 export const Route = createFileRoute("/_authenticated/member/settings")({
   component: MemberSettings,
@@ -29,23 +29,18 @@ function MemberSettings() {
       const trimmedAddress = address.trim();
       const ageInt = age ? parseInt(age) : null;
 
-      if (ageInt !== null && (ageInt < 13 || ageInt > 120)) {
-        throw new Error("Age must be between 13 and 120");
-      }
-
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: fullName,
-          phone,
-          address: trimmedAddress || null,
-          age: ageInt,
-          avatar_url: avatarUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id);
-
-      if (error) throw error;
+      await updateProfile({
+        data: {
+          userId: user.id,
+          data: {
+            full_name: fullName,
+            phone: phone || null,
+            address: trimmedAddress || null,
+            age: ageInt,
+            avatar_url: avatarUrl || null,
+          }
+        }
+      });
     },
     onSuccess: () => {
       toast.success("Profile updated successfully");

@@ -1,72 +1,62 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   Save,
-  EyeOff,
-  Image as ImageIcon,
-  Loader2,
   ShieldCheck,
-  Target
+  EyeOff,
+  Target,
+  Loader2,
 } from "lucide-react";
-import { CampaignLinkManager } from "@/components/dashboard/campaigns/CampaignLinkManager";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CampaignLinkManager } from "@/components/dashboard/campaigns/CampaignLinkManager";
+import { updateInitiative } from "@/lib/security/auth-actions";
 
-export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/$id/manage")({
-  component: InitiativeEditPage,
+export const Route = createFileRoute(
+  "/_authenticated/admin-dashboard/initiatives/$id/manage"
+)({
+  component: AdminInitiativeManagePage,
 });
 
-function InitiativeEditPage() {
+function AdminInitiativeManagePage() {
   const { id } = Route.useParams();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, role, loading: authLoading } = useAuth();
-
-  const { data: organizations } = useQuery({
-    queryKey: ["all-organizations"],
-    enabled: !!user && role === "admin",
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("organizations")
-        .select("id, organization_name")
-        .eq("status", "active")
-        .order("organization_name");
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const [formData, setFormData] = useState<any>({
     title: "",
-    caption: "",
-    summary: "",
     description: "",
-    content: "",
-    image_url: "",
-    gallery_urls: [],
+    summary: "",
+    caption: "",
+    status: "active",
+    category: "Environment",
     goal_amount_mur: 0,
     impact_pool_target: 0,
-    impact_pool_current: 0,
-    status: "active",
+    image_url: "",
     is_published: false,
-    organization_id: "",
-    category: "Environment"
   });
 
-  const { data: initiative, isLoading: initiativeLoading } = useQuery({
-    queryKey: ["initiative-edit", id],
-    enabled: !!id,
+  const { data: initiative, isLoading } = useQuery({
+    queryKey: ["admin-initiative", id],
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
@@ -82,61 +72,51 @@ function InitiativeEditPage() {
     if (initiative) {
       setFormData({
         title: initiative.title || "",
-        caption: initiative.caption || "",
-        summary: initiative.summary || "",
         description: initiative.description || "",
-        content: initiative.content || "",
-        image_url: initiative.image_url || "",
-        gallery_urls: initiative.gallery_urls || [],
+        summary: initiative.summary || "",
+        caption: initiative.caption || "",
+        status: initiative.status || "active",
+        category: initiative.category || "Environment",
         goal_amount_mur: initiative.goal_amount_mur || 0,
         impact_pool_target: initiative.impact_pool_target || 0,
-        impact_pool_current: initiative.impact_pool_current || 0,
-        status: initiative.status || "active",
+        image_url: initiative.image_url || "",
         is_published: initiative.is_published || false,
-        organization_id: initiative.organization_id || "",
-        category: initiative.category || "Environment"
       });
     }
   }, [initiative]);
 
   const updateMutation = useMutation({
-    mutationFn: async (updatedData: any) => {
-      const { error } = await supabase
-        .from("initiatives")
-        .update(updatedData)
-        .eq("id", id);
-      if (error) throw error;
+    mutationFn: async (data: any) => {
+      await updateInitiative({ data: { id, data } });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-initiative", id] });
       toast.success("Initiative updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["initiative-edit", id] });
     },
     onError: (error: Error) => {
-      toast.error("Failed to update initiative: " + error.message);
-    },
+      toast.error(error.message);
+    }
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    setFormData((prev: any) => ({
-      ...prev,
-      [name]: type === "number" ? Number(value) : value,
-    }));
-  };
-
-  const handleCheckboxChange = (name: string, value: any) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCheckboxChange = (name: string, checked: any) => {
+    setFormData((prev: any) => ({ ...prev, [name]: checked }));
+  };
+
+  const handleSubmit = () => {
     updateMutation.mutate(formData);
   };
 
-  if (authLoading || initiativeLoading) {
+  if (isLoading) {
     return (
       <SiteLayout>
-        <div className="flex min-h-screen items-center justify-center">
+        <div className="flex h-screen items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </SiteLayout>
@@ -145,12 +125,12 @@ function InitiativeEditPage() {
 
   return (
     <SiteLayout>
-      <section className="bg-muted/30 py-16">
+      <section className="bg-muted/30 min-h-screen py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-12 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <Link
-              to="/admin-dashboard/initiatives"
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-primary"
+              to="/admin-dashboard"
+              className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition"
             >
               <ArrowLeft className="h-4 w-4" /> Back to Initiatives
             </Link>

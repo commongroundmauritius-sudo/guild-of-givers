@@ -4,23 +4,26 @@ import { paymentService } from "./payments/service";
 import { activityService } from "./activities/activity-service";
 import { z } from "zod";
 import { uuidSchema, emailSchema, nameSchema } from "./security/validators";
+import { ensureAuthenticated } from "./security/auth";
+import { rateLimit } from "./security/rateLimit";
 
 export const toggleInitiativePreference = createServerFn({ method: "POST" })
   .inputValidator(z.object({
-    userId: uuidSchema,
     initiativeId: uuidSchema,
     selected: z.boolean()
   }))
   .handler(async ({ data }) => {
-    const { userId, initiativeId, selected } = data;
+    const user = await ensureAuthenticated();
+    const { initiativeId, selected } = data;
+
     if (selected) {
       const { error } = await supabase.from("member_preferences").upsert(
-        { user_id: userId, initiative_id: initiativeId },
+        { user_id: user.id, initiative_id: initiativeId },
         { onConflict: "user_id, initiative_id" },
       );
       if (error) throw new Error("Failed to add preference");
     } else {
-      const { error } = await supabase.from("member_preferences").delete().eq("user_id", userId).eq("initiative_id", initiativeId);
+      const { error } = await supabase.from("member_preferences").delete().eq("user_id", user.id).eq("initiative_id", initiativeId);
       if (error) throw new Error("Failed to remove preference");
     }
     return { success: true };
@@ -39,6 +42,10 @@ export const createLead = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { email, fullName, phone, amount, coversFees, status = "started", sourceInitiativeId, attribution } = data;
+
+    // Rate limit lead creation to prevent spam
+    await rateLimit(email, 'create_lead', { windowMs: 3600000, max: 5 });
+
     const trimmedEmail = email.trim().toLowerCase();
     let campaignLinkId = null;
     if (attribution?.tracking_code) {
@@ -70,29 +77,36 @@ export const convertLead = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { email, status = "converted", sourceInitiativeId } = data;
-    const query = supabase.from("leads").update({
-      status: status, lead_stage: status === "converted" ? 'Engaged Supporter' : 'Visitor',
-      last_activity_at: new Date().toISOString(), converted_at: status === "converted" ? new Date().toISOString() : undefined,
-    }).eq("email", email.trim().toLowerCase()).neq("status", status);
-    if (sourceInitiativeId) query.eq("source_initiative_id", sourceInitiativeId);
-    await query;
+
+    // Use the secure RPC instead of direct update to avoid permissive RLS
+    const { error } = await supabase.rpc('secure_convert_lead', {
+        p_email: email,
+        p_status: status,
+        p_initiative_id: sourceInitiativeId
+    });
+
+    if (error) throw error;
     return { success: true };
   });
 
 export const startMembershipSubscription = createServerFn({ method: "POST" })
   .inputValidator(z.object({
-    userId: uuidSchema,
     amount: z.number().positive(),
     billingDate: z.number().int().min(1).max(31),
     coversFees: z.boolean(),
     priorities: z.array(uuidSchema),
   }))
   .handler(async ({ data }) => {
+    const user = await ensureAuthenticated();
+
+    // Rate limit subscription attempts
+    await rateLimit(user.id, 'start_subscription', { windowMs: 3600000, max: 3 });
+
     const result = await paymentService.subscribe({
-      userId: data.userId, amount: data.amount, billingDate: data.billingDate, coversFees: data.coversFees, priorityInitiatives: data.priorities,
+      userId: user.id, amount: data.amount, billingDate: data.billingDate, coversFees: data.coversFees, priorityInitiatives: data.priorities,
     });
     const { error } = await supabase.from("subscriptions").upsert({
-      user_id: data.userId, amount_mur: data.amount, status: result.status as any, peach_subscription_id: result.subscriptionId, next_billing_date: result.nextBillingDate, covers_fees: data.coversFees,
+      user_id: user.id, amount_mur: data.amount, status: result.status as any, peach_subscription_id: result.subscriptionId, next_billing_date: result.nextBillingDate, covers_fees: data.coversFees,
     });
     if (error) throw error;
     return result;

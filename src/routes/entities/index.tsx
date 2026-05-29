@@ -26,7 +26,7 @@ function EntitiesListPage() {
     <SiteLayout>
       <div className="mx-auto max-w-7xl px-4 py-20">
         <h1 className="font-display text-5xl font-bold">Partner Organizations</h1>
-        <p className="mt-4 text-xl text-muted-foreground">The incredible Organizations and charity partners making an impact on the ground.</p>
+        <p className="mt-4 text-xl text-muted-foreground">The incredible NGOs and charities making an impact on the ground.</p>
 
         <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {isLoading ? [1,2,3].map(n => <Skeleton key={n} className="h-48 rounded-3xl" />) :
