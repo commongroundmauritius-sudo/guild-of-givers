@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { toast } from "sonner";
+import { submitPartnerApplication } from "@/lib/partner/actions";
 
 export const Route = createFileRoute("/partner")({
   head: () => ({
@@ -16,8 +17,46 @@ export const Route = createFileRoute("/partner")({
   component: PartnerPage,
 });
 
+const ORG_TYPES = [
+  "NGO / Nonprofit",
+  "Social Enterprise",
+  "Community Group",
+  "Corporate / Business",
+  "Educational Institution",
+  "Government / Public Sector",
+  "Foundation",
+  "Religious Organization",
+  "Volunteer Network",
+  "Other",
+];
+
 function PartnerPage() {
   const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    const formData = new FormData(e.currentTarget);
+    const payload = {
+      organization_name: formData.get("organization_name") as string,
+      organization_type: formData.get("organization_type") as string,
+      registration_number: formData.get("registration_number") as string,
+      email: formData.get("email") as string,
+      message: formData.get("message") as string,
+    };
+
+    try {
+      await submitPartnerApplication({ data: payload });
+      toast.success("Application received. Our team will be in touch.");
+      (e.target as HTMLFormElement).reset();
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      toast.error(error.message || "Failed to submit application. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <SiteLayout>
@@ -50,25 +89,32 @@ function PartnerPage() {
 
           <form
             className="mt-10 space-y-5 rounded-3xl border border-border/60 bg-card p-8"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setSubmitting(true);
-              setTimeout(() => {
-                setSubmitting(false);
-                toast.success("Application received. Our team will be in touch.");
-                (e.target as HTMLFormElement).reset();
-              }, 600);
-            }}
+            onSubmit={handleSubmit}
           >
             <Field label="Organization name" required>
-              <input required name="organization" className={inputCls} />
+              <input required name="organization_name" className={inputCls} />
             </Field>
-            <Field label="Registration number" required>
-              <input required name="reg" className={inputCls} />
-            </Field>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label="Organization type" required>
+                <select required name="organization_type" className={inputCls}>
+                  <option value="">Select type...</option>
+                  {ORG_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Registration number" required>
+                <input required name="registration_number" className={inputCls} />
+              </Field>
+            </div>
+
             <Field label="Email address" required>
               <input required type="email" name="email" className={inputCls} />
             </Field>
+
             <Field label="Write to us" required>
               <textarea
                 required
@@ -82,9 +128,11 @@ function PartnerPage() {
                 Minimum 20 characters — max 2000.
               </p>
             </Field>
+
             <p className="text-xs text-muted-foreground">
               By submitting, you agree to be contacted by the CommonGround team.
             </p>
+
             <button
               disabled={submitting}
               className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60 sm:w-auto"

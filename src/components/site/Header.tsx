@@ -24,7 +24,7 @@ import {
   MessageCircle,
   TrendingUp,
   ChevronDown,
-  Users, Shield
+  Users, Shield, MessageSquare
 } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
@@ -42,6 +42,7 @@ const ADMIN_NAV = [
   { label: "Initiatives", to: "/admin-dashboard/initiatives", icon: Heart },
   { label: "Members", to: "/admin-dashboard/members", icon: User },
   { label: "Leads", to: "/admin-dashboard/leads", icon: Users },
+  { label: "Partner Apps", to: "/admin-dashboard/partner-applications", icon: MessageSquare },
   { label: "Finances", to: "/admin-dashboard/finances", icon: TrendingUp },
 ] as const;
 
@@ -66,7 +67,7 @@ export function Header() {
   const navigate = useNavigate();
 
   const navItems =
-    role === "admin"
+     (role === "admin" || role === "super_admin")
       ? ADMIN_NAV
       : role === "organization"
         ? Organization_NAV
@@ -142,7 +143,7 @@ export function Header() {
                       <AvatarImage src={profile?.avatar_url || ""} alt={displayName} />
                       <AvatarFallback
                         className={
-                          role === "admin"
+                           (role === "admin" || role === "super_admin")
                             ? "bg-amber-100 text-amber-700"
                             : "bg-teal-100 text-teal-700"
                         }
@@ -161,7 +162,7 @@ export function Header() {
                       {role && (
                         <span
                           className={`mt-1 inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                            role === "admin"
+                             (role === "admin" || role === "super_admin")
                               ? "bg-amber-100 text-amber-700"
                               : "bg-teal-100 text-teal-700"
                           }`}
@@ -175,7 +176,7 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link
                       to={
-                        role === "admin"
+                         (role === "admin" || role === "super_admin")
                           ? "/admin-dashboard"
                           : role === "organization"
                             ? "/organization"
@@ -187,13 +188,13 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to={role === "admin" ? "/admin-dashboard/profile" : "/member/profile"}>
+                    <Link to={ (role === "admin" || role === "super_admin")  ? "/admin-dashboard/profile" : "/member/profile"}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to={role === "admin" ? "/admin-dashboard/settings" : "/member/settings"}>
+                    <Link to={ (role === "admin" || role === "super_admin")  ? "/admin-dashboard/settings" : "/member/settings"}>
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Settings</span>
                     </Link>
@@ -239,7 +240,7 @@ export function Header() {
               <>
                 <div className="my-2 h-px bg-border/60" />
                 <Link
-                  to={role === "admin" ? "/admin-dashboard/profile" : "/member/profile"}
+                  to={ (role === "admin" || role === "super_admin")  ? "/admin-dashboard/profile" : "/member/profile"}
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-foreground/80 hover:bg-muted"
                 >
@@ -247,7 +248,7 @@ export function Header() {
                   Profile
                 </Link>
                 <Link
-                  to={role === "admin" ? "/admin-dashboard/settings" : "/member/settings"}
+                  to={ (role === "admin" || role === "super_admin")  ? "/admin-dashboard/settings" : "/member/settings"}
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-foreground/80 hover:bg-muted"
                 >

@@ -35,6 +35,7 @@ import { Route as AuthenticatedCommunityHubPostIdRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminDashboardVerifyPaymentsRouteImport } from './routes/_authenticated/admin-dashboard.verify-payments'
 import { Route as AuthenticatedAdminDashboardSettingsRouteImport } from './routes/_authenticated/admin-dashboard.settings'
 import { Route as AuthenticatedAdminDashboardProfileRouteImport } from './routes/_authenticated/admin-dashboard.profile'
+import { Route as AuthenticatedAdminDashboardPartnerApplicationsRouteImport } from './routes/_authenticated/admin-dashboard.partner-applications'
 import { Route as AuthenticatedAdminDashboardOrganizationsRouteImport } from './routes/_authenticated/admin-dashboard.organizations'
 import { Route as AuthenticatedAdminDashboardMembersRouteImport } from './routes/_authenticated/admin-dashboard.members'
 import { Route as AuthenticatedAdminDashboardLeadsRouteImport } from './routes/_authenticated/admin-dashboard.leads'
@@ -186,6 +187,12 @@ const AuthenticatedAdminDashboardProfileRoute =
     path: '/profile',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+const AuthenticatedAdminDashboardPartnerApplicationsRoute =
+  AuthenticatedAdminDashboardPartnerApplicationsRouteImport.update({
+    id: '/partner-applications',
+    path: '/partner-applications',
+    getParentRoute: () => AuthenticatedAdminDashboardRoute,
+  } as any)
 const AuthenticatedAdminDashboardOrganizationsRoute =
   AuthenticatedAdminDashboardOrganizationsRouteImport.update({
     id: '/organizations',
@@ -278,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRouteWithChildren
   '/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
+  '/admin-dashboard/partner-applications': typeof AuthenticatedAdminDashboardPartnerApplicationsRoute
   '/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
   '/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
   '/admin-dashboard/verify-payments': typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
@@ -315,6 +323,7 @@ export interface FileRoutesByTo {
   '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRouteWithChildren
   '/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
+  '/admin-dashboard/partner-applications': typeof AuthenticatedAdminDashboardPartnerApplicationsRoute
   '/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
   '/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
   '/admin-dashboard/verify-payments': typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
@@ -355,6 +364,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/_authenticated/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRouteWithChildren
   '/_authenticated/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
+  '/_authenticated/admin-dashboard/partner-applications': typeof AuthenticatedAdminDashboardPartnerApplicationsRoute
   '/_authenticated/admin-dashboard/profile': typeof AuthenticatedAdminDashboardProfileRoute
   '/_authenticated/admin-dashboard/settings': typeof AuthenticatedAdminDashboardSettingsRoute
   '/_authenticated/admin-dashboard/verify-payments': typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/admin-dashboard/leads'
     | '/admin-dashboard/members'
     | '/admin-dashboard/organizations'
+    | '/admin-dashboard/partner-applications'
     | '/admin-dashboard/profile'
     | '/admin-dashboard/settings'
     | '/admin-dashboard/verify-payments'
@@ -432,6 +443,7 @@ export interface FileRouteTypes {
     | '/admin-dashboard/leads'
     | '/admin-dashboard/members'
     | '/admin-dashboard/organizations'
+    | '/admin-dashboard/partner-applications'
     | '/admin-dashboard/profile'
     | '/admin-dashboard/settings'
     | '/admin-dashboard/verify-payments'
@@ -471,6 +483,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-dashboard/leads'
     | '/_authenticated/admin-dashboard/members'
     | '/_authenticated/admin-dashboard/organizations'
+    | '/_authenticated/admin-dashboard/partner-applications'
     | '/_authenticated/admin-dashboard/profile'
     | '/_authenticated/admin-dashboard/settings'
     | '/_authenticated/admin-dashboard/verify-payments'
@@ -686,6 +699,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardProfileRouteImport
       parentRoute: typeof AuthenticatedAdminDashboardRoute
     }
+    '/_authenticated/admin-dashboard/partner-applications': {
+      id: '/_authenticated/admin-dashboard/partner-applications'
+      path: '/partner-applications'
+      fullPath: '/admin-dashboard/partner-applications'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardPartnerApplicationsRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRoute
+    }
     '/_authenticated/admin-dashboard/organizations': {
       id: '/_authenticated/admin-dashboard/organizations'
       path: '/organizations'
@@ -789,6 +809,7 @@ interface AuthenticatedAdminDashboardRouteChildren {
   AuthenticatedAdminDashboardLeadsRoute: typeof AuthenticatedAdminDashboardLeadsRoute
   AuthenticatedAdminDashboardMembersRoute: typeof AuthenticatedAdminDashboardMembersRouteWithChildren
   AuthenticatedAdminDashboardOrganizationsRoute: typeof AuthenticatedAdminDashboardOrganizationsRoute
+  AuthenticatedAdminDashboardPartnerApplicationsRoute: typeof AuthenticatedAdminDashboardPartnerApplicationsRoute
   AuthenticatedAdminDashboardProfileRoute: typeof AuthenticatedAdminDashboardProfileRoute
   AuthenticatedAdminDashboardSettingsRoute: typeof AuthenticatedAdminDashboardSettingsRoute
   AuthenticatedAdminDashboardVerifyPaymentsRoute: typeof AuthenticatedAdminDashboardVerifyPaymentsRoute
@@ -814,6 +835,8 @@ const AuthenticatedAdminDashboardRouteChildren: AuthenticatedAdminDashboardRoute
       AuthenticatedAdminDashboardMembersRouteWithChildren,
     AuthenticatedAdminDashboardOrganizationsRoute:
       AuthenticatedAdminDashboardOrganizationsRoute,
+    AuthenticatedAdminDashboardPartnerApplicationsRoute:
+      AuthenticatedAdminDashboardPartnerApplicationsRoute,
     AuthenticatedAdminDashboardProfileRoute:
       AuthenticatedAdminDashboardProfileRoute,
     AuthenticatedAdminDashboardSettingsRoute:
