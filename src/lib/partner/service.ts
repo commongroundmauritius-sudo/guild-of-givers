@@ -26,7 +26,7 @@ class PartnerService {
 
     // 2. Insert application (status and duplicate protection handled by DB)
     const { data, error } = await supabase
-      .from("partner_applications")
+      .from("partner_applications" as any)
       .insert({
         organization_name: input.organization_name.trim(),
         organization_type: input.organization_type,
@@ -60,7 +60,7 @@ class PartnerService {
   ) {
     // Note: Logging handled by DB trigger tr_partner_application_activity
     const { error } = await supabase
-      .from("partner_applications")
+      .from("partner_applications" as any)
       .update({
         status: newStatus,
         reviewed_by: actorId,
@@ -73,13 +73,14 @@ class PartnerService {
   }
 
   async convertToOrganization(applicationId: string, actorId: string, orgData: any) {
-    const { data: app, error: appError } = await supabase
-      .from("partner_applications")
+    const { data: appData, error: appError } = await supabase
+      .from("partner_applications" as any)
       .select("*")
       .eq("id", applicationId)
       .single();
 
     if (appError) throw appError;
+    const app = appData as any;
     if (app.status === "converted") throw new Error("Application already converted");
 
     // 1. Create Organization
@@ -100,7 +101,7 @@ class PartnerService {
 
     // 2. Update Application (Logging handled by DB trigger)
     const { error: updateError } = await supabase
-      .from("partner_applications")
+      .from("partner_applications" as any)
       .update({
         status: "converted",
         converted_organization_id: org.id,

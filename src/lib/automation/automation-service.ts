@@ -31,7 +31,7 @@ export const automationService = {
    * Execute the actions defined in a rule
    */
   async executeRule(rule: any, payload: any) {
-    const { data: execution, error: execError } = await supabase
+    const { data: executionData, error: execError } = await supabase
       .from('automation_executions' as any)
       .insert({
         rule_id: rule.id,
@@ -46,6 +46,8 @@ export const automationService = {
       console.error('Failed to create automation execution:', execError);
       return;
     }
+
+    const execution = executionData as any;
 
     try {
       const actions = rule.actions as AutomationAction[];
