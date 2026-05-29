@@ -43,7 +43,7 @@ function AdminDashboard() {
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["admin-stats"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const [init, initPending, organizations, members, reports, leads] = await Promise.all([
         supabase.from("initiatives").select("id", { count: "exact", head: true }),
@@ -78,7 +78,7 @@ function AdminDashboard() {
 
   const { data: adminActions, isLoading: actionsLoading } = useQuery({
     queryKey: ["admin-actions"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data } = await supabase
         .from("admin_actions")
@@ -91,7 +91,7 @@ function AdminDashboard() {
 
   const { data: pendingReports, isLoading: reportsLoading } = useQuery({
     queryKey: ["pending-reports"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data } = await supabase
         .from("reports")
@@ -104,7 +104,7 @@ function AdminDashboard() {
 
   const { data: recentEvents, isLoading: eventsLoading } = useQuery({
     queryKey: ["webhook-events"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data } = await supabase
         .from("payment_events")
@@ -117,7 +117,7 @@ function AdminDashboard() {
 
   const { data: pendingVersions, isLoading: versionsLoading } = useQuery({
     queryKey: ["pending-initiative-versions"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data } = await supabase
         .from("initiative_versions")

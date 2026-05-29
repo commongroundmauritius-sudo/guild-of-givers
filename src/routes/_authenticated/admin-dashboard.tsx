@@ -12,7 +12,7 @@ function AdminDashboardLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!authLoading && (!user || role !== "admin")) {
+    if (!authLoading && (!user || (role !== "admin" && role !== "super_admin"))) {
       navigate({ to: "/dashboard", replace: true });
     }
   }, [user, role, authLoading, navigate]);
@@ -27,7 +27,7 @@ function AdminDashboardLayout() {
     );
   }
 
-  if (!authLoading && role !== "admin") return null;
+  if (!authLoading && (role !== "admin" && role !== "super_admin")) return null;
 
   return <Outlet />;
 }
