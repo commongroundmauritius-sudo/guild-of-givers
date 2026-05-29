@@ -4,9 +4,9 @@ export const intelligenceService = {
   /**
    * Fetch latest health score for an initiative
    */
-  async getLatestHealthScore(initiativeId: string) {
+  async getLatestHealthScore(initiativeId: string): Promise<any | null> {
     const { data, error } = await supabase
-      .from('initiative_health_scores')
+      .from('initiative_health_scores' as any)
       .select('*')
       .eq('initiative_id', initiativeId)
       .order('calculated_at', { ascending: false })
@@ -14,28 +14,28 @@ export const intelligenceService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data as any | null;
   },
 
   /**
    * Fetch health history for trends
    */
-  async getHealthHistory(initiativeId: string, limit = 30) {
+  async getHealthHistory(initiativeId: string, limit = 30): Promise<any[]> {
     const { data, error } = await supabase
-      .from('initiative_health_scores')
+      .from('initiative_health_scores' as any)
       .select('*')
       .eq('initiative_id', initiativeId)
       .order('calculated_at', { ascending: true })
       .limit(limit);
 
     if (error) throw error;
-    return data;
+    return (data as any[]) || [];
   },
 
   /**
    * Fetch latest engagement score for a supporter
    */
-  async getLatestEngagementScore(userId: string) {
+  async getLatestEngagementScore(userId: string): Promise<any | null> {
     const { data, error } = await supabase
       .from('supporter_engagement_scores' as any)
       .select('*')
@@ -45,13 +45,13 @@ export const intelligenceService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data as any | null;
   },
 
   /**
    * Fetch engagement history for a supporter
    */
-  async getEngagementHistory(userId: string, limit = 12) {
+  async getEngagementHistory(userId: string, limit = 12): Promise<any[]> {
     const { data, error } = await supabase
       .from('supporter_engagement_scores' as any)
       .select('*')
@@ -60,7 +60,7 @@ export const intelligenceService = {
       .limit(limit);
 
     if (error) throw error;
-    return data;
+    return (data as any[]) || [];
   },
 
   /**

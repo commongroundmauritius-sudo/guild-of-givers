@@ -14,7 +14,7 @@ export const supporterService = {
    */
   async transitionStage(profileId: string, stage: LifecycleStage) {
     const { error } = await supabase
-      .from('profiles')
+      .from('profiles' as any)
       .update({ lifecycle_stage: stage })
       .eq('id', profileId);
 
@@ -27,9 +27,9 @@ export const supporterService = {
   /**
    * Fetch a unified supporter profile
    */
-  async getSupporterProfile(profileId: string) {
+  async getSupporterProfile(profileId: string): Promise<any> {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('profiles' as any)
       .select(`
         *,
         organizations(organization_name, logo_url),
@@ -40,7 +40,7 @@ export const supporterService = {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as any;
   },
 
   /**
