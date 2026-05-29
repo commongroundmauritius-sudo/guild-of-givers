@@ -40,7 +40,7 @@ function AdminPartnerApplicationsPage() {
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       let query = supabase
-        .from("partner_applications")
+        .from("partner_applications" as any)
         .select("*, activity:partner_application_activity(*, actor:profiles(full_name))")
         .order("created_at", { ascending: false })
         .eq("is_deleted", false);
@@ -51,7 +51,7 @@ function AdminPartnerApplicationsPage() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return (data as any[]) || [];
     },
   });
 

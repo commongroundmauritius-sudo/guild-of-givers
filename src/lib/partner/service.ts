@@ -85,7 +85,7 @@ class PartnerService {
 
     // 1. Create Organization
     const { data: org, error: orgError } = await supabase
-      .from("organizations")
+      .from("organizations" as any)
       .insert({
         organization_name: orgData.organization_name || app.organization_name,
         description: orgData.description || app.message,
@@ -104,7 +104,7 @@ class PartnerService {
       .from("partner_applications" as any)
       .update({
         status: "converted",
-        converted_organization_id: org.id,
+        converted_organization_id: (org as any).id,
         converted_at: new Date().toISOString(),
         converted_by: actorId,
       })
