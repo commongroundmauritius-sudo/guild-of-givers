@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { submitPartnerApplication } from "@/lib/partner/actions";
 
@@ -93,7 +94,38 @@ function PartnerPage() {
 
           <form
             className="mt-10 space-y-5 rounded-3xl border border-border/60 bg-card p-8"
+<<<<<<< Updated upstream
             onSubmit={handleSubmit}
+=======
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setSubmitting(true);
+
+              try {
+                const form = e.currentTarget;
+                const formData = new FormData(form);
+
+                const { error } = await supabase.from("partner_applications").insert({
+                  organization_name: String(formData.get("organization") || "").trim(),
+                  registration_number: String(formData.get("reg") || "").trim(),
+                  email: String(formData.get("email") || "").trim(),
+                  message: String(formData.get("message") || "").trim(),
+                });
+
+                if (error) {
+                  throw error;
+                }
+
+                toast.success("Application received. Our team will be in touch.");
+                form.reset();
+              } catch (error) {
+                console.error("Failed to submit partner application", error);
+                toast.error("We couldn't submit your application. Please try again.");
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+>>>>>>> Stashed changes
           >
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Organization name" required>
