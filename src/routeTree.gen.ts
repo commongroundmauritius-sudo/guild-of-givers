@@ -39,6 +39,7 @@ import { Route as AuthenticatedAdminDashboardPartnerApplicationsRouteImport } fr
 import { Route as AuthenticatedAdminDashboardOrganizationsRouteImport } from './routes/_authenticated/admin-dashboard.organizations'
 import { Route as AuthenticatedAdminDashboardMembersRouteImport } from './routes/_authenticated/admin-dashboard.members'
 import { Route as AuthenticatedAdminDashboardLeadsRouteImport } from './routes/_authenticated/admin-dashboard.leads'
+import { Route as AuthenticatedAdminDashboardHomepageLayoutRouteImport } from './routes/_authenticated/admin-dashboard.homepage-layout'
 import { Route as AuthenticatedAdminDashboardFinancesRouteImport } from './routes/_authenticated/admin-dashboard.finances'
 import { Route as AuthenticatedAdminDashboardCommunityPostsRouteImport } from './routes/_authenticated/admin-dashboard.community-posts'
 import { Route as AuthenticatedAdminDashboardAnnouncementsRouteImport } from './routes/_authenticated/admin-dashboard.announcements'
@@ -211,6 +212,12 @@ const AuthenticatedAdminDashboardLeadsRoute =
     path: '/leads',
     getParentRoute: () => AuthenticatedAdminDashboardRoute,
   } as any)
+const AuthenticatedAdminDashboardHomepageLayoutRoute =
+  AuthenticatedAdminDashboardHomepageLayoutRouteImport.update({
+    id: '/homepage-layout',
+    path: '/homepage-layout',
+    getParentRoute: () => AuthenticatedAdminDashboardRoute,
+  } as any)
 const AuthenticatedAdminDashboardFinancesRoute =
   AuthenticatedAdminDashboardFinancesRouteImport.update({
     id: '/finances',
@@ -282,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
   '/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
+  '/admin-dashboard/homepage-layout': typeof AuthenticatedAdminDashboardHomepageLayoutRoute
   '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRouteWithChildren
   '/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
@@ -320,6 +328,7 @@ export interface FileRoutesByTo {
   '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
   '/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
+  '/admin-dashboard/homepage-layout': typeof AuthenticatedAdminDashboardHomepageLayoutRoute
   '/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRouteWithChildren
   '/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
@@ -361,6 +370,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/_authenticated/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
   '/_authenticated/admin-dashboard/finances': typeof AuthenticatedAdminDashboardFinancesRoute
+  '/_authenticated/admin-dashboard/homepage-layout': typeof AuthenticatedAdminDashboardHomepageLayoutRoute
   '/_authenticated/admin-dashboard/leads': typeof AuthenticatedAdminDashboardLeadsRoute
   '/_authenticated/admin-dashboard/members': typeof AuthenticatedAdminDashboardMembersRouteWithChildren
   '/_authenticated/admin-dashboard/organizations': typeof AuthenticatedAdminDashboardOrganizationsRoute
@@ -402,6 +412,7 @@ export interface FileRouteTypes {
     | '/admin-dashboard/announcements'
     | '/admin-dashboard/community-posts'
     | '/admin-dashboard/finances'
+    | '/admin-dashboard/homepage-layout'
     | '/admin-dashboard/leads'
     | '/admin-dashboard/members'
     | '/admin-dashboard/organizations'
@@ -440,6 +451,7 @@ export interface FileRouteTypes {
     | '/admin-dashboard/announcements'
     | '/admin-dashboard/community-posts'
     | '/admin-dashboard/finances'
+    | '/admin-dashboard/homepage-layout'
     | '/admin-dashboard/leads'
     | '/admin-dashboard/members'
     | '/admin-dashboard/organizations'
@@ -480,6 +492,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-dashboard/announcements'
     | '/_authenticated/admin-dashboard/community-posts'
     | '/_authenticated/admin-dashboard/finances'
+    | '/_authenticated/admin-dashboard/homepage-layout'
     | '/_authenticated/admin-dashboard/leads'
     | '/_authenticated/admin-dashboard/members'
     | '/_authenticated/admin-dashboard/organizations'
@@ -727,6 +740,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardLeadsRouteImport
       parentRoute: typeof AuthenticatedAdminDashboardRoute
     }
+    '/_authenticated/admin-dashboard/homepage-layout': {
+      id: '/_authenticated/admin-dashboard/homepage-layout'
+      path: '/homepage-layout'
+      fullPath: '/admin-dashboard/homepage-layout'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardHomepageLayoutRouteImport
+      parentRoute: typeof AuthenticatedAdminDashboardRoute
+    }
     '/_authenticated/admin-dashboard/finances': {
       id: '/_authenticated/admin-dashboard/finances'
       path: '/finances'
@@ -806,6 +826,7 @@ interface AuthenticatedAdminDashboardRouteChildren {
   AuthenticatedAdminDashboardAnnouncementsRoute: typeof AuthenticatedAdminDashboardAnnouncementsRoute
   AuthenticatedAdminDashboardCommunityPostsRoute: typeof AuthenticatedAdminDashboardCommunityPostsRoute
   AuthenticatedAdminDashboardFinancesRoute: typeof AuthenticatedAdminDashboardFinancesRoute
+  AuthenticatedAdminDashboardHomepageLayoutRoute: typeof AuthenticatedAdminDashboardHomepageLayoutRoute
   AuthenticatedAdminDashboardLeadsRoute: typeof AuthenticatedAdminDashboardLeadsRoute
   AuthenticatedAdminDashboardMembersRoute: typeof AuthenticatedAdminDashboardMembersRouteWithChildren
   AuthenticatedAdminDashboardOrganizationsRoute: typeof AuthenticatedAdminDashboardOrganizationsRoute
@@ -829,6 +850,8 @@ const AuthenticatedAdminDashboardRouteChildren: AuthenticatedAdminDashboardRoute
       AuthenticatedAdminDashboardCommunityPostsRoute,
     AuthenticatedAdminDashboardFinancesRoute:
       AuthenticatedAdminDashboardFinancesRoute,
+    AuthenticatedAdminDashboardHomepageLayoutRoute:
+      AuthenticatedAdminDashboardHomepageLayoutRoute,
     AuthenticatedAdminDashboardLeadsRoute:
       AuthenticatedAdminDashboardLeadsRoute,
     AuthenticatedAdminDashboardMembersRoute:
