@@ -4,13 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { engagementService } from "@/lib/engagement-service";
-import {
-  Bell,
-  Check,
-  BellOff,
-  RefreshCw,
-  Trash2
-} from "lucide-react";
+import { Bell, Check, BellOff, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
@@ -45,24 +39,21 @@ function NotificationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications-full", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
-    }
+    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("notifications")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("notifications").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Notification deleted");
       queryClient.invalidateQueries({ queryKey: ["notifications-full", user?.id] });
-    }
+    },
   });
 
-  const unreadCount = notifications?.filter(n => !n.read).length || 0;
+  const unreadCount = notifications?.filter((n) => !n.read).length || 0;
 
   return (
     <SiteLayout>
@@ -83,7 +74,9 @@ function NotificationsPage() {
 
             {unreadCount > 0 && (
               <Button
-                onClick={() => markReadMutation.mutate(notifications!.filter(n => !n.read).map(n => n.id))}
+                onClick={() =>
+                  markReadMutation.mutate(notifications!.filter((n) => !n.read).map((n) => n.id))
+                }
                 variant="outline"
                 className="rounded-xl gap-2"
               >
@@ -104,27 +97,32 @@ function NotificationsPage() {
                   key={n.id}
                   className={cn(
                     "rounded-3xl border-border/40 transition-all hover:shadow-md",
-                    !n.read && "bg-primary/5 border-primary/20"
+                    !n.read && "bg-primary/5 border-primary/20",
                   )}
                 >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex gap-4">
-                        <div className={cn(
-                          "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0",
-                          !n.read ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                        )}>
+                        <div
+                          className={cn(
+                            "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0",
+                            !n.read
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground",
+                          )}
+                        >
                           <Bell className="h-6 w-6" />
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-bold text-lg leading-tight">
-                              {n.type.replace('_', ' ').charAt(0).toUpperCase() + n.type.slice(1).replace('_', ' ')}
+                              {n.type.replace("_", " ").charAt(0).toUpperCase() +
+                                n.type.slice(1).replace("_", " ")}
                             </h3>
                             {!n.read && <Badge className="bg-primary hover:bg-primary">New</Badge>}
                           </div>
                           <p className="text-muted-foreground">
-                            {(n.metadata as any)?.message || 'Update on your account activity.'}
+                            {(n.metadata as any)?.message || "Update on your account activity."}
                           </p>
                           <p className="text-xs text-muted-foreground/60 pt-1">
                             {formatDistanceToNow(new Date(n.created_at))} ago
@@ -162,7 +160,8 @@ function NotificationsPage() {
                 </div>
                 <h3 className="text-xl font-semibold text-primary mb-2">No notifications yet</h3>
                 <p className="text-muted-foreground max-w-xs mx-auto">
-                  When there's activity on your account or updates from initiatives, you'll see them here.
+                  When there's activity on your account or updates from initiatives, you'll see them
+                  here.
                 </p>
               </div>
             )}

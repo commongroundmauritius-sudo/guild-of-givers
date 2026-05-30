@@ -47,7 +47,7 @@ function AdminAnnouncementsPage() {
     },
     onError: (error: Error) => {
       toast.error(error.message);
-    }
+    },
   });
 
   const pinMutation = useMutation({
@@ -59,7 +59,7 @@ function AdminAnnouncementsPage() {
     },
     onError: (error: Error) => {
       toast.error(error.message);
-    }
+    },
   });
 
   return (
@@ -126,10 +126,17 @@ function AdminAnnouncementsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => pinMutation.mutate({
-                              id: a.id,
-                              data: { title: a.title, content: a.content, category: a.category, pinned: !a.pinned }
-                            })}
+                            onClick={() =>
+                              pinMutation.mutate({
+                                id: a.id,
+                                data: {
+                                  title: a.title,
+                                  content: a.content,
+                                  category: a.category,
+                                  pinned: !a.pinned,
+                                },
+                              })
+                            }
                             title={a.pinned ? "Unpin" : "Pin to top"}
                           >
                             <Pin
@@ -191,8 +198,8 @@ function AnnouncementForm({
       await updateAnnouncement({
         data: {
           id: initialData?.id,
-          data
-        }
+          data,
+        },
       });
     },
     onSuccess: () => {
@@ -203,7 +210,7 @@ function AnnouncementForm({
     },
     onError: (error: Error) => {
       toast.error(error.message);
-    }
+    },
   });
 
   return (

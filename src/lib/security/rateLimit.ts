@@ -13,7 +13,7 @@ const memoryStore = new Map<string, { count: number; resetTime: number }>();
 export async function rateLimit(
   identifier: string,
   action: string,
-  config: RateLimitConfig = { windowMs: 60000, max: 10 }
+  config: RateLimitConfig = { windowMs: 60000, max: 10 },
 ) {
   const key = `${action}:${identifier}`;
   const now = Date.now();
@@ -38,8 +38,8 @@ export async function rateLimit(
 export function getClientIdentifier(request?: Request): string {
   // In Cloudflare Workers, we can use request.headers.get('cf-connecting-ip')
   if (request) {
-    const ip = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for');
+    const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for");
     if (ip) return ip;
   }
-  return 'anonymous';
+  return "anonymous";
 }

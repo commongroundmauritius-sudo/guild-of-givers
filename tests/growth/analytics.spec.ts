@@ -1,11 +1,11 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Growth & Engagement Analytics', () => {
-  test('Admin dashboard contains updated modular dashboard tabs', async ({ page }) => {
+test.describe("Growth & Engagement Analytics", () => {
+  test("Admin dashboard contains updated modular dashboard tabs", async ({ page }) => {
     // This is a smoke test to ensure the tabs are present
     // We assume the user is logged in as admin in a real scenario,
     // but here we just check for component rendering if possible.
-    await page.goto('/admin-dashboard/analytics');
+    await page.goto("/admin-dashboard/analytics");
 
     // Check for the presence of the tabs
     const acquisitionTab = page.locator('button:has-text("Acquisition")');
@@ -16,15 +16,15 @@ test.describe('Growth & Engagement Analytics', () => {
     // In a real environment we'd use a storage state.
   });
 
-  test('Initiative detail page captures attribution', async ({ page }) => {
+  test("Initiative detail page captures attribution", async ({ page }) => {
     // Mock the attribution capture
-    await page.goto('/initiatives/test-slug?ref=TESTCODE&utm_source=testsource');
+    await page.goto("/initiatives/test-slug?ref=TESTCODE&utm_source=testsource");
 
-    const attribution = await page.evaluate(() => localStorage.getItem('cg_attribution'));
+    const attribution = await page.evaluate(() => localStorage.getItem("cg_attribution"));
     if (attribution) {
-        const data = JSON.parse(attribution);
-        expect(data.tracking_code).toBe('TESTCODE');
-        expect(data.utm_source).toBe('testsource');
+      const data = JSON.parse(attribution);
+      expect(data.tracking_code).toBe("TESTCODE");
+      expect(data.utm_source).toBe("testsource");
     }
   });
 });

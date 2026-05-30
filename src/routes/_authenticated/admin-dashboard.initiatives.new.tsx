@@ -18,7 +18,7 @@ import {
   Building,
   Target,
   Sparkles,
-  Link as LinkIcon
+  Link as LinkIcon,
 } from "lucide-react";
 import { createInitiative } from "@/lib/security/auth-actions";
 
@@ -53,7 +53,7 @@ function InitiativeCreatePage() {
   });
 
   useEffect(() => {
-    if (!authLoading && role && (role !== "admin" && role !== "super_admin")) {
+    if (!authLoading && role && role !== "admin" && role !== "super_admin") {
       toast.error("Unauthorized access");
       navigate({ to: "/dashboard" });
     }
@@ -220,11 +220,13 @@ function InitiativeCreatePage() {
                           onChange={handleInputChange}
                           className="w-full rounded-2xl border border-border/40 bg-muted/30 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                         >
-                          {["Environment", "Education", "Community", "Health", "Animals"].map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
+                          {["Environment", "Education", "Community", "Health", "Animals"].map(
+                            (c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ),
+                          )}
                         </select>
                       </div>
                     </div>

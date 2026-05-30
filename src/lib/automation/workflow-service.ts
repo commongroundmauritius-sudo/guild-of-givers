@@ -14,13 +14,13 @@ export const workflowService = {
    */
   async startWorkflow(workflowName: string, userId: string, payload: any = {}) {
     const workflows: Record<string, WorkflowStep[]> = {
-      'welcome_series': [
-        { id: 'welcome_1', templateKey: 'welcome', delayDays: 0 },
-        { id: 'welcome_2', templateKey: 'milestone_reached', delayDays: 2 } // Example follow up
+      welcome_series: [
+        { id: "welcome_1", templateKey: "welcome", delayDays: 0 },
+        { id: "welcome_2", templateKey: "milestone_reached", delayDays: 2 }, // Example follow up
       ],
-      'payment_recovery': [
-        { id: 'recovery_1', templateKey: 'payment_confirmation', delayDays: 0 }, // Using existing templates as placeholders
-      ]
+      payment_recovery: [
+        { id: "recovery_1", templateKey: "payment_confirmation", delayDays: 0 }, // Using existing templates as placeholders
+      ],
     };
 
     const steps = workflows[workflowName];
@@ -39,14 +39,18 @@ export const workflowService = {
   },
 
   async executeStep(step: WorkflowStep, userId: string, payload: any) {
-    const { data: profile } = await supabase.from('profiles').select('email').eq('id', userId).single();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", userId)
+      .single();
 
     await communicationDispatcher.dispatch({
       userId,
-      channels: ['email', 'in_app'],
+      channels: ["email", "in_app"],
       templateKey: step.templateKey,
       payload: { ...payload, step_id: step.id },
-      recipientEmail: profile?.email
+      recipientEmail: profile?.email,
     });
   },
 
@@ -54,15 +58,15 @@ export const workflowService = {
     // In a real system, this would use a background task or a 'delayed_jobs' table.
     // For our foundation, we'll create a CRM task as a 'reminder' to execute or use automation_rules.
 
-    await supabase.from('automation_executions' as any).insert({
+    await supabase.from("automation_executions" as any).insert({
       user_id: userId,
       entity_id: payload.initiative_id,
-      status: 'pending',
+      status: "pending",
       result: {
         scheduled_step: step,
         payload,
-        execute_after: new Date(Date.now() + step.delayDays * 86400000).toISOString()
-      }
+        execute_after: new Date(Date.now() + step.delayDays * 86400000).toISOString(),
+      },
     });
-  }
+  },
 };

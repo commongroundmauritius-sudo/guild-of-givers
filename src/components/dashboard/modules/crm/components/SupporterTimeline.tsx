@@ -10,11 +10,16 @@ export function SupporterTimeline({ profileId }: { profileId: string }) {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'payment_completed': return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-      case 'payment_failed': return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'share_click': return <Share2 className="h-4 w-4 text-blue-500" />;
-      case 'initiative_view': return <MousePointer2 className="h-4 w-4 text-indigo-500" />;
-      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
+      case "payment_completed":
+        return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+      case "payment_failed":
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case "share_click":
+        return <Share2 className="h-4 w-4 text-blue-500" />;
+      case "initiative_view":
+        return <MousePointer2 className="h-4 w-4 text-indigo-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -29,14 +34,15 @@ export function SupporterTimeline({ profileId }: { profileId: string }) {
             {idx !== timeline.length - 1 && (
               <div className="absolute left-2 top-8 h-full w-0.5 bg-muted" />
             )}
-            <div className="mt-1 bg-background p-0.5 z-10">
-              {getIcon(item.event_type)}
-            </div>
+            <div className="mt-1 bg-background p-0.5 z-10">{getIcon(item.event_type)}</div>
             <div className="flex-1 pb-4">
               <p className="text-sm font-medium capitalize">
-                {item.event_type.replace(/_/g, ' ')}
+                {item.event_type.replace(/_/g, " ")}
                 {item.initiatives?.title && (
-                  <span className="text-muted-foreground font-normal"> on {item.initiatives.title}</span>
+                  <span className="text-muted-foreground font-normal">
+                    {" "}
+                    on {item.initiatives.title}
+                  </span>
                 )}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -51,7 +57,9 @@ export function SupporterTimeline({ profileId }: { profileId: string }) {
           </div>
         ))}
         {(!timeline || timeline.length === 0) && (
-          <p className="text-center py-8 text-sm text-muted-foreground">No activities recorded yet.</p>
+          <p className="text-center py-8 text-sm text-muted-foreground">
+            No activities recorded yet.
+          </p>
         )}
       </CardContent>
     </Card>

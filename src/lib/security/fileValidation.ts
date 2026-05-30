@@ -18,11 +18,11 @@ export interface FileValidationResult {
 export async function validateFile(
   file: File,
   allowedTypes: string[],
-  maxSize: number
+  maxSize: number,
 ): Promise<FileValidationResult> {
   // 1. Extension check (simple defensive layer)
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
   if (!extension || !allowedExtensions.includes(extension)) {
     return {
       isValid: false,
@@ -71,7 +71,7 @@ async function getFileHeader(file: File): Promise<string> {
   const view = new Uint8Array(buffer);
   let header = "";
   for (let i = 0; i < view.length; i++) {
-    header += view[i].toString(16).padStart(2, '0');
+    header += view[i].toString(16).padStart(2, "0");
   }
   return header.toUpperCase();
 }

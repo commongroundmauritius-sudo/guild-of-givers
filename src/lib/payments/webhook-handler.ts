@@ -35,7 +35,7 @@ async function validateWebhookSignature(payload: unknown, signature?: string): P
 
 export async function handlePaymentWebhook(
   payload: unknown,
-  signature?: string
+  signature?: string,
 ): Promise<{ success: boolean }> {
   if (!isWebhookPayload(payload)) {
     console.error("Invalid webhook payload received");

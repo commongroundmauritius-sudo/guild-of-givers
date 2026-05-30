@@ -52,7 +52,7 @@ function AdminPostsPage() {
     },
     onError: (error: Error) => {
       toast.error(error.message);
-    }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -65,7 +65,7 @@ function AdminPostsPage() {
     },
     onError: (error: Error) => {
       toast.error(error.message);
-    }
+    },
   });
 
   return (
@@ -74,8 +74,12 @@ function AdminPostsPage() {
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="font-display text-4xl font-semibold text-primary">Community Moderation</h1>
-              <p className="text-muted-foreground mt-2">Manage posts and ensure healthy discussions.</p>
+              <h1 className="font-display text-4xl font-semibold text-primary">
+                Community Moderation
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Manage posts and ensure healthy discussions.
+              </p>
             </div>
           </div>
 
@@ -94,7 +98,9 @@ function AdminPostsPage() {
 
           <div className="grid gap-6">
             {isLoading ? (
-              Array(3).fill(0).map((_, i) => <Card key={i} className="h-40 animate-pulse bg-muted rounded-3xl" />)
+              Array(3)
+                .fill(0)
+                .map((_, i) => <Card key={i} className="h-40 animate-pulse bg-muted rounded-3xl" />)
             ) : posts.length > 0 ? (
               posts.map((post: any) => (
                 <Card key={post.id} className="rounded-3xl border-border/40 overflow-hidden">
@@ -102,13 +108,19 @@ function AdminPostsPage() {
                     <div className="flex items-start gap-4">
                       <Avatar>
                         <AvatarImage src={post.profiles?.avatar_url} />
-                        <AvatarFallback>{post.profiles?.full_name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>
+                          {post.profiles?.full_name?.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-bold">{post.profiles?.full_name}</span>
-                          <span className="text-xs text-muted-foreground">• {formatDistanceToNow(new Date(post.created_at))} ago</span>
-                          <Badge variant="outline" className="text-[10px] uppercase">{post.status}</Badge>
+                          <span className="text-xs text-muted-foreground">
+                            • {formatDistanceToNow(new Date(post.created_at))} ago
+                          </span>
+                          <Badge variant="outline" className="text-[10px] uppercase">
+                            {post.status}
+                          </Badge>
                         </div>
                         {post.initiatives?.title && (
                           <div className="text-xs text-primary font-medium mb-2 flex items-center gap-1">
@@ -116,7 +128,9 @@ function AdminPostsPage() {
                           </div>
                         )}
                         <h3 className="font-bold text-lg mb-2">{post.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{post.content}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                          {post.content}
+                        </p>
 
                         <div className="flex items-center gap-6 text-muted-foreground">
                           <div className="flex items-center gap-1.5 text-xs">
@@ -129,22 +143,26 @@ function AdminPostsPage() {
                       </div>
 
                       <div className="flex flex-col gap-2">
-                        {post.status !== 'published' && (
+                        {post.status !== "published" && (
                           <Button
                             variant="outline"
                             size="sm"
                             className="rounded-xl border-emerald-200 text-emerald-600 hover:bg-emerald-50"
-                            onClick={() => updateStatusMutation.mutate({ id: post.id, status: 'published' })}
+                            onClick={() =>
+                              updateStatusMutation.mutate({ id: post.id, status: "published" })
+                            }
                           >
                             <CheckCircle className="h-4 w-4 mr-2" /> Approve
                           </Button>
                         )}
-                        {post.status !== 'rejected' && (
+                        {post.status !== "rejected" && (
                           <Button
                             variant="outline"
                             size="sm"
                             className="rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50"
-                            onClick={() => updateStatusMutation.mutate({ id: post.id, status: 'rejected' })}
+                            onClick={() =>
+                              updateStatusMutation.mutate({ id: post.id, status: "rejected" })
+                            }
                           >
                             <XCircle className="h-4 w-4 mr-2" /> Reject
                           </Button>

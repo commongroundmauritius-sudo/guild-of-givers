@@ -1,6 +1,6 @@
 import { engagementService, EmailTemplate } from "@/lib/engagement-service";
 
-export type CommunicationChannel = 'email' | 'in_app' | 'sms' | 'whatsapp';
+export type CommunicationChannel = "email" | "in_app" | "sms" | "whatsapp";
 
 export interface DispatchParams {
   userId: string;
@@ -23,17 +23,17 @@ export const communicationDispatcher = {
       try {
         let result;
         switch (channel) {
-          case 'email':
+          case "email":
             result = await this.sendEmail(recipientEmail, templateKey, payload);
             break;
-          case 'in_app':
+          case "in_app":
             result = await this.sendInAppNotification(userId, templateKey, payload, metadata);
             break;
-          case 'sms':
-          case 'whatsapp':
+          case "sms":
+          case "whatsapp":
             // Abstraction for future implementation
             console.log(`Channel ${channel} not yet implemented, but abstracted.`);
-            result = { channel, status: 'deferred' };
+            result = { channel, status: "deferred" };
             break;
           default:
             console.warn(`Unknown communication channel: ${channel}`);
@@ -41,7 +41,7 @@ export const communicationDispatcher = {
         results.push(result);
       } catch (err: any) {
         console.error(`Failed to dispatch to channel ${channel}:`, err);
-        results.push({ channel, status: 'failed', error: err.message });
+        results.push({ channel, status: "failed", error: err.message });
       }
     }
 
@@ -53,9 +53,9 @@ export const communicationDispatcher = {
     await engagementService.enqueueEmail({
       recipient,
       templateKey,
-      payload
+      payload,
     });
-    return { channel: 'email', status: 'queued' };
+    return { channel: "email", status: "queued" };
   },
 
   async sendInAppNotification(userId: string, type: string, payload: any, metadata: any) {
@@ -63,8 +63,8 @@ export const communicationDispatcher = {
       userId,
       type,
       entityId: payload.entityId || payload.initiative_id,
-      metadata: { ...payload, ...metadata }
+      metadata: { ...payload, ...metadata },
     });
-    return { channel: 'in_app', status: 'sent' };
-  }
+    return { channel: "in_app", status: "sent" };
+  },
 };

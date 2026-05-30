@@ -10,7 +10,10 @@ const h3Plugin = {
   name: "h3-resolver",
   setup(build) {
     build.onResolve({ filter: /^h3(-v2)?$/ }, (args) => {
-      const cloudflareEntry = path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs");
+      const cloudflareEntry = path.resolve(
+        rootDir,
+        "node_modules/h3-v2/dist/_entries/cloudflare.mjs",
+      );
       if (fs.existsSync(cloudflareEntry)) return { path: cloudflareEntry };
       return { path: path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/generic.mjs") };
     });
@@ -23,8 +26,23 @@ const h3Plugin = {
       }
       return null;
     });
-    const nodeBuiltIns = ["assert", "async_hooks", "buffer", "crypto", "diagnostics_channel", "events", "path", "process", "stream", "util", "v8"];
-    build.onResolve({ filter: new RegExp(`^(${nodeBuiltIns.join("|")})$`) }, (args) => ({ path: "node:" + args.path, external: true }));
+    const nodeBuiltIns = [
+      "assert",
+      "async_hooks",
+      "buffer",
+      "crypto",
+      "diagnostics_channel",
+      "events",
+      "path",
+      "process",
+      "stream",
+      "util",
+      "v8",
+    ];
+    build.onResolve({ filter: new RegExp(`^(${nodeBuiltIns.join("|")})$`) }, (args) => ({
+      path: "node:" + args.path,
+      external: true,
+    }));
   },
 };
 
@@ -33,7 +51,21 @@ async function build() {
   const workerOutput = path.join(rootDir, "dist/client/_worker.js");
   const wranglerConfigRoot = path.join(rootDir, "wrangler.json");
   const wranglerConfigDist = path.join(rootDir, "dist/client/wrangler.json");
-  const nodeBuiltIns = ["assert", "async_hooks", "buffer", "crypto", "diagnostics_channel", "events", "path", "process", "stream", "stream/web", "string_decoder", "util", "v8"];
+  const nodeBuiltIns = [
+    "assert",
+    "async_hooks",
+    "buffer",
+    "crypto",
+    "diagnostics_channel",
+    "events",
+    "path",
+    "process",
+    "stream",
+    "stream/web",
+    "string_decoder",
+    "util",
+    "v8",
+  ];
   const external = [...nodeBuiltIns, ...nodeBuiltIns.map((id) => `node:${id}`)];
 
   try {
@@ -70,7 +102,8 @@ globalThis.clearImmediate = (id) => clearTimeout(id);
     if (fs.existsSync(wranglerConfigRoot)) {
       const config = JSON.parse(fs.readFileSync(wranglerConfigRoot, "utf-8"));
       if (!config.compatibility_flags) config.compatibility_flags = [];
-      if (!config.compatibility_flags.includes("nodejs_compat")) config.compatibility_flags.push("nodejs_compat");
+      if (!config.compatibility_flags.includes("nodejs_compat"))
+        config.compatibility_flags.push("nodejs_compat");
       config.main = "_worker.js";
       fs.writeFileSync(wranglerConfigDist, JSON.stringify(config, null, 2));
     }
@@ -89,7 +122,9 @@ async function verify() {
     process.exit(1);
   }
   const content = fs.readFileSync(workerOutput, "utf-8");
-  const executableContent = content.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "");
+  const executableContent = content
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/.*$/gm, "");
   const remainingImports = executableContent.match(/^\s*import\s+[^;]+;?/gm) || [];
   const problematic = remainingImports.filter((i) => {
     const match = i.match(/['"]([^'"]+)['"]/);
@@ -102,7 +137,9 @@ async function verify() {
     problematic.forEach((i) => console.error("  ", i));
     process.exit(1);
   }
-  const hasDefaultExport = /export\s+default\s+|export\s*\{[^}]*\bas\s+default\b/.test(executableContent);
+  const hasDefaultExport = /export\s+default\s+|export\s*\{[^}]*\bas\s+default\b/.test(
+    executableContent,
+  );
   if (!hasDefaultExport) {
     console.error("Verification failed: default export is missing in _worker.js");
     process.exit(1);

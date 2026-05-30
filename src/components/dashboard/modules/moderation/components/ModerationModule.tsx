@@ -18,14 +18,16 @@ export function ModerationModule() {
     );
   }
 
-  const suspiciousPercentage = (Number(data?.suspiciousPatterns || 0)) * 10;
+  const suspiciousPercentage = Number(data?.suspiciousPatterns || 0) * 10;
 
   return (
     <Card className="rounded-3xl border-border/40 shadow-sm overflow-hidden">
       <CardHeader className="bg-muted/50 pb-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-indigo-600" />
-          <CardTitle className="text-xs font-bold uppercase tracking-widest text-indigo-600">Platform Intelligence</CardTitle>
+          <CardTitle className="text-xs font-bold uppercase tracking-widest text-indigo-600">
+            Platform Intelligence
+          </CardTitle>
         </div>
       </CardHeader>
       <CardContent className="pt-4 space-y-4">
@@ -34,7 +36,9 @@ export function ModerationModule() {
             <Activity className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">System Health</span>
           </div>
-          <span className="text-xs font-bold px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">Stable</span>
+          <span className="text-xs font-bold px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">
+            Stable
+          </span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -42,7 +46,9 @@ export function ModerationModule() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Growth Rate</span>
           </div>
-          <span className="text-sm font-bold text-indigo-600">+{Number(data?.growthRate || 0)}%</span>
+          <span className="text-sm font-bold text-indigo-600">
+            +{Number(data?.growthRate || 0)}%
+          </span>
         </div>
 
         <div className="flex items-center justify-between">

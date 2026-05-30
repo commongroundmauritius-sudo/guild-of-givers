@@ -39,19 +39,19 @@ export function NotificationBell() {
     refetchInterval: 30000,
   });
 
-  const unreadCount = notifications?.filter(n => !n.read).length || 0;
+  const unreadCount = notifications?.filter((n) => !n.read).length || 0;
 
   const markAllReadMutation = useMutation({
     mutationFn: async () => {
       if (!notifications) return;
-      const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+      const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
       if (unreadIds.length > 0) {
         await engagementService.markAsRead(unreadIds);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
-    }
+    },
   });
 
   return (
@@ -94,22 +94,26 @@ export function NotificationBell() {
                   key={n.id}
                   className={cn(
                     "flex flex-col items-start gap-1 p-3 rounded-xl cursor-default focus:bg-muted",
-                    !n.read && "bg-primary/5 border-l-2 border-primary rounded-l-none"
+                    !n.read && "bg-primary/5 border-l-2 border-primary rounded-l-none",
                   )}
                 >
                   <div className="flex w-full items-start justify-between gap-2">
                     <span className="font-medium text-sm leading-tight">
-                      {n.type === 'welcome' ? '🎉 Welcome!' :
-                       n.type === 'payment_success' ? '💰 Payment Received' :
-                       n.type === 'subscription_created' ? '✅ Subscription Active' :
-                       n.type.replace('_', ' ').charAt(0).toUpperCase() + n.type.slice(1).replace('_', ' ')}
+                      {n.type === "welcome"
+                        ? "🎉 Welcome!"
+                        : n.type === "payment_success"
+                          ? "💰 Payment Received"
+                          : n.type === "subscription_created"
+                            ? "✅ Subscription Active"
+                            : n.type.replace("_", " ").charAt(0).toUpperCase() +
+                              n.type.slice(1).replace("_", " ")}
                     </span>
                     <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                       {formatDistanceToNow(new Date(n.created_at))} ago
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-2">
-                    {(((n as any).metadata) as any)?.message || 'Update on your account activity.'}
+                    {((n as any).metadata as any)?.message || "Update on your account activity."}
                   </p>
                 </DropdownMenuItem>
               ))}

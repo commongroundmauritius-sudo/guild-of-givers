@@ -9,7 +9,7 @@ import {
   Sparkles,
   AlertCircle,
   TrendingUp,
-  Clock
+  Clock,
 } from "lucide-react";
 import { InitiativeCard } from "@/components/InitiativeCard";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -20,7 +20,7 @@ import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger
+  AccordionTrigger,
 } from "@/components/ui/accordion";
 
 export const Route = createFileRoute("/")({
@@ -29,7 +29,8 @@ export const Route = createFileRoute("/")({
       { title: "CommonGround — One Membership. Long-term Impact." },
       {
         name: "description",
-        content: "Turn one monthly membership into predictable funding for vetted, long-term social impact programs.",
+        content:
+          "Turn one monthly membership into predictable funding for vetted, long-term social impact programs.",
       },
       { property: "og:title", content: "CommonGround — One Membership. Long-term Impact." },
       { property: "og:type", content: "website" },
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  useActivityTracker({ eventType: 'homepage_view' });
+  useActivityTracker({ eventType: "homepage_view" });
   const { featured, urgent, trending, newest } = useCuratedInitiatives();
 
   return (
@@ -110,8 +111,8 @@ function Hero() {
             <span className="text-forest">Endless Impact.</span>
           </h1>
           <p className="mt-8 text-xl leading-relaxed text-muted-foreground sm:text-2xl max-w-2xl">
-            We turn predictable monthly contributions into reliable funding for Mauritius' most effective
-            long-horizon social programs.
+            We turn predictable monthly contributions into reliable funding for Mauritius' most
+            effective long-horizon social programs.
           </p>
           <div className="mt-12 flex flex-wrap gap-4">
             <Link
@@ -193,7 +194,7 @@ function CuratedSection({
   isLoading,
   icon: Icon,
   kicker,
-  bgClassName = "bg-white"
+  bgClassName = "bg-white",
 }: CuratedSectionProps) {
   if (!isLoading && (!initiatives || initiatives.length === 0)) return null;
 
@@ -208,18 +209,15 @@ function CuratedSection({
               </div>
               <Kicker>{kicker}</Kicker>
             </div>
-            <h2 className="mt-4 font-display text-4xl font-semibold text-primary">
-              {title}
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              {subtitle}
-            </p>
+            <h2 className="mt-4 font-display text-4xl font-semibold text-primary">{title}</h2>
+            <p className="mt-4 text-muted-foreground">{subtitle}</p>
           </div>
           <Link
             to="/initiatives"
             className="group inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
           >
-            View More <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            View More{" "}
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
 

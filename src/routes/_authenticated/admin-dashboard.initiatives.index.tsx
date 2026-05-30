@@ -5,17 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Plus,
-  Search,
-  Filter,
-  Settings,
-  Eye,
-  Heart,
-  Globe,
-  Loader2,
-  Trash2
-} from "lucide-react";
+import { Plus, Search, Filter, Settings, Eye, Heart, Globe, Loader2, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +16,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { deleteInitiative } from "@/lib/security/auth-actions";
 
@@ -63,9 +53,10 @@ function AdminInitiativesPage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const filtered = initiatives.filter(i =>
-    i.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    i.organizations?.organization_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = initiatives.filter(
+    (i) =>
+      i.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      i.organizations?.organization_name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -76,10 +67,16 @@ function AdminInitiativesPage() {
             <div>
               <div className="flex items-center gap-2">
                 <Globe className="h-5 w-5 text-indigo-500" />
-                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600">Administration</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600">
+                  Administration
+                </span>
               </div>
-              <h1 className="mt-3 font-display text-4xl font-semibold text-primary">Programs & Initiatives</h1>
-              <p className="mt-2 text-muted-foreground">Oversee and manage the active impact catalog.</p>
+              <h1 className="mt-3 font-display text-4xl font-semibold text-primary">
+                Programs & Initiatives
+              </h1>
+              <p className="mt-2 text-muted-foreground">
+                Oversee and manage the active impact catalog.
+              </p>
             </div>
             <Button asChild className="rounded-xl gap-2 shadow-lg shadow-primary/20 h-12 px-6">
               <Link to="/admin-dashboard/initiatives/new">
@@ -129,16 +126,29 @@ function AdminInitiativesPage() {
                         <TableCell className="pl-8 py-5">
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded-2xl overflow-hidden border border-border/40 shrink-0">
-                              <img src={item.image_url || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1200'} className="h-full w-full object-cover" alt="" />
+                              <img
+                                src={
+                                  item.image_url ||
+                                  "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1200"
+                                }
+                                className="h-full w-full object-cover"
+                                alt=""
+                              />
                             </div>
                             <div>
-                              <div className="font-bold text-primary leading-tight">{item.title}</div>
-                              <div className="text-[10px] text-muted-foreground uppercase font-bold mt-1 tracking-wider">{item.category}</div>
+                              <div className="font-bold text-primary leading-tight">
+                                {item.title}
+                              </div>
+                              <div className="text-[10px] text-muted-foreground uppercase font-bold mt-1 tracking-wider">
+                                {item.category}
+                              </div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm font-medium">{item.organizations?.organization_name || 'CommonGround'}</span>
+                          <span className="text-sm font-medium">
+                            {item.organizations?.organization_name || "CommonGround"}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-4 text-muted-foreground">
@@ -151,18 +161,31 @@ function AdminInitiativesPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={item.status === 'active' ? 'default' : 'secondary'} className="rounded-lg capitalize">
+                          <Badge
+                            variant={item.status === "active" ? "default" : "secondary"}
+                            className="rounded-lg capitalize"
+                          >
                             {item.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="pr-8 text-right">
                           <div className="flex justify-end gap-2">
-                            <Button asChild variant="ghost" size="icon" className="rounded-xl h-9 w-9">
+                            <Button
+                              asChild
+                              variant="ghost"
+                              size="icon"
+                              className="rounded-xl h-9 w-9"
+                            >
                               <Link to={`/admin-dashboard/initiatives/${item.id}/manage` as any}>
                                 <Settings className="h-4 w-4" />
                               </Link>
                             </Button>
-                            <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 text-red-500 hover:bg-red-50" onClick={() => deleteMutation.mutate(item.id)}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="rounded-xl h-9 w-9 text-red-500 hover:bg-red-50"
+                              onClick={() => deleteMutation.mutate(item.id)}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>

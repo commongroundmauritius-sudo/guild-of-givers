@@ -6,14 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  ArrowLeft,
-  Save,
-  ShieldCheck,
-  EyeOff,
-  Target,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, Save, ShieldCheck, EyeOff, Target, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -29,9 +22,7 @@ import {
 import { CampaignLinkManager } from "@/components/dashboard/campaigns/CampaignLinkManager";
 import { updateInitiative } from "@/lib/security/auth-actions";
 
-export const Route = createFileRoute(
-  "/_authenticated/admin-dashboard/initiatives/$id/manage"
-)({
+export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/$id/manage")({
   component: AdminInitiativeManagePage,
 });
 
@@ -58,11 +49,7 @@ function AdminInitiativeManagePage() {
     queryKey: ["admin-initiative", id],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("initiatives")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data, error } = await supabase.from("initiatives").select("*").eq("id", id).single();
       if (error) throw error;
       return data;
     },
@@ -95,12 +82,10 @@ function AdminInitiativeManagePage() {
     },
     onError: (error: Error) => {
       toast.error(error.message);
-    }
+    },
   });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
@@ -161,7 +146,9 @@ function AdminInitiativeManagePage() {
             <div className="lg:col-span-2 space-y-8">
               <Tabs defaultValue="details" className="w-full">
                 <TabsList className="bg-card border border-border/40 p-1 rounded-xl mb-6">
-                  <TabsTrigger value="details" className="rounded-lg px-6">General Details</TabsTrigger>
+                  <TabsTrigger value="details" className="rounded-lg px-6">
+                    General Details
+                  </TabsTrigger>
                   <TabsTrigger value="campaigns" className="rounded-lg px-6 gap-2">
                     <Target className="h-4 w-4" /> Campaigns
                   </TabsTrigger>
@@ -189,7 +176,10 @@ function AdminInitiativeManagePage() {
                     <div className="grid gap-6 md:grid-cols-2 mb-6">
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground">Status</label>
-                        <Select value={formData.status} onValueChange={(v) => handleCheckboxChange("status", v)}>
+                        <Select
+                          value={formData.status}
+                          onValueChange={(v) => handleCheckboxChange("status", v)}
+                        >
                           <SelectTrigger className="rounded-xl">
                             <SelectValue />
                           </SelectTrigger>
@@ -201,8 +191,13 @@ function AdminInitiativeManagePage() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">Category</label>
-                        <Select value={formData.category} onValueChange={(v) => handleCheckboxChange("category", v)}>
+                        <label className="text-sm font-medium text-muted-foreground">
+                          Category
+                        </label>
+                        <Select
+                          value={formData.category}
+                          onValueChange={(v) => handleCheckboxChange("category", v)}
+                        >
                           <SelectTrigger className="rounded-xl">
                             <SelectValue />
                           </SelectTrigger>
@@ -219,7 +214,9 @@ function AdminInitiativeManagePage() {
 
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">Initiative Title</label>
+                        <label className="text-sm font-medium text-muted-foreground">
+                          Initiative Title
+                        </label>
                         <Input
                           name="title"
                           value={formData.title}
@@ -228,7 +225,9 @@ function AdminInitiativeManagePage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">Short Caption</label>
+                        <label className="text-sm font-medium text-muted-foreground">
+                          Short Caption
+                        </label>
                         <Input
                           name="caption"
                           value={formData.caption}
@@ -249,10 +248,14 @@ function AdminInitiativeManagePage() {
                   </div>
 
                   <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
-                    <h2 className="mb-6 font-display text-xl font-semibold text-primary">Content</h2>
+                    <h2 className="mb-6 font-display text-xl font-semibold text-primary">
+                      Content
+                    </h2>
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">Full Description</label>
+                        <label className="text-sm font-medium text-muted-foreground">
+                          Full Description
+                        </label>
                         <Textarea
                           name="description"
                           value={formData.description}
@@ -276,7 +279,9 @@ function AdminInitiativeManagePage() {
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border/20">
                   <div className="space-y-0.5">
                     <div className="text-sm font-medium">Public Visibility</div>
-                    <div className="text-xs text-muted-foreground">Make this initiative live on discovery.</div>
+                    <div className="text-xs text-muted-foreground">
+                      Make this initiative live on discovery.
+                    </div>
                   </div>
                   <Switch
                     checked={formData.is_published}
@@ -286,10 +291,14 @@ function AdminInitiativeManagePage() {
               </div>
 
               <div className="rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
-                <h2 className="mb-6 font-display text-xl font-semibold text-primary">Impact Pool</h2>
+                <h2 className="mb-6 font-display text-xl font-semibold text-primary">
+                  Impact Pool
+                </h2>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Goal Amount (MUR)</label>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Goal Amount (MUR)
+                    </label>
                     <Input
                       name="goal_amount_mur"
                       type="number"
@@ -299,7 +308,9 @@ function AdminInitiativeManagePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Target Pool (MUR)</label>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Target Pool (MUR)
+                    </label>
                     <Input
                       name="impact_pool_target"
                       type="number"
@@ -315,7 +326,9 @@ function AdminInitiativeManagePage() {
                 <h2 className="mb-6 font-display text-xl font-semibold text-primary">Media</h2>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Hero Image URL</label>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Hero Image URL
+                    </label>
                     <Input
                       name="image_url"
                       value={formData.image_url}
@@ -325,7 +338,11 @@ function AdminInitiativeManagePage() {
                     />
                     {formData.image_url && (
                       <div className="mt-2 aspect-video rounded-xl overflow-hidden border border-border/40">
-                        <img src={formData.image_url} alt="Hero" className="w-full h-full object-cover" />
+                        <img
+                          src={formData.image_url}
+                          alt="Hero"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     )}
                   </div>

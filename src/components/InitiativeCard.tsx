@@ -11,7 +11,8 @@ export function InitiativeCard({ initiative }: InitiativeCardProps) {
   const current = Number(initiative.current_amount_mur) || 0;
   const progress = Math.min(100, Math.round((current / goal) * 100));
 
-  const organizationName = initiative.organization_name || getJoinedField(initiative.organizations, "organization_name");
+  const organizationName =
+    initiative.organization_name || getJoinedField(initiative.organizations, "organization_name");
 
   return (
     <Link
@@ -51,7 +52,9 @@ export function InitiativeCard({ initiative }: InitiativeCardProps) {
         </h2>
 
         {initiative.caption && (
-          <p className="mt-2 text-sm font-semibold text-teal-600 line-clamp-1">{initiative.caption}</p>
+          <p className="mt-2 text-sm font-semibold text-teal-600 line-clamp-1">
+            {initiative.caption}
+          </p>
         )}
 
         <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
@@ -76,9 +79,7 @@ export function InitiativeCard({ initiative }: InitiativeCardProps) {
 
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-lg font-bold text-primary">
-                Rs {current.toLocaleString()}
-              </span>
+              <span className="text-lg font-bold text-primary">Rs {current.toLocaleString()}</span>
               <span className="text-[10px] font-medium uppercase text-muted-foreground">
                 raised of Rs {goal.toLocaleString()}
               </span>

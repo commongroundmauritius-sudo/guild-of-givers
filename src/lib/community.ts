@@ -43,11 +43,11 @@ export async function compressAndUploadImage(file: File, bucket: string, path: s
     const compressedFile = await imageCompression(file, options);
     // Sanitize filename by removing potentially dangerous characters
     // and ensuring a single controlled extension
-    const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const safeBaseName = file.name
-      .split('.')
+      .split(".")
       .slice(0, -1)
-      .join('.')
+      .join(".")
       .replace(/[^a-zA-Z0-9-]/g, "_")
       .substring(0, 50);
 

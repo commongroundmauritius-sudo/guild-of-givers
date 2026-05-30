@@ -38,19 +38,18 @@ export function useFinancialMetrics() {
         .select("*", { count: "exact", head: true })
         .eq("status", "failed");
 
-      const { data: retryData } = await supabase
-        .from("subscriptions")
-        .select("retry_count" as any);
+      const { data: retryData } = await supabase.from("subscriptions").select("retry_count" as any);
 
-      const totalRetries = (retryData as any[])?.reduce((sum, r) => sum + (r.retry_count || 0), 0) || 0;
+      const totalRetries =
+        (retryData as any[])?.reduce((sum, r) => sum + (r.retry_count || 0), 0) || 0;
 
       return {
         revenue: totalRevenue,
         activeSubscriptions: activeSubs || 0,
         conversionRate,
         failedPayments: failedPayments || 0,
-        totalRetries
+        totalRetries,
       };
-    }
+    },
   });
 }

@@ -103,7 +103,9 @@ export function CreatePostForm() {
   return (
     <Card className="border-border/40 shadow-sm rounded-3xl">
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-display font-bold text-primary">Share with the Community</CardTitle>
+        <CardTitle className="text-xl font-display font-bold text-primary">
+          Share with the Community
+        </CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -161,7 +163,12 @@ export function CreatePostForm() {
               onChange={handleImageChange}
             />
             <label htmlFor="post-image">
-              <Button variant="ghost" type="button" className="rounded-full hover:bg-primary/5 text-primary" asChild>
+              <Button
+                variant="ghost"
+                type="button"
+                className="rounded-full hover:bg-primary/5 text-primary"
+                asChild
+              >
                 <span className="cursor-pointer gap-2 font-bold text-xs uppercase tracking-widest">
                   <ImagePlus className="h-4 w-4" />
                   Add Photo
@@ -169,7 +176,11 @@ export function CreatePostForm() {
               </Button>
             </label>
           </div>
-          <Button type="submit" className="rounded-full px-8 font-bold shadow-lg shadow-primary/20" disabled={uploading || mutation.isPending}>
+          <Button
+            type="submit"
+            className="rounded-full px-8 font-bold shadow-lg shadow-primary/20"
+            disabled={uploading || mutation.isPending}
+          >
             {uploading ? "Uploading..." : "Post to Hub"}
             {!uploading && <Send className="h-4 w-4 ml-2" />}
           </Button>

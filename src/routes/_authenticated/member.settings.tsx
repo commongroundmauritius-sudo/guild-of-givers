@@ -38,8 +38,8 @@ function MemberSettings() {
             address: trimmedAddress || null,
             age: ageInt,
             avatar_url: avatarUrl || null,
-          }
-        }
+          },
+        },
       });
     },
     onSuccess: () => {

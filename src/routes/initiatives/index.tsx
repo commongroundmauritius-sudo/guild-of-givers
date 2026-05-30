@@ -47,15 +47,17 @@ function InitiativesPage() {
               <div className="rounded-full bg-primary/10 p-2 text-primary">
                 <Target className="h-5 w-5" />
               </div>
-              <span className="text-xs font-bold uppercase tracking-widest text-primary">Discovery</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary">
+                Discovery
+              </span>
             </div>
             <h1 className="font-display text-5xl font-bold text-primary sm:text-6xl lg:text-7xl">
               Find Your <br />
               <span className="text-forest">Impact Focus.</span>
             </h1>
             <p className="mt-6 text-xl text-muted-foreground leading-relaxed max-w-2xl">
-              Explore vetted long-term programs. One membership allows you to distribute
-              support across multiple initiatives.
+              Explore vetted long-term programs. One membership allows you to distribute support
+              across multiple initiatives.
             </p>
           </div>
         </div>
@@ -119,7 +121,9 @@ function InitiativesPage() {
           ) : (
             <div className="py-20 text-center">
               <h3 className="text-xl font-semibold text-primary">No initiatives found</h3>
-              <p className="mt-2 text-muted-foreground">Try adjusting your filters or search term.</p>
+              <p className="mt-2 text-muted-foreground">
+                Try adjusting your filters or search term.
+              </p>
               <Button
                 variant="link"
                 className="mt-4 font-bold text-primary"

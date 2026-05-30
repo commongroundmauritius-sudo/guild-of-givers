@@ -13,7 +13,7 @@ import {
   Plus,
   Check,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,9 +31,15 @@ function MemberDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const subSyncKeys = useMemo(() => user?.id ? [["member-subscription", user.id]] : [], [user?.id]);
-  const prefSyncKeys = useMemo(() => user?.id ? [["member-preferences", user.id]] : [], [user?.id]);
-  const ledgerSyncKeys = useMemo(() => user?.id ? [["member-ledger", user.id]] : [], [user?.id]);
+  const subSyncKeys = useMemo(
+    () => (user?.id ? [["member-subscription", user.id]] : []),
+    [user?.id],
+  );
+  const prefSyncKeys = useMemo(
+    () => (user?.id ? [["member-preferences", user.id]] : []),
+    [user?.id],
+  );
+  const ledgerSyncKeys = useMemo(() => (user?.id ? [["member-ledger", user.id]] : []), [user?.id]);
 
   useRealtimeSync("subscriptions", subSyncKeys);
   useRealtimeSync("member_preferences", prefSyncKeys);
@@ -43,7 +49,11 @@ function MemberDashboard() {
     queryKey: ["profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user!.id)
+        .single();
       if (error) throw error;
       return data;
     },
@@ -121,13 +131,19 @@ function MemberDashboard() {
             <div>
               <div className="flex items-center gap-2">
                 <LayoutDashboard className="h-5 w-5 text-teal-600" />
-                <span className="text-xs font-bold uppercase tracking-widest text-teal-600">Member Hub</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-teal-600">
+                  Member Hub
+                </span>
               </div>
               <h1 className="mt-3 font-display text-4xl font-semibold text-primary">
                 Welcome back, {profile?.full_name || "Member"}
               </h1>
             </div>
-            <Button variant="outline" className="gap-2 rounded-xl" onClick={() => navigate({ to: "/member/profile" })}>
+            <Button
+              variant="outline"
+              className="gap-2 rounded-xl"
+              onClick={() => navigate({ to: "/member/profile" })}
+            >
               Account Settings
               <ExternalLink className="h-4 w-4" />
             </Button>
@@ -147,17 +163,25 @@ function MemberDashboard() {
                 </div>
                 <CardContent className="grid gap-6 p-8 sm:grid-cols-3">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Monthly Amount</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Monthly Amount
+                    </p>
                     <p className="mt-2 font-display text-3xl font-bold text-primary">
                       Rs {Number(subscription?.amount_mur || 0).toLocaleString()}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Selected Programs</p>
-                    <p className="mt-2 font-display text-3xl font-bold text-primary">{selectedIds.size}</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Selected Programs
+                    </p>
+                    <p className="mt-2 font-display text-3xl font-bold text-primary">
+                      {selectedIds.size}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Next Billing</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Next Billing
+                    </p>
                     <p className="mt-2 font-display text-xl font-bold text-primary">
                       {subscription?.next_billing_date
                         ? new Date(subscription.next_billing_date).toLocaleDateString()
@@ -173,7 +197,10 @@ function MemberDashboard() {
                     <Heart className="h-6 w-6 text-teal-600" />
                     Impact Distribution
                   </h2>
-                  <Link to="/initiatives" className="flex items-center gap-1 text-sm font-bold text-teal-600 hover:underline">
+                  <Link
+                    to="/initiatives"
+                    className="flex items-center gap-1 text-sm font-bold text-teal-600 hover:underline"
+                  >
                     Explore more <ChevronRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -185,7 +212,9 @@ function MemberDashboard() {
                       <div
                         key={i.id}
                         className={`relative flex flex-col overflow-hidden rounded-3xl border p-6 transition ${
-                          isSelected ? "border-teal-600 bg-teal-600/5 shadow-sm" : "border-border/40 bg-card"
+                          isSelected
+                            ? "border-teal-600 bg-teal-600/5 shadow-sm"
+                            : "border-border/40 bg-card"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-4">
@@ -195,16 +224,26 @@ function MemberDashboard() {
                                 (i as any).organization_name ||
                                 "Organization Partner"}
                             </span>
-                            <h3 className="mt-1 font-display text-lg font-semibold text-primary">{i.title}</h3>
+                            <h3 className="mt-1 font-display text-lg font-semibold text-primary">
+                              {i.title}
+                            </h3>
                           </div>
                           <button
                             type="button"
-                            onClick={() => toggleMutation.mutate({ initiativeId: i.id, selected: !isSelected })}
+                            onClick={() =>
+                              toggleMutation.mutate({ initiativeId: i.id, selected: !isSelected })
+                            }
                             className={`grid h-8 w-8 shrink-0 place-items-center rounded-full transition ${
-                              isSelected ? "bg-teal-600 text-white" : "bg-muted text-muted-foreground hover:bg-teal-100"
+                              isSelected
+                                ? "bg-teal-600 text-white"
+                                : "bg-muted text-muted-foreground hover:bg-teal-100"
                             }`}
                           >
-                            {isSelected ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                            {isSelected ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Plus className="h-4 w-4" />
+                            )}
                           </button>
                         </div>
                       </div>

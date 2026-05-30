@@ -1,14 +1,30 @@
-import { useInitiativeHealth, useInitiativeHealthHistory } from "@/hooks/intelligence/use-initiative-health";
+import {
+  useInitiativeHealth,
+  useInitiativeHealthHistory,
+} from "@/hooks/intelligence/use-initiative-health";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { AlertCircle } from "lucide-react";
 
 export function InitiativeHealth({ initiativeId }: { initiativeId: string }) {
-  const { data: health, isLoading: healthLoading, isError: healthError } = useInitiativeHealth(initiativeId);
+  const {
+    data: health,
+    isLoading: healthLoading,
+    isError: healthError,
+  } = useInitiativeHealth(initiativeId);
   const { data: history, isLoading: historyLoading } = useInitiativeHealthHistory(initiativeId);
 
-  if (healthLoading || historyLoading) return <div className="h-64 animate-pulse bg-muted rounded-3xl" />;
+  if (healthLoading || historyLoading)
+    return <div className="h-64 animate-pulse bg-muted rounded-3xl" />;
 
   if (healthError) {
     return (
@@ -30,20 +46,29 @@ export function InitiativeHealth({ initiativeId }: { initiativeId: string }) {
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="rounded-3xl border-border/40 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Aggregate Health Score</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+              Aggregate Health Score
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-end gap-2">
-              <span className="text-5xl font-bold tracking-tighter">{Number(health?.health_score || 0)}</span>
+              <span className="text-5xl font-bold tracking-tighter">
+                {Number(health?.health_score || 0)}
+              </span>
               <span className="text-sm text-muted-foreground pb-2">/ 100</span>
             </div>
-            <Progress value={Number(health?.health_score || 0)} className={`h-3 ${getHealthColor(Number(health?.health_score || 0))}`} />
+            <Progress
+              value={Number(health?.health_score || 0)}
+              className={`h-3 ${getHealthColor(Number(health?.health_score || 0))}`}
+            />
           </CardContent>
         </Card>
 
         <Card className="rounded-3xl border-border/40 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Heuristic breakdown</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+              Heuristic breakdown
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <ScoreRow label="Supporter Growth" value={Number(health?.growth_score || 0)} />
@@ -56,7 +81,9 @@ export function InitiativeHealth({ initiativeId }: { initiativeId: string }) {
 
       <Card className="rounded-3xl border-border/40 shadow-sm overflow-hidden">
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Health Trend (30d)</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+            Health Trend (30d)
+          </CardTitle>
         </CardHeader>
         <CardContent className="h-64 pt-4">
           <ResponsiveContainer width="100%" height="100%">
@@ -64,15 +91,23 @@ export function InitiativeHealth({ initiativeId }: { initiativeId: string }) {
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
               <XAxis
                 dataKey="calculated_at"
-                tickFormatter={(date) => date ? new Date(date).toLocaleDateString([], { month: 'short', day: 'numeric' }) : ''}
+                tickFormatter={(date) =>
+                  date
+                    ? new Date(date).toLocaleDateString([], { month: "short", day: "numeric" })
+                    : ""
+                }
                 fontSize={10}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
               <Tooltip
-                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                labelFormatter={(date) => date ? new Date(date).toLocaleDateString() : ''}
+                contentStyle={{
+                  borderRadius: "12px",
+                  border: "none",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                }}
+                labelFormatter={(date) => (date ? new Date(date).toLocaleDateString() : "")}
               />
               <Line
                 type="monotone"
@@ -90,7 +125,7 @@ export function InitiativeHealth({ initiativeId }: { initiativeId: string }) {
   );
 }
 
-function ScoreRow({ label, value }: { label: string, value?: number }) {
+function ScoreRow({ label, value }: { label: string; value?: number }) {
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs">

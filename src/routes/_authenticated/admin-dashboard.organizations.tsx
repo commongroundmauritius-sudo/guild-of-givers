@@ -6,14 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Search,
-  Building2,
-  CheckCircle2,
-  XCircle,
-  ExternalLink,
-  Info,
-} from "lucide-react";
+import { Search, Building2, CheckCircle2, XCircle, ExternalLink, Info } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { updateOrganizationStatus } from "@/lib/security/auth-actions";
@@ -50,11 +43,11 @@ function AdminOrganizationsPage() {
     },
     onError: (error: Error) => {
       toast.error(error.message);
-    }
+    },
   });
 
   const filteredOrgs = organizations.filter((org) =>
-    org.organization_name.toLowerCase().includes(searchTerm.toLowerCase())
+    org.organization_name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -89,53 +82,72 @@ function AdminOrganizationsPage() {
 
           {isLoading ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {Array(6).fill(0).map((_, i) => (
-                <Card key={i} className="h-48 animate-pulse bg-muted rounded-[2.5rem]" />
-              ))}
+              {Array(6)
+                .fill(0)
+                .map((_, i) => (
+                  <Card key={i} className="h-48 animate-pulse bg-muted rounded-[2.5rem]" />
+                ))}
             </div>
           ) : filteredOrgs.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredOrgs.map((org) => (
-                <Card key={org.id} className="rounded-[2.5rem] border-border/40 overflow-hidden group">
+                <Card
+                  key={org.id}
+                  className="rounded-[2.5rem] border-border/40 overflow-hidden group"
+                >
                   <CardContent className="p-8">
                     <div className="flex items-start justify-between gap-4 mb-6">
                       <div className="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center border border-indigo-100 shrink-0">
                         {org.logo_url ? (
-                          <img src={org.logo_url} className="h-full w-full object-cover rounded-2xl" alt="" />
+                          <img
+                            src={org.logo_url}
+                            className="h-full w-full object-cover rounded-2xl"
+                            alt=""
+                          />
                         ) : (
                           <Building2 className="h-8 w-8 text-indigo-500" />
                         )}
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        org.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
-                      }`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          org.status === "active"
+                            ? "bg-green-50 text-green-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
                         {org.status}
                       </span>
                     </div>
 
-                    <h3 className="text-xl font-bold text-primary mb-2 line-clamp-1">{org.organization_name}</h3>
+                    <h3 className="text-xl font-bold text-primary mb-2 line-clamp-1">
+                      {org.organization_name}
+                    </h3>
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-6 h-10">
                       {org.description || "No description provided."}
                     </p>
 
                     <div className="flex items-center justify-between border-t border-border/40 pt-6">
                       <div className="flex gap-2">
-                        {org.status !== 'active' && (
+                        {org.status !== "active" && (
                           <Button
                             variant="ghost"
                             size="icon"
                             className="rounded-full text-green-600 hover:bg-green-50 h-9 w-9"
-                            onClick={() => updateStatusMutation.mutate({ id: org.id, status: 'active' })}
+                            onClick={() =>
+                              updateStatusMutation.mutate({ id: org.id, status: "active" })
+                            }
                           >
                             <CheckCircle2 className="h-5 w-5" />
                           </Button>
                         )}
-                        {org.status !== 'suspended' && (
+                        {org.status !== "suspended" && (
                           <Button
                             variant="ghost"
                             size="icon"
                             className="rounded-full text-red-600 hover:bg-red-50 h-9 w-9"
-                            onClick={() => updateStatusMutation.mutate({ id: org.id, status: 'suspended' })}
+                            onClick={() =>
+                              updateStatusMutation.mutate({ id: org.id, status: "suspended" })
+                            }
                           >
                             <XCircle className="h-5 w-5" />
                           </Button>

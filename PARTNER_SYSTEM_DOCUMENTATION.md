@@ -3,34 +3,43 @@
 ## Technical Implementation Summary
 
 ### Architecture Decisions
+
 The Partner Application System is built as a robust, scalable onboarding pipeline. It separates public submission from administrative management and organization conversion. We've introduced a service-oriented architecture for partner logic and used TanStack Start server functions for secure backend communication.
 
 ### Schema Changes
+
 - Introduced `partner_applications` table for tracking the lifecycle of an application.
 - Introduced `partner_application_activity` for a detailed audit log of all actions.
 - Expanded `app_role` enum to include `super_admin`.
 - Added soft-delete support and converted organization tracking.
 
 ### RLS Design
+
 - **Public:** Can only INSERT into `partner_applications`.
 - **Admin/Super Admin:** Can SELECT, UPDATE, and DELETE on all application and activity records.
 - **Strict Isolation:** Public users cannot read or modify any existing applications.
 
 ### Realtime Implementation
+
 The system is built to support realtime updates in the Admin Dashboard via Supabase subscriptions (implemented in the Query keys for invalidation).
 
 ### Conversion Flow Logic
+
 When an application is "Converted", the system:
+
 1. Creates a new record in the `organizations` table.
 2. Updates the application status to 'converted'.
 3. Links the new Organization ID back to the application.
 4. Logs the conversion in the audit trail.
 
 ### Duplicate Protection Strategy
+
 A 24-hour cooldown is enforced at the service level. If an application with the same email in 'submitted' or 'under_review' status exists from the last 24 hours, new submissions are rejected with a friendly message.
 
 ### Notification Flow
+
 Database triggers automatically enqueue emails in the `email_queue`:
+
 - **Applicant:** Confirmation on submission.
 - **Admin:** Alert on new submission.
 - **Applicant:** Notification on approval.
@@ -42,30 +51,32 @@ Database triggers automatically enqueue emails in the `email_queue`:
 ### New Tables
 
 #### `public.partner_applications`
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | UUID | Primary Key |
-| `organization_name` | TEXT | |
-| `organization_type` | TEXT | |
-| `registration_number` | TEXT | |
-| `email` | TEXT | Indexed |
-| `message` | TEXT | |
-| `status` | Enum | Default 'submitted' |
-| `converted_organization_id` | UUID | Link to organizations table |
-| `converted_at` | TIMESTAMPTZ | |
-| `converted_by` | UUID | Link to profiles |
-| `is_deleted` | BOOLEAN | Soft delete support |
+
+| Column                      | Type        | Notes                       |
+| --------------------------- | ----------- | --------------------------- |
+| `id`                        | UUID        | Primary Key                 |
+| `organization_name`         | TEXT        |                             |
+| `organization_type`         | TEXT        |                             |
+| `registration_number`       | TEXT        |                             |
+| `email`                     | TEXT        | Indexed                     |
+| `message`                   | TEXT        |                             |
+| `status`                    | Enum        | Default 'submitted'         |
+| `converted_organization_id` | UUID        | Link to organizations table |
+| `converted_at`              | TIMESTAMPTZ |                             |
+| `converted_by`              | UUID        | Link to profiles            |
+| `is_deleted`                | BOOLEAN     | Soft delete support         |
 
 #### `public.partner_application_activity`
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | UUID | Primary Key |
-| `application_id` | UUID | FK to partner_applications |
-| `actor_id` | UUID | FK to profiles (admin) |
-| `action` | TEXT | Action type (status_change, etc.) |
-| `previous_status` | Enum | |
-| `new_status` | Enum | |
-| `metadata` | JSONB | Additional details |
+
+| Column            | Type  | Notes                             |
+| ----------------- | ----- | --------------------------------- |
+| `id`              | UUID  | Primary Key                       |
+| `application_id`  | UUID  | FK to partner_applications        |
+| `actor_id`        | UUID  | FK to profiles (admin)            |
+| `action`          | TEXT  | Action type (status_change, etc.) |
+| `previous_status` | Enum  |                                   |
+| `new_status`      | Enum  |                                   |
+| `metadata`        | JSONB | Additional details                |
 
 ---
 
@@ -124,12 +135,14 @@ Database triggers automatically enqueue emails in the `email_queue`:
 ## Final Deliverables
 
 ### Changed Files
+
 - `src/routes/partner.tsx` (Updated public form)
 - `src/routes/_authenticated/admin-dashboard.tsx` (Admin role protection update)
 - `src/routes/_authenticated/admin-dashboard.index.tsx` (Admin role protection update)
 - `src/components/site/Header.tsx` (Navigation and role support)
 
 ### New Files
+
 - `src/lib/partner/service.ts` (Backend logic)
 - `src/lib/partner/actions.ts` (Server functions)
 - `src/routes/_authenticated/admin-dashboard.partner-applications.tsx` (Admin UI)

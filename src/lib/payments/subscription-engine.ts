@@ -10,7 +10,13 @@ export class SubscriptionEngine {
       case "payment.success":
       case "subscription.renewal":
         if (userId && transactionId && typeof amount === "number") {
-          await this.processSuccessfulPayment(userId, subscriptionId, transactionId, amount, payload);
+          await this.processSuccessfulPayment(
+            userId,
+            subscriptionId,
+            transactionId,
+            amount,
+            payload,
+          );
         }
         break;
 
@@ -18,7 +24,9 @@ export class SubscriptionEngine {
         if (await this.updateSubscriptionStatus(subscriptionId, "cancelled")) {
           await this.recordSupporterStatusEvent(userId, "supporter_deactivated");
           if (userId) {
-            automationService.processTrigger('event', { event_name: 'subscription_cancelled', user_id: userId }).catch(console.error);
+            automationService
+              .processTrigger("event", { event_name: "subscription_cancelled", user_id: userId })
+              .catch(console.error);
           }
         }
         break;
@@ -27,7 +35,9 @@ export class SubscriptionEngine {
         if (await this.updateSubscriptionStatus(subscriptionId, "active")) {
           await this.recordSupporterStatusEvent(userId, "supporter_activated");
           if (userId) {
-            automationService.processTrigger('event', { event_name: 'supporter_returned', user_id: userId }).catch(console.error);
+            automationService
+              .processTrigger("event", { event_name: "supporter_returned", user_id: userId })
+              .catch(console.error);
           }
         }
         break;
@@ -48,7 +58,7 @@ export class SubscriptionEngine {
     subscriptionId: string | undefined,
     transactionId: string | undefined,
     amount: number | undefined,
-    payload?: any
+    payload?: any,
   ): Promise<void> {
     if (!transactionId || amount === undefined) return;
 
@@ -64,13 +74,16 @@ export class SubscriptionEngine {
     }
 
     // 2. Update payment record with reliability metadata
-    await supabase.from("payments").update({
-      status: "success",
-      paid_at: new Date().toISOString(),
-      reconciliation_status: "success",
-      gateway_response: payload,
-      webhook_event_id: payload?.id
-    } as any).eq("id", transactionId);
+    await supabase
+      .from("payments")
+      .update({
+        status: "success",
+        paid_at: new Date().toISOString(),
+        reconciliation_status: "success",
+        gateway_response: payload,
+        webhook_event_id: payload?.id,
+      } as any)
+      .eq("id", transactionId);
 
     // 3. Update subscription status
     if (subscriptionId) {
@@ -86,19 +99,22 @@ export class SubscriptionEngine {
     subscriptionId: string | undefined,
     transactionId: string | undefined,
     amount: number | undefined,
-    payload?: any
+    payload?: any,
   ): Promise<void> {
     const failureReason = payload?.failure_reason || "unknown_error";
 
     // 1. Update payment record
     if (transactionId) {
-      await supabase.from("payments").update({
-        status: "failed",
-        failure_reason: failureReason,
-        gateway_response: payload,
-        reconciliation_status: "failed",
-        webhook_event_id: payload?.id
-      } as any).eq("id", transactionId);
+      await supabase
+        .from("payments")
+        .update({
+          status: "failed",
+          failure_reason: failureReason,
+          gateway_response: payload,
+          reconciliation_status: "failed",
+          webhook_event_id: payload?.id,
+        } as any)
+        .eq("id", transactionId);
     }
 
     // 2. Update subscription status and retry count
@@ -126,12 +142,14 @@ export class SubscriptionEngine {
     }
 
     if (userId) {
-      automationService.processTrigger('event', {
-        event_name: 'payment_failed',
-        user_id: userId,
-        amount,
-        failure_reason: failureReason
-      }).catch(console.error);
+      automationService
+        .processTrigger("event", {
+          event_name: "payment_failed",
+          user_id: userId,
+          amount,
+          failure_reason: failureReason,
+        })
+        .catch(console.error);
     }
   }
 
@@ -165,17 +183,23 @@ export class SubscriptionEngine {
       .maybeSingle();
 
     if (profile) {
-      const { data, error } = await supabase.from("initiative_events").insert({
-        initiative_id: (profile as any).primary_initiative_id,
-        event_type: eventType,
-        user_id: userId,
-      } as any).select().single();
+      const { data, error } = await supabase
+        .from("initiative_events")
+        .insert({
+          initiative_id: (profile as any).primary_initiative_id,
+          event_type: eventType,
+          user_id: userId,
+        } as any)
+        .select()
+        .single();
 
       if (!error && data) {
-        automationService.processTrigger('activity', {
-          ...data,
-          organization_id: (profile as any).organization_id
-        }).catch(console.error);
+        automationService
+          .processTrigger("activity", {
+            ...data,
+            organization_id: (profile as any).organization_id,
+          })
+          .catch(console.error);
       }
     }
   }

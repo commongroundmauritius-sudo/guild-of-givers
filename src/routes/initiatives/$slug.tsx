@@ -75,7 +75,7 @@ function InitiativeDetailPage() {
     if (initiativeId) {
       localStorage.setItem("source_initiative_id", initiativeId);
       // Log page view via hardened action
-      logInitiativeEvent({ data: { initiativeId, eventType: 'page_view' } }).catch(console.error);
+      logInitiativeEvent({ data: { initiativeId, eventType: "page_view" } }).catch(console.error);
     }
   }, [initiativeId]);
 
@@ -89,7 +89,7 @@ function InitiativeDetailPage() {
             url: typeof window !== "undefined" ? window.location.href : "",
             source: "initiative_detail_primary",
           },
-        }
+        },
       });
     }
   };
@@ -105,7 +105,7 @@ function InitiativeDetailPage() {
               initiativeId,
               eventType: "share",
               metadata: { url: window.location.href },
-            }
+            },
           });
         }
       } catch (err) {
