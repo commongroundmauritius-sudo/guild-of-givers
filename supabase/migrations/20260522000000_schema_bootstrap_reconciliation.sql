@@ -4,7 +4,7 @@
 -- 1. Enum Seed (Top-level commands to ensure visibility and prevent SQLSTATE 55P04)
 -- Adding these outside of any transaction block.
 ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'super_admin';
-ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'ngo';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'organization';
 
 -- 2. Structural Tables
 BEGIN;
