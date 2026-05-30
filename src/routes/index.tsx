@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -10,12 +9,15 @@ import {
   AlertCircle,
   TrendingUp,
   Clock,
+  LucideIcon,
 } from "lucide-react";
 import { InitiativeCard } from "@/components/InitiativeCard";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Kicker } from "@/components/Kicker";
 import { useCuratedInitiatives } from "@/hooks/initiatives/use-curated-initiatives";
 import { useActivityTracker } from "@/hooks/activities/use-activity-tracker";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Accordion,
   AccordionContent,
@@ -39,24 +41,79 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+interface VisibilitySettings {
+  hero: boolean;
+  valueProps: boolean;
+  featured: boolean;
+  forOrgs: boolean;
+  faq: boolean;
+}
+
 function Index() {
   useActivityTracker({ eventType: "homepage_view" });
-  const { featured, urgent, trending, newest } = useCuratedInitiatives();
+
+  // Fetch visibility settings
+  const { data: settings } = useQuery({
+    queryKey: ["homepage-visibility"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("homepage_settings")
+        .select("setting_value")
+        .eq("setting_key", "homepage_section_visibility")
+        .maybeSingle();
+      return (
+        (data?.setting_value as unknown as VisibilitySettings) || {
+          hero: true,
+          valueProps: true,
+          featured: true,
+          forOrgs: true,
+          faq: true,
+        }
+      );
+    },
+  });
+
+  // Fetch manually featured initiatives
+  const { data: manualFeatured = [], isLoading: manualFeaturedLoading } = useQuery({
+    queryKey: ["homepage-featured-manual"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("homepage_featured_initiatives")
+        .select("*, initiatives(*, organizations(organization_name))")
+        .neq("initiatives.status", "archived")
+        .order("display_order", { ascending: true });
+
+      if (error) return [];
+      return (data || []).filter((d) => d.initiatives).map((d) => d.initiatives);
+    },
+  });
+
+  const { urgent, trending, newest } = useCuratedInitiatives();
+
+  const visibility = settings || {
+    hero: true,
+    valueProps: true,
+    featured: true,
+    forOrgs: true,
+    faq: true,
+  };
 
   return (
     <SiteLayout>
-      <Hero />
-      <ValueProps />
+      {visibility.hero && <Hero />}
+      {visibility.valueProps && <ValueProps />}
 
-      {/* Featured Section */}
-      <CuratedSection
-        title="Featured Initiatives"
-        subtitle="Vetted programs making a significant impact right now."
-        initiatives={featured.data}
-        isLoading={featured.isLoading}
-        icon={Sparkles}
-        kicker="Handpicked"
-      />
+      {/* Featured Section (Manual Control) */}
+      {visibility.featured && (
+        <CuratedSection
+          title="Featured Initiatives"
+          subtitle="Vetted programs making a significant impact right now."
+          initiatives={manualFeatured as unknown as unknown[]}
+          isLoading={manualFeaturedLoading}
+          icon={Sparkles}
+          kicker="Handpicked"
+        />
+      )}
 
       {/* Urgent Section */}
       <CuratedSection
@@ -90,8 +147,8 @@ function Index() {
         bgClassName="bg-cream-deep/30"
       />
 
-      <ForOrgs />
-      <FAQ />
+      {visibility.forOrgs && <ForOrgs />}
+      {visibility.faq && <FAQ />}
       <FinalCTA />
     </SiteLayout>
   );
@@ -180,9 +237,9 @@ function ValueProps() {
 interface CuratedSectionProps {
   title: string;
   subtitle: string;
-  initiatives?: any[];
+  initiatives?: unknown[];
   isLoading: boolean;
-  icon: any;
+  icon: LucideIcon;
   kicker: string;
   bgClassName?: string;
 }
