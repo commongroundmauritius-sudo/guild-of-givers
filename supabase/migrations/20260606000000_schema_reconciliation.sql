@@ -1,6 +1,7 @@
--- Schema Reconciliation Migration
--- Restores Proven Missing Category A tables to ensure migration consistency.
--- Enforces production-grade security, indexing, and data integrity.
+-- Schema Reconciliation & Hardening Migration
+-- Restores or hardens Proven Missing Category A tables.
+-- This migration ensures that structural tables created by the bootstrap layer
+-- (20260522000000) are upgraded with proper enums, constraints, and RLS.
 
 BEGIN;
 
@@ -15,7 +16,7 @@ BEGIN
 END $$;
 
 -- ==========================================
--- 2. TABLES
+-- 2. TABLES & REFINEMENTS
 -- ==========================================
 
 -- billing_runs
@@ -26,8 +27,7 @@ CREATE TABLE IF NOT EXISTS public.billing_runs (
     subscriptions_processed INTEGER DEFAULT 0,
     total_amount_mur NUMERIC DEFAULT 0,
     error_log TEXT,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    CONSTRAINT billing_runs_status_check CHECK (status IN ('pending', 'running', 'completed', 'failed'))
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
 -- initiative_versions
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS public.initiative_versions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     initiative_id UUID REFERENCES public.initiatives(id) ON DELETE CASCADE NOT NULL,
     version_number INTEGER NOT NULL,
-    status public.initiative_version_status DEFAULT 'pending' NOT NULL,
+    status TEXT DEFAULT 'pending' NOT NULL,
     title TEXT,
     description TEXT,
     summary TEXT,
@@ -84,15 +84,36 @@ CREATE TABLE IF NOT EXISTS public.crm_tag_assignments (
     tag_id UUID REFERENCES public.crm_tags(id) ON DELETE CASCADE NOT NULL,
     lead_id UUID REFERENCES public.leads(id) ON DELETE CASCADE,
     profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    CONSTRAINT crm_tag_assignments_target_check CHECK (
-        (lead_id IS NOT NULL AND profile_id IS NULL) OR
-        (lead_id IS NULL AND profile_id IS NOT NULL)
-    )
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
 -- ==========================================
--- 3. INDEXING & UNIQUENESS
+-- 3. HARDENING (ENUMS & CONSTRAINTS)
+-- ==========================================
+DO $$
+BEGIN
+    -- initiative_versions.status ENUM conversion
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'initiative_versions' AND column_name = 'status' AND data_type = 'text') THEN
+        ALTER TABLE public.initiative_versions ALTER COLUMN status TYPE public.initiative_version_status USING status::public.initiative_version_status;
+        ALTER TABLE public.initiative_versions ALTER COLUMN status SET DEFAULT 'pending';
+    END IF;
+
+    -- billing_runs.status check constraint
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'billing_runs_status_check') THEN
+        ALTER TABLE public.billing_runs ADD CONSTRAINT billing_runs_status_check CHECK (status IN ('pending', 'running', 'completed', 'failed'));
+    END IF;
+
+    -- crm_tag_assignments target check
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'crm_tag_assignments_target_check') THEN
+        ALTER TABLE public.crm_tag_assignments ADD CONSTRAINT crm_tag_assignments_target_check CHECK (
+            (lead_id IS NOT NULL AND profile_id IS NULL) OR
+            (lead_id IS NULL AND profile_id IS NOT NULL)
+        );
+    END IF;
+END $$;
+
+-- ==========================================
+-- 4. INDEXING & UNIQUENESS
 -- ==========================================
 
 -- billing_runs
@@ -122,7 +143,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_crm_tag_assignments_tag_lead_unique ON pub
 CREATE UNIQUE INDEX IF NOT EXISTS idx_crm_tag_assignments_tag_profile_unique ON public.crm_tag_assignments(tag_id, profile_id) WHERE profile_id IS NOT NULL;
 
 -- ==========================================
--- 4. HELPER FUNCTIONS
+-- 5. HELPER FUNCTIONS
 -- ==========================================
 
 -- Performance-optimized org_id resolver for RLS
@@ -144,7 +165,7 @@ RETURNS UUID AS $$
 $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
 -- ==========================================
--- 5. RLS & POLICIES (Strict Organization Isolation)
+-- 6. RLS & POLICIES (Strict Organization Isolation)
 -- ==========================================
 
 -- RLS Baseline: Default Deny
