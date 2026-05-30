@@ -1,15 +1,14 @@
 -- Schema Bootstrap Reconciliation
 -- Minimal structural restoration to ensure migration chain consistency.
--- Enums are added first to avoid SQLSTATE 55P04 in subsequent migrations.
 
--- 1. Enum Bootstrap (Must run outside transaction)
+-- 1. Enum Seed (Top-level commands to ensure visibility and prevent SQLSTATE 55P04)
+-- Adding these outside of any transaction block.
 ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'super_admin';
 ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'ngo';
 
 -- 2. Structural Tables
 BEGIN;
 
--- billing_runs
 CREATE TABLE IF NOT EXISTS public.billing_runs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     run_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -20,7 +19,6 @@ CREATE TABLE IF NOT EXISTS public.billing_runs (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
--- initiative_versions
 CREATE TABLE IF NOT EXISTS public.initiative_versions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     initiative_id UUID REFERENCES public.initiatives(id) ON DELETE CASCADE NOT NULL,
@@ -46,7 +44,6 @@ CREATE TABLE IF NOT EXISTS public.initiative_versions (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
--- activities
 CREATE TABLE IF NOT EXISTS public.activities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -58,7 +55,6 @@ CREATE TABLE IF NOT EXISTS public.activities (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
--- crm_tags
 CREATE TABLE IF NOT EXISTS public.crm_tags (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
@@ -68,7 +64,6 @@ CREATE TABLE IF NOT EXISTS public.crm_tags (
     UNIQUE(organization_id, name)
 );
 
--- crm_tag_assignments
 CREATE TABLE IF NOT EXISTS public.crm_tag_assignments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tag_id UUID REFERENCES public.crm_tags(id) ON DELETE CASCADE NOT NULL,
@@ -79,12 +74,13 @@ CREATE TABLE IF NOT EXISTS public.crm_tag_assignments (
 
 COMMIT;
 
--- 3. Refresh has_role to ensure it recognizes the updated enum type
-CREATE OR REPLACE FUNCTION public.has_role(requested_role public.app_role)
+-- 3. has_role Overload
+-- Provide a TEXT-based overload to bypass OID issues with new enum values in RLS policies.
+CREATE OR REPLACE FUNCTION public.has_role(requested_role_name TEXT)
 RETURNS boolean AS $$
     SELECT EXISTS (
         SELECT 1 FROM public.user_roles
         WHERE user_id = auth.uid()
-        AND role = requested_role
+        AND role::TEXT = requested_role_name
     );
 $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
