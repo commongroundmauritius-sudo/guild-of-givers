@@ -27,7 +27,7 @@ function AdminDashboardLayout() {
     );
   }
 
-  if (!authLoading && (role !== "admin" && role !== "super_admin")) return null;
+  if (!authLoading && role !== "admin" && role !== "super_admin") return null;
 
   return <Outlet />;
 }

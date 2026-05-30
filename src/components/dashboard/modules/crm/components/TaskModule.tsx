@@ -16,7 +16,7 @@ export const TaskModule: React.FC<TaskModuleProps> = ({ organizationId }) => {
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ["crm-tasks", organizationId],
-    queryFn: () => crmService.getTasks(organizationId)
+    queryFn: () => crmService.getTasks(organizationId),
   });
 
   const updateTaskMutation = useMutation({
@@ -24,15 +24,19 @@ export const TaskModule: React.FC<TaskModuleProps> = ({ organizationId }) => {
       crmService.updateTaskStatus(taskId, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["crm-tasks", organizationId] });
-    }
+    },
   });
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "urgent": return "bg-red-100 text-red-800 border-red-200";
-      case "high": return "bg-orange-100 text-orange-800 border-orange-200";
-      case "medium": return "bg-blue-100 text-blue-800 border-blue-200";
-      default: return "bg-slate-100 text-slate-800 border-slate-200";
+      case "urgent":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "high":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "medium":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      default:
+        return "bg-slate-100 text-slate-800 border-slate-200";
     }
   };
 
@@ -44,8 +48,12 @@ export const TaskModule: React.FC<TaskModuleProps> = ({ organizationId }) => {
           <p className="text-muted-foreground">Manage follow-ups and organization operations.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">All Tasks</Button>
-          <Button variant="outline" size="sm">My Tasks</Button>
+          <Button variant="outline" size="sm">
+            All Tasks
+          </Button>
+          <Button variant="outline" size="sm">
+            My Tasks
+          </Button>
         </div>
       </div>
 
@@ -61,16 +69,27 @@ export const TaskModule: React.FC<TaskModuleProps> = ({ organizationId }) => {
           </Card>
         ) : (
           tasks?.map((task: any) => (
-            <Card key={task.id} className={`border-l-4 ${
-              task.priority === 'urgent' ? 'border-l-red-500' :
-              task.priority === 'high' ? 'border-l-orange-500' : 'border-l-slate-200'
-            }`}>
+            <Card
+              key={task.id}
+              className={`border-l-4 ${
+                task.priority === "urgent"
+                  ? "border-l-red-500"
+                  : task.priority === "high"
+                    ? "border-l-orange-500"
+                    : "border-l-slate-200"
+              }`}
+            >
               <CardContent className="p-4 flex items-start gap-4">
                 <button
-                  onClick={() => updateTaskMutation.mutate({ taskId: task.id, status: task.status === 'completed' ? 'open' : 'completed' })}
+                  onClick={() =>
+                    updateTaskMutation.mutate({
+                      taskId: task.id,
+                      status: task.status === "completed" ? "open" : "completed",
+                    })
+                  }
                   className="mt-1 transition-colors hover:text-primary"
                 >
-                  {task.status === 'completed' ? (
+                  {task.status === "completed" ? (
                     <CheckCircle2 className="h-6 w-6 text-green-500" />
                   ) : (
                     <Circle className="h-6 w-6 text-muted-foreground" />
@@ -78,7 +97,9 @@ export const TaskModule: React.FC<TaskModuleProps> = ({ organizationId }) => {
                 </button>
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center justify-between">
-                    <h3 className={`font-semibold ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
+                    <h3
+                      className={`font-semibold ${task.status === "completed" ? "line-through text-muted-foreground" : ""}`}
+                    >
                       {task.title}
                     </h3>
                     <div className="flex items-center gap-2">
@@ -93,7 +114,9 @@ export const TaskModule: React.FC<TaskModuleProps> = ({ organizationId }) => {
                       </Badge>
                     </div>
                   </div>
-                  {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
+                  {task.description && (
+                    <p className="text-sm text-muted-foreground">{task.description}</p>
+                  )}
                   <div className="pt-2 flex items-center gap-4 text-xs text-muted-foreground">
                     {(task.profile || task.lead) && (
                       <div className="flex items-center gap-1">

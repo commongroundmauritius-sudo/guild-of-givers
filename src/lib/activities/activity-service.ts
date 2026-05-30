@@ -3,9 +3,17 @@ import { automationService } from "@/lib/automation/automation-service";
 import { isUUID } from "@/lib/identifiers";
 
 export type ActivityEventType =
-  | 'homepage_view' | 'initiative_view' | 'share_click' | 'signup_started'
-  | 'user_signup' | 'subscription_started' | 'payment_completed' | 'lead_captured' | 'referral_visit'
-  | 'payment_failed' | 'subscription_cancelled';
+  | "homepage_view"
+  | "initiative_view"
+  | "share_click"
+  | "signup_started"
+  | "user_signup"
+  | "subscription_started"
+  | "payment_completed"
+  | "lead_captured"
+  | "referral_visit"
+  | "payment_failed"
+  | "subscription_cancelled";
 
 export const activityService = {
   async logEvent(params: {
@@ -13,10 +21,12 @@ export const activityService = {
     initiativeId?: string;
     organizationId?: string;
     metadata?: Record<string, any>;
-    source?: 'frontend' | 'backend';
+    source?: "frontend" | "backend";
   }) {
-    const { eventType, initiativeId, organizationId, metadata = {}, source = 'frontend' } = params;
-    const { data: { session } } = await supabase.auth.getSession();
+    const { eventType, initiativeId, organizationId, metadata = {}, source = "frontend" } = params;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const userId = session?.user?.id;
 
     // Validate IDs
@@ -31,19 +41,23 @@ export const activityService = {
       source,
       metadata: {
         ...metadata,
-        url: typeof window !== 'undefined' ? window.location.href : undefined,
-        referrer: typeof document !== 'undefined' ? document.referrer : undefined,
-        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-      }
+        url: typeof window !== "undefined" ? window.location.href : undefined,
+        referrer: typeof document !== "undefined" ? document.referrer : undefined,
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+      },
     };
 
-    const { data, error } = await supabase.from("activities").insert(activityData).select().single();
+    const { data, error } = await supabase
+      .from("activities")
+      .insert(activityData)
+      .select()
+      .single();
 
     if (!error && data) {
       // Trigger automation system
       // We don't await this to keep the frontend responsive
-      automationService.processTrigger('activity', data).catch(err => {
-        console.error('Automation trigger failed:', err);
+      automationService.processTrigger("activity", data).catch((err) => {
+        console.error("Automation trigger failed:", err);
       });
     }
   },
@@ -60,19 +74,27 @@ export const activityService = {
   }) {
     const { userId, initiativeId, organizationId, limit = 50 } = params;
 
-    let activityQuery = supabase.from('activities').select('*, profiles(full_name, avatar_url)').order('created_at', { ascending: false }).limit(limit);
-    let eventQuery = supabase.from('initiative_events').select('*, initiatives(title)').order('created_at', { ascending: false }).limit(limit);
+    let activityQuery = supabase
+      .from("activities")
+      .select("*, profiles(full_name, avatar_url)")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    let eventQuery = supabase
+      .from("initiative_events")
+      .select("*, initiatives(title)")
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
     if (userId && isUUID(userId)) {
-      activityQuery = activityQuery.eq('user_id', userId);
-      eventQuery = eventQuery.eq('user_id', userId);
+      activityQuery = activityQuery.eq("user_id", userId);
+      eventQuery = eventQuery.eq("user_id", userId);
     }
     if (initiativeId && isUUID(initiativeId)) {
-      activityQuery = activityQuery.eq('initiative_id', initiativeId);
-      eventQuery = eventQuery.eq('initiative_id', initiativeId);
+      activityQuery = activityQuery.eq("initiative_id", initiativeId);
+      eventQuery = eventQuery.eq("initiative_id", initiativeId);
     }
     if (organizationId && isUUID(organizationId)) {
-      activityQuery = activityQuery.eq('organization_id', organizationId);
+      activityQuery = activityQuery.eq("organization_id", organizationId);
     }
 
     const [activitiesRes, eventsRes] = await Promise.all([activityQuery, eventQuery]);
@@ -81,10 +103,10 @@ export const activityService = {
     if (eventsRes.error) throw eventsRes.error;
 
     const merged = [
-      ...(activitiesRes.data || []).map(a => ({ ...a, source_table: 'activities' })),
-      ...(eventsRes.data || []).map(e => ({ ...e, source_table: 'initiative_events' }))
-    ].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      ...(activitiesRes.data || []).map((a) => ({ ...a, source_table: "activities" })),
+      ...(eventsRes.data || []).map((e) => ({ ...e, source_table: "initiative_events" })),
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return merged.slice(0, limit);
-  }
+  },
 };

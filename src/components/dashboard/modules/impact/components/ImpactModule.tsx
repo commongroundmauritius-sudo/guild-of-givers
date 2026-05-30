@@ -27,40 +27,54 @@ export function ImpactModule({ initiativeId }: { initiativeId?: string }) {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="rounded-3xl border-border/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Lives Impacted</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+              Lives Impacted
+            </CardTitle>
             <Heart className="h-4 w-4 text-rose-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{Number(data?.totalImpact || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold">
+              {Number(data?.totalImpact || 0).toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Estimated direct impact</p>
           </CardContent>
         </Card>
 
         <Card className="rounded-3xl border-border/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Active Initiatives</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+              Active Initiatives
+            </CardTitle>
             <Target className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{Number(data?.activeCount || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold">
+              {Number(data?.activeCount || 0).toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Currently running campaigns</p>
           </CardContent>
         </Card>
 
         <Card className="rounded-3xl border-border/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Verified Orgs</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+              Verified Orgs
+            </CardTitle>
             <Shield className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{Number(data?.verifiedOrgs || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold">
+              {Number(data?.verifiedOrgs || 0).toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Trust-vetted organizations</p>
           </CardContent>
         </Card>
 
         <Card className="rounded-3xl border-border/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Engagement</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+              Engagement
+            </CardTitle>
             <Activity className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>

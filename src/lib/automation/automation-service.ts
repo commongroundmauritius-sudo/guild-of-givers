@@ -8,20 +8,23 @@ export const automationService = {
    */
   async processTrigger(triggerType: string, payload: any) {
     const { data: rules, error } = await supabase
-      .from('automation_rules' as any)
-      .select('*')
-      .eq('trigger_type', triggerType)
-      .eq('is_active', true);
+      .from("automation_rules" as any)
+      .select("*")
+      .eq("trigger_type", triggerType)
+      .eq("is_active", true);
 
     if (error) {
-      console.error('Failed to fetch automation rules:', error);
+      console.error("Failed to fetch automation rules:", error);
       return;
     }
 
     if (!rules) return;
 
     for (const rule of rules) {
-      if (triggerHandler.matches(rule, payload) && triggerHandler.evaluateConditions(rule, payload)) {
+      if (
+        triggerHandler.matches(rule, payload) &&
+        triggerHandler.evaluateConditions(rule, payload)
+      ) {
         await this.executeRule(rule, payload);
       }
     }
@@ -31,33 +34,31 @@ export const automationService = {
    * Execute the actions defined in a rule
    */
   async executeRule(rule: any, payload: any) {
-    const { data: executionData, error: execError } = await supabase
-      .from('automation_executions' as any)
+    const { data: execution, error: execError } = await supabase
+      .from("automation_executions" as any)
       .insert({
         rule_id: rule.id,
         user_id: payload.user_id,
         entity_id: payload.entity_id || payload.initiative_id,
-        status: 'pending'
+        status: "pending",
       })
       .select()
       .single();
 
     if (execError) {
-      console.error('Failed to create automation execution:', execError);
+      console.error("Failed to create automation execution:", execError);
       return;
     }
-
-    const execution = executionData as any;
 
     try {
       const actions = rule.actions as AutomationAction[];
       const results = [];
 
       const logFn = async (level: string, message: string) => {
-        await supabase.from('automation_logs' as any).insert({
+        await supabase.from("automation_logs" as any).insert({
           execution_id: execution.id,
           level,
-          message
+          message,
         });
       };
 
@@ -67,21 +68,20 @@ export const automationService = {
       }
 
       await supabase
-        .from('automation_executions' as any)
-        .update({ status: 'completed', result: { actions: results } })
-        .eq('id', execution.id);
-
+        .from("automation_executions" as any)
+        .update({ status: "completed", result: { actions: results } })
+        .eq("id", execution.id);
     } catch (err: any) {
-      console.error('Rule execution failed:', err);
-      await supabase.from('automation_logs' as any).insert({
+      console.error("Rule execution failed:", err);
+      await supabase.from("automation_logs" as any).insert({
         execution_id: execution.id,
-        level: 'error',
-        message: err.message
+        level: "error",
+        message: err.message,
       });
       await supabase
-        .from('automation_executions' as any)
-        .update({ status: 'failed' })
-        .eq('id', execution.id);
+        .from("automation_executions" as any)
+        .update({ status: "failed" })
+        .eq("id", execution.id);
     }
-  }
+  },
 };

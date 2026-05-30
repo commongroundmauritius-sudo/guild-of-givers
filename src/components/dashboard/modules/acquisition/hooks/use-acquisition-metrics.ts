@@ -18,9 +18,7 @@ export function useAcquisitionMetrics() {
         .select("*", { count: "exact", head: true });
 
       // 3. Fetch top campaign link performance
-      const { data: linkPerformance } = await supabase
-        .from("campaign_links" as any)
-        .select(`
+      const { data: linkPerformance } = await supabase.from("campaign_links" as any).select(`
           id,
           name,
           tracking_code,
@@ -34,18 +32,21 @@ export function useAcquisitionMetrics() {
           )
         `);
 
-      const processedLinks = (linkPerformance as any[])?.map(link => {
-        const stats = (link.daily_campaign_stats as any[]) || [];
-        return {
-          id: link.id,
-          name: link.name,
-          code: link.tracking_code,
-          source: link.source_type,
-          visits: stats.reduce((sum, s) => sum + (s.view_count || 0), 0),
-          conversions: stats.reduce((sum, s) => sum + (s.successful_payment_count || 0), 0),
-          revenue: stats.reduce((sum, s) => sum + Number(s.total_revenue_mur || 0), 0)
-        };
-      }).sort((a, b) => b.visits - a.visits) || [];
+      const processedLinks =
+        (linkPerformance as any[])
+          ?.map((link) => {
+            const stats = (link.daily_campaign_stats as any[]) || [];
+            return {
+              id: link.id,
+              name: link.name,
+              code: link.tracking_code,
+              source: link.source_type,
+              visits: stats.reduce((sum, s) => sum + (s.view_count || 0), 0),
+              conversions: stats.reduce((sum, s) => sum + (s.successful_payment_count || 0), 0),
+              revenue: stats.reduce((sum, s) => sum + Number(s.total_revenue_mur || 0), 0),
+            };
+          })
+          .sort((a, b) => b.visits - a.visits) || [];
 
       // 4. Fetch traffic sources from leads
       const { data: leadSources } = await supabase
@@ -54,8 +55,8 @@ export function useAcquisitionMetrics() {
         .not("acquisition_channel", "is", null);
 
       const sources: Record<string, number> = {};
-      leadSources?.forEach(l => {
-        const source = (l as any).acquisition_channel || 'Direct';
+      leadSources?.forEach((l) => {
+        const source = (l as any).acquisition_channel || "Direct";
         sources[source] = (sources[source] || 0) + 1;
       });
 
@@ -66,8 +67,8 @@ export function useAcquisitionMetrics() {
           .map(([name, count]) => ({ name, count }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 5),
-        campaignLinks: processedLinks.slice(0, 5)
+        campaignLinks: processedLinks.slice(0, 5),
       };
-    }
+    },
   });
 }

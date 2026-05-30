@@ -15,7 +15,8 @@ export function AcquisitionModule() {
           <AlertCircle className="h-10 w-10 text-destructive mb-4" />
           <h3 className="text-lg font-bold text-destructive">Failed to load acquisition data</h3>
           <p className="text-sm text-muted-foreground mt-2 max-w-md">
-            {(error as any)?.message || "You might not have permission to view this analytics data."}
+            {(error as any)?.message ||
+              "You might not have permission to view this analytics data."}
           </p>
         </CardContent>
       </Card>
@@ -27,7 +28,9 @@ export function AcquisitionModule() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="rounded-3xl border-border/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Total Visits</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+              Total Visits
+            </CardTitle>
             <Globe className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
@@ -38,23 +41,33 @@ export function AcquisitionModule() {
 
         <Card className="rounded-3xl border-border/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Registrations</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+              Registrations
+            </CardTitle>
             <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{Number(data?.registrations || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold">
+              {Number(data?.registrations || 0).toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Total member accounts</p>
           </CardContent>
         </Card>
 
         <Card className="rounded-3xl border-border/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Top Channel</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+              Top Channel
+            </CardTitle>
             <MousePointer2 className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold capitalize">{data?.topSources?.[0]?.name || "Direct"}</div>
-            <p className="text-xs text-muted-foreground mt-1">{Number(data?.topSources?.[0]?.count || 0)} leads acquired</p>
+            <div className="text-3xl font-bold capitalize">
+              {data?.topSources?.[0]?.name || "Direct"}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {Number(data?.topSources?.[0]?.count || 0)} leads acquired
+            </p>
           </CardContent>
         </Card>
       </div>

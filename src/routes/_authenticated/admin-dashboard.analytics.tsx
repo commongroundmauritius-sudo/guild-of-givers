@@ -12,7 +12,7 @@ import {
   RefreshCw,
   Eye,
   TrendingUp,
-  ShieldAlert
+  ShieldAlert,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AcquisitionModule } from "@/components/dashboard/modules/acquisition/components/AcquisitionModule";
@@ -27,7 +27,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/analytics")({
@@ -187,9 +194,13 @@ function AdminAnalyticsPage() {
                       {filteredInitiatives?.map((initiative) => (
                         <TableRow key={initiative.id}>
                           <TableCell className="font-medium">{initiative.title}</TableCell>
-                          <TableCell>{(initiative as any).organizations?.organization_name}</TableCell>
+                          <TableCell>
+                            {(initiative as any).organizations?.organization_name}
+                          </TableCell>
                           <TableCell className="text-right">{initiative.view_count || 0}</TableCell>
-                          <TableCell className="text-right">{initiative.conversion_count || 0}</TableCell>
+                          <TableCell className="text-right">
+                            {initiative.conversion_count || 0}
+                          </TableCell>
                           <TableCell className="text-right font-semibold text-emerald-600">
                             {initiative.active_supporter_count || 0}
                           </TableCell>
@@ -201,7 +212,9 @@ function AdminAnalyticsPage() {
                               onClick={() => reconcileMutation.mutate(initiative.id)}
                               disabled={reconcileMutation.isPending}
                             >
-                              <RefreshCw className={`h-3.5 w-3.5 mr-1 ${reconcileMutation.isPending ? 'animate-spin' : ''}`} />
+                              <RefreshCw
+                                className={`h-3.5 w-3.5 mr-1 ${reconcileMutation.isPending ? "animate-spin" : ""}`}
+                              />
                               Reconcile
                             </Button>
                           </TableCell>
@@ -210,7 +223,9 @@ function AdminAnalyticsPage() {
                       {(!filteredInitiatives || filteredInitiatives.length === 0) && (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                            {initiativesLoading ? "Loading data..." : "No initiatives found matching your search."}
+                            {initiativesLoading
+                              ? "Loading data..."
+                              : "No initiatives found matching your search."}
                           </TableCell>
                         </TableRow>
                       )}

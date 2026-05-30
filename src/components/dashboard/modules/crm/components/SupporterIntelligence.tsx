@@ -8,16 +8,18 @@ export function SupporterIntelligence({ organizationId }: { organizationId: stri
   if (isLoading) return <div className="h-64 animate-pulse bg-muted rounded-3xl" />;
 
   const chartData = [
-    { name: 'Active', value: data?.summary?.active || 0, color: '#10b981' },
-    { name: 'Dormant', value: data?.summary?.dormant || 0, color: '#f59e0b' },
-    { name: 'Inactive', value: data?.summary?.inactive || 0, color: '#ef4444' },
-  ].filter(d => d.value > 0);
+    { name: "Active", value: data?.summary?.active || 0, color: "#10b981" },
+    { name: "Dormant", value: data?.summary?.dormant || 0, color: "#f59e0b" },
+    { name: "Inactive", value: data?.summary?.inactive || 0, color: "#ef4444" },
+  ].filter((d) => d.value > 0);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card className="rounded-3xl border-border/40">
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Retention Summary</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+            Retention Summary
+          </CardTitle>
         </CardHeader>
         <CardContent className="h-64">
           {chartData.length > 0 ? (
@@ -47,21 +49,30 @@ export function SupporterIntelligence({ organizationId }: { organizationId: stri
 
       <Card className="rounded-3xl border-border/40">
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Quick Stats</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+            Quick Stats
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex justify-between items-center border-b pb-2">
             <span className="text-sm text-muted-foreground">Total Supporters</span>
-            <span className="text-xl font-bold">{Number(data?.summary?.totalSupporters || 0).toLocaleString()}</span>
+            <span className="text-xl font-bold">
+              {Number(data?.summary?.totalSupporters || 0).toLocaleString()}
+            </span>
           </div>
           <div className="flex justify-between items-center border-b pb-2">
             <span className="text-sm text-muted-foreground">Lifetime Revenue</span>
-            <span className="text-xl font-bold">MUR {Number(data?.summary?.totalLifetimeRevenue || 0).toLocaleString()}</span>
+            <span className="text-xl font-bold">
+              MUR {Number(data?.summary?.totalLifetimeRevenue || 0).toLocaleString()}
+            </span>
           </div>
           <div className="flex justify-between items-center border-b pb-2">
             <span className="text-sm text-muted-foreground">Retention Rate</span>
             <span className="text-xl font-bold">
-              {data?.summary?.totalSupporters ? Math.round((data.summary.active / data.summary.totalSupporters) * 100) : 0}%
+              {data?.summary?.totalSupporters
+                ? Math.round((data.summary.active / data.summary.totalSupporters) * 100)
+                : 0}
+              %
             </span>
           </div>
         </CardContent>

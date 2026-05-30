@@ -20,11 +20,11 @@ export const attributionService = {
    * Capture attribution data from URL parameters
    */
   captureFromUrl() {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const tracking_code = urlParams.get('ref');
-    const utm_source = urlParams.get('utm_source');
+    const tracking_code = urlParams.get("ref");
+    const utm_source = urlParams.get("utm_source");
 
     // Only update if we have new attribution data
     if (!tracking_code && !utm_source) return;
@@ -32,13 +32,13 @@ export const attributionService = {
     const data: AttributionData = {
       tracking_code: tracking_code || undefined,
       utm_source: utm_source || undefined,
-      utm_medium: urlParams.get('utm_medium') || undefined,
-      utm_campaign: urlParams.get('utm_campaign') || undefined,
-      utm_content: urlParams.get('utm_content') || undefined,
-      utm_term: urlParams.get('utm_term') || undefined,
+      utm_medium: urlParams.get("utm_medium") || undefined,
+      utm_campaign: urlParams.get("utm_campaign") || undefined,
+      utm_content: urlParams.get("utm_content") || undefined,
+      utm_term: urlParams.get("utm_term") || undefined,
       landing_page: window.location.pathname,
       referrer: document.referrer,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(data));
@@ -48,7 +48,7 @@ export const attributionService = {
    * Get stored attribution data
    */
   getStored(): AttributionData | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
     const stored = localStorage.getItem(ATTRIBUTION_KEY);
     if (!stored) return null;
 
@@ -64,5 +64,5 @@ export const attributionService = {
     } catch (e) {
       return null;
     }
-  }
+  },
 };

@@ -52,15 +52,17 @@ function SignupPage() {
     if (submitting) return;
 
     // Client-side validation
-    const validation = z.object({
-      email: emailSchema,
-      fullName: nameSchema,
-      amount: z.number().positive(),
-    }).safeParse({
-      email,
-      fullName,
-      amount: finalAmount,
-    });
+    const validation = z
+      .object({
+        email: emailSchema,
+        fullName: nameSchema,
+        amount: z.number().positive(),
+      })
+      .safeParse({
+        email,
+        fullName,
+        amount: finalAmount,
+      });
 
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
@@ -160,9 +162,12 @@ function SignupPage() {
 
             {step === 0 && (
               <div>
-                <h2 className="font-display text-4xl font-bold text-primary">Monthly Contribution</h2>
+                <h2 className="font-display text-4xl font-bold text-primary">
+                  Monthly Contribution
+                </h2>
                 <p className="mt-4 text-muted-foreground">
-                  Pick an amount that reflects the impact you want to make. You can adjust this anytime.
+                  Pick an amount that reflects the impact you want to make. You can adjust this
+                  anytime.
                 </p>
 
                 <div className="mt-10">
@@ -293,14 +298,20 @@ function SignupPage() {
                   Complete your checkout via our secure payment gateway.
                 </p>
                 <div className="mt-10 rounded-3xl border border-primary/10 bg-primary/5 p-8">
-                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Order Summary</p>
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                    Order Summary
+                  </p>
                   <div className="mt-6 flex justify-between border-b border-primary/10 pb-4">
                     <span className="text-muted-foreground">Contribution</span>
-                    <span className="font-bold text-primary">Rs {finalAmount.toLocaleString()}</span>
+                    <span className="font-bold text-primary">
+                      Rs {finalAmount.toLocaleString()}
+                    </span>
                   </div>
                   <div className="mt-4 flex justify-between">
                     <span className="font-bold text-primary">Total Recurring</span>
-                    <span className="font-bold text-primary text-xl">Rs {finalAmount.toLocaleString()}</span>
+                    <span className="font-bold text-primary text-xl">
+                      Rs {finalAmount.toLocaleString()}
+                    </span>
                   </div>
                 </div>
                 <button
@@ -315,7 +326,9 @@ function SignupPage() {
 
             {step === 3 && (
               <div>
-                <h2 className="font-display text-4xl font-bold text-primary">Create your account</h2>
+                <h2 className="font-display text-4xl font-bold text-primary">
+                  Create your account
+                </h2>
                 <p className="mt-4 text-muted-foreground">
                   Set a password to manage your membership and track your impact.
                 </p>
@@ -362,7 +375,8 @@ function SignupPage() {
                   Welcome to CommonGround
                 </h2>
                 <p className="mt-4 text-muted-foreground leading-relaxed max-w-sm mx-auto">
-                  Your monthly impact has started. Check your email for your receipt and account confirmation.
+                  Your monthly impact has started. Check your email for your receipt and account
+                  confirmation.
                 </p>
                 <button
                   onClick={() => navigate({ to: "/dashboard" })}

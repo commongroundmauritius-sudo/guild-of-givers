@@ -1,17 +1,37 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { campaignService, CampaignLink } from "@/lib/campaign-service";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { QRCodeCanvas } from "qrcode.react";
-import { Copy, Plus, QrCode, Trash2, RefreshCw, Calendar } from "lucide-react";
+import { Copy, Plus, QrCode, Trash2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { createCampaignLink } from "@/lib/security/auth-actions";
 
 interface CampaignLinkManagerProps {
   initiativeId: string;
@@ -24,37 +44,37 @@ export function CampaignLinkManager({ initiativeId }: CampaignLinkManagerProps) 
     name: "",
     source_type: "social",
     tracking_code: "",
-    expires_at: ""
+    expires_at: "",
   });
 
   const { data: links, isLoading } = useQuery({
     queryKey: ["campaign-links", initiativeId],
-    queryFn: () => campaignService.getInitiativeLinks(initiativeId)
+    queryFn: () => campaignService.getInitiativeLinks(initiativeId),
   });
 
   const createMutation = useMutation({
-    mutationFn: (params: any) => campaignService.createLink(params),
+    mutationFn: (params: any) => createCampaignLink({ data: params }),
     onSuccess: () => {
       toast.success("Campaign link created successfully");
       queryClient.invalidateQueries({ queryKey: ["campaign-links", initiativeId] });
       setIsCreateOpen(false);
       setNewLink({ name: "", source_type: "social", tracking_code: "", expires_at: "" });
     },
-    onError: (err: Error) => toast.error(err.message)
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string, updates: Partial<CampaignLink> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<CampaignLink> }) =>
       campaignService.updateLink(id, updates),
     onSuccess: () => {
       toast.success("Campaign link updated");
       queryClient.invalidateQueries({ queryKey: ["campaign-links", initiativeId] });
-    }
+    },
   });
 
   const generateTrackingCode = () => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    setNewLink(prev => ({ ...prev, tracking_code: code }));
+    setNewLink((prev) => ({ ...prev, tracking_code: code }));
   };
 
   const copyToClipboard = (code: string) => {
@@ -71,7 +91,7 @@ export function CampaignLinkManager({ initiativeId }: CampaignLinkManagerProps) 
       source_type: newLink.source_type,
       tracking_code: newLink.tracking_code,
       expires_at: newLink.expires_at || undefined,
-      is_active: true
+      is_active: true,
     });
   };
 
@@ -98,7 +118,7 @@ export function CampaignLinkManager({ initiativeId }: CampaignLinkManagerProps) 
                   id="name"
                   placeholder="e.g. Facebook Summer Ad"
                   value={newLink.name}
-                  onChange={e => setNewLink(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => setNewLink((prev) => ({ ...prev, name: e.target.value }))}
                   required
                 />
               </div>
@@ -107,7 +127,7 @@ export function CampaignLinkManager({ initiativeId }: CampaignLinkManagerProps) 
                   <Label htmlFor="source">Source</Label>
                   <Select
                     value={newLink.source_type}
-                    onValueChange={v => setNewLink(prev => ({ ...prev, source_type: v }))}
+                    onValueChange={(v) => setNewLink((prev) => ({ ...prev, source_type: v }))}
                   >
                     <SelectTrigger id="source">
                       <SelectValue />
@@ -127,10 +147,17 @@ export function CampaignLinkManager({ initiativeId }: CampaignLinkManagerProps) 
                     <Input
                       id="code"
                       value={newLink.tracking_code}
-                      onChange={e => setNewLink(prev => ({ ...prev, tracking_code: e.target.value }))}
+                      onChange={(e) =>
+                        setNewLink((prev) => ({ ...prev, tracking_code: e.target.value }))
+                      }
                       required
                     />
-                    <Button type="button" variant="outline" size="icon" onClick={generateTrackingCode}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={generateTrackingCode}
+                    >
                       <RefreshCw className="h-4 w-4" />
                     </Button>
                   </div>
@@ -142,10 +169,14 @@ export function CampaignLinkManager({ initiativeId }: CampaignLinkManagerProps) 
                   id="expiry"
                   type="date"
                   value={newLink.expires_at}
-                  onChange={e => setNewLink(prev => ({ ...prev, expires_at: e.target.value }))}
+                  onChange={(e) => setNewLink((prev) => ({ ...prev, expires_at: e.target.value }))}
                 />
               </div>
-              <Button type="submit" className="w-full rounded-xl" disabled={createMutation.isPending}>
+              <Button
+                type="submit"
+                className="w-full rounded-xl"
+                disabled={createMutation.isPending}
+              >
                 {createMutation.isPending ? "Creating..." : "Generate Link"}
               </Button>
             </form>
@@ -169,18 +200,26 @@ export function CampaignLinkManager({ initiativeId }: CampaignLinkManagerProps) 
                 <TableCell className="font-medium">{link.name}</TableCell>
                 <TableCell className="capitalize">{link.source_type}</TableCell>
                 <TableCell>
-                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{link.tracking_code}</code>
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                    {link.tracking_code}
+                  </code>
                 </TableCell>
                 <TableCell>
                   <Badge variant={link.is_active ? "default" : "secondary"}>
                     {link.is_active ? "Active" : "Disabled"}
                   </Badge>
                   {link.expires_at && new Date(link.expires_at) < new Date() && (
-                    <Badge variant="destructive" className="ml-2">Expired</Badge>
+                    <Badge variant="destructive" className="ml-2">
+                      Expired
+                    </Badge>
                   )}
                 </TableCell>
                 <TableCell className="text-right space-x-1">
-                  <Button variant="ghost" size="icon" onClick={() => copyToClipboard(link.tracking_code)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyToClipboard(link.tracking_code)}
+                  >
                     <Copy className="h-4 w-4" />
                   </Button>
                   <Dialog>
@@ -202,10 +241,14 @@ export function CampaignLinkManager({ initiativeId }: CampaignLinkManagerProps) 
                           />
                         </div>
                         <p className="text-xs text-muted-foreground text-center">
-                          Scan to support initiative <br/>
+                          Scan to support initiative <br />
                           <span className="font-mono mt-1 block">Ref: {link.tracking_code}</span>
                         </p>
-                        <Button variant="outline" className="w-full rounded-xl" onClick={() => window.print()}>
+                        <Button
+                          variant="outline"
+                          className="w-full rounded-xl"
+                          onClick={() => window.print()}
+                        >
                           Print QR Code
                         </Button>
                       </div>
@@ -214,9 +257,18 @@ export function CampaignLinkManager({ initiativeId }: CampaignLinkManagerProps) 
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => updateMutation.mutate({ id: link.id, updates: { is_active: !link.is_active } })}
+                    onClick={() =>
+                      updateMutation.mutate({
+                        id: link.id,
+                        updates: { is_active: !link.is_active },
+                      })
+                    }
                   >
-                    {link.is_active ? <Trash2 className="h-4 w-4 text-muted-foreground" /> : <RefreshCw className="h-4 w-4" />}
+                    {link.is_active ? (
+                      <Trash2 className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
                   </Button>
                 </TableCell>
               </TableRow>

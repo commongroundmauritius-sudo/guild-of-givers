@@ -21,7 +21,7 @@ function MemberDetailPage() {
             <Button
               variant="ghost"
               className="rounded-xl gap-2 text-muted-foreground hover:text-primary"
-              onClick={() => navigate({ to: '/admin-dashboard/members' })}
+              onClick={() => navigate({ to: "/admin-dashboard/members" })}
             >
               <ArrowLeft className="h-4 w-4" /> Back to Members
             </Button>

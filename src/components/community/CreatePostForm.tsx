@@ -36,10 +36,10 @@ export function CreatePostForm() {
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const validation = validateFile(file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
+      const validation = await validateFile(file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
       if (!validation.isValid) {
         toast.error(validation.error);
         return;
@@ -51,6 +51,7 @@ export function CreatePostForm() {
 
   const removeImage = () => {
     setImage(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
   };
 
@@ -87,6 +88,7 @@ export function CreatePostForm() {
       setTitle("");
       setContent("");
       setImage(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
       setInitiativeId(null);
     } catch (error) {
@@ -101,7 +103,9 @@ export function CreatePostForm() {
   return (
     <Card className="border-border/40 shadow-sm rounded-3xl">
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-display font-bold text-primary">Share with the Community</CardTitle>
+        <CardTitle className="text-xl font-display font-bold text-primary">
+          Share with the Community
+        </CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -159,7 +163,12 @@ export function CreatePostForm() {
               onChange={handleImageChange}
             />
             <label htmlFor="post-image">
-              <Button variant="ghost" type="button" className="rounded-full hover:bg-primary/5 text-primary" asChild>
+              <Button
+                variant="ghost"
+                type="button"
+                className="rounded-full hover:bg-primary/5 text-primary"
+                asChild
+              >
                 <span className="cursor-pointer gap-2 font-bold text-xs uppercase tracking-widest">
                   <ImagePlus className="h-4 w-4" />
                   Add Photo
@@ -167,7 +176,11 @@ export function CreatePostForm() {
               </Button>
             </label>
           </div>
-          <Button type="submit" className="rounded-full px-8 font-bold shadow-lg shadow-primary/20" disabled={uploading || mutation.isPending}>
+          <Button
+            type="submit"
+            className="rounded-full px-8 font-bold shadow-lg shadow-primary/20"
+            disabled={uploading || mutation.isPending}
+          >
             {uploading ? "Uploading..." : "Post to Hub"}
             {!uploading && <Send className="h-4 w-4 ml-2" />}
           </Button>

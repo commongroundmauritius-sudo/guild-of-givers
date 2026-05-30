@@ -17,13 +17,16 @@ export const SegmentationView: React.FC<SegmentationViewProps> = ({ organization
 
   const { data: segments, refetch: refetchSegments } = useQuery({
     queryKey: ["segments", organizationId],
-    queryFn: () => segmentationService.getSegments(organizationId)
+    queryFn: () => segmentationService.getSegments(organizationId),
   });
 
   const { data: members, isFetching: isFetchingMembers } = useQuery({
     queryKey: ["segment-members", organizationId, activeSegment?.id],
-    queryFn: () => activeSegment ? segmentationService.getSegmentMembers(organizationId, activeSegment.filter_definition) : [],
-    enabled: !!activeSegment
+    queryFn: () =>
+      activeSegment
+        ? segmentationService.getSegmentMembers(organizationId, activeSegment.filter_definition)
+        : [],
+    enabled: !!activeSegment,
   });
 
   return (
@@ -51,11 +54,15 @@ export const SegmentationView: React.FC<SegmentationViewProps> = ({ organization
                 key={segment.id}
                 onClick={() => setActiveSegment(segment)}
                 className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                  activeSegment?.id === segment.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                  activeSegment?.id === segment.id
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted"
                 }`}
               >
                 <div className="font-medium text-sm">{segment.name}</div>
-                {segment.description && <div className="text-xs opacity-80 truncate">{segment.description}</div>}
+                {segment.description && (
+                  <div className="text-xs opacity-80 truncate">{segment.description}</div>
+                )}
               </button>
             ))}
             {(!segments || segments.length === 0) && (
@@ -73,7 +80,9 @@ export const SegmentationView: React.FC<SegmentationViewProps> = ({ organization
                     <Users className="h-5 w-5" />
                     {activeSegment.name}
                   </>
-                ) : "Select a segment"}
+                ) : (
+                  "Select a segment"
+                )}
               </CardTitle>
               {activeSegment && (
                 <div className="flex gap-2">
@@ -86,14 +95,23 @@ export const SegmentationView: React.FC<SegmentationViewProps> = ({ organization
             {activeSegment ? (
               <div className="divide-y">
                 {isFetchingMembers ? (
-                  <div className="p-8 text-center text-muted-foreground italic">Calculating segment members...</div>
+                  <div className="p-8 text-center text-muted-foreground italic">
+                    Calculating segment members...
+                  </div>
                 ) : (members as any[])?.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground italic">No supporters match these criteria.</div>
+                  <div className="p-8 text-center text-muted-foreground italic">
+                    No supporters match these criteria.
+                  </div>
                 ) : (
                   (members as any[])?.map((member: any) => (
-                    <div key={member.id} className="p-4 flex justify-between items-center hover:bg-muted/50">
+                    <div
+                      key={member.id}
+                      className="p-4 flex justify-between items-center hover:bg-muted/50"
+                    >
                       <div>
-                        <div className="font-medium">{member.full_name || "Anonymous Supporter"}</div>
+                        <div className="font-medium">
+                          {member.full_name || "Anonymous Supporter"}
+                        </div>
                         <div className="text-xs text-muted-foreground">{member.email}</div>
                       </div>
                       <Badge variant="secondary">{member.lifecycle_stage}</Badge>

@@ -22,7 +22,11 @@ import {
 import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { updateApplicationStatus, convertApplicationToOrganization, softDeleteApplication } from "@/lib/partner/actions";
+import {
+  updateApplicationStatus,
+  convertApplicationToOrganization,
+  softDeleteApplication,
+} from "@/lib/partner/actions";
 import { PartnerApplicationStatus } from "@/lib/partner/service";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/partner-applications")({
@@ -40,7 +44,7 @@ function AdminPartnerApplicationsPage() {
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       let query = supabase
-        .from("partner_applications" as any)
+        .from("partner_applications")
         .select("*, activity:partner_application_activity(*, actor:profiles(full_name))")
         .order("created_at", { ascending: false })
         .eq("is_deleted", false);
@@ -51,14 +55,24 @@ function AdminPartnerApplicationsPage() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data as any[]) || [];
+      return data;
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, status, notes }: { id: string; status: PartnerApplicationStatus; notes?: string }) => {
+    mutationFn: async ({
+      id,
+      status,
+      notes,
+    }: {
+      id: string;
+      status: PartnerApplicationStatus;
+      notes?: string;
+    }) => {
       if (!user) throw new Error("Unauthorized");
-      return await updateApplicationStatus({ data: { applicationId: id, actorId: user.id, status, notes } });
+      return await updateApplicationStatus({
+        data: { applicationId: id, actorId: user.id, status, notes },
+      });
     },
     onSuccess: () => {
       toast.success("Application status updated");
@@ -71,7 +85,9 @@ function AdminPartnerApplicationsPage() {
   const convertMutation = useMutation({
     mutationFn: async ({ id, orgData }: { id: string; orgData: any }) => {
       if (!user) throw new Error("Unauthorized");
-      return await convertApplicationToOrganization({ data: { applicationId: id, actorId: user.id, orgData } });
+      return await convertApplicationToOrganization({
+        data: { applicationId: id, actorId: user.id, orgData },
+      });
     },
     onSuccess: (org: any) => {
       toast.success(`Converted to organization: ${org.organization_name}`);
@@ -97,12 +113,18 @@ function AdminPartnerApplicationsPage() {
 
   const getStatusBadgeCls = (status: string) => {
     switch (status) {
-      case "submitted": return "bg-blue-100 text-blue-700";
-      case "under_review": return "bg-amber-100 text-amber-700";
-      case "approved": return "bg-green-100 text-green-700";
-      case "converted": return "bg-purple-100 text-purple-700";
-      case "rejected": return "bg-red-100 text-red-700";
-      default: return "bg-gray-100 text-gray-700";
+      case "submitted":
+        return "bg-blue-100 text-blue-700";
+      case "under_review":
+        return "bg-amber-100 text-amber-700";
+      case "approved":
+        return "bg-green-100 text-green-700";
+      case "converted":
+        return "bg-purple-100 text-purple-700";
+      case "rejected":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -114,10 +136,16 @@ function AdminPartnerApplicationsPage() {
             <div>
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-amber-600" />
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-600">Admin Control</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-600">
+                  Admin Control
+                </span>
               </div>
-              <h1 className="mt-2 font-display text-4xl font-bold text-primary">Partner Applications</h1>
-              <p className="mt-2 text-muted-foreground">Manage and review organizations applying to join the network.</p>
+              <h1 className="mt-2 font-display text-4xl font-bold text-primary">
+                Partner Applications
+              </h1>
+              <p className="mt-2 text-muted-foreground">
+                Manage and review organizations applying to join the network.
+              </p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -142,13 +170,15 @@ function AdminPartnerApplicationsPage() {
             {/* List View */}
             <div className="lg:col-span-2 space-y-4">
               {isLoading ? (
-                Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
+                Array(5)
+                  .fill(0)
+                  .map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
               ) : applications && applications.length > 0 ? (
                 applications.map((app) => (
                   <div
                     key={app.id}
                     onClick={() => setSelectedApp(app)}
-                    className={`cursor-pointer overflow-hidden rounded-2xl border transition hover:border-primary/40 hover:shadow-sm ${selectedApp?.id === app.id ? 'border-primary/50 bg-primary/5 shadow-sm' : 'border-border/40 bg-card'}`}
+                    className={`cursor-pointer overflow-hidden rounded-2xl border transition hover:border-primary/40 hover:shadow-sm ${selectedApp?.id === app.id ? "border-primary/50 bg-primary/5 shadow-sm" : "border-border/40 bg-card"}`}
                   >
                     <div className="p-5 flex items-start justify-between">
                       <div className="flex gap-4">
@@ -158,14 +188,20 @@ function AdminPartnerApplicationsPage() {
                         <div>
                           <h3 className="font-bold text-primary">{app.organization_name}</h3>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-muted-foreground">{app.organization_type}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {app.organization_type}
+                            </span>
                             <span className="text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">{format(new Date(app.created_at), "MMM d, yyyy")}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(app.created_at), "MMM d, yyyy")}
+                            </span>
                           </div>
                         </div>
                       </div>
-                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getStatusBadgeCls(app.status)}`}>
-                        {app.status.replace('_', ' ')}
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getStatusBadgeCls(app.status)}`}
+                      >
+                        {app.status.replace("_", " ")}
                       </span>
                     </div>
                   </div>
@@ -182,16 +218,26 @@ function AdminPartnerApplicationsPage() {
               {selectedApp ? (
                 <div className="sticky top-8 overflow-hidden rounded-2xl border border-border/40 bg-card shadow-sm">
                   <div className="border-b border-border/40 bg-muted/20 p-6">
-                    <h2 className="font-display text-xl font-bold text-primary">Application Detail</h2>
+                    <h2 className="font-display text-xl font-bold text-primary">
+                      Application Detail
+                    </h2>
                     <p className="text-xs text-muted-foreground mt-1">ID: {selectedApp.id}</p>
                   </div>
 
                   <div className="p-6 space-y-6">
                     <div>
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Organization Info</h4>
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Organization Info
+                      </h4>
                       <div className="mt-3 space-y-2">
-                        <p className="text-sm font-medium"><span className="text-muted-foreground">Type:</span> {selectedApp.organization_type}</p>
-                        <p className="text-sm font-medium"><span className="text-muted-foreground">Reg No:</span> {selectedApp.registration_number}</p>
+                        <p className="text-sm font-medium">
+                          <span className="text-muted-foreground">Type:</span>{" "}
+                          {selectedApp.organization_type}
+                        </p>
+                        <p className="text-sm font-medium">
+                          <span className="text-muted-foreground">Reg No:</span>{" "}
+                          {selectedApp.registration_number}
+                        </p>
                         <p className="text-sm font-medium flex items-center gap-1.5">
                           <Mail className="h-3 w-3 text-muted-foreground" />
                           <span className="text-muted-foreground">Email:</span> {selectedApp.email}
@@ -200,37 +246,47 @@ function AdminPartnerApplicationsPage() {
                     </div>
 
                     <div>
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Application Message</h4>
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Application Message
+                      </h4>
                       <p className="mt-3 text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                         {selectedApp.message}
                       </p>
                     </div>
 
-                    {selectedApp.status !== 'converted' && (
+                    {selectedApp.status !== "converted" && (
                       <div className="grid grid-cols-2 gap-3 pt-4">
                         <button
-                          onClick={() => updateMutation.mutate({ id: selectedApp.id, status: 'under_review' })}
+                          onClick={() =>
+                            updateMutation.mutate({ id: selectedApp.id, status: "under_review" })
+                          }
                           disabled={updateMutation.isPending}
                           className="flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-muted/30 py-2.5 text-xs font-bold transition hover:bg-muted"
                         >
                           <Clock className="h-3.5 w-3.5" /> Review
                         </button>
                         <button
-                          onClick={() => updateMutation.mutate({ id: selectedApp.id, status: 'approved' })}
+                          onClick={() =>
+                            updateMutation.mutate({ id: selectedApp.id, status: "approved" })
+                          }
                           disabled={updateMutation.isPending}
                           className="flex items-center justify-center gap-2 rounded-xl bg-green-50 text-green-700 py-2.5 text-xs font-bold transition hover:bg-green-100"
                         >
                           <CheckCircle2 className="h-3.5 w-3.5" /> Approve
                         </button>
                         <button
-                          onClick={() => convertMutation.mutate({ id: selectedApp.id, orgData: {} })}
+                          onClick={() =>
+                            convertMutation.mutate({ id: selectedApp.id, orgData: {} })
+                          }
                           disabled={convertMutation.isPending}
                           className="col-span-2 flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-white shadow-sm transition hover:bg-primary/90"
                         >
                           <ArrowRight className="h-4 w-4" /> Convert to Organization
                         </button>
                         <button
-                          onClick={() => updateMutation.mutate({ id: selectedApp.id, status: 'rejected' })}
+                          onClick={() =>
+                            updateMutation.mutate({ id: selectedApp.id, status: "rejected" })
+                          }
                           disabled={updateMutation.isPending}
                           className="flex items-center justify-center gap-2 rounded-xl bg-red-50 text-red-700 py-2.5 text-xs font-bold transition hover:bg-red-100"
                         >
@@ -246,7 +302,7 @@ function AdminPartnerApplicationsPage() {
                       </div>
                     )}
 
-                    {selectedApp.status === 'converted' && (
+                    {selectedApp.status === "converted" && (
                       <div className="rounded-xl bg-purple-50 p-4 border border-purple-100">
                         <div className="flex items-center gap-2 text-purple-700 font-bold text-sm">
                           <CheckCircle2 className="h-4 w-4" /> Successfully Converted
@@ -264,15 +320,23 @@ function AdminPartnerApplicationsPage() {
                       <div className="mt-4 space-y-4">
                         {selectedApp.activity && selectedApp.activity.length > 0 ? (
                           selectedApp.activity.slice(0, 3).map((act: any) => (
-                            <div key={act.id} className="relative pl-4 before:absolute before:left-0 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-border">
-                              <p className="text-xs font-medium">{act.metadata?.message || act.action}</p>
+                            <div
+                              key={act.id}
+                              className="relative pl-4 before:absolute before:left-0 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-border"
+                            >
+                              <p className="text-xs font-medium">
+                                {act.metadata?.message || act.action}
+                              </p>
                               <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {act.actor?.full_name || 'System'} • {format(new Date(act.created_at), "MMM d, HH:mm")}
+                                {act.actor?.full_name || "System"} •{" "}
+                                {format(new Date(act.created_at), "MMM d, HH:mm")}
                               </p>
                             </div>
                           ))
                         ) : (
-                          <p className="text-xs text-muted-foreground italic">No activity logged yet.</p>
+                          <p className="text-xs text-muted-foreground italic">
+                            No activity logged yet.
+                          </p>
                         )}
                       </div>
                     </div>
@@ -283,7 +347,9 @@ function AdminPartnerApplicationsPage() {
                   <div className="rounded-full bg-muted p-3">
                     <MessageSquare className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <p className="mt-4 text-sm font-medium text-muted-foreground">Select an application to view details and take action.</p>
+                  <p className="mt-4 text-sm font-medium text-muted-foreground">
+                    Select an application to view details and take action.
+                  </p>
                 </div>
               )}
             </div>

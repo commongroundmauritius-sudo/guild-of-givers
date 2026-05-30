@@ -16,7 +16,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
   },
 });
 
-export type AppRole = Database["public"]["Enums"]["app_role"] | "super_admin";
+export type AppRole = Database["public"]["Enums"]["app_role"];
 
 export type Tables<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Row"];

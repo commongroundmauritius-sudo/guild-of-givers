@@ -28,7 +28,7 @@ export type Comment = Database["public"]["Tables"]["post_comments"]["Row"] & {
 
 export async function compressAndUploadImage(file: File, bucket: string, path: string) {
   // Defensive check
-  const validation = validateFile(file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
+  const validation = await validateFile(file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
   if (!validation.isValid) {
     throw new Error(validation.error);
   }
@@ -42,8 +42,16 @@ export async function compressAndUploadImage(file: File, bucket: string, path: s
   try {
     const compressedFile = await imageCompression(file, options);
     // Sanitize filename by removing potentially dangerous characters
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const fileName = `${path}/${Date.now()}-${safeFileName}`;
+    // and ensuring a single controlled extension
+    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const safeBaseName = file.name
+      .split(".")
+      .slice(0, -1)
+      .join(".")
+      .replace(/[^a-zA-Z0-9-]/g, "_")
+      .substring(0, 50);
+
+    const fileName = `${path}/${Date.now()}-${safeBaseName}.${extension}`;
 
     const { data, error } = await supabase.storage.from(bucket).upload(fileName, compressedFile);
 

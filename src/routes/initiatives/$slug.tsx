@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 import { attributionService } from "@/lib/attribution-service";
 import { isUUID } from "@/lib/identifiers";
+import { logInitiativeEvent } from "@/lib/security/auth-actions";
 
 export const Route = createFileRoute("/initiatives/$slug")({
   loader: async ({ params }: { params: any }) => {
@@ -73,17 +74,21 @@ function InitiativeDetailPage() {
     attributionService.captureFromUrl();
     if (initiativeId) {
       localStorage.setItem("source_initiative_id", initiativeId);
+      // Log page view via hardened action
+      logInitiativeEvent({ data: { initiativeId, eventType: "page_view" } }).catch(console.error);
     }
   }, [initiativeId]);
 
   const trackCtaClick = async () => {
     if (initiativeId) {
-      await supabase.from("initiative_events" as any).insert({
-        initiative_id: initiativeId,
-        event_type: "cta_click",
-        metadata: {
-          url: typeof window !== "undefined" ? window.location.href : "",
-          source: "initiative_detail_primary",
+      await logInitiativeEvent({
+        data: {
+          initiativeId,
+          eventType: "cta_click",
+          metadata: {
+            url: typeof window !== "undefined" ? window.location.href : "",
+            source: "initiative_detail_primary",
+          },
         },
       });
     }
@@ -95,10 +100,12 @@ function InitiativeDetailPage() {
         await navigator.clipboard.writeText(window.location.href);
         toast.success("Link copied to clipboard!");
         if (initiativeId) {
-          await supabase.from("initiative_events" as any).insert({
-            initiative_id: initiativeId,
-            event_type: "share",
-            metadata: { url: window.location.href },
+          await logInitiativeEvent({
+            data: {
+              initiativeId,
+              eventType: "share",
+              metadata: { url: window.location.href },
+            },
           });
         }
       } catch (err) {

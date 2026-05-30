@@ -23,8 +23,8 @@ export function useModerationAnalytics() {
       return {
         growthRate: 12.5,
         anomaliesCount: failedCount || 0,
-        suspiciousPatterns: 2
+        suspiciousPatterns: 2,
       };
-    }
+    },
   });
 }

@@ -7,13 +7,11 @@ export function useCrmSummary() {
     queryKey: ["dashboard", "crm", "summary"],
     queryFn: async () => {
       // Fetch lead stage distribution
-      const { data: leadStages } = await supabase
-        .from("leads")
-        .select("lead_stage");
+      const { data: leadStages } = await supabase.from("leads").select("lead_stage");
 
       const stages: Record<string, number> = {};
-      leadStages?.forEach(l => {
-        const stage = l.lead_stage || 'Visitor';
+      leadStages?.forEach((l) => {
+        const stage = l.lead_stage || "Visitor";
         stages[stage] = (stages[stage] || 0) + 1;
       });
 
@@ -32,8 +30,8 @@ export function useCrmSummary() {
       return {
         stages,
         notesCount: notesCount || 0,
-        recentActivity: activities || []
+        recentActivity: activities || [],
       };
-    }
+    },
   });
 }

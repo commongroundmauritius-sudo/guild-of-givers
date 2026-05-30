@@ -13,25 +13,14 @@ export function useImpactMetrics() {
         .eq("status", "active");
 
       // Fetch initiative participation (number of initiatives with allocations)
-      const { data: allocations } = await supabase
-        .from("allocations")
-        .select("initiative_id");
+      const { data: allocations } = await supabase.from("allocations").select("initiative_id");
 
-      const uniqueInitiatives = new Set(allocations?.map(a => a.initiative_id)).size;
-
-      const { count: verifiedOrgs } = await supabase
-        .from("organizations")
-        .select("*", { count: "exact", head: true })
-        .eq("is_verified", true);
+      const uniqueInitiatives = new Set(allocations?.map((a) => a.initiative_id)).size;
 
       return {
         activeSupporters: activeSupporters || 0,
         supportedInitiatives: uniqueInitiatives,
-        totalImpact: activeSupporters || 0,
-        activeCount: uniqueInitiatives,
-        verifiedOrgs: verifiedOrgs || 0,
-        engagementScore: activeSupporters ? Math.min(100, Math.round((uniqueInitiatives / activeSupporters) * 100)) : 0,
       };
-    }
+    },
   });
 }

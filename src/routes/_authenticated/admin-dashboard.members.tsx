@@ -111,7 +111,11 @@ function AdminMembersPage() {
                   </thead>
                   <tbody className="divide-y divide-border/40">
                     {filteredMembers.map((member) => (
-                      <tr key={member.id} className="transition hover:bg-muted/30 cursor-pointer" onClick={() => navigate({ to: `/admin-dashboard/members/${member.id}` })}>
+                      <tr
+                        key={member.id}
+                        className="transition hover:bg-muted/30 cursor-pointer"
+                        onClick={() => navigate({ to: `/admin-dashboard/members/${member.id}` })}
+                      >
                         <td className="px-8 py-5">
                           <div className="flex items-center gap-4">
                             <Avatar className="h-10 w-10 border border-border/60">

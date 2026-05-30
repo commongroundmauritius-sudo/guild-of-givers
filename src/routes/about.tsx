@@ -1,14 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import {
-  ShieldCheck,
-  Target,
-  Users,
-  TrendingUp,
-  Globe,
-  Heart,
-  ArrowRight
-} from "lucide-react";
+import { ShieldCheck, Target, Users, TrendingUp, Globe, Heart, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -16,7 +8,8 @@ export const Route = createFileRoute("/about")({
       { title: "About CommonGround — Structured Philanthropy in Mauritius" },
       {
         name: "description",
-        content: "CommonGround is a membership-based platform providing predictable, structured funding for high-impact social programs in Mauritius."
+        content:
+          "CommonGround is a membership-based platform providing predictable, structured funding for high-impact social programs in Mauritius.",
       },
       { property: "og:title", content: "About CommonGround" },
       { property: "og:type", content: "website" },
@@ -67,10 +60,12 @@ function AboutPage() {
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600">
                   <TrendingUp className="h-6 w-6" />
                 </div>
-                <h3 className="font-display text-2xl font-bold text-primary">Predictable Funding</h3>
+                <h3 className="font-display text-2xl font-bold text-primary">
+                  Predictable Funding
+                </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  By structuring support as monthly memberships, we provide organizations with
-                  the stability they need to commit to multi-year restoration and education programs.
+                  By structuring support as monthly memberships, we provide organizations with the
+                  stability they need to commit to multi-year restoration and education programs.
                 </p>
               </div>
               <div className="space-y-6">
@@ -79,8 +74,8 @@ function AboutPage() {
                 </div>
                 <h3 className="font-display text-2xl font-bold text-primary">Root Cause Focus</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  We prioritize initiatives that solve systemic problems at their source,
-                  aiming for permanent solutions rather than temporary relief.
+                  We prioritize initiatives that solve systemic problems at their source, aiming for
+                  permanent solutions rather than temporary relief.
                 </p>
               </div>
             </div>
@@ -90,9 +85,12 @@ function AboutPage() {
         {/* CTA */}
         <section className="border-t border-border/40 py-24 sm:py-32">
           <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-            <h2 className="font-display text-4xl font-bold text-primary">Ready to make an impact?</h2>
+            <h2 className="font-display text-4xl font-bold text-primary">
+              Ready to make an impact?
+            </h2>
             <p className="mt-6 text-lg text-muted-foreground">
-              Join a growing community of members dedicated to building a resilient future for Mauritius.
+              Join a growing community of members dedicated to building a resilient future for
+              Mauritius.
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <Link

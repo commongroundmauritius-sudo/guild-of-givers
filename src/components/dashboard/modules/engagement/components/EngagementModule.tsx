@@ -25,7 +25,9 @@ export function EngagementModule() {
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
       <Card className="rounded-3xl border-border/40">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Shares</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+            Shares
+          </CardTitle>
           <Share2 className="h-4 w-4 text-rose-500" />
         </CardHeader>
         <CardContent>
@@ -36,33 +38,45 @@ export function EngagementModule() {
 
       <Card className="rounded-3xl border-border/40">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Repeat Engagers</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+            Repeat Engagers
+          </CardTitle>
           <Zap className="h-4 w-4 text-rose-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">{Number(data?.repeatEngagers || 0).toLocaleString()}</div>
+          <div className="text-3xl font-bold">
+            {Number(data?.repeatEngagers || 0).toLocaleString()}
+          </div>
           <p className="text-xs text-muted-foreground mt-1">Members with more than 1 interaction</p>
         </CardContent>
       </Card>
 
       <Card className="rounded-3xl border-border/40">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Active (7d)</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+            Active (7d)
+          </CardTitle>
           <Users className="h-4 w-4 text-rose-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">{Number(data?.activeSupporters7d || 0).toLocaleString()}</div>
+          <div className="text-3xl font-bold">
+            {Number(data?.activeSupporters7d || 0).toLocaleString()}
+          </div>
           <p className="text-xs text-muted-foreground mt-1">Supporters active this week</p>
         </CardContent>
       </Card>
 
       <Card className="rounded-3xl border-border/40">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Multi-Choice</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+            Multi-Choice
+          </CardTitle>
           <Heart className="h-4 w-4 text-rose-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">{Number(data?.multiInitiativeSupporters || 0).toLocaleString()}</div>
+          <div className="text-3xl font-bold">
+            {Number(data?.multiInitiativeSupporters || 0).toLocaleString()}
+          </div>
           <p className="text-xs text-muted-foreground mt-1">Supporting 2+ initiatives</p>
         </CardContent>
       </Card>
