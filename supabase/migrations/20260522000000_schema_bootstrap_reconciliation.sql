@@ -73,3 +73,10 @@ CREATE TABLE IF NOT EXISTS public.crm_tag_assignments (
 );
 
 COMMIT;
+
+-- 6. Enum Bootstrap
+-- ALTER TYPE ... ADD VALUE must run at top-level and cannot be inside a DO block or Transaction.
+-- We add these here to ensure they exist before migrations like 20260530000000 use them,
+-- avoiding SQLSTATE 55P04 (unsafe use of new value).
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'super_admin';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'ngo';
