@@ -1,179 +1,388 @@
+import { isUUID } from '@/lib/identifiers';
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { useMemo, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
-  ExternalLink,
-  Users,
-  Heart,
   Share2,
+  Heart,
   ShieldCheck,
+  MapPin,
+  Calendar,
+  Users,
+  AlertCircle,
+  ExternalLink,
   Lightbulb,
+  CheckCircle2
 } from "lucide-react";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { getJoinedData } from "@/lib/utils";
+import { InitiativeCard } from "@/components/InitiativeCard";
+import { setAttribution } from "@/lib/attribution";
 import { attributionService } from "@/lib/attribution-service";
-import { isUUID } from "@/lib/identifiers";
 
 export const Route = createFileRoute("/initiatives/$slug")({
+  head: (ctx: any) => {
+    const initiative = ctx.loaderData?.initiative;
+    const title = initiative?.title ? `${initiative.title} — CommonGround` : "Initiative — CommonGround";
+    const description = initiative?.summary || initiative?.description || "High-impact social initiative in Mauritius.";
+    const image = initiative?.image_url || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1200";
+    const canonical = typeof window !== "undefined" ? window.location.href : "";
+
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:image", content: image },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:image", content: image },
+        { rel: "canonical", href: canonical }
+      ],
+    };
+  },
   loader: async ({ params }: { params: any }) => {
     const { slug } = params;
-
-    // 1. First attempt: resolve by slug (canonical)
-    const { data: initiativeBySlug } = await supabase
+    const { data: initiative } = await supabase
       .from("initiatives")
-      .select("id, slug")
+      .select("*")
       .eq("slug", slug)
+      .eq("is_approved", true)
+      .eq("is_published", true)
       .maybeSingle();
 
-    if (initiativeBySlug) return { initiativeId: initiativeBySlug.id };
-
-    // 2. Second attempt: fallback for legacy UUID routes
-    if (isUUID(slug)) {
-      const { data: initiativeById } = await supabase
-        .from("initiatives")
-        .select("id, slug")
-        .eq("id", slug)
-        .maybeSingle();
-
-      if (initiativeById) return { initiativeId: initiativeById.id };
-    }
-
-    throw new Error("Initiative not found");
+    return { initiative };
   },
   component: InitiativeDetailPage,
 });
 
 function InitiativeDetailPage() {
-  const { initiativeId } = Route.useLoaderData();
+  const { slug } = Route.useParams();
   const navigate = useNavigate();
+  const queryKeys = useMemo(() => [["initiative-slug", slug], ["public-initiatives"]], [slug]);
+  useRealtimeSync("initiatives", queryKeys);
 
-  const { data: initiative, isLoading } = useQuery({
-    queryKey: ["initiative", initiativeId],
+  const {
+    data: initiative,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["initiative-slug", slug],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("initiatives")
         .select("*, organizations(*)")
-        .eq("id", initiativeId)
-        .single();
+        .eq("is_approved", true)
+        .eq("is_published", true);
 
+      if (isUUID(slug)) {
+        query = query.eq("id", slug);
+      } else {
+        query = query.eq("slug", slug);
+      }
+
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
-      return data;
+      return data as any;
+    },
+  });
+
+  const { data: relatedInitiatives } = useQuery({
+    queryKey: ["related-initiatives", initiative?.organization_id],
+    enabled: !!initiative?.organization_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("initiatives")
+        .select("*, organizations(*)")
+        .eq("is_approved", true)
+        .eq("is_published", true)
+        .eq("organization_id", initiative!.organization_id as string)
+        .neq("id", initiative!.id)
+        .limit(3);
+      return data as any[];
     },
   });
 
   useEffect(() => {
-    if (initiative?.slug && initiative.slug !== Route.useParams().slug) {
+    if (initiative && initiative.slug && initiative.slug !== slug) {
       navigate({ to: "/initiatives/$slug", params: { slug: initiative.slug }, replace: true });
     }
-  }, [initiative, navigate]);
+  }, [initiative, slug, navigate]);
 
   useEffect(() => {
-    attributionService.captureFromUrl();
-    if (initiativeId) {
-      localStorage.setItem("source_initiative_id", initiativeId);
-    }
-  }, [initiativeId]);
+    if (initiative) {
+      setAttribution(initiative.id);
 
-  const trackCtaClick = async () => {
-    if (initiativeId) {
-      await supabase.from("initiative_events" as any).insert({
-        initiative_id: initiativeId,
-        event_type: "cta_click",
-        metadata: {
-          url: typeof window !== "undefined" ? window.location.href : "",
-          source: "initiative_detail_primary",
-        },
-      });
+      const recordPageView = async () => {
+        if (typeof window === "undefined") return;
+        const sessionId = sessionStorage.getItem("cg_session_id") || Math.random().toString(36).substring(2, 15);
+        sessionStorage.setItem("cg_session_id", sessionId);
+
+        const lastViewedKey = `last_viewed_${initiative.id}`;
+        const lastViewed = sessionStorage.getItem(lastViewedKey);
+        const now = Date.now();
+
+        if (!lastViewed || now - parseInt(lastViewed) > 1000 * 60 * 30) {
+          const attribution = attributionService.getStored();
+          let campaignLinkId = null;
+
+          if (attribution?.tracking_code) {
+             const { data: linkData } = await supabase
+               .from('campaign_links' as any)
+               .select('id')
+               .eq('tracking_code', attribution.tracking_code)
+               .maybeSingle();
+             campaignLinkId = (linkData as any)?.id;
+          }
+
+          await supabase.from("initiative_events" as any).insert({
+            initiative_id: initiative.id,
+            event_type: "page_view",
+            session_id: sessionId,
+            campaign_link_id: campaignLinkId,
+            metadata: {
+              referrer: document.referrer,
+              userAgent: navigator.userAgent,
+              utm_source: attribution?.utm_source,
+              utm_medium: attribution?.utm_medium,
+              utm_campaign: attribution?.utm_campaign
+            }
+          });
+          sessionStorage.setItem(lastViewedKey, now.toString());
+        }
+      };
+      recordPageView();
     }
-  };
+  }, [initiative]);
 
   const handleShare = async () => {
-    if (typeof window !== "undefined") {
-      try {
+    if (typeof window === "undefined") return;
+
+    const shareData = {
+      title: initiative?.title || "CommonGround Initiative",
+      text: initiative?.summary || initiative?.description || "Check out this high-impact initiative on CommonGround.",
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        await supabase.from("initiative_events" as any).insert({
+          initiative_id: initiative?.id,
+          event_type: "share",
+          metadata: { method: "native" }
+        });
+      } else {
         await navigator.clipboard.writeText(window.location.href);
         toast.success("Link copied to clipboard!");
-        if (initiativeId) {
-          await supabase.from("initiative_events" as any).insert({
-            initiative_id: initiativeId,
-            event_type: "share",
-            metadata: { url: window.location.href },
-          });
-        }
-      } catch (err) {
-        toast.error("Failed to copy link");
+        await supabase.from("initiative_events" as any).insert({
+          initiative_id: initiative?.id,
+          event_type: "share",
+          metadata: { method: "clipboard" }
+        });
       }
+    } catch (err) {
+      console.error("Error sharing:", err);
     }
   };
 
-  if (isLoading) return <div className="p-20 text-center">Loading initiative...</div>;
-  if (!initiative) return <div className="p-20 text-center">Initiative not found.</div>;
+  const trackCtaClick = async () => {
+    if (!initiative) return;
+    await supabase.from("initiative_events" as any).insert({
+      initiative_id: initiative.id,
+      event_type: "cta_click",
+      metadata: {
+        destination: "/signup",
+        label: "Support this Initiative"
+      }
+    });
+  };
 
-  const progress =
-    initiative.goal_amount_mur > 0
-      ? (initiative.current_amount_mur / initiative.goal_amount_mur) * 100
-      : 0;
+  if (isLoading) {
+    return (
+      <SiteLayout>
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-8">
+              <Skeleton className="h-[400px] w-full rounded-[3rem]" />
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-3/4" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-2/3" />
+              </div>
+            </div>
+            <Skeleton className="h-[600px] rounded-[3rem]" />
+          </div>
+        </div>
+      </SiteLayout>
+    );
+  }
 
-  const organization = initiative.organizations;
-  const gallery = (initiative.gallery_urls as string[]) || [];
+  if (error || !initiative) {
+    return (
+      <SiteLayout>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center px-4">
+          <div className="h-16 w-16 bg-red-50 rounded-full flex items-center justify-center mb-6">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+          </div>
+          <h1 className="text-3xl font-display font-bold text-primary mb-2">Initiative Not Found</h1>
+          <p className="text-muted-foreground max-w-md mb-8">
+            The initiative you're looking for might have been archived or the link is incorrect.
+          </p>
+          <Link
+            to="/initiatives"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 font-bold text-white transition hover:bg-primary/90"
+          >
+            <ArrowLeft className="h-4 w-4" /> Explore Other Initiatives
+          </Link>
+        </div>
+      </SiteLayout>
+    );
+  }
+
+  const gallery = Array.isArray(initiative.gallery_urls) ? initiative.gallery_urls : [];
+  const progress = (Number(initiative.current_amount_mur || 0) / Number(initiative.goal_amount_mur || 1)) * 100;
+  const organization = getJoinedData(initiative.organizations);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Project",
+    name: initiative.title,
+    description: initiative.summary || initiative.description,
+    image: initiative.image_url,
+    funder: organization?.organization_name,
+  };
 
   return (
     <SiteLayout>
-      <article className="relative bg-white pb-32">
-        <div className="relative h-[45vh] w-full overflow-hidden sm:h-[65vh]">
-          <img
-            src={initiative.image_url || "/placeholder.svg"}
-            alt={initiative.title}
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 pb-12 sm:pb-20">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="max-w-3xl">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md">
-                  <span className="h-1.5 w-1.5 rounded-full bg-forest animate-pulse" />
-                  Active Initiative
-                </div>
-                <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
-                  {initiative.title}
-                </h1>
+      {structuredData && (
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      )}
+      <article className="pb-24">
+        {/* Top Hero Section */}
+        <div className="relative h-[50vh] min-h-[400px] w-full overflow-hidden bg-primary/5">
+          {initiative.image_url ? (
+            <img
+              src={initiative.image_url}
+              alt={initiative.title}
+              className="h-full w-full object-cover"
+              loading="eager"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+              <Heart className="h-24 w-24 text-primary/10" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+          <div className="absolute bottom-0 left-0 w-full p-6 sm:p-12">
+            <div className="mx-auto max-w-7xl">
+              <Link
+                to="/initiatives"
+                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/20"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back to Initiatives
+              </Link>
+              <h1 className="mt-6 font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
+                {initiative.title || "Untitled Initiative"}
+              </h1>
+              <div className="mt-6 flex flex-wrap items-center gap-4 text-white/90">
+                <span className="flex items-center gap-2 rounded-full bg-forest/20 px-4 py-1 text-xs font-bold uppercase tracking-widest text-forest-light backdrop-blur-sm border border-forest/30">
+                  <CheckCircle2 className="h-3 w-3" /> Active Initiative
+                </span>
+                {initiative.category && (
+                  <span className="rounded-full bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-widest backdrop-blur-sm border border-white/20">
+                    {initiative.category}
+                  </span>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-3 lg:gap-16">
+        <div className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-3">
             <div className="lg:col-span-2">
-              <div className="py-12 lg:py-20">
-                <div className="prose prose-forest max-w-none">
+              {/* Hero Image */}
+              <div className="relative aspect-[16/9] overflow-hidden rounded-[3rem] shadow-2xl shadow-primary/10">
+                <img
+                  src={initiative.image_url || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1200"}
+                  alt={initiative.title}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-8 left-8 right-8">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="flex items-center gap-2 rounded-full bg-forest/20 px-4 py-1 text-xs font-bold uppercase tracking-widest text-forest-light backdrop-blur-sm border border-forest/30">
+                      <MapPin className="h-3 w-3" /> Mauritius
+                    </span>
+                    <span className="rounded-full bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-sm border border-white/20">
+                      {initiative.category || "Social Impact"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Title & Metadata */}
+              <div className="mt-12 space-y-6">
+                <h1 className="font-display text-4xl font-extrabold tracking-tight text-primary sm:text-5xl lg:text-6xl leading-[1.1]">
+                  {initiative.title}
+                </h1>
+
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-4 py-4 border-y border-border/40">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted/50">
+                      <Users className="h-5 w-5 text-primary/60" />
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Partnership</span>
+                      <span className="text-sm font-bold text-primary">{organization?.organization_name || "CommonGround Verified"}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted/50">
+                      <Calendar className="h-5 w-5 text-primary/60" />
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Launched</span>
+                      <span className="text-sm font-bold text-primary">{new Date(initiative.created_at).toLocaleDateString('en-MU', { month: 'long', year: 'numeric' })}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content Sections */}
+                <div className="prose prose-forest max-w-none pt-6">
+                  <div className="text-xl font-medium leading-relaxed text-muted-foreground mb-12">
+                    {initiative.summary || initiative.caption}
+                  </div>
+
+                  <h3 className="font-display text-2xl font-semibold text-primary mb-6">About the Initiative</h3>
                   <div className="text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap">
                     {initiative.description}
                   </div>
 
-                  {(initiative.short_term_goals ||
-                    initiative.long_term_vision ||
-                    initiative.expected_outcomes) && (
+                  {(initiative.short_term_goals || initiative.long_term_vision || initiative.expected_outcomes) && (
                     <div className="mt-12 grid gap-6 sm:grid-cols-2">
                       {initiative.short_term_goals && (
                         <div className="rounded-3xl bg-muted/30 p-6 border border-border/40">
-                          <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                            Short-term Goals
-                          </h5>
-                          <p className="text-sm leading-relaxed text-primary/80 whitespace-pre-wrap">
-                            {initiative.short_term_goals}
-                          </p>
+                          <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Short-term Goals</h5>
+                          <p className="text-sm leading-relaxed text-primary/80 whitespace-pre-wrap">{initiative.short_term_goals}</p>
                         </div>
                       )}
                       {initiative.long_term_vision && (
                         <div className="rounded-3xl bg-muted/30 p-6 border border-border/40">
-                          <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                            Long-term Vision
-                          </h5>
-                          <p className="text-sm leading-relaxed text-primary/80 whitespace-pre-wrap">
-                            {initiative.long_term_vision}
-                          </p>
+                          <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Long-term Vision</h5>
+                          <p className="text-sm leading-relaxed text-primary/80 whitespace-pre-wrap">{initiative.long_term_vision}</p>
                         </div>
                       )}
                       {initiative.expected_outcomes && (
@@ -181,9 +390,7 @@ function InitiativeDetailPage() {
                           <h5 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-forest mb-3">
                             <Lightbulb className="h-3 w-3" /> Expected Outcomes
                           </h5>
-                          <p className="text-sm leading-relaxed text-forest/80 whitespace-pre-wrap">
-                            {initiative.expected_outcomes}
-                          </p>
+                          <p className="text-sm leading-relaxed text-forest/80 whitespace-pre-wrap">{initiative.expected_outcomes}</p>
                         </div>
                       )}
                     </div>
@@ -221,11 +428,7 @@ function InitiativeDetailPage() {
                   <div className="flex flex-col sm:flex-row gap-8 items-start">
                     <div className="h-24 w-24 shrink-0 overflow-hidden rounded-3xl border-4 border-white shadow-xl bg-white">
                       {organization.logo_url ? (
-                        <img
-                          src={organization.logo_url}
-                          className="h-full w-full object-cover"
-                          alt=""
-                        />
+                        <img src={organization.logo_url} className="h-full w-full object-cover" alt="" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-primary text-white text-3xl font-bold">
                           {organization.organization_name?.charAt(0)}
@@ -235,10 +438,9 @@ function InitiativeDetailPage() {
                     <div className="flex-1">
                       <h3 className="font-display text-2xl font-bold text-primary">
                         {organization.organization_name}
-                      </h3>
+                      </h3 >
                       <p className="mt-4 text-muted-foreground leading-relaxed line-clamp-3">
-                        {organization.description ||
-                          "Leading systemic change through vetted social impact programs."}
+                        {organization.description || "Leading systemic change through vetted social impact programs."}
                       </p>
                       <div className="mt-6 flex flex-wrap gap-4">
                         <Link

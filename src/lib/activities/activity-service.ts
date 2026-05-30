@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { automationService } from "@/lib/automation/automation-service";
-import { isUUID } from "@/lib/identifiers";
 
 export type ActivityEventType =
   | 'homepage_view' | 'initiative_view' | 'share_click' | 'signup_started'
@@ -19,15 +18,11 @@ export const activityService = {
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
 
-    // Validate IDs
-    const validInitiativeId = initiativeId && isUUID(initiativeId) ? initiativeId : null;
-    const validOrganizationId = organizationId && isUUID(organizationId) ? organizationId : null;
-
     const activityData = {
       event_type: eventType,
       user_id: userId,
-      initiative_id: validInitiativeId,
-      organization_id: validOrganizationId,
+      initiative_id: initiativeId,
+      organization_id: organizationId,
       source,
       metadata: {
         ...metadata,
@@ -63,15 +58,15 @@ export const activityService = {
     let activityQuery = supabase.from('activities').select('*, profiles(full_name, avatar_url)').order('created_at', { ascending: false }).limit(limit);
     let eventQuery = supabase.from('initiative_events').select('*, initiatives(title)').order('created_at', { ascending: false }).limit(limit);
 
-    if (userId && isUUID(userId)) {
+    if (userId) {
       activityQuery = activityQuery.eq('user_id', userId);
       eventQuery = eventQuery.eq('user_id', userId);
     }
-    if (initiativeId && isUUID(initiativeId)) {
+    if (initiativeId) {
       activityQuery = activityQuery.eq('initiative_id', initiativeId);
       eventQuery = eventQuery.eq('initiative_id', initiativeId);
     }
-    if (organizationId && isUUID(organizationId)) {
+    if (organizationId) {
       activityQuery = activityQuery.eq('organization_id', organizationId);
     }
 

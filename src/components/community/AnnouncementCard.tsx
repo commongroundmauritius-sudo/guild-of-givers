@@ -33,9 +33,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
             loading="lazy"
           />
         )}
-        <p className="whitespace-pre-wrap text-sm text-foreground/90 leading-relaxed">
-          {announcement.content}
-        </p>
+        <p className="whitespace-pre-wrap text-sm text-foreground/90 leading-relaxed">{announcement.content}</p>
       </CardContent>
     </Card>
   );

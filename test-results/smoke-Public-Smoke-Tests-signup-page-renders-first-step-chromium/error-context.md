@@ -12,10 +12,23 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8788/signup
-Call log:
-  - navigating to "http://localhost:8788/signup", waiting until "load"
+Error: expect(locator).toContainText(expected) failed
 
+Locator: locator('h2')
+Expected pattern: /Start your monthly impact/i
+Received string:  "Monthly Contribution"
+Timeout: 5000ms
+
+Call log:
+  - Expect "toContainText" with timeout 5000ms
+  - waiting for locator('h2')
+    13 × locator resolved to <h2 class="font-display text-4xl font-bold text-primary">Monthly Contribution</h2>
+       - unexpected value "Monthly Contribution"
+
+```
+
+```yaml
+- heading "Monthly Contribution" [level=2]
 ```
 
 # Test source
@@ -35,9 +48,9 @@ Call log:
   12 |   });
   13 |
   14 |   test('signup page renders first step', async ({ page }) => {
-> 15 |     await page.goto('/signup');
-     |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8788/signup
-  16 |     await expect(page.locator('h2')).toContainText(/Start your monthly impact/i);
+  15 |     await page.goto('/signup');
+> 16 |     await expect(page.locator('h2')).toContainText(/Start your monthly impact/i);
+     |                                      ^ Error: expect(locator).toContainText(expected) failed
   17 |     await expect(page.locator('button', { hasText: 'Rs 350' })).toBeVisible();
   18 |   });
   19 | });
