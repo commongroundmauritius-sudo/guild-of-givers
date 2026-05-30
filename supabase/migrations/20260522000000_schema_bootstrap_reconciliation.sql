@@ -1,10 +1,15 @@
 -- Schema Bootstrap Reconciliation
--- Minimal structural restoration to ensure migration chain consistency for fresh databases.
--- Full hardening and policies are handled in 20260606000000_schema_reconciliation.sql.
+-- Minimal structural restoration to ensure migration chain consistency.
+-- Enums are added first to avoid SQLSTATE 55P04 in subsequent migrations.
 
+-- 1. Enum Bootstrap (Must run outside transaction)
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'super_admin';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'ngo';
+
+-- 2. Structural Tables
 BEGIN;
 
--- 1. billing_runs
+-- billing_runs
 CREATE TABLE IF NOT EXISTS public.billing_runs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     run_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -15,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.billing_runs (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
--- 2. initiative_versions
+-- initiative_versions
 CREATE TABLE IF NOT EXISTS public.initiative_versions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     initiative_id UUID REFERENCES public.initiatives(id) ON DELETE CASCADE NOT NULL,
@@ -41,7 +46,7 @@ CREATE TABLE IF NOT EXISTS public.initiative_versions (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
--- 3. activities
+-- activities
 CREATE TABLE IF NOT EXISTS public.activities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -53,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.activities (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
--- 4. crm_tags
+-- crm_tags
 CREATE TABLE IF NOT EXISTS public.crm_tags (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
@@ -63,7 +68,7 @@ CREATE TABLE IF NOT EXISTS public.crm_tags (
     UNIQUE(organization_id, name)
 );
 
--- 5. crm_tag_assignments
+-- crm_tag_assignments
 CREATE TABLE IF NOT EXISTS public.crm_tag_assignments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tag_id UUID REFERENCES public.crm_tags(id) ON DELETE CASCADE NOT NULL,
@@ -74,9 +79,12 @@ CREATE TABLE IF NOT EXISTS public.crm_tag_assignments (
 
 COMMIT;
 
--- 6. Enum Bootstrap
--- ALTER TYPE ... ADD VALUE must run at top-level and cannot be inside a DO block or Transaction.
--- We add these here to ensure they exist before migrations like 20260530000000 use them,
--- avoiding SQLSTATE 55P04 (unsafe use of new value).
-ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'super_admin';
-ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'ngo';
+-- 3. Refresh has_role to ensure it recognizes the updated enum type
+CREATE OR REPLACE FUNCTION public.has_role(requested_role public.app_role)
+RETURNS boolean AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM public.user_roles
+        WHERE user_id = auth.uid()
+        AND role = requested_role
+    );
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
