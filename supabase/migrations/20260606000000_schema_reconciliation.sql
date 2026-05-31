@@ -8,15 +8,18 @@ BEGIN;
 -- 1. ENUMS & TYPES
 -- ==========================================
 
--- initiative_version_status
-IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'initiative_version_status') THEN
-    CREATE TYPE public.initiative_version_status AS ENUM ('pending', 'approved', 'superseded', 'rejected');
-END IF;
+DO $$
+BEGIN
+    -- initiative_version_status
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'initiative_version_status') THEN
+        CREATE TYPE public.initiative_version_status AS ENUM ('pending', 'approved', 'superseded', 'rejected');
+    END IF;
 
--- partner_application_status
-IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'partner_application_status') THEN
-    CREATE TYPE public.partner_application_status AS ENUM ('submitted', 'under_review', 'contacted', 'approved', 'rejected', 'converted', 'archived');
-END IF;
+    -- partner_application_status
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'partner_application_status') THEN
+        CREATE TYPE public.partner_application_status AS ENUM ('submitted', 'under_review', 'contacted', 'approved', 'rejected', 'converted', 'archived');
+    END IF;
+END $$;
 
 -- ==========================================
 -- 2. TABLES (Proven Missing)
