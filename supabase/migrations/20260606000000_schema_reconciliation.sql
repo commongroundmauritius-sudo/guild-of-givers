@@ -1,41 +1,33 @@
--- Schema Reconciliation & Hardening Migration
--- Restores or hardens Proven Missing Category A tables.
--- This migration ensures that structural tables created by the bootstrap layer
--- (20260522000000) are upgraded with proper enums, constraints, and RLS.
+-- Schema Reconciliation Migration
+-- Reconstructs proven missing entities from Category A to resolve codebase/migration drift.
+-- Classified as Category A (Proven Missing) due to references in RPCs and RLS policies.
 
 BEGIN;
 
 -- ==========================================
 -- 1. ENUMS & TYPES
 -- ==========================================
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'initiative_version_status') THEN
-        CREATE TYPE public.initiative_version_status AS ENUM ('pending', 'approved', 'superseded', 'rejected');
-    END IF;
-END $$;
+
+-- initiative_version_status
+IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'initiative_version_status') THEN
+    CREATE TYPE public.initiative_version_status AS ENUM ('pending', 'approved', 'superseded', 'rejected');
+END IF;
+
+-- partner_application_status
+IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'partner_application_status') THEN
+    CREATE TYPE public.partner_application_status AS ENUM ('submitted', 'under_review', 'contacted', 'approved', 'rejected', 'converted', 'archived');
+END IF;
 
 -- ==========================================
--- 2. TABLES & REFINEMENTS
+-- 2. TABLES (Proven Missing)
 -- ==========================================
-
--- billing_runs
-CREATE TABLE IF NOT EXISTS public.billing_runs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    run_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    status TEXT DEFAULT 'pending',
-    subscriptions_processed INTEGER DEFAULT 0,
-    total_amount_mur NUMERIC DEFAULT 0,
-    error_log TEXT,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
-);
 
 -- initiative_versions
 CREATE TABLE IF NOT EXISTS public.initiative_versions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     initiative_id UUID REFERENCES public.initiatives(id) ON DELETE CASCADE NOT NULL,
     version_number INTEGER NOT NULL,
-    status TEXT DEFAULT 'pending' NOT NULL,
+    status public.initiative_version_status DEFAULT 'pending'::public.initiative_version_status NOT NULL,
     title TEXT,
     description TEXT,
     summary TEXT,
@@ -92,10 +84,12 @@ CREATE TABLE IF NOT EXISTS public.crm_tag_assignments (
 -- ==========================================
 DO $$
 BEGIN
-    -- initiative_versions.status ENUM conversion
+    -- initiative_versions.status ENUM conversion (for existing tables that were TEXT)
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'initiative_versions' AND column_name = 'status' AND data_type = 'text') THEN
-        ALTER TABLE public.initiative_versions ALTER COLUMN status TYPE public.initiative_version_status USING status::public.initiative_version_status;
-        ALTER TABLE public.initiative_versions ALTER COLUMN status SET DEFAULT 'pending';
+        ALTER TABLE public.initiative_versions
+            ALTER COLUMN status DROP DEFAULT,
+            ALTER COLUMN status TYPE public.initiative_version_status USING status::public.initiative_version_status,
+            ALTER COLUMN status SET DEFAULT 'pending'::public.initiative_version_status;
     END IF;
 
     -- billing_runs.status check constraint
