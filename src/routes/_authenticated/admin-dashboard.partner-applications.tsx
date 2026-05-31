@@ -54,7 +54,10 @@ function AdminPartnerApplicationsPage() {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching partner applications:", error);
+        throw error;
+      }
       return data;
     },
   });
@@ -100,8 +103,7 @@ function AdminPartnerApplicationsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!user) throw new Error("Unauthorized");
-      return await softDeleteApplication({ data: { applicationId: id, actorId: user.id } });
+      return await softDeleteApplication({ data: { applicationId: id } });
     },
     onSuccess: () => {
       toast.success("Application archived");
@@ -114,66 +116,79 @@ function AdminPartnerApplicationsPage() {
   const getStatusBadgeCls = (status: string) => {
     switch (status) {
       case "submitted":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-50 text-blue-700 border-blue-100";
       case "under_review":
-        return "bg-amber-100 text-amber-700";
+        return "bg-amber-50 text-amber-700 border-amber-100";
       case "approved":
-        return "bg-green-100 text-green-700";
-      case "converted":
-        return "bg-purple-100 text-purple-700";
+        return "bg-green-50 text-green-700 border-green-100";
       case "rejected":
-        return "bg-red-100 text-red-700";
+        return "bg-red-50 text-red-700 border-red-100";
+      case "converted":
+        return "bg-purple-50 text-purple-700 border-purple-100";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-50 text-gray-700 border-gray-100";
     }
   };
+
+  if (isLoading) {
+    return (
+      <SiteLayout>
+        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-1/4" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </SiteLayout>
+    );
+  }
 
   return (
     <SiteLayout>
       <section className="bg-muted/30 min-h-screen py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 flex items-center justify-between">
+          <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-amber-600" />
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-600">
-                  Admin Control
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-primary/10 p-1.5 rounded-lg">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-sm font-bold uppercase tracking-wider text-primary">
+                  Admin Console
                 </span>
               </div>
-              <h1 className="mt-2 font-display text-4xl font-bold text-primary">
+              <h1 className="font-display text-4xl font-bold tracking-tight text-primary">
                 Partner Applications
               </h1>
-              <p className="mt-2 text-muted-foreground">
-                Manage and review organizations applying to join the network.
+              <p className="mt-2 text-muted-foreground max-w-2xl">
+                Review and manage applications from organizations wanting to join the platform.
               </p>
             </div>
 
             <div className="flex items-center gap-3">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-full border border-border/40 bg-card px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="all">All Statuses</option>
-                <option value="submitted">Submitted</option>
-                <option value="under_review">Under Review</option>
-                <option value="approved">Approved</option>
-                <option value="converted">Converted</option>
-                <option value="rejected">Rejected</option>
-                <option value="archived">Archived</option>
-              </select>
+              <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card px-4 py-2 shadow-sm">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="border-none bg-transparent text-sm font-medium focus:ring-0"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="under_review">Under Review</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="converted">Converted</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* List View */}
             <div className="lg:col-span-2 space-y-4">
-              {isLoading ? (
-                Array(5)
-                  .fill(0)
-                  .map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
-              ) : applications && applications.length > 0 ? (
+              {applications && applications.length > 0 ? (
                 applications.map((app) => (
                   <div
                     key={app.id}
