@@ -19,42 +19,17 @@ export interface PartnerApplicationInput {
 
 class PartnerService {
   async submitApplication(input: PartnerApplicationInput) {
-    const email = input.email.trim().toLowerCase();
-
-    // 1. Duplicate protection (24h cooldown for pending/submitted status)
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-    const { data: existing, error: checkError } = await supabase
-      .from("partner_applications")
-      .select("id, created_at, status")
-      .eq("email", email)
-      .in("status", ["submitted", "under_review"])
-      .gt("created_at", twentyFourHoursAgo)
-      .is("deleted_at", null)
-      .maybeSingle();
-
-    if (checkError) throw checkError;
-    if (existing) {
-      throw new Error(
-        "An application from this email is already being processed. Please wait 24 hours before submitting another.",
-      );
-    }
-
-    // 2. Insert application
-    const { data, error } = await supabase
-      .from("partner_applications")
-      .insert({
-        ...input,
-        email,
-        status: "submitted",
-      })
-      .select()
-      .single();
+    // 1. Use the secure RPC for submission
+    // This handles duplicate checks, insertion, and activity logging atomically.
+    const { data, error } = await supabase.rpc("submit_partner_application", {
+      p_org_name: input.organization_name,
+      p_org_type: input.organization_type,
+      p_reg_num: input.registration_number,
+      p_email: input.email,
+      p_message: input.message,
+    });
 
     if (error) throw error;
-
-    // 3. Log activity
-    await this.logActivity(data.id, null, "submitted", "Application submitted via public form");
 
     return data;
   }
