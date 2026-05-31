@@ -29,8 +29,12 @@ class PartnerService {
       p_message: input.message,
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Partner application submission failed:", error);
+      throw error;
+    }
 
+    console.log("Partner application submitted successfully:", (data as any)?.id);
     return data;
   }
 
