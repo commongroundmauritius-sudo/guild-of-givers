@@ -1,13 +1,21 @@
 -- Create public partner application submissions table and restore access
-CREATE TABLE IF NOT EXISTS public.partner_applications (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  organization_name TEXT NOT NULL,
-  registration_number TEXT NOT NULL,
-  email TEXT NOT NULL,
-  message TEXT NOT NULL,
-  status TEXT DEFAULT 'pending' NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
-);
+-- Note: This is a legacy migration to ensure consistency with existing production schema
+-- if the table already exists.
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'partner_applications') THEN
+        CREATE TABLE public.partner_applications (
+          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+          organization_name TEXT NOT NULL,
+          registration_number TEXT NOT NULL,
+          email TEXT NOT NULL,
+          message TEXT NOT NULL,
+          status TEXT DEFAULT 'pending' NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+        );
+    END IF;
+END $$;
 
 ALTER TABLE public.partner_applications ENABLE ROW LEVEL SECURITY;
 

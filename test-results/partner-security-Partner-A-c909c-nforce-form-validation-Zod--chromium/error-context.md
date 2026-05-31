@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: growth/growth-foundation.spec.ts >> Growth & Attribution Foundation >> signup page loads successfully
-- Location: tests/growth/growth-foundation.spec.ts:14:3
+- Name: partner-security.spec.ts >> Partner Application Security >> should enforce form validation (Zod)
+- Location: tests/partner-security.spec.ts:8:3
 
 # Error details
 

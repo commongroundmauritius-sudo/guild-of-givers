@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: growth/analytics.spec.ts >> Growth & Engagement Analytics >> Admin dashboard contains updated modular dashboard tabs
-- Location: tests/growth/analytics.spec.ts:4:3
+- Name: partner-security.spec.ts >> Partner Application Security >> should block unauthorized access to applications list
+- Location: tests/partner-security.spec.ts:43:3
 
 # Error details
 
