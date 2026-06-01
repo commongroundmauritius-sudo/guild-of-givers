@@ -20,7 +20,7 @@ export const homepageService = {
   async getPublishedVersion() {
     const { data, error } = await supabase
       .from("homepage_versions")
-      .select("*")
+      .select("id, configuration_json, published_at")
       .eq("status", "published")
       .maybeSingle();
 
@@ -29,9 +29,12 @@ export const homepageService = {
   },
 
   async getDraftVersion() {
+    // Only project the fields the CMS reads on initial render.
+    // configuration_json is the JSONB blob driving the editor; everything
+    // else (status, created_by, created_at, published_at) is unused there.
     const { data, error } = await supabase
       .from("homepage_versions")
-      .select("*")
+      .select("id, configuration_json")
       .eq("status", "draft")
       .order("created_at", { ascending: false })
       .limit(1)
@@ -40,6 +43,7 @@ export const homepageService = {
     if (error) throw error;
     return data;
   },
+
 
   async saveDraft(config: HomepageConfig, userId: string) {
     const draft = await this.getDraftVersion();
