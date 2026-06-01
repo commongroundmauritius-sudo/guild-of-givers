@@ -94,8 +94,9 @@ export const homepageService = {
         published_at: new Date().toISOString()
       })
       .eq("id", versionId)
-      .select()
+      .select("id, published_at")
       .single();
+
 
     if (error) throw error;
     return data;
