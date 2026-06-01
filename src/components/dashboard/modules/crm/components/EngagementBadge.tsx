@@ -12,6 +12,7 @@ export const EngagementBadge: React.FC<{ userId: string }> = ({ userId }) => {
   });
 
   if (isLoading || !score) return null;
+  const engagementScore = score as any;
 
   const getLevelColor = (level: string) => {
     switch (level) {
@@ -31,11 +32,11 @@ export const EngagementBadge: React.FC<{ userId: string }> = ({ userId }) => {
       <Tooltip>
         <TooltipTrigger asChild>
           <Badge
-            className={`flex items-center gap-1 ${getLevelColor(score.engagement_level)}`}
+            className={`flex items-center gap-1 ${getLevelColor(engagementScore.engagement_level)}`}
             variant="outline"
           >
             <Zap className="h-3 w-3 fill-current" />
-            {score.engagement_level} ({score.engagement_score})
+            {engagementScore.engagement_level} ({engagementScore.engagement_score})
           </Badge>
         </TooltipTrigger>
         <TooltipContent className="p-4 space-y-2">
@@ -44,19 +45,19 @@ export const EngagementBadge: React.FC<{ userId: string }> = ({ userId }) => {
             <div className="flex justify-between gap-4">
               <span>Activity Score:</span>
               <span className="font-medium text-indigo-600">
-                {score.score_breakdown?.activity_score}/40
+                {engagementScore.score_breakdown?.activity_score}/40
               </span>
             </div>
             <div className="flex justify-between gap-4">
               <span>Payment Score:</span>
               <span className="font-medium text-indigo-600">
-                {score.score_breakdown?.payment_score}/30
+                {engagementScore.score_breakdown?.payment_score}/30
               </span>
             </div>
             <div className="flex justify-between gap-4">
               <span>Subscription Bonus:</span>
               <span className="font-medium text-indigo-600">
-                +{score.score_breakdown?.subscription_bonus}
+                +{engagementScore.score_breakdown?.subscription_bonus}
               </span>
             </div>
           </div>
