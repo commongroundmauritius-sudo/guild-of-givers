@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: homepage-cms-smoke.spec.ts >> Homepage CMS Smoke Test >> should redirect to login when accessing admin dashboard without session
-- Location: tests/homepage-cms-smoke.spec.ts:4:3
+- Name: admin.spec.ts >> Admin Protected Routes >> admin analytics requires auth
+- Location: tests/admin.spec.ts:4:3
 
 # Error details
 
