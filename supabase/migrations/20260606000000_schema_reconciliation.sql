@@ -301,7 +301,7 @@ END $$;
 
 
 -- crm_notes: Staff manage own org
-DO 3906 BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'crm_notes' AND policyname = 'Staff can manage own org notes') THEN
         CREATE POLICY "Staff can manage own org notes" ON public.crm_notes
         FOR ALL TO authenticated USING (
