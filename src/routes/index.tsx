@@ -461,7 +461,7 @@ function FAQ({ settings }: { settings: any }) {
     },
     {
       q: 'Is my contribution tax-deductible?',
-      a: 'Where partner Organizations are registered for tax-deductible giving, you'll receive an automated receipt at year-end.',
+      a: 'Where partner Organizations are registered for tax-deductible giving, you\'ll receive an automated receipt at year-end.',
     },
     {
       q: 'How do I know my impact is real?',
