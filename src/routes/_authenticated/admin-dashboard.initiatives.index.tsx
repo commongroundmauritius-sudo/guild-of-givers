@@ -15,8 +15,6 @@ import {
   Globe,
   Loader2,
   Trash2,
-  Home,
-  XCircle,
   MoreVertical,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -38,14 +36,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { deleteInitiative } from "@/lib/security/auth-actions";
 import { cn } from "@/lib/utils";
 
@@ -66,21 +56,10 @@ interface JoinedInitiative {
   } | null;
 }
 
-interface FeaturedEntry {
-  initiative_id: string;
-  display_order: number;
-  initiatives?: {
-    title: string;
-  } | null;
-}
-
 function AdminInitiativesPage() {
   const { user, role } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [featureModalData, setFeatureModalData] = useState<{ id: string; title: string } | null>(
-    null,
-  );
 
   const { data: initiatives = [], isLoading } = useQuery({
     queryKey: ["admin-initiatives"],
@@ -95,16 +74,6 @@ function AdminInitiativesPage() {
     },
   });
 
-  const { data: featured = [] } = useQuery({
-    queryKey: ["homepage-featured-initiatives"],
-    enabled: !!user && (role === "admin" || role === "super_admin"),
-    queryFn: async () => {
-      const { data, error } = await supabase.from("homepage_featured_initiatives").select("*");
-      if (error) throw error;
-      return (data || []) as unknown as FeaturedEntry[];
-    },
-  });
-
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await deleteInitiative({ data: { id } });
@@ -112,21 +81,6 @@ function AdminInitiativesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-initiatives"] });
       toast.success("Initiative deleted successfully");
-    },
-    onError: (err: Error) => toast.error(err.message),
-  });
-
-  const removeFromHomepageMutation = useMutation({
-    mutationFn: async (initiativeId: string) => {
-      const { error } = await supabase
-        .from("homepage_featured_initiatives")
-        .delete()
-        .eq("initiative_id", initiativeId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["homepage-featured-initiatives"] });
-      toast.success("Removed from homepage");
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -200,7 +154,6 @@ function AdminInitiativesPage() {
                     </TableRow>
                   ) : filtered.length > 0 ? (
                     filtered.map((item) => {
-                      const isFeatured = featured.some((f) => f.initiative_id === item.id);
                       return (
                         <TableRow key={item.id} className="hover:bg-muted/30 transition-colors">
                           <TableCell className="pl-8 py-5">
@@ -214,23 +167,10 @@ function AdminInitiativesPage() {
                                   className="h-full w-full object-cover"
                                   alt=""
                                 />
-                                {isFeatured && (
-                                  <div className="absolute top-0 right-0 p-1 bg-amber-500 rounded-bl-lg shadow-sm">
-                                    <Home className="h-2 w-2 text-white" />
-                                  </div>
-                                )}
                               </div>
                               <div>
-                                <div className="font-bold text-primary leading-tight flex items-center gap-2">
+                                <div className="font-bold text-primary leading-tight">
                                   {item.title}
-                                  {isFeatured && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-[8px] h-4 bg-amber-50 text-amber-600 border-amber-200"
-                                    >
-                                      Featured
-                                    </Badge>
-                                  )}
                                 </div>
                                 <div className="text-[10px] text-muted-foreground uppercase font-bold mt-1 tracking-wider">
                                   {item.category}
@@ -285,26 +225,6 @@ function AdminInitiativesPage() {
 
                                   <DropdownMenuSeparator />
 
-                                  {isFeatured ? (
-                                    <DropdownMenuItem
-                                      className="text-red-600 focus:text-red-600 cursor-pointer"
-                                      onClick={() => removeFromHomepageMutation.mutate(item.id)}
-                                    >
-                                      <XCircle className="h-4 w-4 mr-2" /> Remove from Homepage
-                                    </DropdownMenuItem>
-                                  ) : (
-                                    <DropdownMenuItem
-                                      className="text-amber-600 focus:text-amber-600 cursor-pointer"
-                                      onClick={() =>
-                                        setFeatureModalData({ id: item.id, title: item.title })
-                                      }
-                                    >
-                                      <Home className="h-4 w-4 mr-2" /> Feature on Homepage
-                                    </DropdownMenuItem>
-                                  )}
-
-                                  <DropdownMenuSeparator />
-
                                   <DropdownMenuItem
                                     className="text-red-600 focus:text-red-600 cursor-pointer"
                                     onClick={() => deleteMutation.mutate(item.id)}
@@ -331,165 +251,6 @@ function AdminInitiativesPage() {
           </Card>
         </div>
       </section>
-
-      {/* Feature on Homepage Modal */}
-      <FeatureModal data={featureModalData} onClose={() => setFeatureModalData(null)} />
     </SiteLayout>
-  );
-}
-
-function FeatureModal({
-  data,
-  onClose,
-}: {
-  data: { id: string; title: string } | null;
-  onClose: () => void;
-}) {
-  const queryClient = useQueryClient();
-  const [replacingSlot, setReplacingSlot] = useState<{ slot: number; currentTitle: string } | null>(
-    null,
-  );
-
-  const { data: currentFeatured = [] } = useQuery({
-    queryKey: ["homepage-featured-initiatives-modal"],
-    enabled: !!data,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("homepage_featured_initiatives")
-        .select("*, initiatives(title)")
-        .order("display_order");
-      if (error) throw error;
-      return (data || []) as unknown as FeaturedEntry[];
-    },
-  });
-
-  const featureMutation = useMutation({
-    mutationFn: async (slot: number) => {
-      const { error } = await supabase.from("homepage_featured_initiatives").upsert(
-        {
-          display_order: slot,
-          initiative_id: data!.id,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "display_order" },
-      );
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["homepage-featured-initiatives"] });
-      queryClient.invalidateQueries({ queryKey: ["homepage-featured-initiatives-modal"] });
-      toast.success("Initiative featured successfully");
-      onClose();
-      setReplacingSlot(null);
-    },
-    onError: (err: Error) => toast.error(err.message),
-  });
-
-  if (!data) return null;
-
-  return (
-    <Dialog open={!!data} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] rounded-[2rem]">
-        <DialogHeader>
-          <DialogTitle>Feature on Homepage</DialogTitle>
-          <DialogDescription>
-            Select a slot for <span className="font-bold text-primary">"{data.title}"</span>
-          </DialogDescription>
-        </DialogHeader>
-
-        {replacingSlot ? (
-          <div className="py-6 text-center space-y-6">
-            <div className="h-16 w-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-600">
-              <Home className="h-8 w-8" />
-            </div>
-            <div className="space-y-2">
-              <p className="font-bold text-lg">Replace Slot {replacingSlot.slot}?</p>
-              <p className="text-sm text-muted-foreground">
-                This slot already contains{" "}
-                <span className="font-medium text-primary">"{replacingSlot.currentTitle}"</span>.
-              </p>
-            </div>
-            <div className="flex gap-3 justify-center">
-              <Button
-                variant="ghost"
-                onClick={() => setReplacingSlot(null)}
-                className="rounded-xl px-6"
-              >
-                Back
-              </Button>
-              <Button
-                variant="destructive"
-                className="rounded-xl px-6"
-                onClick={() => featureMutation.mutate(replacingSlot.slot)}
-                disabled={featureMutation.isPending}
-              >
-                Replace & Assign
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid gap-4 py-4 sm:grid-cols-2">
-            {[1, 2, 3, 4].map((slot) => {
-              const current = (currentFeatured as FeaturedEntry[]).find(
-                (f) => f.display_order === slot,
-              );
-              const isOccupiedBySame = current?.initiative_id === data.id;
-
-              return (
-                <button
-                  key={slot}
-                  disabled={isOccupiedBySame}
-                  onClick={() => {
-                    if (current) {
-                      setReplacingSlot({
-                        slot,
-                        currentTitle: current.initiatives?.title || "Unknown",
-                      });
-                    } else {
-                      featureMutation.mutate(slot);
-                    }
-                  }}
-                  className={cn(
-                    "flex flex-col items-start p-5 rounded-[1.5rem] border-2 transition-all text-left group",
-                    isOccupiedBySame
-                      ? "border-primary/10 bg-muted/20 cursor-not-allowed"
-                      : current
-                        ? "border-amber-200 bg-amber-50/30 hover:border-amber-400"
-                        : "border-dashed border-border/60 hover:border-primary/40 hover:bg-primary/5",
-                  )}
-                >
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
-                    Slot {slot}
-                  </span>
-                  {current ? (
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold text-primary line-clamp-1">
-                        {current.initiatives?.title}
-                      </p>
-                      <p className="text-[9px] text-amber-600 font-bold uppercase">Occupied</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground italic">Available</p>
-                      <div className="flex items-center gap-1 text-[9px] text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Plus className="h-2 w-2" /> Assign Now
-                      </div>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {!replacingSlot && (
-          <DialogFooter>
-            <Button variant="ghost" onClick={onClose} className="rounded-xl">
-              Cancel
-            </Button>
-          </DialogFooter>
-        )}
-      </DialogContent>
-    </Dialog>
   );
 }

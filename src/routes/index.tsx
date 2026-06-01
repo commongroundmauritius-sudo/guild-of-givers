@@ -9,6 +9,7 @@ import {
   AlertCircle,
   TrendingUp,
   Clock,
+  Heart,
   LucideIcon,
 } from "lucide-react";
 import { InitiativeCard } from "@/components/InitiativeCard";
@@ -17,6 +18,9 @@ import { Kicker } from "@/components/Kicker";
 import { useCuratedInitiatives } from "@/hooks/initiatives/use-curated-initiatives";
 import { useActivityTracker } from "@/hooks/activities/use-activity-tracker";
 import { useQuery } from "@tanstack/react-query";
+import { homepageService } from "@/lib/homepage-service";
+import { useHomepageAnalytics } from "@/hooks/use-homepage-analytics";
+import { successStoryService } from "@/lib/success-story-service";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Accordion,
@@ -41,120 +45,70 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-interface VisibilitySettings {
-  hero: boolean;
-  valueProps: boolean;
-  featured: boolean;
-  forOrgs: boolean;
-  faq: boolean;
-}
-
 function Index() {
   useActivityTracker({ eventType: "homepage_view" });
 
-  // Fetch visibility settings
-  const { data: settings } = useQuery({
-    queryKey: ["homepage-visibility"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("homepage_settings")
-        .select("setting_value")
-        .eq("setting_key", "homepage_section_visibility")
-        .maybeSingle();
-      return (
-        (data?.setting_value as unknown as VisibilitySettings) || {
-          hero: true,
-          valueProps: true,
-          featured: true,
-          forOrgs: true,
-          faq: true,
-        }
-      );
-    },
+  const { data: publishedVersion } = useQuery({
+    queryKey: ["homepage", "published"],
+    queryFn: () => homepageService.getPublishedVersion(),
   });
 
-  // Fetch manually featured initiatives
-  const { data: manualFeatured = [], isLoading: manualFeaturedLoading } = useQuery({
-    queryKey: ["homepage-featured-manual"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("homepage_featured_initiatives")
-        .select("*, initiatives(*, organizations(organization_name))")
-        .neq("initiatives.status", "archived")
-        .order("display_order", { ascending: true });
+  const { trackEvent } = useHomepageAnalytics(publishedVersion?.id);
 
-      if (error) return [];
-      return (data || []).filter((d) => d.initiatives).map((d) => d.initiatives);
-    },
-  });
-
-  const { urgent, trending, newest } = useCuratedInitiatives();
-
-  const visibility = settings || {
-    hero: true,
-    valueProps: true,
-    featured: true,
-    forOrgs: true,
-    faq: true,
-  };
+  const config = publishedVersion?.configuration_json as any;
+  const sections = config?.sections || [];
 
   return (
     <SiteLayout>
-      {visibility.hero && <Hero />}
-      {visibility.valueProps && <ValueProps />}
-
-      {/* Featured Section (Manual Control) */}
-      {visibility.featured && (
-        <CuratedSection
-          title="Featured Initiatives"
-          subtitle="Vetted programs making a significant impact right now."
-          initiatives={manualFeatured as unknown as unknown[]}
-          isLoading={manualFeaturedLoading}
-          icon={Sparkles}
-          kicker="Handpicked"
-        />
-      )}
-
-      {/* Urgent Section */}
-      <CuratedSection
-        title="Urgent Funding Gaps"
-        subtitle="These programs need immediate support to maintain their vital operations."
-        initiatives={urgent.data}
-        isLoading={urgent.isLoading}
-        icon={AlertCircle}
-        kicker="Critical"
-        bgClassName="bg-cream-deep/30"
-      />
-
-      {/* Trending Section */}
-      <CuratedSection
-        title="Trending Programs"
-        subtitle="Initiatives seeing the most growth in our community."
-        initiatives={trending.data}
-        isLoading={trending.isLoading}
-        icon={TrendingUp}
-        kicker="Active"
-      />
-
-      {/* Newest Section */}
-      <CuratedSection
-        title="Recently Onboarded"
-        subtitle="New partners joining the CommonGround network."
-        initiatives={newest.data}
-        isLoading={newest.isLoading}
-        icon={Clock}
-        kicker="New"
-        bgClassName="bg-cream-deep/30"
-      />
-
-      {visibility.forOrgs && <ForOrgs />}
-      {visibility.faq && <FAQ />}
-      <FinalCTA />
+      {sections
+        .filter((s: any) => s.visible)
+        .map((section: any) => (
+          <div key={section.id} data-section={section.id}>
+            {renderSection(section)}
+          </div>
+        ))}
+        {sections.length === 0 && <DefaultHomepage />}
+        <FinalCTA />
     </SiteLayout>
   );
 }
 
-function Hero() {
+function DefaultHomepage() {
+  return (
+    <div className="py-20 text-center">
+      <h2 className="text-2xl font-bold">Welcome to CommonGround</h2>
+      <p className="text-muted-foreground mt-2">Homepage content is being prepared.</p>
+    </div>
+  );
+}
+
+function renderSection(section: any) {
+  switch (section.id) {
+    case "hero":
+      return <Hero settings={section.settings} />;
+    case "stats":
+      return <ImpactStats settings={section.settings} />;
+    case "featured":
+      return <FeaturedInitiatives settings={section.settings} />;
+    case "urgent":
+      return <UrgentNeeds settings={section.settings} />;
+    case "trending":
+      return <TrendingPrograms settings={section.settings} />;
+    case "volunteers":
+      return <VolunteerOpportunities settings={section.settings} />;
+    case "success":
+      return <SuccessStories settings={section.settings} />;
+    case "partners":
+    case "forOrgs":
+      return <ForOrgs />;
+    case "faq":
+      return <FAQ />;
+    default:
+      return null;
+  }
+}
+
+function Hero({ settings }: { settings: any }) {
   return (
     <section className="relative overflow-hidden bg-cream-deep pb-20 pt-32 lg:pt-48">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -164,27 +118,45 @@ function Hero() {
             Vetted. Stable. Long-term.
           </div>
           <h1 className="mt-8 font-display text-5xl font-extrabold tracking-tight text-primary sm:text-7xl lg:text-8xl leading-[0.9]">
-            One Membership. <br />
-            <span className="text-forest">Endless Impact.</span>
+            {settings.headline || "One Membership. Endless Impact."}
           </h1>
           <p className="mt-8 text-xl leading-relaxed text-muted-foreground sm:text-2xl max-w-2xl">
-            We turn predictable monthly contributions into reliable funding for Mauritius' most
-            effective long-horizon social programs.
+            {settings.subheadline || "We turn predictable monthly contributions into reliable funding for Mauritius' most effective long-horizon social programs."}
           </p>
           <div className="mt-12 flex flex-wrap gap-4">
             <Link
-              to="/signup"
+              to={settings.primaryCTA?.link || "/signup"}
               className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-10 text-sm font-bold text-white shadow-xl shadow-primary/20 transition hover:bg-primary/90 hover:shadow-2xl active:scale-95"
             >
-              Start Supporting
+              {settings.primaryCTA?.text || "Start Supporting"}
             </Link>
             <Link
-              to="/initiatives"
+              to={settings.secondaryCTA?.link || "/initiatives"}
               className="inline-flex h-14 items-center justify-center rounded-full border border-primary/10 bg-white/50 px-8 text-sm font-bold text-primary backdrop-blur-sm transition hover:bg-white hover:shadow-lg"
             >
-              Explore Initiatives
+              {settings.secondaryCTA?.text || "Explore Initiatives"}
             </Link>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ImpactStats({ settings }: { settings: any }) {
+  return (
+    <section className="bg-white py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          {PROPS.map((p) => (
+            <div key={p.title} className="flex flex-col items-start">
+              <div className="mb-6 rounded-2xl bg-primary/5 p-4 text-primary">
+                <p.icon className="h-6 w-6" />
+              </div>
+              <h3 className="font-display text-xl font-semibold text-primary">{p.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -214,20 +186,128 @@ const PROPS = [
   },
 ];
 
-function ValueProps() {
+function FeaturedInitiatives({ settings }: { settings: any }) {
+  const { data: initiatives = [], isLoading } = useQuery({
+    queryKey: ["homepage-featured-manual", settings.manual_ids],
+    enabled: !!settings.manual_ids && settings.manual_ids.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("initiatives")
+        .select("*, organizations(organization_name)")
+        .in("id", settings.manual_ids);
+
+      const results = data || [];
+      return results.sort((a, b) => settings.manual_ids.indexOf(a.id) - settings.manual_ids.indexOf(b.id));
+    },
+  });
+
+  return (
+    <CuratedSection
+      title="Featured Initiatives"
+      subtitle="Vetted programs making a significant impact right now."
+      initiatives={initiatives as any}
+      isLoading={isLoading}
+      icon={Sparkles}
+      kicker="Handpicked"
+    />
+  );
+}
+
+function UrgentNeeds({ settings }: { settings: any }) {
+  const { urgent } = useCuratedInitiatives();
+  return (
+    <CuratedSection
+      title="Urgent Funding Gaps"
+      subtitle="These programs need immediate support to maintain their vital operations."
+      initiatives={urgent.data?.slice(0, settings.limit || 4)}
+      isLoading={urgent.isLoading}
+      icon={AlertCircle}
+      kicker="Critical"
+      bgClassName="bg-cream-deep/30"
+    />
+  );
+}
+
+function TrendingPrograms({ settings }: { settings: any }) {
+  const { trending } = useCuratedInitiatives();
+  return (
+    <CuratedSection
+      title="Trending Programs"
+      subtitle="Initiatives seeing the most growth in our community."
+      initiatives={trending.data?.slice(0, settings.limit || 4)}
+      isLoading={trending.isLoading}
+      icon={TrendingUp}
+      kicker="Active"
+    />
+  );
+}
+
+function VolunteerOpportunities({ settings }: { settings: any }) {
+  const { data: initiatives = [], isLoading } = useQuery({
+    queryKey: ["homepage-volunteers"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("initiatives")
+        .select("*, organizations(organization_name)")
+        .eq("volunteer_opportunity", true)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(settings.limit || 4);
+      return data || [];
+    },
+  });
+
+  return (
+    <CuratedSection
+      title="Volunteer Opportunities"
+      subtitle="Give your time and skills to make a direct difference on the ground."
+      initiatives={initiatives as any}
+      isLoading={isLoading}
+      icon={UserPlus}
+      kicker="Volunteer"
+      bgClassName="bg-cream-deep/30"
+    />
+  );
+}
+
+function SuccessStories({ settings }: { settings: any }) {
+  const { data: stories = [], isLoading } = useQuery({
+    queryKey: ["homepage-success-stories"],
+    queryFn: () => successStoryService.getPublished(),
+  });
+
+  if (!isLoading && stories.length === 0) return null;
+
   return (
     <section className="bg-white py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
-          {PROPS.map((p) => (
-            <div key={p.title} className="flex flex-col items-start">
-              <div className="mb-6 rounded-2xl bg-primary/5 p-4 text-primary">
-                <p.icon className="h-6 w-6" />
+        <div className="mb-12">
+          <Kicker>Impact Stories</Kicker>
+          <h2 className="mt-4 font-display text-4xl font-semibold text-primary">Success Stories</h2>
+          <p className="mt-4 text-muted-foreground">Real stories of change from our community.</p>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {isLoading ? (
+            [1, 2, 3].map(i => <div key={i} className="h-64 bg-muted animate-pulse rounded-[2rem]" />)
+          ) : (
+            stories.slice(0, settings.limit || 3).map((story) => (
+              <div key={story.id} className="group relative flex flex-col overflow-hidden rounded-[2.5rem] bg-muted/30 border border-border/40 transition-all hover:shadow-xl">
+                <div className="aspect-[16/10] overflow-hidden">
+                  <img src={story.image_url || ""} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                </div>
+                <div className="flex-1 p-8">
+                  <h3 className="text-xl font-bold text-primary mb-3">{story.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-6">{story.summary}</p>
+                  {story.cta_link && (
+                    <Link to={story.cta_link} className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
+                      Read Full Story <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  )}
+                </div>
               </div>
-              <h3 className="font-display text-xl font-semibold text-primary">{p.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </section>
@@ -237,7 +317,7 @@ function ValueProps() {
 interface CuratedSectionProps {
   title: string;
   subtitle: string;
-  initiatives?: unknown[];
+  initiatives?: any[];
   isLoading: boolean;
   icon: LucideIcon;
   kicker: string;
