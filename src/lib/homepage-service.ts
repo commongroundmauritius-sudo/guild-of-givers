@@ -56,7 +56,7 @@ export const homepageService = {
           created_by: userId,
         })
         .eq("id", draft.id)
-        .select()
+        .select("id")
         .single();
 
       if (error) throw error;
@@ -69,8 +69,9 @@ export const homepageService = {
           configuration_json: config as any,
           created_by: userId,
         })
-        .select()
+        .select("id")
         .single();
+
 
       if (error) throw error;
       return data;
