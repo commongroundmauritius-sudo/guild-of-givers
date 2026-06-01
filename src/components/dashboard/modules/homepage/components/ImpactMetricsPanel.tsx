@@ -13,14 +13,18 @@ interface ImpactMetricsPanelProps {
 }
 
 export function ImpactMetricsPanel({ settings, onUpdate }: ImpactMetricsPanelProps) {
-  const { data: autoMetrics, refetch, isFetching } = useQuery({
+  const {
+    data: autoMetrics,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["impact-metrics-auto"],
     queryFn: () => impactMetricsService.calculateMetrics(),
   });
 
   const updateMetric = (id: string, updates: any) => {
     const updatedMetrics = settings.metrics.map((m: any) =>
-      m.id === id ? { ...m, ...updates } : m
+      m.id === id ? { ...m, ...updates } : m,
     );
     onUpdate({ ...settings, metrics: updatedMetrics });
   };
@@ -47,7 +51,9 @@ export function ImpactMetricsPanel({ settings, onUpdate }: ImpactMetricsPanelPro
             <div className="flex items-center justify-between">
               <div>
                 <span className="font-bold text-primary">{metric.label}</span>
-                <p className="text-xs text-muted-foreground uppercase tracking-widest font-black">{metric.id}</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-black">
+                  {metric.id}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <Label className="text-xs">Visible</Label>
@@ -73,7 +79,9 @@ export function ImpactMetricsPanel({ settings, onUpdate }: ImpactMetricsPanelPro
                   <Input
                     type="number"
                     value={metric.manualValue || 0}
-                    onChange={(e) => updateMetric(metric.id, { manualValue: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      updateMetric(metric.id, { manualValue: parseInt(e.target.value) })
+                    }
                   />
                 </div>
               )}

@@ -8,28 +8,43 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Home, Save, Send, Eye, Layout, Move, Info, Loader2 } from "lucide-react";
 import { SectionItem } from "@/components/dashboard/modules/homepage/components/SectionItem";
 import { HomepagePreview } from "@/components/dashboard/modules/homepage/HomepagePreview";
+import { DEFAULT_HOMEPAGE_CONFIG } from "@/lib/homepage-service";
 import { cn } from "@/lib/utils";
 
 const HeroPanel = lazy(() =>
-  import("@/components/dashboard/modules/homepage/components/HeroPanel").then((m) => ({ default: m.HeroPanel }))
+  import("@/components/dashboard/modules/homepage/components/HeroPanel").then((m) => ({
+    default: m.HeroPanel,
+  })),
 );
 const FeaturedInitiativesPanel = lazy(() =>
-  import("@/components/dashboard/modules/homepage/components/FeaturedInitiativesPanel").then((m) => ({ default: m.FeaturedInitiativesPanel }))
+  import("@/components/dashboard/modules/homepage/components/FeaturedInitiativesPanel").then(
+    (m) => ({ default: m.FeaturedInitiativesPanel }),
+  ),
 );
 const SuccessStoriesManager = lazy(() =>
-  import("@/components/dashboard/modules/homepage/components/SuccessStoriesManager").then((m) => ({ default: m.SuccessStoriesManager }))
+  import("@/components/dashboard/modules/homepage/components/SuccessStoriesManager").then((m) => ({
+    default: m.SuccessStoriesManager,
+  })),
 );
 const ImpactMetricsPanel = lazy(() =>
-  import("@/components/dashboard/modules/homepage/components/ImpactMetricsPanel").then((m) => ({ default: m.ImpactMetricsPanel }))
+  import("@/components/dashboard/modules/homepage/components/ImpactMetricsPanel").then((m) => ({
+    default: m.ImpactMetricsPanel,
+  })),
 );
 const VolunteerOpportunitiesPanel = lazy(() =>
-  import("@/components/dashboard/modules/homepage/components/VolunteerOpportunitiesPanel").then((m) => ({ default: m.VolunteerOpportunitiesPanel }))
+  import("@/components/dashboard/modules/homepage/components/VolunteerOpportunitiesPanel").then(
+    (m) => ({ default: m.VolunteerOpportunitiesPanel }),
+  ),
 );
 const UrgentNeedsPanel = lazy(() =>
-  import("@/components/dashboard/modules/homepage/components/UrgentNeedsPanel").then((m) => ({ default: m.UrgentNeedsPanel }))
+  import("@/components/dashboard/modules/homepage/components/UrgentNeedsPanel").then((m) => ({
+    default: m.UrgentNeedsPanel,
+  })),
 );
 const TrendingProgramsPanel = lazy(() =>
-  import("@/components/dashboard/modules/homepage/components/TrendingProgramsPanel").then((m) => ({ default: m.TrendingProgramsPanel }))
+  import("@/components/dashboard/modules/homepage/components/TrendingProgramsPanel").then((m) => ({
+    default: m.TrendingProgramsPanel,
+  })),
 );
 
 const PanelFallback = () => (
@@ -38,43 +53,67 @@ const PanelFallback = () => (
   </div>
 );
 
+const CMSLoadingState = () => (
+  <SiteLayout>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+      <div className="relative">
+        <div className="h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Home className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
+      </div>
+      <div className="text-center space-y-2">
+        <h3 className="font-display text-xl font-bold text-primary">Loading Homepage CMS</h3>
+        <p className="text-muted-foreground animate-pulse">
+          Syncing configuration with database...
+        </p>
+      </div>
+    </div>
+  </SiteLayout>
+);
+
 export const Route = createFileRoute("/_authenticated/admin-dashboard/homepage-layout")({
   component: HomepageCMS,
 });
 
 function HomepageCMS() {
   const { user } = useAuth();
-  const { draft, saveDraft, publish, isSaving, isPublishing } = useHomepage();
+  const { draft, published, saveDraft, publish, isSaving, isPublishing } = useHomepage({
+    includePublished: true,
+  });
   const [config, setConfig] = useState<any>(null);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
+    // Priority 1: Draft version if it exists
     if (draft.data?.configuration_json) {
       setConfig(draft.data.configuration_json);
     }
-  }, [draft.data]);
+    // Priority 2: Published version if no draft
+    else if (published.data?.configuration_json) {
+      setConfig(published.data.configuration_json);
+    }
+    // Priority 3: Default fallback if neither exist (e.g. fresh installation)
+    else if (!draft.isLoading && !published.isLoading) {
+      setConfig(DEFAULT_HOMEPAGE_CONFIG);
+    }
+  }, [draft.data, published.data, draft.isLoading, published.isLoading]);
 
   const handleToggle = (id: string, visible: boolean) => {
     if (!config) return;
-    const updatedSections = config.sections.map((s: any) =>
-      s.id === id ? { ...s, visible } : s
-    );
+    const updatedSections = config.sections.map((s: any) => (s.id === id ? { ...s, visible } : s));
     setConfig({ ...config, sections: updatedSections });
   };
 
   const handleUpdateSettings = (id: string, settings: any) => {
     if (!config) return;
-    const updatedSections = config.sections.map((s: any) =>
-      s.id === id ? { ...s, settings } : s
-    );
+    const updatedSections = config.sections.map((s: any) => (s.id === id ? { ...s, settings } : s));
     setConfig({ ...config, sections: updatedSections });
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = (index: number, direction: "up" | "down") => {
     if (!config) return;
     const newSections = [...config.sections];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newSections.length) return;
 
     [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
@@ -90,10 +129,25 @@ function HomepageCMS() {
   const onPublish = () => {
     if (draft.data?.id) {
       publish(draft.data.id);
+    } else if (published.data?.id) {
+      // If they are publishing the "published" config (e.g. they modified
+      // it but didn't save draft), we'll save it as draft first then publish.
+      // But usually, clicking 'Publish' should use the current ID.
+      // In this CMS flow, draft is created on the first 'Save Draft'.
+      // For safety, let's toast a message if they try to publish without a draft.
+      onSave();
+      // Success handler in hook will invalidate and we can publish then.
+      // But simpler: just use onSave first.
     }
   };
 
-  if (!config) return <div className="p-20 text-center">Loading Homepage CMS...</div>;
+  // Show professional loading state while fetching initial data
+  if (!config && (draft.isLoading || published.isLoading)) {
+    return <CMSLoadingState />;
+  }
+
+  // Handle case where config is still null after loading (shouldn't happen with fallback)
+  if (!config) return <CMSLoadingState />;
 
   return (
     <SiteLayout>
@@ -134,7 +188,8 @@ function HomepageCMS() {
               <Button
                 className="rounded-full gap-2 bg-primary shadow-lg shadow-primary/20"
                 onClick={onPublish}
-                disabled={isPublishing}
+                disabled={isPublishing || !draft.data?.id}
+                title={!draft.data?.id ? "Save a draft first to publish" : ""}
               >
                 <Send className="h-4 w-4" />
                 {isPublishing ? "Publishing..." : "Publish Changes"}
@@ -163,8 +218,8 @@ function HomepageCMS() {
                       visible={section.visible}
                       onToggle={(visible) => handleToggle(section.id, visible)}
                       onConfigure={() => setActiveSectionId(section.id)}
-                      onMoveUp={() => handleMove(index, 'up')}
-                      onMoveDown={() => handleMove(index, 'down')}
+                      onMoveUp={() => handleMove(index, "up")}
+                      onMoveDown={() => handleMove(index, "down")}
                       isFirst={index === 0}
                       isLast={index === config.sections.length - 1}
                     />
@@ -180,8 +235,8 @@ function HomepageCMS() {
                   <div>
                     <h4 className="font-bold text-primary">CMS Instructions</h4>
                     <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-                      Changes are saved as a draft. Click 'Publish' to make them live.
-                      Sections can be customized by clicking 'Configure'.
+                      Changes are saved as a draft. Click 'Publish' to make them live. Sections can
+                      be customized by clicking 'Configure'.
                     </p>
                   </div>
                 </div>
@@ -196,7 +251,8 @@ function HomepageCMS() {
                       <div className="flex items-center justify-between">
                         <div>
                           <CardTitle className="text-2xl font-bold text-primary">
-                            Configure {activeSectionId.charAt(0).toUpperCase() + activeSectionId.slice(1)}
+                            Configure{" "}
+                            {activeSectionId.charAt(0).toUpperCase() + activeSectionId.slice(1)}
                           </CardTitle>
                           <CardDescription>Customize settings for this section.</CardDescription>
                         </div>
@@ -211,51 +267,67 @@ function HomepageCMS() {
                     </CardHeader>
                     <CardContent className="p-8">
                       <Suspense fallback={<PanelFallback />}>
-                      {activeSectionId === "hero" && (
-                        <HeroPanel
-                          settings={config.sections.find((s: any) => s.id === "hero")?.settings}
-                          onUpdate={(s) => handleUpdateSettings("hero", s)}
-                        />
-                      )}
-                      {activeSectionId === "featured" && (
-                        <FeaturedInitiativesPanel
-                          settings={config.sections.find((s: any) => s.id === "featured")?.settings}
-                          onUpdate={(s) => handleUpdateSettings("featured", s)}
-                        />
-                      )}
-                      {activeSectionId === "stats" && (
-                        <ImpactMetricsPanel
-                          settings={config.sections.find((s: any) => s.id === "stats")?.settings}
-                          onUpdate={(s) => handleUpdateSettings("stats", s)}
-                        />
-                      )}
-                      {activeSectionId === "volunteers" && (
-                        <VolunteerOpportunitiesPanel
-                          settings={config.sections.find((s: any) => s.id === "volunteers")?.settings}
-                          onUpdate={(s) => handleUpdateSettings("volunteers", s)}
-                        />
-                      )}
-                      {activeSectionId === "urgent" && (
-                        <UrgentNeedsPanel
-                          settings={config.sections.find((s: any) => s.id === "urgent")?.settings}
-                          onUpdate={(s) => handleUpdateSettings("urgent", s)}
-                        />
-                      )}
-                      {activeSectionId === "trending" && (
-                        <TrendingProgramsPanel
-                          settings={config.sections.find((s: any) => s.id === "trending")?.settings}
-                          onUpdate={(s) => handleUpdateSettings("trending", s)}
-                        />
-                      )}
-                      {activeSectionId === "success" && (
-                        <SuccessStoriesManager />
-                      )}
+                        {activeSectionId === "hero" && (
+                          <HeroPanel
+                            settings={config.sections.find((s: any) => s.id === "hero")?.settings}
+                            onUpdate={(s) => handleUpdateSettings("hero", s)}
+                          />
+                        )}
+                        {activeSectionId === "featured" && (
+                          <FeaturedInitiativesPanel
+                            settings={
+                              config.sections.find((s: any) => s.id === "featured")?.settings
+                            }
+                            onUpdate={(s) => handleUpdateSettings("featured", s)}
+                          />
+                        )}
+                        {activeSectionId === "stats" && (
+                          <ImpactMetricsPanel
+                            settings={config.sections.find((s: any) => s.id === "stats")?.settings}
+                            onUpdate={(s) => handleUpdateSettings("stats", s)}
+                          />
+                        )}
+                        {activeSectionId === "volunteers" && (
+                          <VolunteerOpportunitiesPanel
+                            settings={
+                              config.sections.find((s: any) => s.id === "volunteers")?.settings
+                            }
+                            onUpdate={(s) => handleUpdateSettings("volunteers", s)}
+                          />
+                        )}
+                        {activeSectionId === "urgent" && (
+                          <UrgentNeedsPanel
+                            settings={config.sections.find((s: any) => s.id === "urgent")?.settings}
+                            onUpdate={(s) => handleUpdateSettings("urgent", s)}
+                          />
+                        )}
+                        {activeSectionId === "trending" && (
+                          <TrendingProgramsPanel
+                            settings={
+                              config.sections.find((s: any) => s.id === "trending")?.settings
+                            }
+                            onUpdate={(s) => handleUpdateSettings("trending", s)}
+                          />
+                        )}
+                        {activeSectionId === "success" && <SuccessStoriesManager />}
                       </Suspense>
-                      {!["hero", "featured", "success", "stats", "volunteers", "urgent", "trending"].includes(activeSectionId) && (
+                      {![
+                        "hero",
+                        "featured",
+                        "success",
+                        "stats",
+                        "volunteers",
+                        "urgent",
+                        "trending",
+                      ].includes(activeSectionId) && (
                         <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
                           <Layout className="h-12 w-12 mb-4 opacity-20" />
-                          <p>Settings for <strong>{activeSectionId}</strong> coming soon.</p>
-                          <p className="text-sm">Visibility and ordering controls are available in the sidebar.</p>
+                          <p>
+                            Settings for <strong>{activeSectionId}</strong> coming soon.
+                          </p>
+                          <p className="text-sm">
+                            Visibility and ordering controls are available in the sidebar.
+                          </p>
                         </div>
                       )}
                     </CardContent>
@@ -265,7 +337,8 @@ function HomepageCMS() {
                     <Move className="h-12 w-12 mb-4 opacity-20" />
                     <h3 className="text-xl font-bold text-primary/40">Select a Section</h3>
                     <p className="max-w-xs mx-auto mt-2">
-                      Click 'Configure' on any section in the sidebar to manage its content and settings.
+                      Click 'Configure' on any section in the sidebar to manage its content and
+                      settings.
                     </p>
                   </div>
                 )}

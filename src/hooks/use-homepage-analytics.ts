@@ -5,19 +5,22 @@ export function useHomepageAnalytics(versionId: string | undefined) {
   useEffect(() => {
     if (!versionId) return;
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const sectionId = entry.target.getAttribute('data-section');
-          if (sectionId) {
-            trackEvent(sectionId, 'view');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.getAttribute("data-section");
+            if (sectionId) {
+              trackEvent(sectionId, "view");
+            }
           }
-        }
-      });
-    }, { threshold: 0.5 });
+        });
+      },
+      { threshold: 0.5 },
+    );
 
-    const sections = document.querySelectorAll('[data-section]');
-    sections.forEach(s => observer.observe(s));
+    const sections = document.querySelectorAll("[data-section]");
+    sections.forEach((s) => observer.observe(s));
 
     return () => observer.disconnect();
   }, [versionId]);
@@ -29,7 +32,7 @@ export function useHomepageAnalytics(versionId: string | undefined) {
       version_id: versionId,
       section_id: sectionId,
       event_type: eventType,
-      metadata
+      metadata,
     });
   };
 
