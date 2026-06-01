@@ -29,3 +29,12 @@ USING (
     WHERE user_id = auth.uid() AND role IN ('admin', 'super_admin')
   )
 );
+
+-- 4. Update existing homepage configurations to include FAQ section if missing
+UPDATE public.homepage_versions
+SET configuration_json = jsonb_set(
+    configuration_json,
+    '{sections}',
+    (configuration_json->'sections') || '[{"id": "faq", "visible": true, "settings": {}}]'::jsonb
+)
+WHERE NOT (configuration_json->'sections' @> '[{"id": "faq"}]'::jsonb);

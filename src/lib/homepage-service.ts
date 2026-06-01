@@ -46,6 +46,7 @@ export const DEFAULT_HOMEPAGE_CONFIG: HomepageConfig = {
     { id: "urgent", visible: true, settings: {} },
     { id: "trending", visible: true, settings: {} },
     { id: "success", visible: true, settings: {} },
+    { id: "faq", visible: true, settings: {} },
   ],
 };
 

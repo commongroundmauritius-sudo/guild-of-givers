@@ -310,6 +310,12 @@ function HomepageCMS() {
                           />
                         )}
                         {activeSectionId === "success" && <SuccessStoriesManager />}
+                        {activeSectionId === "faq" && (
+                          <FAQPanel
+                            settings={config.sections.find((s: any) => s.id === "faq")?.settings}
+                            onUpdate={(s) => handleUpdateSettings("faq", s)}
+                          />
+                        )}
                       </Suspense>
                       {![
                         "hero",
@@ -319,6 +325,7 @@ function HomepageCMS() {
                         "volunteers",
                         "urgent",
                         "trending",
+                        "faq",
                       ].includes(activeSectionId) && (
                         <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
                           <Layout className="h-12 w-12 mb-4 opacity-20" />
