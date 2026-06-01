@@ -2,20 +2,41 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { useHomepage } from "@/hooks/use-homepage";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Home, Save, Send, Eye, Layout, Move, Info } from "lucide-react";
+import { Home, Save, Send, Eye, Layout, Move, Info, Loader2 } from "lucide-react";
 import { SectionItem } from "@/components/dashboard/modules/homepage/components/SectionItem";
-import { HeroPanel } from "@/components/dashboard/modules/homepage/components/HeroPanel";
-import { FeaturedInitiativesPanel } from "@/components/dashboard/modules/homepage/components/FeaturedInitiativesPanel";
-import { SuccessStoriesManager } from "@/components/dashboard/modules/homepage/components/SuccessStoriesManager";
-import { ImpactMetricsPanel } from "@/components/dashboard/modules/homepage/components/ImpactMetricsPanel";
-import { VolunteerOpportunitiesPanel } from "@/components/dashboard/modules/homepage/components/VolunteerOpportunitiesPanel";
-import { UrgentNeedsPanel } from "@/components/dashboard/modules/homepage/components/UrgentNeedsPanel";
-import { TrendingProgramsPanel } from "@/components/dashboard/modules/homepage/components/TrendingProgramsPanel";
 import { HomepagePreview } from "@/components/dashboard/modules/homepage/HomepagePreview";
 import { cn } from "@/lib/utils";
+
+const HeroPanel = lazy(() =>
+  import("@/components/dashboard/modules/homepage/components/HeroPanel").then((m) => ({ default: m.HeroPanel }))
+);
+const FeaturedInitiativesPanel = lazy(() =>
+  import("@/components/dashboard/modules/homepage/components/FeaturedInitiativesPanel").then((m) => ({ default: m.FeaturedInitiativesPanel }))
+);
+const SuccessStoriesManager = lazy(() =>
+  import("@/components/dashboard/modules/homepage/components/SuccessStoriesManager").then((m) => ({ default: m.SuccessStoriesManager }))
+);
+const ImpactMetricsPanel = lazy(() =>
+  import("@/components/dashboard/modules/homepage/components/ImpactMetricsPanel").then((m) => ({ default: m.ImpactMetricsPanel }))
+);
+const VolunteerOpportunitiesPanel = lazy(() =>
+  import("@/components/dashboard/modules/homepage/components/VolunteerOpportunitiesPanel").then((m) => ({ default: m.VolunteerOpportunitiesPanel }))
+);
+const UrgentNeedsPanel = lazy(() =>
+  import("@/components/dashboard/modules/homepage/components/UrgentNeedsPanel").then((m) => ({ default: m.UrgentNeedsPanel }))
+);
+const TrendingProgramsPanel = lazy(() =>
+  import("@/components/dashboard/modules/homepage/components/TrendingProgramsPanel").then((m) => ({ default: m.TrendingProgramsPanel }))
+);
+
+const PanelFallback = () => (
+  <div className="flex items-center justify-center py-20 text-muted-foreground">
+    <Loader2 className="h-6 w-6 animate-spin" />
+  </div>
+);
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/homepage-layout")({
   component: HomepageCMS,
@@ -189,6 +210,7 @@ function HomepageCMS() {
                       </div>
                     </CardHeader>
                     <CardContent className="p-8">
+                      <Suspense fallback={<PanelFallback />}>
                       {activeSectionId === "hero" && (
                         <HeroPanel
                           settings={config.sections.find((s: any) => s.id === "hero")?.settings}
@@ -228,6 +250,7 @@ function HomepageCMS() {
                       {activeSectionId === "success" && (
                         <SuccessStoriesManager />
                       )}
+                      </Suspense>
                       {!["hero", "featured", "success", "stats", "volunteers", "urgent", "trending"].includes(activeSectionId) && (
                         <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
                           <Layout className="h-12 w-12 mb-4 opacity-20" />
