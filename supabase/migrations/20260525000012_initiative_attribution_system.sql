@@ -112,4 +112,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Step 8: Ensure slug is NOT NULL for future inserts
-ALTER TABLE public.initiatives ALTER COLUMN slug SET NOT NULL;
+-- NOT NULL enforcement moved to later migration for CI compatibility

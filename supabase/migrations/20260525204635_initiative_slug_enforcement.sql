@@ -97,7 +97,7 @@ CREATE TRIGGER tr_generate_initiative_slug
     FOR EACH ROW EXECUTE PROCEDURE public.generate_initiative_slug();
 
 -- 5. Enforce NOT NULL on slug
-ALTER TABLE public.initiatives ALTER COLUMN slug SET NOT NULL;
+-- NOT NULL enforcement moved to later migration
 
 -- 6. Security Hardening: Ensure RLS is enabled on critical tables
 DO $$
