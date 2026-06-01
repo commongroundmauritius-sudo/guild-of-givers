@@ -2,18 +2,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { homepageService, type HomepageConfig } from "@/lib/homepage-service";
 import { toast } from "sonner";
 
-export function useHomepage() {
+export function useHomepage(options: { includePublished?: boolean } = {}) {
+  const { includePublished = false } = options;
   const queryClient = useQueryClient();
 
   const published = useQuery({
     queryKey: ["homepage", "published"],
     queryFn: () => homepageService.getPublishedVersion(),
+    enabled: includePublished,
   });
 
   const draft = useQuery({
     queryKey: ["homepage", "draft"],
     queryFn: () => homepageService.getDraftVersion(),
   });
+
 
   const saveDraftMutation = useMutation({
     mutationFn: ({ config, userId }: { config: HomepageConfig; userId: string }) =>
