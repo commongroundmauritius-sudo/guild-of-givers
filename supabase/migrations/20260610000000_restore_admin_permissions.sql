@@ -1,4 +1,4 @@
--- Restore and Harden Admin/Service Permissions for CRM and Automation
+-- Restore and Harden Admin/Service Permissions for CMS and CRM
 
 -- 1. Grant Table Permissions
 -- CRM & Automation
@@ -19,6 +19,7 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_
 
 -- 3. Harden Automation Rules Policy (Admin Only as requested)
 DROP POLICY IF EXISTS "Orgs can manage their own automation rules" ON public.automation_rules;
+DROP POLICY IF EXISTS "Admins manage automation rules" ON public.automation_rules;
 
 CREATE POLICY "Admins manage automation rules"
 ON public.automation_rules FOR ALL
@@ -31,10 +32,11 @@ USING (
 );
 
 -- 4. Update existing homepage configurations to include FAQ section if missing
+-- This update only works if homepage_versions already has content.
 UPDATE public.homepage_versions
 SET configuration_json = jsonb_set(
     configuration_json,
     '{sections}',
     (configuration_json->'sections') || '[{"id": "faq", "visible": true, "settings": {}}]'::jsonb
 )
-WHERE NOT (configuration_json->'sections' @> '[{"id": "faq"}]'::jsonb);
+WHERE status = 'published' AND NOT (configuration_json->'sections' @> '[{"id": "faq"}]'::jsonb);

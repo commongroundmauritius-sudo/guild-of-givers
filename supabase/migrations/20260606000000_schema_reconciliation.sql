@@ -82,6 +82,51 @@ CREATE TABLE IF NOT EXISTS public.crm_tag_assignments (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
+
+-- crm_notes
+CREATE TABLE IF NOT EXISTS public.crm_notes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
+    author_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    lead_id UUID REFERENCES public.leads(id) ON DELETE CASCADE,
+    profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+-- crm_tasks
+CREATE TABLE IF NOT EXISTS public.crm_tasks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
+    assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    lead_id UUID REFERENCES public.leads(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    due_date TIMESTAMPTZ,
+    status TEXT DEFAULT 'open',
+    priority TEXT DEFAULT 'medium',
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+-- automation_rules
+CREATE TABLE IF NOT EXISTS public.automation_rules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    description TEXT,
+    trigger_type TEXT NOT NULL,
+    trigger_config JSONB DEFAULT '{}'::jsonb,
+    conditions JSONB DEFAULT '[]'::jsonb,
+    actions JSONB DEFAULT '[]'::jsonb,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- ==========================================
 -- 3. HARDENING (ENUMS & CONSTRAINTS)
 -- ==========================================
@@ -171,6 +216,13 @@ ALTER TABLE public.initiative_versions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.crm_tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.crm_tag_assignments ENABLE ROW LEVEL SECURITY;
+-- crm_notes
+ALTER TABLE public.crm_notes ENABLE ROW LEVEL SECURITY;
+-- crm_tasks
+ALTER TABLE public.crm_tasks ENABLE ROW LEVEL SECURITY;
+-- automation_rules
+ALTER TABLE public.automation_rules ENABLE ROW LEVEL SECURITY;
+
 
 -- billing_runs: Admin only
 DO $$ BEGIN
@@ -242,6 +294,18 @@ DO $$ BEGIN
         CREATE POLICY "Staff can manage tag assignments" ON public.crm_tag_assignments
         FOR ALL TO authenticated USING (
             public.get_crm_tag_org_id(tag_id) = public.get_auth_org_id()
+            OR public.has_role('admin')
+        );
+    END IF;
+END $$;
+
+
+-- crm_notes: Staff manage own org
+DO 3906 BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'crm_notes' AND policyname = 'Staff can manage own org notes') THEN
+        CREATE POLICY "Staff can manage own org notes" ON public.crm_notes
+        FOR ALL TO authenticated USING (
+            organization_id = public.get_auth_org_id()
             OR public.has_role('admin')
         );
     END IF;
