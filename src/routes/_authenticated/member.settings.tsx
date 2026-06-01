@@ -31,11 +31,13 @@ function MemberSettings() {
 
       await updateProfile({
         data: {
-          full_name: fullName,
-          phone: phone || null,
-          address: trimmedAddress || null,
-          age: ageInt,
-          avatar_url: avatarUrl || null,
+          data: {
+            full_name: fullName,
+            phone: phone || null,
+            address: trimmedAddress || null,
+            age: ageInt,
+            avatar_url: avatarUrl || null,
+          },
         },
       });
     },
