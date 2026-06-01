@@ -1,77 +1,83 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 import imageCompression from "browser-image-compression";
-import { validateFile, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "./security/fileValidation";
 
-export type Post = Database["public"]["Tables"]["community_posts"]["Row"] & {
-  profiles: {
-    full_name: string | null;
-    avatar_url: string | null;
-  } | null;
-  initiatives: {
-    title: string;
-  } | null;
-};
-
-export type Announcement = Database["public"]["Tables"]["announcements"]["Row"] & {
-  profiles: {
-    full_name: string | null;
-  } | null;
-};
-
-export type Comment = Database["public"]["Tables"]["post_comments"]["Row"] & {
-  profiles: {
-    full_name: string | null;
-    avatar_url: string | null;
-  } | null;
-};
-
-export async function compressAndUploadImage(file: File, bucket: string, path: string) {
-  // Defensive check
-  const validation = await validateFile(file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
-  if (!validation.isValid) {
-    throw new Error(validation.error);
-  }
-
+export async function compressAndUploadImage(file: File, bucket: string, userId: string) {
   const options = {
-    maxSizeMB: 3,
-    maxWidthOrHeight: 1200,
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1920,
     useWebWorker: true,
   };
 
   try {
     const compressedFile = await imageCompression(file, options);
-    // Sanitize filename by removing potentially dangerous characters
-    // and ensuring a single controlled extension
-    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const safeBaseName = file.name
-      .split(".")
-      .slice(0, -1)
-      .join(".")
-      .replace(/[^a-zA-Z0-9-]/g, "_")
-      .substring(0, 50);
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${userId}-${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
 
-    const fileName = `${path}/${Date.now()}-${safeBaseName}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, compressedFile);
 
-    const { data, error } = await supabase.storage.from(bucket).upload(fileName, compressedFile);
+    if (uploadError) {
+      throw uploadError;
+    }
 
-    if (error) throw error;
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(bucket).getPublicUrl(data.path);
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
 
     return publicUrl;
   } catch (error) {
-    console.error("Error uploading image:", error);
+    console.error("Error compressing/uploading image:", error);
     throw error;
   }
+}
+
+export interface Post {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  image_url?: string;
+  status: string;
+  created_at: string;
+  profiles?: {
+    full_name: string;
+    avatar_url: string;
+  };
+  initiatives?: {
+    title: string;
+  };
+  reactions_count: number;
+  comments_count: number;
+}
+
+export interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  profiles?: {
+    full_name: string;
+    avatar_url: string;
+  };
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  image_url?: string;
+  category: string;
+  pinned: boolean;
+  created_at: string;
 }
 
 export async function fetchAnnouncements() {
   const { data, error } = await supabase
     .from("announcements")
-    .select("*, profiles(full_name)")
+    .select("*")
     .eq("is_deleted", false)
     .order("pinned", { ascending: false })
     .order("created_at", { ascending: false });
@@ -80,26 +86,21 @@ export async function fetchAnnouncements() {
   return data as Announcement[];
 }
 
-export async function fetchPosts(
-  page = 0,
-  pageSize = 20,
-  sort: "newest" | "active" | "reactions" = "newest",
-) {
+export async function fetchPosts(page = 0, limit = 20, sort = "newest") {
   let query = supabase
     .from("community_posts")
     .select("*, profiles(full_name, avatar_url), initiatives(title)")
-    .eq("is_deleted", false)
-    .eq("status", "published");
+    .eq("is_deleted", false);
 
   if (sort === "newest") {
     query = query.order("created_at", { ascending: false });
-  } else if (sort === "active") {
-    query = query.order("comments_count", { ascending: false });
   } else if (sort === "reactions") {
     query = query.order("reactions_count", { ascending: false });
   }
 
-  const { data, error } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
+  const from = page * limit;
+  const to = from + limit - 1;
+  const { data, error } = await query.range(from, to);
 
   if (error) throw error;
   return data as Post[];
@@ -120,7 +121,7 @@ export async function fetchComments(postId: string) {
 export async function fetchReactions(postId: string) {
   const { data, error } = await supabase
     .from("post_reactions")
-    .select("reaction_type, user_id")
+    .select("*")
     .eq("post_id", postId);
 
   if (error) throw error;
@@ -130,26 +131,19 @@ export async function fetchReactions(postId: string) {
 export async function toggleReaction(postId: string, userId: string, reactionType: string) {
   const { data: existing } = await supabase
     .from("post_reactions")
-    .select("*")
+    .select("id")
     .eq("post_id", postId)
     .eq("user_id", userId)
+    .eq("reaction_type", reactionType)
     .maybeSingle();
 
   if (existing) {
-    if (existing.reaction_type === reactionType) {
-      // Remove reaction
-      return supabase.from("post_reactions").delete().eq("id", existing.id);
-    } else {
-      // Update reaction
-      return supabase
-        .from("post_reactions")
-        .update({ reaction_type: reactionType })
-        .eq("id", existing.id);
-    }
+    await supabase.from("post_reactions").delete().eq("id", existing.id);
   } else {
-    // Add reaction
-    return supabase
-      .from("post_reactions")
-      .insert({ post_id: postId, user_id: userId, reaction_type: reactionType });
+    await supabase.from("post_reactions").insert({
+      post_id: postId,
+      user_id: userId,
+      reaction_type: reactionType
+    });
   }
 }
