@@ -210,6 +210,7 @@ function HomepageCMS() {
                       </div>
                     </CardHeader>
                     <CardContent className="p-8">
+                      <Suspense fallback={<PanelFallback />}>
                       {activeSectionId === "hero" && (
                         <HeroPanel
                           settings={config.sections.find((s: any) => s.id === "hero")?.settings}
@@ -249,6 +250,7 @@ function HomepageCMS() {
                       {activeSectionId === "success" && (
                         <SuccessStoriesManager />
                       )}
+                      </Suspense>
                       {!["hero", "featured", "success", "stats", "volunteers", "urgent", "trending"].includes(activeSectionId) && (
                         <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
                           <Layout className="h-12 w-12 mb-4 opacity-20" />
