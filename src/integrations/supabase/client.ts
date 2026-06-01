@@ -14,7 +14,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
     autoRefreshToken: true,
     storage: typeof window !== "undefined" ? window.localStorage : undefined,
   },
-});
+}) as any;
 
 export type AppRole = Database["public"]["Enums"]["app_role"];
 
