@@ -8,12 +8,45 @@ export type HomepageVersion = {
   created_at: string;
   published_at: string | null;
 };
+
 export type HomepageConfig = {
   sections: Array<{
     id: string;
     visible: boolean;
     settings: any;
   }>;
+};
+
+export const DEFAULT_HOMEPAGE_CONFIG: HomepageConfig = {
+  sections: [
+    {
+      id: "hero",
+      visible: true,
+      settings: {
+        headline: "Impact that Matters",
+        subheadline: "Support verified community initiatives and see your contribution in action.",
+        primaryCTA: { text: "Explore Initiatives", href: "/initiatives" },
+        secondaryCTA: { text: "Our Story", href: "/about" },
+      },
+    },
+    {
+      id: "stats",
+      visible: true,
+      settings: {
+        metrics: [
+          { id: "orgs", label: "Verified Organizations", visible: true },
+          { id: "initiatives", label: "Active Initiatives", visible: true },
+          { id: "donations", label: "Total Contributions", visible: true },
+          { id: "profiles", label: "Impact Makers", visible: true },
+        ],
+      },
+    },
+    { id: "featured", visible: true, settings: {} },
+    { id: "volunteers", visible: true, settings: {} },
+    { id: "urgent", visible: true, settings: {} },
+    { id: "trending", visible: true, settings: {} },
+    { id: "success", visible: true, settings: {} },
+  ],
 };
 
 export const homepageService = {
@@ -29,9 +62,6 @@ export const homepageService = {
   },
 
   async getDraftVersion() {
-    // Only project the fields the CMS reads on initial render.
-    // configuration_json is the JSONB blob driving the editor; everything
-    // else (status, created_by, created_at, published_at) is unused there.
     const { data, error } = await supabase
       .from("homepage_versions")
       .select("id, configuration_json")
@@ -43,7 +73,6 @@ export const homepageService = {
     if (error) throw error;
     return data;
   },
-
 
   async saveDraft(config: HomepageConfig, userId: string) {
     const draft = await this.getDraftVersion();
@@ -72,33 +101,28 @@ export const homepageService = {
         .select("id")
         .single();
 
-
       if (error) throw error;
       return data;
     }
   },
 
   async publishVersion(versionId: string) {
-    // Start a transaction-like sequence
-    // 1. Archive current published version
     await supabase
       .from("homepage_versions")
       .update({ status: "archived" })
       .eq("status", "published");
 
-    // 2. Publish new version
     const { data, error } = await supabase
       .from("homepage_versions")
       .update({
         status: "published",
-        published_at: new Date().toISOString()
+        published_at: new Date().toISOString(),
       })
       .eq("id", versionId)
       .select("id, published_at")
       .single();
 
-
     if (error) throw error;
     return data;
-  }
+  },
 };

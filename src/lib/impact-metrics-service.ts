@@ -11,9 +11,15 @@ export type ImpactMetric = {
 export const impactMetricsService = {
   async calculateMetrics() {
     const [orgs, initiatives, profiles] = await Promise.all([
-      supabase.from("organizations").select("id", { count: "exact", head: true }).eq("is_verified", true),
-      supabase.from("initiatives").select("id", { count: "exact", head: true }).eq("status", "active"),
-      supabase.from("profiles").select("id", { count: "exact", head: true })
+      supabase
+        .from("organizations")
+        .select("id", { count: "exact", head: true })
+        .eq("is_verified", true),
+      supabase
+        .from("initiatives")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "active"),
+      supabase.from("profiles").select("id", { count: "exact", head: true }),
     ]);
 
     // Calculate total contributed from payments
@@ -31,7 +37,7 @@ export const impactMetricsService = {
       totalOrganizations: orgs.count || 0,
       totalInitiatives: initiatives.count || 0,
       totalContributions: totalContributions,
-      totalVolunteers: profiles.count || 0 // Placeholder logic for volunteers
+      totalVolunteers: profiles.count || 0, // Placeholder logic for volunteers
     };
-  }
+  },
 };

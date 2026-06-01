@@ -35,7 +35,9 @@ export function UrgentNeedsPanel({ settings, onUpdate }: UrgentNeedsPanelProps) 
           />
           <div>
             <Label>Auto-select urgent initiatives</Label>
-            <p className="text-xs text-muted-foreground">Pulls all initiatives marked as is_urgent.</p>
+            <p className="text-xs text-muted-foreground">
+              Pulls all initiatives marked as is_urgent.
+            </p>
           </div>
         </div>
       </div>

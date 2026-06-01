@@ -22,9 +22,9 @@ export async function compressAndUploadImage(file: File, bucket: string, userId:
       throw uploadError;
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(bucket).getPublicUrl(filePath);
 
     return publicUrl;
   } catch (error) {
@@ -124,10 +124,7 @@ export async function fetchComments(postId: string) {
 }
 
 export async function fetchReactions(postId: string) {
-  const { data, error } = await supabase
-    .from("post_reactions")
-    .select("*")
-    .eq("post_id", postId);
+  const { data, error } = await supabase.from("post_reactions").select("*").eq("post_id", postId);
 
   if (error) throw error;
   return data;
@@ -148,7 +145,7 @@ export async function toggleReaction(postId: string, userId: string, reactionTyp
     await supabase.from("post_reactions").insert({
       post_id: postId,
       user_id: userId,
-      reaction_type: reactionType
+      reaction_type: reactionType,
     });
   }
 }

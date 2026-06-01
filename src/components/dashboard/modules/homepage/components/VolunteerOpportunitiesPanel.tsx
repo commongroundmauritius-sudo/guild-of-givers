@@ -7,7 +7,10 @@ interface VolunteerOpportunitiesPanelProps {
   onUpdate: (settings: any) => void;
 }
 
-export function VolunteerOpportunitiesPanel({ settings, onUpdate }: VolunteerOpportunitiesPanelProps) {
+export function VolunteerOpportunitiesPanel({
+  settings,
+  onUpdate,
+}: VolunteerOpportunitiesPanelProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -35,7 +38,9 @@ export function VolunteerOpportunitiesPanel({ settings, onUpdate }: VolunteerOpp
           />
           <div>
             <Label>Auto-select matching initiatives</Label>
-            <p className="text-xs text-muted-foreground">Pulls all initiatives marked as volunteer opportunities.</p>
+            <p className="text-xs text-muted-foreground">
+              Pulls all initiatives marked as volunteer opportunities.
+            </p>
           </div>
         </div>
       </div>

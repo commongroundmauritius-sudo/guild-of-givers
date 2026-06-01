@@ -29,8 +29,6 @@ export function useHomepage(options: { includePublished?: boolean } = {}) {
     refetchOnMount: false,
   });
 
-
-
   const saveDraftMutation = useMutation({
     mutationFn: ({ config, userId }: { config: HomepageConfig; userId: string }) =>
       homepageService.saveDraft(config, userId),

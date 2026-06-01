@@ -27,9 +27,7 @@ export function SuccessStoriesManager() {
 
   const mutation = useMutation({
     mutationFn: (story: any) =>
-      story.id
-        ? successStoryService.update(story.id, story)
-        : successStoryService.create(story),
+      story.id ? successStoryService.update(story.id, story) : successStoryService.create(story),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["success-stories"] });
       setIsDialogOpen(false);
@@ -62,7 +60,10 @@ export function SuccessStoriesManager() {
 
       <div className="grid gap-4">
         {stories.map((story: any) => (
-          <div key={story.id} className="flex items-center gap-4 p-4 bg-white border rounded-2xl shadow-sm">
+          <div
+            key={story.id}
+            className="flex items-center gap-4 p-4 bg-white border rounded-2xl shadow-sm"
+          >
             {story.image_url && (
               <img src={story.image_url} className="h-12 w-12 rounded-xl object-cover" alt="" />
             )}
@@ -131,7 +132,9 @@ export function SuccessStoriesManager() {
               <input
                 type="checkbox"
                 defaultChecked={editingStory?.is_published}
-                onChange={(e) => setEditingStory({ ...editingStory, is_published: e.target.checked })}
+                onChange={(e) =>
+                  setEditingStory({ ...editingStory, is_published: e.target.checked })
+                }
               />
             </div>
           </div>

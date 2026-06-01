@@ -54,7 +54,7 @@ export function FeaturedInitiativesPanel({ settings, onUpdate }: FeaturedInitiat
   };
 
   const removeInitiative = (id: string) => {
-    const updated = manualIds.filter(i => i !== id);
+    const updated = manualIds.filter((i) => i !== id);
     setManualIds(updated);
     onUpdate({ ...settings, manual_ids: updated });
   };
@@ -63,7 +63,9 @@ export function FeaturedInitiativesPanel({ settings, onUpdate }: FeaturedInitiat
     <div className="space-y-8">
       <div className="space-y-4">
         <Label className="text-base font-bold">Manual Selection</Label>
-        <p className="text-sm text-muted-foreground">Select initiatives to feature prominently. Order determines display position.</p>
+        <p className="text-sm text-muted-foreground">
+          Select initiatives to feature prominently. Order determines display position.
+        </p>
 
         <div className="space-y-3">
           {selectedInitiatives.map((i, index) => (
@@ -100,7 +102,7 @@ export function FeaturedInitiativesPanel({ settings, onUpdate }: FeaturedInitiat
         </div>
 
         <div className="grid gap-2">
-          {initiatives.map(i => (
+          {initiatives.map((i) => (
             <button
               key={i.id}
               onClick={() => addInitiative(i.id)}
@@ -109,12 +111,14 @@ export function FeaturedInitiativesPanel({ settings, onUpdate }: FeaturedInitiat
                 "w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all",
                 manualIds.includes(i.id)
                   ? "bg-muted border-transparent opacity-50"
-                  : "bg-white hover:border-primary/40 hover:bg-primary/5"
+                  : "bg-white hover:border-primary/40 hover:bg-primary/5",
               )}
             >
               <div className="flex flex-col">
                 <span className="font-bold text-primary">{i.title}</span>
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{i.status}</span>
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {i.status}
+                </span>
               </div>
               {!manualIds.includes(i.id) && <Plus className="h-4 w-4 text-primary" />}
             </button>

@@ -24,13 +24,15 @@ export function SectionItem({
   onMoveUp,
   onMoveDown,
   isFirst,
-  isLast
+  isLast,
 }: SectionItemProps) {
   return (
-    <div className={cn(
-      "flex items-center gap-4 p-4 bg-white border border-border/60 rounded-2xl shadow-sm transition-all",
-      !visible && "opacity-60 grayscale-[0.5]"
-    )}>
+    <div
+      className={cn(
+        "flex items-center gap-4 p-4 bg-white border border-border/60 rounded-2xl shadow-sm transition-all",
+        !visible && "opacity-60 grayscale-[0.5]",
+      )}
+    >
       <div className="flex flex-col gap-1">
         <Button
           variant="ghost"
@@ -55,7 +57,7 @@ export function SectionItem({
       <div className="flex-1">
         <h3 className="font-bold text-primary">{label}</h3>
         <p className="text-xs text-muted-foreground uppercase tracking-widest font-black">
-          {id.replace(/_/g, ' ')}
+          {id.replace(/_/g, " ")}
         </p>
       </div>
 
@@ -73,7 +75,11 @@ export function SectionItem({
         <div className="h-6 w-px bg-border/60" />
 
         <div className="flex items-center gap-2">
-          {visible ? <Eye className="h-4 w-4 text-forest" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+          {visible ? (
+            <Eye className="h-4 w-4 text-forest" />
+          ) : (
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
+          )}
           <Switch
             checked={visible}
             onCheckedChange={onToggle}

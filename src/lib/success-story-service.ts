@@ -27,11 +27,7 @@ export const successStoryService = {
   },
 
   async create(story: SuccessStoryInsert) {
-    const { data, error } = await supabase
-      .from("success_stories")
-      .insert(story)
-      .select()
-      .single();
+    const { data, error } = await supabase.from("success_stories").insert(story).select().single();
 
     if (error) throw error;
     return data;
@@ -50,10 +46,7 @@ export const successStoryService = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase
-      .from("success_stories")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("success_stories").delete().eq("id", id);
 
     if (error) throw error;
   },
@@ -61,7 +54,7 @@ export const successStoryService = {
   async reorder(orderedIds: string[]) {
     const updates = orderedIds.map((id, index) => ({
       id,
-      display_order: index
+      display_order: index,
     }));
 
     // Perform multiple updates
@@ -71,5 +64,5 @@ export const successStoryService = {
         .update({ display_order: update.display_order })
         .eq("id", update.id);
     }
-  }
+  },
 };

@@ -23,7 +23,7 @@ export function HeroPanel({ settings, onUpdate }: HeroPanelProps) {
   const handleCTAChange = (cta: "primaryCTA" | "secondaryCTA", field: string, value: string) => {
     const updated = {
       ...localSettings,
-      [cta]: { ...(localSettings[cta] || {}), [field]: value }
+      [cta]: { ...(localSettings[cta] || {}), [field]: value },
     };
     setLocalSettings(updated);
     onUpdate(updated);
@@ -54,7 +54,9 @@ export function HeroPanel({ settings, onUpdate }: HeroPanelProps) {
       <div className="grid sm:grid-cols-2 gap-6">
         <Card className="rounded-2xl border-border/40 bg-muted/20">
           <CardContent className="pt-6 space-y-4">
-            <h4 className="font-bold text-sm uppercase tracking-widest text-primary">Primary CTA</h4>
+            <h4 className="font-bold text-sm uppercase tracking-widest text-primary">
+              Primary CTA
+            </h4>
             <div className="space-y-2">
               <Label>Label</Label>
               <Input
@@ -76,7 +78,9 @@ export function HeroPanel({ settings, onUpdate }: HeroPanelProps) {
 
         <Card className="rounded-2xl border-border/40 bg-muted/20">
           <CardContent className="pt-6 space-y-4">
-            <h4 className="font-bold text-sm uppercase tracking-widest text-primary">Secondary CTA</h4>
+            <h4 className="font-bold text-sm uppercase tracking-widest text-primary">
+              Secondary CTA
+            </h4>
             <div className="space-y-2">
               <Label>Label</Label>
               <Input

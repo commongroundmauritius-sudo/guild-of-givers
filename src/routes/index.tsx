@@ -67,8 +67,8 @@ function Index() {
             {renderSection(section)}
           </div>
         ))}
-        {sections.length === 0 && <DefaultHomepage />}
-        <FinalCTA />
+      {sections.length === 0 && <DefaultHomepage />}
+      <FinalCTA />
     </SiteLayout>
   );
 }
@@ -121,7 +121,8 @@ function Hero({ settings }: { settings: any }) {
             {settings.headline || "One Membership. Endless Impact."}
           </h1>
           <p className="mt-8 text-xl leading-relaxed text-muted-foreground sm:text-2xl max-w-2xl">
-            {settings.subheadline || "We turn predictable monthly contributions into reliable funding for Mauritius' most effective long-horizon social programs."}
+            {settings.subheadline ||
+              "We turn predictable monthly contributions into reliable funding for Mauritius' most effective long-horizon social programs."}
           </p>
           <div className="mt-12 flex flex-wrap gap-4">
             <Link
@@ -197,7 +198,9 @@ function FeaturedInitiatives({ settings }: { settings: any }) {
         .in("id", settings.manual_ids);
 
       const results = data || [];
-      return results.sort((a, b) => settings.manual_ids.indexOf(a.id) - settings.manual_ids.indexOf(b.id));
+      return results.sort(
+        (a, b) => settings.manual_ids.indexOf(a.id) - settings.manual_ids.indexOf(b.id),
+      );
     },
   });
 
@@ -288,26 +291,38 @@ function SuccessStories({ settings }: { settings: any }) {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {isLoading ? (
-            [1, 2, 3].map(i => <div key={i} className="h-64 bg-muted animate-pulse rounded-[2rem]" />)
-          ) : (
-            stories.slice(0, settings.limit || 3).map((story) => (
-              <div key={story.id} className="group relative flex flex-col overflow-hidden rounded-[2.5rem] bg-muted/30 border border-border/40 transition-all hover:shadow-xl">
-                <div className="aspect-[16/10] overflow-hidden">
-                  <img src={story.image_url || ""} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          {isLoading
+            ? [1, 2, 3].map((i) => (
+                <div key={i} className="h-64 bg-muted animate-pulse rounded-[2rem]" />
+              ))
+            : stories.slice(0, settings.limit || 3).map((story) => (
+                <div
+                  key={story.id}
+                  className="group relative flex flex-col overflow-hidden rounded-[2.5rem] bg-muted/30 border border-border/40 transition-all hover:shadow-xl"
+                >
+                  <div className="aspect-[16/10] overflow-hidden">
+                    <img
+                      src={story.image_url || ""}
+                      alt=""
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </div>
+                  <div className="flex-1 p-8">
+                    <h3 className="text-xl font-bold text-primary mb-3">{story.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-6">
+                      {story.summary}
+                    </p>
+                    {story.cta_link && (
+                      <Link
+                        to={story.cta_link}
+                        className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
+                      >
+                        Read Full Story <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1 p-8">
-                  <h3 className="text-xl font-bold text-primary mb-3">{story.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-6">{story.summary}</p>
-                  {story.cta_link && (
-                    <Link to={story.cta_link} className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
-                      Read Full Story <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
+              ))}
         </div>
       </div>
     </section>
