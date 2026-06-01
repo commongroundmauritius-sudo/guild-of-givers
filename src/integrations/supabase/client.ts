@@ -8,15 +8,7 @@ const SUPABASE_ANON_KEY =
 
 import type { Database } from "./types";
 
-type LooseDatabase = Omit<Database, "public"> & {
-  public: Omit<Database["public"], "Tables" | "Views" | "Functions"> & {
-    Tables: Database["public"]["Tables"] & Record<string, { Row: any; Insert: any; Update: any; Relationships: any[] }>;
-    Views: Database["public"]["Views"] & Record<string, { Row: any; Relationships: any[] }>;
-    Functions: Database["public"]["Functions"] & Record<string, { Args: any; Returns: any }>;
-  };
-};
-
-export const supabase = createClient<LooseDatabase>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase: any = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
