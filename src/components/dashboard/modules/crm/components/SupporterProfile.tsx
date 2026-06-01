@@ -8,6 +8,10 @@ export function SupporterProfile({ profileId }: { profileId: string }) {
   const { data: profile, isLoading } = useSupporterProfile(profileId);
 
   if (isLoading) return <div className="h-64 animate-pulse bg-muted rounded-3xl" />;
+  const supporter = profile as any;
+  const memberPreferences = Array.isArray(supporter?.member_preferences)
+    ? supporter.member_preferences
+    : [];
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
@@ -41,7 +45,7 @@ export function SupporterProfile({ profileId }: { profileId: string }) {
               <ProfileItem
                 icon={<Mail className="h-4 w-4" />}
                 label="Email"
-                value={profile?.email}
+                value={supporter?.email ?? undefined}
               />
               <ProfileItem
                 icon={<Phone className="h-4 w-4" />}
@@ -67,7 +71,7 @@ export function SupporterProfile({ profileId }: { profileId: string }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {profile?.member_preferences?.map((pref: any) => (
+              {memberPreferences.map((pref: any) => (
                 <div
                   key={pref.id}
                   className="flex items-center justify-between p-3 bg-muted/30 rounded-2xl"
@@ -76,7 +80,7 @@ export function SupporterProfile({ profileId }: { profileId: string }) {
                   <Award className="h-4 w-4 text-amber-500" />
                 </div>
               ))}
-              {(!profile?.member_preferences || profile.member_preferences.length === 0) && (
+              {memberPreferences.length === 0 && (
                 <p className="text-xs text-muted-foreground italic">
                   No initiatives supported yet.
                 </p>

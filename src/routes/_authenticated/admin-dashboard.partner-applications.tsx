@@ -74,7 +74,7 @@ function AdminPartnerApplicationsPage() {
     }) => {
       if (!user) throw new Error("Unauthorized");
       return await updateApplicationStatus({
-        data: { applicationId: id, actorId: user.id, status, notes },
+        data: { applicationId: id, status, notes },
       });
     },
     onSuccess: () => {
@@ -89,7 +89,7 @@ function AdminPartnerApplicationsPage() {
     mutationFn: async ({ id, orgData }: { id: string; orgData: any }) => {
       if (!user) throw new Error("Unauthorized");
       return await convertApplicationToOrganization({
-        data: { applicationId: id, actorId: user.id, orgData },
+        data: { applicationId: id, orgData },
       });
     },
     onSuccess: (org: any) => {

@@ -47,7 +47,11 @@ const h3Plugin = {
 };
 
 async function build() {
-  const serverEntry = path.join(rootDir, "dist/server/server.js");
+  const serverEntryCandidates = [
+    path.join(rootDir, "dist/server/index.mjs"),
+    path.join(rootDir, "dist/server/server.js"),
+  ];
+  const serverEntry = serverEntryCandidates.find((candidate) => fs.existsSync(candidate));
   const workerOutput = path.join(rootDir, "dist/client/_worker.js");
   const wranglerConfigRoot = path.join(rootDir, "wrangler.json");
   const wranglerConfigDist = path.join(rootDir, "dist/client/wrangler.json");
@@ -69,6 +73,15 @@ async function build() {
   const external = [...nodeBuiltIns, ...nodeBuiltIns.map((id) => `node:${id}`)];
 
   try {
+    if (!serverEntry) {
+      console.error(
+        `Build worker failed: server entry not found. Checked:\n${serverEntryCandidates
+          .map((candidate) => `  - ${candidate}`)
+          .join("\n")}`,
+      );
+      process.exit(1);
+    }
+
     await esbuild.build({
       entryPoints: [serverEntry],
       plugins: [h3Plugin],

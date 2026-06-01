@@ -38,7 +38,7 @@ export function useModerationAlerts() {
         supabase.from("payments").select("user_id, status").gte("created_at", twentyFourHoursAgo),
       ]);
 
-      const alerts = [];
+      const alerts: Array<{ type: string; message: string }> = [];
       const failureRate = totalRecentPayments
         ? (failedRecentPayments || 0) / totalRecentPayments
         : 0;

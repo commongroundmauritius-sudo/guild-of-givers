@@ -17,7 +17,7 @@ export interface DispatchParams {
 export const communicationDispatcher = {
   async dispatch(params: DispatchParams) {
     const { userId, channels, templateKey, payload, recipientEmail, metadata = {} } = params;
-    const results = [];
+    const results: Array<{ channel?: CommunicationChannel; status?: string; error?: string } | undefined> = [];
 
     for (const channel of channels) {
       try {

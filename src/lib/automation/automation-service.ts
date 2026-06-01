@@ -52,7 +52,7 @@ export const automationService = {
 
     try {
       const actions = rule.actions as AutomationAction[];
-      const results = [];
+      const results: Array<{ type?: string; status?: string; [key: string]: any }> = [];
 
       const logFn = async (level: string, message: string) => {
         await supabase.from("automation_logs" as any).insert({

@@ -1,7 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 
-export type HomepageVersion = Database["public"]["Tables"]["homepage_versions"]["Row"];
+export type HomepageVersion = {
+  id: string;
+  status: string;
+  configuration_json: any;
+  created_by: string | null;
+  created_at: string;
+  published_at: string | null;
+};
 export type HomepageConfig = {
   sections: Array<{
     id: string;

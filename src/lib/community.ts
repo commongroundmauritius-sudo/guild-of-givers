@@ -57,6 +57,7 @@ export interface Comment {
   post_id: string;
   user_id: string;
   content: string;
+  parent_comment_id: string | null;
   created_at: string;
   profiles?: {
     full_name: string;
@@ -72,6 +73,10 @@ export interface Announcement {
   category: string;
   pinned: boolean;
   created_at: string;
+  profiles?: {
+    full_name: string;
+    avatar_url: string;
+  };
 }
 
 export async function fetchAnnouncements() {
