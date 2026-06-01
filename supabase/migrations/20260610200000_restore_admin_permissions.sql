@@ -1,7 +1,6 @@
 -- Restore and Harden Admin/Service Permissions for CMS and CRM
 
 -- 1. Grant Table Permissions
--- CMS (Ensuring existence if possible, but they should be there by now)
 DO $$
 BEGIN
     -- CMS

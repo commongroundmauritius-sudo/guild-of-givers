@@ -66,6 +66,36 @@ BEGIN
     END IF;
 END $$;
 
+
+-- 7. Automated Slug Generation (Trigger)
+CREATE OR REPLACE FUNCTION public.generate_initiative_slug()
+RETURNS TRIGGER AS $$
+DECLARE
+    base_slug TEXT;
+    final_slug TEXT;
+    counter INTEGER := 1;
+BEGIN
+    IF NEW.slug IS NULL OR NEW.slug = '' THEN
+        base_slug := lower(regexp_replace(NEW.title, '[^a-zA-Z0-9]+', '-', 'g'));
+        base_slug := trim(both '-' from base_slug);
+        IF base_slug = '' THEN base_slug := 'initiative'; END IF;
+
+        final_slug := base_slug;
+        WHILE EXISTS (SELECT 1 FROM public.initiatives WHERE slug = final_slug AND id != NEW.id) LOOP
+            counter := counter + 1;
+            final_slug := base_slug || '-' || counter;
+        END LOOP;
+        NEW.slug := final_slug;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tr_generate_initiative_slug ON public.initiatives;
+CREATE TRIGGER tr_generate_initiative_slug
+    BEFORE INSERT OR UPDATE OF title ON public.initiatives
+    FOR EACH ROW EXECUTE PROCEDURE public.generate_initiative_slug();
+
 -- 5. Enforce NOT NULL on slug
 ALTER TABLE public.initiatives ALTER COLUMN slug SET NOT NULL;
 
