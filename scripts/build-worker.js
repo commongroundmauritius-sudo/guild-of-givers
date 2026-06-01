@@ -67,6 +67,8 @@ async function build() {
     "stream",
     "stream/web",
     "string_decoder",
+    "timers",
+    "timers/promises",
     "util",
     "v8",
   ];
