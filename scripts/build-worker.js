@@ -36,6 +36,8 @@ const h3Plugin = {
       "path",
       "process",
       "stream",
+      "timers",
+      "timers/promises",
       "util",
       "v8",
     ];
