@@ -74,7 +74,6 @@ export function HomepagePreview({ config, isOpen, onClose }: HomepagePreviewProp
                     </span>
                   </div>
                   <div className="bg-white border-b">
-                    {/* Simplified mock rendering for preview */}
                     {renderPreviewSection(section)}
                   </div>
                 </div>

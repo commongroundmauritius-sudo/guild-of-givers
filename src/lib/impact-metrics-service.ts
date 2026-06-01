@@ -10,28 +10,27 @@ export type ImpactMetric = {
 
 export const impactMetricsService = {
   async calculateMetrics() {
-    const [orgs, initiatives, donations, profiles] = await Promise.all([
+    const [orgs, initiatives, profiles] = await Promise.all([
       supabase.from("organizations").select("id", { count: "exact", head: true }).eq("is_verified", true),
       supabase.from("initiatives").select("id", { count: "exact", head: true }).eq("status", "active"),
-      supabase.rpc("get_ledger_summary_metrics"), // Assuming this exists or using sum
       supabase.from("profiles").select("id", { count: "exact", head: true })
     ]);
 
-    // Fallback for donations if RPC fails or not available
-    let totalDonations = 0;
-    const { data: donationData } = await supabase
+    // Calculate total contributed from payments
+    let totalContributions = 0;
+    const { data: contributionData } = await supabase
       .from("payments")
       .select("amount_mur")
       .eq("status", "success");
 
-    if (donationData) {
-      totalDonations = donationData.reduce((sum, p) => sum + Number(p.amount_mur), 0);
+    if (contributionData) {
+      totalContributions = contributionData.reduce((sum, p) => sum + Number(p.amount_mur), 0);
     }
 
     return {
       totalOrganizations: orgs.count || 0,
       totalInitiatives: initiatives.count || 0,
-      totalDonations: totalDonations,
+      totalContributions: totalContributions,
       totalVolunteers: profiles.count || 0 // Placeholder logic for volunteers
     };
   }

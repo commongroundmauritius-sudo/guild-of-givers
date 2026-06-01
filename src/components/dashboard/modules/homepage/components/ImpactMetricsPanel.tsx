@@ -93,10 +93,16 @@ export function ImpactMetricsPanel({ settings, onUpdate }: ImpactMetricsPanelPro
 
 function getAutoValue(id: string, metrics: any) {
   switch (id) {
-    case "donations": return metrics.totalDonations;
-    case "ngos": return metrics.totalOrganizations;
-    case "volunteers": return metrics.totalVolunteers;
-    case "campaigns": return metrics.totalInitiatives;
-    default: return 0;
+    case "contributions":
+    case "contributed":
+      return metrics.totalContributed;
+    case "organizations":
+      return metrics.totalOrganizations;
+    case "volunteers":
+      return metrics.totalVolunteers;
+    case "campaigns":
+      return metrics.totalInitiatives;
+    default:
+      return 0;
   }
 }
