@@ -85,9 +85,14 @@ function DefaultHomepage() {
 function renderSection(section: any) {
   switch (section.id) {
     case "hero":
-      return <Hero settings={section.settings} />;
+      return (
+        <>
+          <Hero settings={section.settings} />
+          <ValueProps />
+        </>
+      );
     case "stats":
-      return <ImpactStats settings={section.settings} />;
+      return null;
     case "featured":
       return <FeaturedInitiatives settings={section.settings} />;
     case "urgent":
@@ -144,18 +149,22 @@ function Hero({ settings }: { settings: any }) {
   );
 }
 
-function ImpactStats({ settings }: { settings: any }) {
+function ValueProps() {
   return (
-    <section className="bg-white py-24">
+    <section className="bg-white py-24 border-t border-border/40">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
-          {PROPS.map((p) => (
-            <div key={p.title} className="flex flex-col items-start">
-              <div className="mb-6 rounded-2xl bg-primary/5 p-4 text-primary">
+          {VALUE_PROPS.map((p) => (
+            <div key={p.title} className="flex flex-col items-start group">
+              <div className="mb-8 rounded-full bg-muted/50 p-4 text-primary transition-colors group-hover:bg-primary/10">
                 <p.icon className="h-6 w-6" />
               </div>
-              <h3 className="font-display text-xl font-semibold text-primary">{p.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
+              <h3 className="font-display text-2xl font-bold text-primary tracking-tight">
+                {p.title}
+              </h3>
+              <p className="mt-4 text-muted-foreground leading-relaxed">
+                {p.desc}
+              </p>
             </div>
           ))}
         </div>
@@ -164,7 +173,7 @@ function ImpactStats({ settings }: { settings: any }) {
   );
 }
 
-const PROPS = [
+const VALUE_PROPS = [
   {
     icon: UserPlus,
     title: "Vetted Partners",
