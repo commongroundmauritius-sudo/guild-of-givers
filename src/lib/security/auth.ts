@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getWebRequest } from "@tanstack/react-start/server";
+import { getRequest } from "@tanstack/react-start/server";
 import { parseCookie } from "cookie-es";
 
 /**
@@ -17,7 +17,7 @@ export async function getSessionUser() {
     if (user && !error) return user;
 
     // 2. If we're on the server and getUser failed, try to manually resolve from cookies
-    const request = getWebRequest();
+    const request = getRequest();
     if (request) {
       const cookies = parseCookie(request.headers.get("cookie") || "");
 
@@ -45,7 +45,7 @@ export async function getSessionUser() {
       }
     }
   } catch (error) {
-    // getWebRequest might throw if called outside of a request context
+    // getRequest might throw if called outside of a request context
     console.warn("getSessionUser context warning:", error);
   }
 
