@@ -1,6 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getRequest } from "@tanstack/react-start/server";
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { parseCookie } from "cookie-es";
+
+const getServerCookieHeader = createIsomorphicFn()
+  .client(() => "")
+  .server(async () => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    return getRequest().headers.get("cookie") || "";
+  });
 
 /**
  * Server-side authorization and session helpers.
@@ -17,9 +24,9 @@ export async function getSessionUser() {
     if (user && !error) return user;
 
     // 2. If we're on the server and getUser failed, try to manually resolve from cookies
-    const request = getRequest();
-    if (request) {
-      const cookies = parseCookie(request.headers.get("cookie") || "");
+    const cookieHeader = await getServerCookieHeader();
+    if (cookieHeader) {
+      const cookies = parseCookie(cookieHeader);
 
       // Look for Supabase auth cookies
       // The naming pattern is usually sb-<project-ref>-auth-token
@@ -45,7 +52,7 @@ export async function getSessionUser() {
       }
     }
   } catch (error) {
-    // getRequest might throw if called outside of a request context
+    // Server request context might be unavailable outside SSR/server calls.
     console.warn("getSessionUser context warning:", error);
   }
 
