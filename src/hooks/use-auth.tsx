@@ -43,6 +43,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
 
+  const resolvePrimaryRole = (roles: Array<{ role: AppRole }> | null | undefined): AppRole | null => {
+    const roleValues = new Set((roles ?? []).map((item) => item.role));
+    if (roleValues.has("super_admin")) return "super_admin";
+    if (roleValues.has("admin")) return "admin";
+    if (roleValues.has("organization")) return "organization";
+    if (roleValues.has("ngo")) return "ngo";
+    if (roleValues.has("member")) return "member";
+    return null;
+  };
+
   // Use React Query for auth data to get better caching and stale-while-revalidate behavior
   const { data: authData, isLoading: authDataLoading } = useQuery({
     queryKey: ["auth-data", user?.id],
@@ -50,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!user) return null;
 
       const [roleRes, profileRes, subRes] = await Promise.all([
-        supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
         supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
         supabase
           .from("subscriptions")
@@ -61,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
 
       return {
-        role: (roleRes.data?.role as AppRole) ?? null,
+        role: resolvePrimaryRole(roleRes.data as Array<{ role: AppRole }> | null),
         profile: profileRes.data as Profile | null,
         isSubscribed: !!subRes.data,
       };

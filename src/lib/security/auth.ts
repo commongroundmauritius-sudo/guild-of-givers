@@ -21,6 +21,25 @@ const getServerRequestContext = createIsomorphicFn()
  * Server-side authorization and session helpers.
  */
 
+function applySupabaseBearer(token: string) {
+  const authorization = `Bearer ${token}`;
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const client = supabase as any;
+    client.headers = { ...(client.headers ?? {}), Authorization: authorization };
+
+    const restHeaders = client.rest?.headers;
+    if (typeof restHeaders?.set === "function") {
+      restHeaders.set("Authorization", authorization);
+    } else if (restHeaders) {
+      restHeaders.Authorization = authorization;
+    }
+  } catch {
+    // ignore header attachment failures; the caller will fail closed
+  }
+}
+
 /**
  * Robustly retrieves the current user, handling both client and server (TanStack Start) environments.
  */
@@ -50,15 +69,7 @@ export async function getSessionUser() {
           // CRITICAL: attach the bearer token to the PostgREST client so
           // subsequent RLS-scoped queries (e.g. user_roles lookups in
           // isAdmin) run as this authenticated user instead of `anon`.
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const rest = (supabase as any).rest;
-            if (rest?.headers) {
-              rest.headers["Authorization"] = `Bearer ${token}`;
-            }
-          } catch {
-            // ignore
-          }
+          applySupabaseBearer(token);
           return bearerUser;
         }
       }
@@ -124,6 +135,7 @@ export async function getSessionUser() {
           const refreshToken = parsed.refresh_token;
 
           if (accessToken) {
+            applySupabaseBearer(accessToken);
             // CRITICAL: We must set the session on the supabase client instance used in the server call
             const {
               data: { user: sessionUser },
@@ -151,7 +163,9 @@ export async function isAdmin(userId: string): Promise<boolean> {
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .single();
+    .in("role", ["admin", "super_admin"])
+    .limit(1)
+    .maybeSingle();
 
   if (error || !data) return false;
   return data.role === "admin" || data.role === "super_admin";
@@ -162,7 +176,9 @@ export async function isSuperAdmin(userId: string): Promise<boolean> {
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .single();
+    .eq("role", "super_admin")
+    .limit(1)
+    .maybeSingle();
 
   if (error || !data) return false;
   return data.role === "super_admin";
