@@ -35,7 +35,13 @@ export async function getSessionUser() {
     const cookieHeader = await getServerCookieHeader();
     if (cookieHeader) {
       const cookies = parseCookie(cookieHeader);
-      const projectRef = "vzsifigcowusabfmnudk";
+
+      // Extract project ref dynamically from supabase client URL to avoid hardcoding errors
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      const projectRef = supabaseUrl
+        ? new URL(supabaseUrl).hostname.split(".")[0]
+        : "vzsifigcowusabfmnudk";
 
       // Possible cookie names:
       // - sb-<ref>-auth-token
@@ -66,12 +72,14 @@ export async function getSessionUser() {
         try {
           // Supabase cookies are often URL-encoded JSON or quoted JSON strings
           let decoded = authCookieContent;
-          if (
-            authCookieContent.startsWith("%7B") ||
-            authCookieContent.startsWith("%22") ||
-            authCookieContent.startsWith("%5B")
-          ) {
-            decoded = decodeURIComponent(authCookieContent);
+
+          // Safety check for URL encoding
+          if (authCookieContent.includes("%")) {
+            try {
+              decoded = decodeURIComponent(authCookieContent);
+            } catch (e) {
+              console.warn("getSessionUser: decodeURIComponent failed", e);
+            }
           }
 
           // If the cookie is double-quoted (e.g. "{"access_token":...}")
@@ -95,7 +103,7 @@ export async function getSessionUser() {
             if (sessionUser && !sessionError) return sessionUser;
           }
         } catch (e) {
-          console.debug("getSessionUser: Auth cookie parsing failed");
+          console.debug("getSessionUser: Auth cookie parsing failed", e);
         }
       }
     }
