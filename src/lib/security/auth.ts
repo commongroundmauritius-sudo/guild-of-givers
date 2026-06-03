@@ -34,8 +34,22 @@ export async function getSessionUser() {
 
     if (user && !error) return user;
 
-    // 2. If we're on the server or getUser failed, try to manually resolve from cookies
-    const cookieHeader = await getServerCookieHeader();
+    // 2. If we're on the server or getUser failed, try to resolve from request context
+    const { cookie: cookieHeader, authorization } = await getServerRequestContext();
+
+    // 2a. Prefer Authorization: Bearer <token> attached by attachSupabaseAuth middleware
+    if (authorization) {
+      const match = authorization.match(/^Bearer\s+(.+)$/i);
+      const token = match?.[1];
+      if (token) {
+        const {
+          data: { user: bearerUser },
+          error: bearerError,
+        } = await supabase.auth.getUser(token);
+        if (bearerUser && !bearerError) return bearerUser;
+      }
+    }
+
     if (cookieHeader) {
       const cookies = parseCookie(cookieHeader);
 
