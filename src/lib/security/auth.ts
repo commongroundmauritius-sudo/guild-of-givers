@@ -46,9 +46,24 @@ export async function getSessionUser() {
           data: { user: bearerUser },
           error: bearerError,
         } = await supabase.auth.getUser(token);
-        if (bearerUser && !bearerError) return bearerUser;
+        if (bearerUser && !bearerError) {
+          // CRITICAL: attach the bearer token to the PostgREST client so
+          // subsequent RLS-scoped queries (e.g. user_roles lookups in
+          // isAdmin) run as this authenticated user instead of `anon`.
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const rest = (supabase as any).rest;
+            if (rest?.headers) {
+              rest.headers["Authorization"] = `Bearer ${token}`;
+            }
+          } catch {
+            // ignore
+          }
+          return bearerUser;
+        }
       }
     }
+
 
     if (cookieHeader) {
       const cookies = parseCookie(cookieHeader);
