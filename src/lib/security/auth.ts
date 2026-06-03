@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getWebRequest } from "@tanstack/react-start/server";
-import { parseCookies } from "cookie-es";
+import { parseCookie } from "cookie-es";
 
 /**
  * Server-side authorization and session helpers.
@@ -19,7 +19,7 @@ export async function getSessionUser() {
     // 2. If we're on the server and getUser failed, try to manually resolve from cookies
     const request = getWebRequest();
     if (request) {
-      const cookies = parseCookies(request.headers.get("cookie") || "");
+      const cookies = parseCookie(request.headers.get("cookie") || "");
 
       // Look for Supabase auth cookies
       // The naming pattern is usually sb-<project-ref>-auth-token
