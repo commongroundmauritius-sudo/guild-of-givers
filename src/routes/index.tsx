@@ -162,9 +162,7 @@ function ValueProps() {
               <h3 className="font-display text-2xl font-bold text-primary tracking-tight">
                 {p.title}
               </h3>
-              <p className="mt-4 text-muted-foreground leading-relaxed">
-                {p.desc}
-              </p>
+              <p className="mt-4 text-muted-foreground leading-relaxed">{p.desc}</p>
             </div>
           ))}
         </div>
@@ -453,34 +451,35 @@ function ForOrgs() {
   );
 }
 
-
 function FAQ({ settings }: { settings: any }) {
   const defaultFaqs = [
     {
-      q: 'How does CommonGround membership work?',
-      a: 'You pick a monthly contribution, choose one or more vetted initiatives, and we handle the rest—recurring billing, allocation, receipts, and impact updates.',
+      q: "How does CommonGround membership work?",
+      a: "You pick a monthly contribution, choose one or more vetted initiatives, and we handle the rest—recurring billing, allocation, receipts, and impact updates.",
     },
     {
-      q: 'How are initiatives vetted?',
-      a: 'Every partner is reviewed for legal status, governance, financial transparency and demonstrated long-term impact before being listed.',
+      q: "How are initiatives vetted?",
+      a: "Every partner is reviewed for legal status, governance, financial transparency and demonstrated long-term impact before being listed.",
     },
     {
-      q: 'Can I change or cancel my membership?',
-      a: 'Yes. You can adjust your monthly amount, switch allocations, pause or cancel anytime from your dashboard.',
+      q: "Can I change or cancel my membership?",
+      a: "Yes. You can adjust your monthly amount, switch allocations, pause or cancel anytime from your dashboard.",
     },
     {
-      q: 'Is my contribution tax-deductible?',
-      a: 'Where partner Organizations are registered for tax-deductible giving, you\'ll receive an automated receipt at year-end.',
+      q: "Is my contribution tax-deductible?",
+      a: "Where partner Organizations are registered for tax-deductible giving, you'll receive an automated receipt at year-end.",
     },
     {
-      q: 'How do I know my impact is real?',
-      a: 'Members receive unified, audited impact reports plus direct field updates from the organizations they support.',
+      q: "How do I know my impact is real?",
+      a: "Members receive unified, audited impact reports plus direct field updates from the organizations they support.",
     },
   ];
 
   const items = settings?.items || defaultFaqs;
-  const title = settings?.title || 'Questions, answered.';
-  const description = settings?.description || 'Everything you need to know about how CommonGround works, our vetting process, and what your membership unlocks.';
+  const title = settings?.title || "Questions, answered.";
+  const description =
+    settings?.description ||
+    "Everything you need to know about how CommonGround works, our vetting process, and what your membership unlocks.";
 
   return (
     <section id="faq" className="border-t border-border/60 bg-white">
@@ -490,9 +489,7 @@ function FAQ({ settings }: { settings: any }) {
           <h2 className="mt-4 font-display text-4xl font-semibold text-primary sm:text-5xl">
             {title}
           </h2>
-          <p className="mt-4 text-muted-foreground">
-            {description}
-          </p>
+          <p className="mt-4 text-muted-foreground">{description}</p>
         </div>
         <Accordion type="single" collapsible className="w-full">
           {items.map((f: any, i: number) => (
@@ -508,7 +505,6 @@ function FAQ({ settings }: { settings: any }) {
     </section>
   );
 }
-
 
 function FinalCTA() {
   return (
