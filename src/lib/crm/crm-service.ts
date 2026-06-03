@@ -90,4 +90,20 @@ export const crmService = {
     if (error) throw error;
     return data;
   },
+
+  async updateTaskStatus(taskId: string, status: string) {
+    if (!isUUID(taskId)) throw new Error("Invalid task ID");
+
+    const user = await getSessionUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase
+      .from("crm_tasks")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", taskId)
+      .select("id, status, updated_at")
+      .single();
+    if (error) throw error;
+    return data;
+  },
 };

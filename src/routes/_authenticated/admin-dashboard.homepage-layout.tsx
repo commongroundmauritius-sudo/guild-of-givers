@@ -46,6 +46,11 @@ const TrendingProgramsPanel = lazy(() =>
     default: m.TrendingProgramsPanel,
   })),
 );
+const FAQPanel = lazy(() =>
+  import("@/components/dashboard/modules/homepage/components/FAQPanel").then((m) => ({
+    default: m.FAQPanel,
+  })),
+);
 
 const PanelFallback = () => (
   <div className="flex items-center justify-center py-20 text-muted-foreground">

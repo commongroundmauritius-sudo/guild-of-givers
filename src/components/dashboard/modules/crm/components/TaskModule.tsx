@@ -16,7 +16,7 @@ export const TaskModule: React.FC<TaskModuleProps> = ({ organizationId }) => {
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ["crm-tasks", organizationId],
-    queryFn: () => crmService.getTasks(organizationId),
+    queryFn: () => crmService.getTasks({ organizationId }),
   });
 
   const updateTaskMutation = useMutation({
