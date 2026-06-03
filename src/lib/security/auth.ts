@@ -2,15 +2,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { parseCookie } from "cookie-es";
 
-const getServerCookieHeader = createIsomorphicFn()
-  .client(() => "")
+const getServerRequestContext = createIsomorphicFn()
+  .client(() => ({ cookie: "", authorization: "" }))
   .server(async () => {
     try {
       const { getRequest } = await import("@tanstack/react-start/server");
       const req = getRequest();
-      return req.headers.get("cookie") || "";
+      return {
+        cookie: req.headers.get("cookie") || "",
+        authorization: req.headers.get("authorization") || "",
+      };
     } catch (e) {
-      return "";
+      return { cookie: "", authorization: "" };
     }
   });
 
@@ -31,8 +34,22 @@ export async function getSessionUser() {
 
     if (user && !error) return user;
 
-    // 2. If we're on the server or getUser failed, try to manually resolve from cookies
-    const cookieHeader = await getServerCookieHeader();
+    // 2. If we're on the server or getUser failed, try to resolve from request context
+    const { cookie: cookieHeader, authorization } = await getServerRequestContext();
+
+    // 2a. Prefer Authorization: Bearer <token> attached by attachSupabaseAuth middleware
+    if (authorization) {
+      const match = authorization.match(/^Bearer\s+(.+)$/i);
+      const token = match?.[1];
+      if (token) {
+        const {
+          data: { user: bearerUser },
+          error: bearerError,
+        } = await supabase.auth.getUser(token);
+        if (bearerUser && !bearerError) return bearerUser;
+      }
+    }
+
     if (cookieHeader) {
       const cookies = parseCookie(cookieHeader);
 
