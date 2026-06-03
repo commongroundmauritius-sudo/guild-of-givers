@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { communicationDispatcher } from "@/lib/communication/dispatcher";
 
 export type PartnerApplicationStatus =
   | "submitted"
@@ -19,8 +20,6 @@ export interface PartnerApplicationInput {
 
 class PartnerService {
   async submitApplication(input: PartnerApplicationInput) {
-    // 1. Use the secure RPC for submission
-    // This handles duplicate checks, insertion, and activity logging atomically.
     const { data, error } = await supabase.rpc("submit_partner_application", {
       p_org_name: input.organization_name,
       p_org_type: input.organization_type,
@@ -34,7 +33,6 @@ class PartnerService {
       throw error;
     }
 
-    console.log("Partner application submitted successfully:", (data as any)?.id);
     return data;
   }
 
@@ -79,6 +77,9 @@ class PartnerService {
     if (appError) throw appError;
     if (app.status === "converted") throw new Error("Application already converted");
 
+    // Generate unique 8-character access code
+    const signupCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+
     // 1. Create Organization
     const { data: org, error: orgError } = await supabase
       .from("organizations")
@@ -95,28 +96,43 @@ class PartnerService {
 
     if (orgError) throw orgError;
 
-    // 2. Update Application
+    // 2. Update Application with code and conversion info
     const { error: updateError } = await supabase
       .from("partner_applications")
       .update({
         status: "converted",
+        signup_code: signupCode,
         converted_organization_id: org.id,
         converted_at: new Date().toISOString(),
         converted_by: actorId,
-      })
+      } as any)
       .eq("id", applicationId);
 
     if (updateError) throw updateError;
 
-    // 3. Log activity
+    // 3. Dispatch Welcome Email with Access Code
+    await communicationDispatcher.dispatch({
+      userId: actorId, // Admin who triggered conversion
+      channels: ["email"],
+      templateKey: "welcome" as any, // Reusing welcome template or specialized if exists
+      recipientEmail: app.email,
+      payload: {
+        organizationName: org.organization_name,
+        signupCode: signupCode,
+        message: "Your partner application has been successful! Use the code below to complete your organization setup.",
+        actionUrl: `${window.location.origin}/signup?code=${signupCode}`,
+      },
+    });
+
+    // 4. Log activity
     await this.logActivity(
       applicationId,
       actorId,
       "converted",
-      `Converted to organization: ${org.organization_name}`,
+      `Converted to organization: ${org.organization_name}. Signup code generated: ${signupCode}`,
       app.status as PartnerApplicationStatus,
       "converted",
-      { organization_id: org.id },
+      { organization_id: org.id, signup_code: signupCode },
     );
 
     return org;
