@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: admin.spec.ts >> Admin Protected Routes >> admin analytics requires auth
-- Location: tests/admin.spec.ts:4:3
+- Name: partner-security.spec.ts >> Partner Application Security >> should block unauthorized access to applications list
+- Location: tests/partner-security.spec.ts:43:3
 
 # Error details
 

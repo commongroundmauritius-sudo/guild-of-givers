@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: admin.spec.ts >> Admin Protected Routes >> admin finances requires auth
-- Location: tests/admin.spec.ts:9:3
+- Name: auth.spec.ts >> Authentication Tests >> login page renders
+- Location: tests/auth.spec.ts:4:3
 
 # Error details
 

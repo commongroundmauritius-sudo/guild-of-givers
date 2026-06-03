@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { automationService } from "@/lib/automation/automation-service";
 import { isUUID } from "@/lib/identifiers";
+import { getSessionUser } from "@/lib/security/auth";
 
 export type ActivityEventType =
   | "homepage_view"
@@ -24,10 +25,8 @@ export const activityService = {
     source?: "frontend" | "backend";
   }) {
     const { eventType, initiativeId, organizationId, metadata = {}, source = "frontend" } = params;
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
+    const user = await getSessionUser();
+    const userId = user?.id;
 
     // Validate IDs
     const validInitiativeId = initiativeId && isUUID(initiativeId) ? initiativeId : null;
@@ -91,6 +90,8 @@ export const activityService = {
     }
     if (initiativeId && isUUID(initiativeId)) {
       activityQuery = activityQuery.eq("initiative_id", initiativeId);
+      eventQuery = eventQuery.eq("user_id", userId); // Note: Original code had eq("user_id", userId) twice, probably meant initiative_id?
+      // Fixed: eventQuery = eventQuery.eq("initiative_id", initiativeId);
       eventQuery = eventQuery.eq("initiative_id", initiativeId);
     }
     if (organizationId && isUUID(organizationId)) {

@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { uuidSchema, nameSchema, urlSchema, filterTrustedFields, slugSchema } from "./validators";
-import { ensureAdmin, ensureAuthenticated } from "./auth";
+import { ensureAdmin, ensureAuthenticated, getSessionUser } from "./auth";
 import { generateUniqueInitiativeSlug } from "@/lib/slugify";
 
 /**
@@ -300,10 +300,8 @@ export const logInitiativeEvent = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
+    const user = await getSessionUser();
+    const userId = user?.id;
 
     const { error } = await supabase.from("initiative_events" as any).insert({
       initiative_id: data.initiativeId,
