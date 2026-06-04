@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link as RouterLink } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,10 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Building2, CheckCircle2, XCircle, ExternalLink, Info } from "lucide-react";
+import { Search, Building2, CheckCircle2, XCircle, ExternalLink, Info, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { updateOrganizationStatus } from "@/lib/security/auth-actions";
+import { updateOrganizationStatus, toggleOrganizationVetted } from "@/lib/security/auth-actions";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/organizations")({
   component: AdminOrganizationsPage,
@@ -40,6 +40,19 @@ function AdminOrganizationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-organizations"] });
       toast.success("Organization status updated");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const toggleVettedMutation = useMutation({
+    mutationFn: async ({ id, is_verified }: { id: string; is_verified: boolean }) => {
+      await toggleOrganizationVetted({ data: { id, is_verified } });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-organizations"] });
+      toast.success("Organization verification updated");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -93,76 +106,109 @@ function AdminOrganizationsPage() {
               {filteredOrgs.map((org) => (
                 <Card
                   key={org.id}
-                  className="rounded-[2.5rem] border-border/40 overflow-hidden group"
+                  className="rounded-[2.5rem] border-border/40 overflow-hidden group relative hover:border-primary/40 transition-colors"
                 >
                   <CardContent className="p-8">
-                    <div className="flex items-start justify-between gap-4 mb-6">
-                      <div className="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center border border-indigo-100 shrink-0">
-                        {org.logo_url ? (
-                          <img
-                            src={org.logo_url}
-                            className="h-full w-full object-cover rounded-2xl"
-                            alt=""
-                          />
-                        ) : (
-                          <Building2 className="h-8 w-8 text-indigo-500" />
-                        )}
+                    <RouterLink
+                      to="/entities/$id"
+                      params={{ id: org.id }}
+                      className="absolute inset-0 z-0"
+                      aria-label={`View ${org.organization_name} profile`}
+                    />
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between gap-4 mb-6">
+                        <div className="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center border border-indigo-100 shrink-0">
+                          {org.logo_url ? (
+                            <img
+                              src={org.logo_url}
+                              className="h-full w-full object-cover rounded-2xl"
+                              alt=""
+                            />
+                          ) : (
+                            <Building2 className="h-8 w-8 text-indigo-500" />
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                           <span
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              org.status === "active"
+                                ? "bg-green-50 text-green-700"
+                                : "bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            {org.status}
+                          </span>
+                          {org.is_verified && (
+                             <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                               <ShieldCheck className="h-3 w-3" /> Vetted
+                             </span>
+                          )}
+                        </div>
                       </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          org.status === "active"
-                            ? "bg-green-50 text-green-700"
-                            : "bg-amber-50 text-amber-700"
-                        }`}
-                      >
-                        {org.status}
-                      </span>
-                    </div>
 
-                    <h3 className="text-xl font-bold text-primary mb-2 line-clamp-1">
-                      {org.organization_name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-6 h-10">
-                      {org.description || "No description provided."}
-                    </p>
+                      <h3 className="text-xl font-bold text-primary mb-2 line-clamp-1">
+                        {org.organization_name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-6 h-10">
+                        {org.description || "No description provided."}
+                      </p>
 
-                    <div className="flex items-center justify-between border-t border-border/40 pt-6">
-                      <div className="flex gap-2">
-                        {org.status !== "active" && (
+                      <div className="flex items-center justify-between border-t border-border/40 pt-6">
+                        <div className="flex gap-2 relative z-20">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="rounded-full text-green-600 hover:bg-green-50 h-9 w-9"
-                            onClick={() =>
-                              updateStatusMutation.mutate({ id: org.id, status: "active" })
-                            }
+                            title={org.is_verified ? "Remove Vetted Badge" : "Mark as Vetted"}
+                            className={`rounded-full h-9 w-9 ${org.is_verified ? "text-indigo-600 bg-indigo-50" : "text-muted-foreground hover:bg-muted"}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleVettedMutation.mutate({ id: org.id, is_verified: !org.is_verified });
+                            }}
                           >
-                            <CheckCircle2 className="h-5 w-5" />
+                            <ShieldCheck className="h-5 w-5" />
                           </Button>
-                        )}
-                        {org.status !== "suspended" && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-full text-red-600 hover:bg-red-50 h-9 w-9"
-                            onClick={() =>
-                              updateStatusMutation.mutate({ id: org.id, status: "suspended" })
-                            }
+                          {org.status !== "active" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="rounded-full text-green-600 hover:bg-green-50 h-9 w-9"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                updateStatusMutation.mutate({ id: org.id, status: "active" });
+                              }}
+                            >
+                              <CheckCircle2 className="h-5 w-5" />
+                            </Button>
+                          )}
+                          {org.status !== "suspended" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="rounded-full text-red-600 hover:bg-red-50 h-9 w-9"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                updateStatusMutation.mutate({ id: org.id, status: "suspended" });
+                              }}
+                            >
+                              <XCircle className="h-5 w-5" />
+                            </Button>
+                          )}
+                        </div>
+                        {org.website_url && (
+                          <a
+                            href={org.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1.5 relative z-20"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <XCircle className="h-5 w-5" />
-                          </Button>
+                            Website <ExternalLink className="h-3 w-3" />
+                          </a>
                         )}
                       </div>
-                      {org.website_url && (
-                        <a
-                          href={org.website_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1.5"
-                        >
-                          Website <ExternalLink className="h-3 w-3" />
-                        </a>
-                      )}
                     </div>
                   </CardContent>
                 </Card>

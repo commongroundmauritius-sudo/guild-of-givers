@@ -29,7 +29,7 @@ import {
   FileText,
   MessageCircle,
   TrendingUp,
-  ChevronDown,
+  Building2, ChevronDown,
   Users,
   Shield,
   MessageSquare,
@@ -56,7 +56,9 @@ const PRIMARY_ADMIN_NAV = [
 const MORE_ADMIN_NAV = [
   { label: "Homepage Layout", to: "/admin-dashboard/homepage-layout", icon: Home },
   { label: "Announcements", to: "/admin-dashboard/announcements", icon: Megaphone },
+  { label: "Organizations", to: "/admin-dashboard/organizations", icon: Building2 },
   { label: "Leads", to: "/admin-dashboard/leads", icon: Users },
+  { label: "Reports", to: "/admin-dashboard/reports", icon: FileText },
   {
     label: "Partner Applications",
     to: "/admin-dashboard/partner-applications",
