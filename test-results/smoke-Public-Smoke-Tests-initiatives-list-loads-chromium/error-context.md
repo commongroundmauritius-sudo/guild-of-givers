@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: partner-security.spec.ts >> Partner Application Security >> should block XSS injection in organization name
-- Location: tests/partner-security.spec.ts:24:3
+- Name: smoke.spec.ts >> Public Smoke Tests >> initiatives list loads
+- Location: tests/smoke.spec.ts:9:3
 
 # Error details
 

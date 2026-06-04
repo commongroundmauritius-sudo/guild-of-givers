@@ -6,7 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Building2, CheckCircle2, XCircle, ExternalLink, Info, ShieldCheck } from "lucide-react";
+import {
+  Search,
+  Building2,
+  CheckCircle2,
+  XCircle,
+  ExternalLink,
+  Info,
+  ShieldCheck,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { updateOrganizationStatus, toggleOrganizationVetted } from "@/lib/security/auth-actions";
@@ -129,7 +137,7 @@ function AdminOrganizationsPage() {
                           )}
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                           <span
+                          <span
                             className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                               org.status === "active"
                                 ? "bg-green-50 text-green-700"
@@ -139,9 +147,9 @@ function AdminOrganizationsPage() {
                             {org.status}
                           </span>
                           {org.is_verified && (
-                             <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
-                               <ShieldCheck className="h-3 w-3" /> Vetted
-                             </span>
+                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                              <ShieldCheck className="h-3 w-3" /> Vetted
+                            </span>
                           )}
                         </div>
                       </div>
@@ -163,7 +171,10 @@ function AdminOrganizationsPage() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              toggleVettedMutation.mutate({ id: org.id, is_verified: !org.is_verified });
+                              toggleVettedMutation.mutate({
+                                id: org.id,
+                                is_verified: !org.is_verified,
+                              });
                             }}
                           >
                             <ShieldCheck className="h-5 w-5" />

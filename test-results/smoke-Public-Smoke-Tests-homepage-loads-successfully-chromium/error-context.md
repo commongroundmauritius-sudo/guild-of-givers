@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: partner-security.spec.ts >> Partner Application Security >> should block unauthorized access to applications list
-- Location: tests/partner-security.spec.ts:43:3
+- Name: smoke.spec.ts >> Public Smoke Tests >> homepage loads successfully
+- Location: tests/smoke.spec.ts:4:3
 
 # Error details
 

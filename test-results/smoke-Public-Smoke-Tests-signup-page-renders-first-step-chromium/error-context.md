@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: partner-security.spec.ts >> Partner Application Security >> should enforce form validation (Zod)
-- Location: tests/partner-security.spec.ts:8:3
+- Name: smoke.spec.ts >> Public Smoke Tests >> signup page renders first step
+- Location: tests/smoke.spec.ts:14:3
 
 # Error details
 

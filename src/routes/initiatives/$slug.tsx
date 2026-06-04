@@ -49,6 +49,7 @@ export const Route = createFileRoute("/initiatives/$slug")({
 function InitiativeDetailPage() {
   const { initiativeId } = Route.useLoaderData();
   const navigate = useNavigate();
+  const { slug } = Route.useParams();
 
   const { data: initiative, isLoading } = useQuery({
     queryKey: ["initiative", initiativeId],
@@ -65,10 +66,10 @@ function InitiativeDetailPage() {
   });
 
   useEffect(() => {
-    if (initiative?.slug && initiative.slug !== Route.useParams().slug) {
+    if (initiative?.slug && initiative.slug !== slug) {
       navigate({ to: "/initiatives/$slug", params: { slug: initiative.slug }, replace: true });
     }
-  }, [initiative, navigate]);
+  }, [initiative, navigate, slug]);
 
   useEffect(() => {
     attributionService.captureFromUrl();
@@ -130,7 +131,10 @@ function InitiativeDetailPage() {
       <article className="relative bg-white pb-32">
         <div className="relative h-[45vh] w-full overflow-hidden sm:h-[65vh]">
           <img
-            src={initiative.image_url || "/placeholder.svg"}
+            src={
+              initiative.image_url ||
+              "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&q=80&w=800"
+            }
             alt={initiative.title}
             className="h-full w-full object-cover"
           />
