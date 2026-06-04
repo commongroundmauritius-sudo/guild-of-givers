@@ -6,10 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Building2, CheckCircle2, XCircle, ExternalLink, Info } from "lucide-react";
+import { Search, Building2, CheckCircle2, XCircle, ExternalLink, Info, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { updateOrganizationStatus } from "@/lib/security/auth-actions";
+import { updateOrganizationStatus, toggleOrganizationVetted } from "@/lib/security/auth-actions";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/organizations")({
   component: AdminOrganizationsPage,
@@ -40,6 +40,19 @@ function AdminOrganizationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-organizations"] });
       toast.success("Organization status updated");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const toggleVettedMutation = useMutation({
+    mutationFn: async ({ id, is_verified }: { id: string; is_verified: boolean }) => {
+      await toggleOrganizationVetted({ data: { id, is_verified } });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-organizations"] });
+      toast.success("Organization verification updated");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -115,15 +128,22 @@ function AdminOrganizationsPage() {
                             <Building2 className="h-8 w-8 text-indigo-500" />
                           )}
                         </div>
-                        <span
-                          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            org.status === "active"
-                              ? "bg-green-50 text-green-700"
-                              : "bg-amber-50 text-amber-700"
-                          }`}
-                        >
-                          {org.status}
-                        </span>
+                        <div className="flex flex-col items-end gap-2">
+                           <span
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              org.status === "active"
+                                ? "bg-green-50 text-green-700"
+                                : "bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            {org.status}
+                          </span>
+                          {org.is_verified && (
+                             <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                               <ShieldCheck className="h-3 w-3" /> Vetted
+                             </span>
+                          )}
+                        </div>
                       </div>
 
                       <h3 className="text-xl font-bold text-primary mb-2 line-clamp-1">
@@ -135,6 +155,19 @@ function AdminOrganizationsPage() {
 
                       <div className="flex items-center justify-between border-t border-border/40 pt-6">
                         <div className="flex gap-2 relative z-20">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title={org.is_verified ? "Remove Vetted Badge" : "Mark as Vetted"}
+                            className={`rounded-full h-9 w-9 ${org.is_verified ? "text-indigo-600 bg-indigo-50" : "text-muted-foreground hover:bg-muted"}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleVettedMutation.mutate({ id: org.id, is_verified: !org.is_verified });
+                            }}
+                          >
+                            <ShieldCheck className="h-5 w-5" />
+                          </Button>
                           {org.status !== "active" && (
                             <Button
                               variant="ghost"

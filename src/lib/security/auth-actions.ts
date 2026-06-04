@@ -73,6 +73,44 @@ export const updateOrganizationStatus = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+export const toggleOrganizationVetted = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      id: uuidSchema,
+      is_verified: z.boolean(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await ensureAdmin();
+    const { error } = await supabase
+      .from("organizations")
+      .update({ is_verified: data.is_verified })
+      .eq("id", data.id);
+    if (error) throw error;
+    return { success: true };
+  });
+
+export const updateReportStatus = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      id: uuidSchema,
+      status: z.enum(['pending', 'reviewing', 'approved', 'returned_for_revision']),
+      adminFeedback: z.string().max(1000).optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await ensureAdmin();
+    const { error } = await supabase
+      .from("reports")
+      .update({
+        status: data.status,
+        admin_feedback: data.adminFeedback,
+      })
+      .eq("id", data.id);
+    if (error) throw error;
+    return { success: true };
+  });
+
 export const updatePostStatus = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
@@ -308,6 +346,43 @@ export const logInitiativeEvent = createServerFn({ method: "POST" })
       event_type: data.eventType,
       user_id: userId,
       metadata: data.metadata || {},
+    });
+
+    if (error) throw error;
+    return { success: true };
+  });
+
+export const uploadReport = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      title: z.string().min(1).max(200),
+      description: z.string().max(1000).optional(),
+      fileUrl: z.string().url(),
+      organizationId: uuidSchema,
+      reportDate: z.string().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const user = await ensureAuthenticated();
+
+    // Verify user belongs to the organization
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("organization_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.organization_id !== data.organizationId) {
+       throw new Error("Unauthorized: You can only upload reports for your own organization");
+    }
+
+    const { error } = await supabase.from("reports").insert({
+      title: data.title,
+      description: data.description,
+      file_url: data.fileUrl,
+      organization_id: data.organizationId,
+      report_date: data.reportDate || new Date().toISOString(),
+      status: "pending",
     });
 
     if (error) throw error;
