@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Lock } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { createLead, convertLead } from "@/lib/auth-actions";
@@ -8,6 +8,7 @@ import { attributionService } from "@/lib/attribution-service";
 import { toast } from "sonner";
 import { emailSchema, nameSchema } from "@/lib/security/validators";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -26,7 +27,8 @@ const PRESETS = [350, 450, 900, 2500, 5000, 8000];
 const STEPS = ["Amount", "Details", "Payment", "Account", "Done"];
 
 function SignupPage() {
-  const [step, setStep] = useState(0);
+  const search = useSearch({ from: "/signup" }) as any;
+  const [step, setStep] = useState(search.code ? 3 : 0);
   const [amount, setAmount] = useState(450);
   const [customAmount, setCustomAmount] = useState("");
   const [email, setEmail] = useState("");
@@ -35,6 +37,10 @@ function SignupPage() {
   const [phone, setPhone] = useState("");
   const [coversFees, setCoversFees] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [signupCode, setSignupCode] = useState(search.code || "");
+  const [isPartnerSignup, setIsPartnerSignup] = useState(!!search.code);
+  const [partnerData, setPartnerData] = useState<any>(null);
+
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -44,14 +50,40 @@ function SignupPage() {
     attributionService.captureFromUrl();
     const stored = localStorage.getItem("source_initiative_id");
     if (stored) setSourceInitiativeId(stored);
+
+    if (signupCode) {
+      verifySignupCode(signupCode);
+    }
   }, []);
+
+  const verifySignupCode = async (code: string) => {
+    const { data, error } = await supabase
+      .from("partner_applications")
+      .select("*, converted_organization_id")
+      .eq("signup_code", code)
+      .eq("status", "converted")
+      .single();
+
+    if (error || !data) {
+      toast.error("Invalid or expired access code.");
+      setIsPartnerSignup(false);
+      setSignupCode("");
+      setStep(0);
+      return;
+    }
+
+    setPartnerData(data);
+    setEmail(data.email);
+    setFullName(data.organization_name);
+    setIsPartnerSignup(true);
+    setStep(3);
+  };
 
   const finalAmount = customAmount ? parseInt(customAmount) : amount;
 
   const submitDetails = async () => {
     if (submitting) return;
 
-    // Client-side validation
     const validation = z
       .object({
         email: emailSchema,
@@ -116,18 +148,35 @@ function SignupPage() {
     }
 
     setSubmitting(true);
-    const { error } = await signUp(email.trim().toLowerCase(), password, {
+
+    const role = isPartnerSignup ? "organization" : "member";
+    const signUpData: any = {
       full_name: fullName.trim(),
       phone: phone.trim(),
-      subscription_amount: finalAmount,
-      covers_fees: coversFees,
+      subscription_amount: isPartnerSignup ? 0 : finalAmount,
+      covers_fees: isPartnerSignup ? false : coversFees,
       source_initiative_id: sourceInitiativeId,
-    });
+      role: role
+    };
+
+    if (isPartnerSignup && partnerData?.converted_organization_id) {
+      signUpData.organization_id = partnerData.converted_organization_id;
+    }
+
+    const { error } = await signUp(email.trim().toLowerCase(), password, signUpData);
 
     if (error) {
       toast.error((error as Error).message);
       setSubmitting(false);
       return;
+    }
+
+    if (isPartnerSignup) {
+       // Clear code after use
+       await supabase
+         .from("partner_applications")
+         .update({ signup_code: null } as any)
+         .eq("id", partnerData.id);
     }
 
     setStep(4);
@@ -150,7 +199,7 @@ function SignupPage() {
                   />
                 ))}
               </div>
-              {step > 0 && step < 4 && (
+              {step > 0 && step < 4 && !isPartnerSignup && (
                 <button
                   onClick={() => setStep(step - 1)}
                   className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition"
@@ -159,6 +208,18 @@ function SignupPage() {
                 </button>
               )}
             </div>
+
+            {isPartnerSignup && step === 3 && (
+              <div className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center gap-4">
+                <div className="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shrink-0">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-indigo-900">Partner Access Verified</p>
+                  <p className="text-xs text-indigo-700">Setting up account for: {partnerData?.organization_name}</p>
+                </div>
+              </div>
+            )}
 
             {step === 0 && (
               <div>
@@ -330,7 +391,7 @@ function SignupPage() {
                   Create your account
                 </h2>
                 <p className="mt-4 text-muted-foreground">
-                  Set a password to manage your membership and track your impact.
+                  Set a password to manage your {isPartnerSignup ? 'organization' : 'membership'} and track your impact.
                 </p>
                 <form
                   onSubmit={(e) => {
@@ -339,6 +400,15 @@ function SignupPage() {
                   }}
                   className="mt-10 space-y-5"
                 >
+                  {isPartnerSignup && (
+                    <Field label="Email Address">
+                      <input
+                        disabled
+                        value={email}
+                        className={inputCls + " opacity-60"}
+                      />
+                    </Field>
+                  )}
                   <Field label="Password">
                     <input
                       required
@@ -355,13 +425,15 @@ function SignupPage() {
                   >
                     {submitting ? "Setting up…" : "Complete setup"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep(4)}
-                    className="mt-6 block w-full text-center text-sm font-bold text-primary hover:underline"
-                  >
-                    I'll set it up later via email
-                  </button>
+                  {!isPartnerSignup && (
+                    <button
+                      type="button"
+                      onClick={() => setStep(4)}
+                      className="mt-6 block w-full text-center text-sm font-bold text-primary hover:underline"
+                    >
+                      I'll set it up later via email
+                    </button>
+                  )}
                 </form>
               </div>
             )}
@@ -375,11 +447,13 @@ function SignupPage() {
                   Welcome to CommonGround
                 </h2>
                 <p className="mt-4 text-muted-foreground leading-relaxed max-w-sm mx-auto">
-                  Your monthly impact has started. Check your email for your receipt and account
-                  confirmation.
+                  {isPartnerSignup
+                    ? `Your organization account for ${partnerData?.organization_name} is ready.`
+                    : "Your monthly impact has started. Check your email for your receipt and account confirmation."
+                  }
                 </p>
                 <button
-                  onClick={() => navigate({ to: "/dashboard" })}
+                  onClick={() => navigate({ to: isPartnerSignup ? "/organization" : "/dashboard" })}
                   className="mt-10 inline-flex items-center justify-center rounded-full bg-primary px-10 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
                 >
                   Go to my Dashboard
