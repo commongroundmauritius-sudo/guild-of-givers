@@ -43,7 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
 
-  const resolvePrimaryRole = (roles: Array<{ role: AppRole }> | null | undefined): AppRole | null => {
+  const resolvePrimaryRole = (
+    roles: Array<{ role: AppRole }> | null | undefined,
+  ): AppRole | null => {
     const roleValues = new Set((roles ?? []).map((item) => item.role));
     if (roleValues.has("super_admin")) return "super_admin";
     if (roleValues.has("admin")) return "admin";

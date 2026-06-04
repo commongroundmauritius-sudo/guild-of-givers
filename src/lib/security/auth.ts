@@ -75,7 +75,6 @@ export async function getSessionUser() {
       }
     }
 
-
     if (cookieHeader) {
       const cookies = parseCookie(cookieHeader);
 

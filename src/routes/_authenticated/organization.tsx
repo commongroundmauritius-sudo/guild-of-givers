@@ -4,11 +4,28 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Eye, TrendingUp, Heart, Settings, FileText, Upload, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import {
+  Users,
+  Eye,
+  TrendingUp,
+  Heart,
+  Settings,
+  FileText,
+  Upload,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+} from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,7 +94,7 @@ function OrganizationDashboard() {
           description: reportDesc,
           fileUrl: reportUrl,
           organizationId: profile?.organization_id as string,
-        }
+        },
       });
     },
     onSuccess: () => {
@@ -112,10 +129,14 @@ function OrganizationDashboard() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "approved": return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case "returned_for_revision": return <AlertCircle className="h-4 w-4 text-amber-500" />;
-      case "reviewing": return <Clock className="h-4 w-4 text-blue-500" />;
-      default: return <Clock className="h-4 w-4 text-slate-400" />;
+      case "approved":
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case "returned_for_revision":
+        return <AlertCircle className="h-4 w-4 text-amber-500" />;
+      case "reviewing":
+        return <Clock className="h-4 w-4 text-blue-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-slate-400" />;
     }
   };
 
@@ -130,55 +151,61 @@ function OrganizationDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-             <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-               <DialogTrigger asChild>
-                 <Button className="rounded-full bg-forest hover:bg-forest/90">
-                   <Upload className="mr-2 h-4 w-4" /> Upload Report
-                 </Button>
-               </DialogTrigger>
-               <DialogContent className="sm:max-w-[425px] rounded-[2rem]">
-                 <div className="p-4">
-                   <h2 className="text-2xl font-bold text-primary mb-6">Submit Impact Report</h2>
-                   <form onSubmit={handleUpload} className="space-y-4">
-                     <div className="space-y-2">
-                       <Label htmlFor="title">Report Title</Label>
-                       <Input
+            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-full bg-forest hover:bg-forest/90">
+                  <Upload className="mr-2 h-4 w-4" /> Upload Report
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] rounded-[2rem]">
+                <div className="p-4">
+                  <h2 className="text-2xl font-bold text-primary mb-6">Submit Impact Report</h2>
+                  <form onSubmit={handleUpload} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Report Title</Label>
+                      <Input
                         id="title"
                         placeholder="e.g., May 2024 Impact Report"
                         value={reportTitle}
                         onChange={(e) => setReportTitle(e.target.value)}
                         className="rounded-xl"
-                       />
-                     </div>
-                     <div className="space-y-2">
-                       <Label htmlFor="url">Report URL (PDF)</Label>
-                       <Input
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="url">Report URL (PDF)</Label>
+                      <Input
                         id="url"
                         placeholder="https://..."
                         type="url"
                         value={reportUrl}
                         onChange={(e) => setReportUrl(e.target.value)}
                         className="rounded-xl"
-                       />
-                       <p className="text-[10px] text-muted-foreground">For now, please provide a link to your hosted PDF.</p>
-                     </div>
-                     <div className="space-y-2">
-                       <Label htmlFor="desc">Notes (Optional)</Label>
-                       <Textarea
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        For now, please provide a link to your hosted PDF.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="desc">Notes (Optional)</Label>
+                      <Textarea
                         id="desc"
                         placeholder="Brief summary of the report..."
                         value={reportDesc}
                         onChange={(e) => setReportDesc(e.target.value)}
                         className="rounded-xl"
-                       />
-                     </div>
-                     <Button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-forest mt-4">
-                       {isSubmitting ? "Uploading..." : "Submit for Review"}
-                     </Button>
-                   </form>
-                 </div>
-               </DialogContent>
-             </Dialog>
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full rounded-xl bg-forest mt-4"
+                    >
+                      {isSubmitting ? "Uploading..." : "Submit for Review"}
+                    </Button>
+                  </form>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             <Link
               to="/organization"
@@ -252,7 +279,9 @@ function OrganizationDashboard() {
                           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                             Members
                           </span>
-                          <p className="font-bold text-primary">{initiative.conversion_count || 0}</p>
+                          <p className="font-bold text-primary">
+                            {initiative.conversion_count || 0}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -270,10 +299,15 @@ function OrganizationDashboard() {
                 <Skeleton className="h-24 w-full rounded-2xl" />
               ) : reports?.length ? (
                 reports.map((report) => (
-                  <div key={report.id} className="p-5 rounded-2xl border border-border/40 bg-white shadow-sm">
+                  <div
+                    key={report.id}
+                    className="p-5 rounded-2xl border border-border/40 bg-white shadow-sm"
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h4 className="text-sm font-bold text-primary line-clamp-1">{report.title}</h4>
+                        <h4 className="text-sm font-bold text-primary line-clamp-1">
+                          {report.title}
+                        </h4>
                         <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider font-bold">
                           {format(new Date(report.created_at), "MMM d, yyyy")}
                         </p>
@@ -281,17 +315,17 @@ function OrganizationDashboard() {
                       {getStatusIcon(report.status)}
                     </div>
                     <div className="mt-4 flex items-center justify-between">
-                       <span className="text-[10px] font-bold text-muted-foreground uppercase">
-                         {report.status.replace(/_/g, ' ')}
-                       </span>
-                       <a
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                        {report.status.replace(/_/g, " ")}
+                      </span>
+                      <a
                         href={report.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[10px] font-bold text-forest hover:underline"
-                       >
-                         View Report
-                       </a>
+                      >
+                        View Report
+                      </a>
                     </div>
                     {report.admin_feedback && (
                       <p className="mt-3 text-[10px] bg-amber-50 text-amber-700 p-2 rounded-lg border border-amber-100">
@@ -302,7 +336,7 @@ function OrganizationDashboard() {
                 ))
               ) : (
                 <div className="text-center py-10 bg-muted/20 rounded-2xl border border-dashed border-border/60">
-                   <p className="text-xs text-muted-foreground">No reports uploaded.</p>
+                  <p className="text-xs text-muted-foreground">No reports uploaded.</p>
                 </div>
               )}
             </div>

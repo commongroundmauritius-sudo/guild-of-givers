@@ -46,10 +46,14 @@ function AdminReportsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "approved": return "bg-green-50 text-green-700 border-green-100";
-      case "reviewing": return "bg-blue-50 text-blue-700 border-blue-100";
-      case "returned_for_revision": return "bg-amber-50 text-amber-700 border-amber-100";
-      default: return "bg-slate-50 text-slate-700 border-slate-100";
+      case "approved":
+        return "bg-green-50 text-green-700 border-green-100";
+      case "reviewing":
+        return "bg-blue-50 text-blue-700 border-blue-100";
+      case "returned_for_revision":
+        return "bg-amber-50 text-amber-700 border-amber-100";
+      default:
+        return "bg-slate-50 text-slate-700 border-slate-100";
     }
   };
 
@@ -91,9 +95,7 @@ function AdminReportsPage() {
                           <FileText className="h-6 w-6 text-indigo-500" />
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold text-primary">
-                            {report.title}
-                          </h3>
+                          <h3 className="text-xl font-bold text-primary">{report.title}</h3>
                           <p className="text-sm font-medium text-indigo-600">
                             {report.organizations?.organization_name}
                           </p>
@@ -103,15 +105,19 @@ function AdminReportsPage() {
                               Submitted {format(new Date(report.created_at), "MMM d, yyyy")}
                             </span>
                             {report.report_date && (
-                              <span>• Period: {format(new Date(report.report_date), "MMMM yyyy")}</span>
+                              <span>
+                                • Period: {format(new Date(report.report_date), "MMMM yyyy")}
+                              </span>
                             )}
                           </div>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(report.status)}`}>
-                          {report.status.replace(/_/g, ' ')}
+                        <span
+                          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(report.status)}`}
+                        >
+                          {report.status.replace(/_/g, " ")}
                         </span>
 
                         <div className="h-8 w-px bg-border/40 hidden md:block mx-2" />
@@ -122,7 +128,9 @@ function AdminReportsPage() {
                               size="sm"
                               variant="outline"
                               className="rounded-full border-green-200 text-green-700 hover:bg-green-50"
-                              onClick={() => updateStatusMutation.mutate({ id: report.id, status: "approved" })}
+                              onClick={() =>
+                                updateStatusMutation.mutate({ id: report.id, status: "approved" })
+                              }
                             >
                               <CheckCircle2 className="h-4 w-4 mr-1" /> Approve
                             </Button>
@@ -132,17 +140,17 @@ function AdminReportsPage() {
                               size="sm"
                               variant="outline"
                               className="rounded-full border-amber-200 text-amber-700 hover:bg-amber-50"
-                              onClick={() => updateStatusMutation.mutate({ id: report.id, status: "returned_for_revision" })}
+                              onClick={() =>
+                                updateStatusMutation.mutate({
+                                  id: report.id,
+                                  status: "returned_for_revision",
+                                })
+                              }
                             >
                               <AlertCircle className="h-4 w-4 mr-1" /> Return
                             </Button>
                           )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="rounded-full"
-                            asChild
-                          >
+                          <Button size="sm" variant="ghost" className="rounded-full" asChild>
                             <a href={report.file_url} target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="h-4 w-4 mr-1" /> View PDF
                             </a>
@@ -151,9 +159,9 @@ function AdminReportsPage() {
                       </div>
                     </div>
                     {report.description && (
-                       <p className="mt-4 text-sm text-muted-foreground bg-muted/20 p-4 rounded-2xl italic">
-                         "{report.description}"
-                       </p>
+                      <p className="mt-4 text-sm text-muted-foreground bg-muted/20 p-4 rounded-2xl italic">
+                        "{report.description}"
+                      </p>
                     )}
                   </CardContent>
                 </Card>
@@ -163,7 +171,9 @@ function AdminReportsPage() {
             <div className="text-center py-32 border-2 border-dashed rounded-[3rem]">
               <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-primary">No reports submitted yet</h2>
-              <p className="text-muted-foreground mt-2">Reports from organizations will appear here.</p>
+              <p className="text-muted-foreground mt-2">
+                Reports from organizations will appear here.
+              </p>
             </div>
           )}
         </div>

@@ -54,7 +54,7 @@ function SignupPage() {
     if (signupCode) {
       verifySignupCode(signupCode);
     }
-  }, []);
+  }, [signupCode]);
 
   const verifySignupCode = async (code: string) => {
     const { data, error } = await supabase
@@ -156,7 +156,7 @@ function SignupPage() {
       subscription_amount: isPartnerSignup ? 0 : finalAmount,
       covers_fees: isPartnerSignup ? false : coversFees,
       source_initiative_id: sourceInitiativeId,
-      role: role
+      role: role,
     };
 
     if (isPartnerSignup && partnerData?.converted_organization_id) {
@@ -172,11 +172,11 @@ function SignupPage() {
     }
 
     if (isPartnerSignup) {
-       // Clear code after use
-       await supabase
-         .from("partner_applications")
-         .update({ signup_code: null } as any)
-         .eq("id", partnerData.id);
+      // Clear code after use
+      await supabase
+        .from("partner_applications")
+        .update({ signup_code: null } as any)
+        .eq("id", partnerData.id);
     }
 
     setStep(4);
@@ -216,7 +216,9 @@ function SignupPage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-indigo-900">Partner Access Verified</p>
-                  <p className="text-xs text-indigo-700">Setting up account for: {partnerData?.organization_name}</p>
+                  <p className="text-xs text-indigo-700">
+                    Setting up account for: {partnerData?.organization_name}
+                  </p>
                 </div>
               </div>
             )}
@@ -391,7 +393,8 @@ function SignupPage() {
                   Create your account
                 </h2>
                 <p className="mt-4 text-muted-foreground">
-                  Set a password to manage your {isPartnerSignup ? 'organization' : 'membership'} and track your impact.
+                  Set a password to manage your {isPartnerSignup ? "organization" : "membership"}{" "}
+                  and track your impact.
                 </p>
                 <form
                   onSubmit={(e) => {
@@ -402,11 +405,7 @@ function SignupPage() {
                 >
                   {isPartnerSignup && (
                     <Field label="Email Address">
-                      <input
-                        disabled
-                        value={email}
-                        className={inputCls + " opacity-60"}
-                      />
+                      <input disabled value={email} className={inputCls + " opacity-60"} />
                     </Field>
                   )}
                   <Field label="Password">
@@ -449,8 +448,7 @@ function SignupPage() {
                 <p className="mt-4 text-muted-foreground leading-relaxed max-w-sm mx-auto">
                   {isPartnerSignup
                     ? `Your organization account for ${partnerData?.organization_name} is ready.`
-                    : "Your monthly impact has started. Check your email for your receipt and account confirmation."
-                  }
+                    : "Your monthly impact has started. Check your email for your receipt and account confirmation."}
                 </p>
                 <button
                   onClick={() => navigate({ to: isPartnerSignup ? "/organization" : "/dashboard" })}

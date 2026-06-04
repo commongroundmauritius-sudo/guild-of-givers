@@ -94,7 +94,7 @@ export const updateReportStatus = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       id: uuidSchema,
-      status: z.enum(['pending', 'reviewing', 'approved', 'returned_for_revision']),
+      status: z.enum(["pending", "reviewing", "approved", "returned_for_revision"]),
       adminFeedback: z.string().max(1000).optional(),
     }),
   )
@@ -373,7 +373,7 @@ export const uploadReport = createServerFn({ method: "POST" })
       .single();
 
     if (profile?.organization_id !== data.organizationId) {
-       throw new Error("Unauthorized: You can only upload reports for your own organization");
+      throw new Error("Unauthorized: You can only upload reports for your own organization");
     }
 
     const { error } = await supabase.from("reports").insert({
