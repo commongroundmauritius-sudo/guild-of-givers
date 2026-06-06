@@ -16,6 +16,10 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Database } from "@/integrations/supabase/types";
+
+type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 
 export function NotificationBell() {
   const { user } = useAuth();
@@ -27,13 +31,13 @@ export function NotificationBell() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("notifications" as any)
+        .from("notifications")
         .select("*")
         .eq("user_id", user?.id as string)
         .order("created_at", { ascending: false })
         .limit(10);
       if (error) throw error;
-      return data as any[];
+      return data as Notification[];
     },
     // Polling for new notifications
     refetchInterval: 30000,
@@ -56,16 +60,28 @@ export function NotificationBell() {
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative rounded-xl hover:bg-muted">
-          <Bell className={cn("h-5 w-5", unreadCount > 0 && "text-primary fill-primary/10")} />
-          {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 rounded-full border-2 border-background animate-in zoom-in duration-300">
-              {unreadCount}
-            </Badge>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative rounded-xl hover:bg-muted"
+              aria-label="Notifications"
+            >
+              <Bell className={cn("h-5 w-5", unreadCount > 0 && "text-primary fill-primary/10")} />
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 rounded-full border-2 border-background animate-in zoom-in duration-300">
+                  {unreadCount}
+                </Badge>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Notifications</p>
+        </TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="end" className="w-80 rounded-2xl p-2 shadow-xl border-border/40">
         <div className="flex items-center justify-between px-3 py-2">
           <h3 className="font-semibold text-sm">Notifications</h3>
@@ -75,8 +91,14 @@ export function NotificationBell() {
               size="sm"
               className="h-8 text-xs text-primary hover:text-primary/80"
               onClick={() => markAllReadMutation.mutate()}
+              disabled={markAllReadMutation.isPending}
             >
-              <Check className="h-3.5 w-3.5 mr-1" /> Mark all read
+              {markAllReadMutation.isPending ? (
+                <RefreshCw className="h-3.5 w-3.5 mr-1 animate-spin" />
+              ) : (
+                <Check className="h-3.5 w-3.5 mr-1" />
+              )}
+              Mark all read
             </Button>
           )}
         </div>
@@ -113,7 +135,9 @@ export function NotificationBell() {
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-2">
-                    {((n as any).metadata as any)?.message || "Update on your account activity."}
+                    {n.metadata && typeof n.metadata === "object" && "message" in n.metadata
+                      ? (n.metadata as { message: string }).message
+                      : "Update on your account activity."}
                   </p>
                 </DropdownMenuItem>
               ))}
@@ -127,7 +151,7 @@ export function NotificationBell() {
         </div>
         <DropdownMenuSeparator className="my-1" />
         <Link
-          to={"/notifications" as any}
+          to="/notifications"
           className="w-full flex items-center justify-center py-2 text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
           onClick={() => setIsOpen(false)}
         >
