@@ -70,7 +70,12 @@ function LoginPage() {
             <label className="block">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Password</span>
-                <span className="text-xs text-muted-foreground">Forgot password?</span>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-primary underline-offset-4 hover:underline"
+                >
+                  Forgot password?
+                </Link>
               </div>
               <input
                 required
