@@ -31,6 +31,8 @@ interface AuthContextValue {
     metadata?: Record<string, unknown>,
   ) => Promise<{ error: Error | null; data?: unknown }>;
   signInWithGoogle: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
 }
@@ -147,6 +149,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
       return { error, data };
+    },
+    resetPassword: async (email) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo:
+          typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined,
+      });
+      return { error } as { error: Error | null };
+    },
+    updatePassword: async (password) => {
+      const { error } = await supabase.auth.updateUser({ password });
+      return { error } as { error: Error | null };
     },
     signInWithGoogle: async () => {
       await supabase.auth.signInWithOAuth({

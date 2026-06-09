@@ -1,0 +1,31 @@
+            <div className="px-4 pt-4 flex flex-col gap-3">
+              {user ? (
+                <button
+                  onClick={() => {
+                    signOut().then(() => navigate({ to: "/login" }));
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full border border-red-200 bg-red-50 px-5 py-3.5 text-sm font-bold text-red-600"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign out
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex w-full items-center justify-center rounded-full border border-input bg-background px-5 py-3.5 text-sm font-bold text-foreground"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground shadow-sm active:scale-[0.98] transition-transform"
+                  >
+                    Become a Member
+                  </Link>
+                </>
+              )}
+            </div>

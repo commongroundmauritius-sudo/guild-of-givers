@@ -129,6 +129,7 @@ export function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
+                    aria-label="Toggle menu"
                     className={cn(
                       "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary focus:outline-none",
                       isMoreActive ? "text-primary font-bold" : "text-foreground/80",
@@ -346,7 +347,7 @@ export function Header() {
               </>
             )}
 
-            <div className="px-4 pt-4">
+            <div className="px-4 pt-4 flex flex-col gap-3">
               {user ? (
                 <button
                   onClick={() => {
@@ -359,13 +360,22 @@ export function Header() {
                   Sign out
                 </button>
               ) : (
-                <Link
-                  to="/signup"
-                  onClick={() => setOpen(false)}
-                  className="inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground"
-                >
-                  Become a Member
-                </Link>
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex w-full items-center justify-center rounded-full border border-input bg-background px-5 py-3.5 text-sm font-bold text-foreground"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground shadow-sm active:scale-[0.98] transition-transform"
+                  >
+                    Become a Member
+                  </Link>
+                </>
               )}
             </div>
           </div>

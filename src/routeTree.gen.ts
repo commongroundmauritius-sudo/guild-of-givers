@@ -10,10 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LegalRouteImport } from './routes/legal'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ForOrgsRouteImport } from './routes/for-orgs'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as AboutRouteImport } from './routes/about'
@@ -55,6 +57,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PartnerRoute = PartnerRouteImport.update({
   id: '/partner',
   path: '/partner',
@@ -73,6 +80,11 @@ const LoginRoute = LoginRouteImport.update({
 const LegalRoute = LegalRouteImport.update({
   id: '/legal',
   path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForOrgsRoute = ForOrgsRouteImport.update({
@@ -279,10 +291,12 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/faq': typeof FaqRoute
   '/for-orgs': typeof ForOrgsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/partner': typeof PartnerRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -320,10 +334,12 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/faq': typeof FaqRoute
   '/for-orgs': typeof ForOrgsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/partner': typeof PartnerRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRouteWithChildren
@@ -362,10 +378,12 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/faq': typeof FaqRoute
   '/for-orgs': typeof ForOrgsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/partner': typeof PartnerRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -405,10 +423,12 @@ export interface FileRouteTypes {
     | '/about'
     | '/faq'
     | '/for-orgs'
+    | '/forgot-password'
     | '/legal'
     | '/login'
     | '/notifications'
     | '/partner'
+    | '/reset-password'
     | '/signup'
     | '/admin-dashboard'
     | '/dashboard'
@@ -446,10 +466,12 @@ export interface FileRouteTypes {
     | '/about'
     | '/faq'
     | '/for-orgs'
+    | '/forgot-password'
     | '/legal'
     | '/login'
     | '/notifications'
     | '/partner'
+    | '/reset-password'
     | '/signup'
     | '/dashboard'
     | '/member'
@@ -487,10 +509,12 @@ export interface FileRouteTypes {
     | '/about'
     | '/faq'
     | '/for-orgs'
+    | '/forgot-password'
     | '/legal'
     | '/login'
     | '/notifications'
     | '/partner'
+    | '/reset-password'
     | '/signup'
     | '/_authenticated/admin-dashboard'
     | '/_authenticated/dashboard'
@@ -530,10 +554,12 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   FaqRoute: typeof FaqRoute
   ForOrgsRoute: typeof ForOrgsRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LegalRoute: typeof LegalRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   PartnerRoute: typeof PartnerRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   EntitiesIdRoute: typeof EntitiesIdRoute
   InitiativesSlugRoute: typeof InitiativesSlugRoute
@@ -548,6 +574,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner': {
@@ -576,6 +609,13 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal'
       preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/for-orgs': {
@@ -946,10 +986,12 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   FaqRoute: FaqRoute,
   ForOrgsRoute: ForOrgsRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LegalRoute: LegalRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   PartnerRoute: PartnerRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   EntitiesIdRoute: EntitiesIdRoute,
   InitiativesSlugRoute: InitiativesSlugRoute,
