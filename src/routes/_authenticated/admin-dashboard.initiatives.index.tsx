@@ -216,7 +216,8 @@ function AdminInitiativesPage() {
                                 <DropdownMenuContent align="end" className="w-56 rounded-2xl">
                                   <DropdownMenuItem asChild>
                                     <Link
-                                      to={`/admin-dashboard/initiatives/${item.id}/manage`}
+                                      to="/admin-dashboard/initiatives/$id/manage"
+                                      params={{ id: item.id }}
                                       className="cursor-pointer"
                                     >
                                       <Settings className="h-4 w-4 mr-2" /> Manage Program

@@ -1,12 +1,18 @@
-import { Comment } from "@/lib/community";
-import { useComments, useCommentMutation, useCommunityRealtime } from "@/hooks/use-community";
+import { Comment, isWithinEditWindow } from "@/lib/community";
+import {
+  useComments,
+  useCommentMutation,
+  useCommentEditMutation,
+  useCommentDeleteMutation,
+  useCommunityRealtime,
+} from "@/hooks/use-community";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
-import { MessageSquare, Reply } from "lucide-react";
+import { MessageSquare, Reply, Pencil, Trash2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { commentSchema } from "@/lib/security/validators";
 
@@ -57,6 +63,10 @@ export function CommentSection({ postId }: CommentSectionProps) {
     );
   };
 
+  const editMutation = useCommentEditMutation(postId);
+  const deleteMutation = useCommentDeleteMutation(postId);
+  const isAdmin = role === "admin" || role === "super_admin";
+
   const mainComments = comments.filter((c) => !c.parent_comment_id);
   const getReplies = (parentId: string) => comments.filter((c) => c.parent_comment_id === parentId);
 
@@ -103,6 +113,23 @@ export function CommentSection({ postId }: CommentSectionProps) {
             replies={getReplies(comment.id)}
             onReply={setReplyTo}
             canReply={!!user}
+            currentUserId={user?.id ?? null}
+            isAdmin={isAdmin}
+            onEdit={(id, content) =>
+              editMutation.mutate(
+                { commentId: id, content },
+                {
+                  onSuccess: () => toast.success("Comment updated"),
+                  onError: (error: Error) => toast.error(error.message || "Failed to update"),
+                },
+              )
+            }
+            onDelete={(id) =>
+              deleteMutation.mutate(id, {
+                onSuccess: () => toast.success("Comment deleted"),
+                onError: (error: Error) => toast.error(error.message || "Failed to delete"),
+              })
+            }
           />
         ))}
         {mainComments.length === 0 && !isLoading && (
@@ -120,12 +147,27 @@ function CommentItem({
   replies,
   onReply,
   canReply,
+  currentUserId,
+  isAdmin,
+  onEdit,
+  onDelete,
 }: {
   comment: Comment;
   replies: Comment[];
   onReply: (id: string) => void;
   canReply: boolean;
+  currentUserId: string | null;
+  isAdmin: boolean;
+  onEdit: (id: string, content: string) => void;
+  onDelete: (id: string) => void;
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(comment.content);
+
+  const isOwner = !!currentUserId && currentUserId === comment.user_id;
+  const canEdit = isOwner && isWithinEditWindow(comment.created_at);
+  const canDelete = isOwner || isAdmin;
+
   return (
     <div className="space-y-4">
       <div className="flex gap-3">
@@ -140,17 +182,79 @@ function CommentItem({
               {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
             </span>
           </div>
-          <p className="text-sm text-foreground/90">{comment.content}</p>
-          {canReply && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto p-0 text-xs text-muted-foreground hover:text-primary"
-              onClick={() => onReply(comment.id)}
-            >
-              <Reply className="h-3 w-3 mr-1" />
-              Reply
-            </Button>
+
+          {isEditing ? (
+            <div className="space-y-2">
+              <Textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                className="min-h-[80px]"
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (!draft.trim()) return;
+                    onEdit(comment.id, draft.trim());
+                    setIsEditing(false);
+                  }}
+                >
+                  <Check className="h-3 w-3 mr-1" />
+                  Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setDraft(comment.content);
+                    setIsEditing(false);
+                  }}
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-foreground/90">{comment.content}</p>
+          )}
+
+          {!isEditing && (
+            <div className="flex items-center gap-3">
+              {canReply && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 text-xs text-muted-foreground hover:text-primary"
+                  onClick={() => onReply(comment.id)}
+                >
+                  <Reply className="h-3 w-3 mr-1" />
+                  Reply
+                </Button>
+              )}
+              {canEdit && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 text-xs text-muted-foreground hover:text-primary"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Pencil className="h-3 w-3 mr-1" />
+                  Edit
+                </Button>
+              )}
+              {canDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 text-xs text-muted-foreground hover:text-destructive"
+                  onClick={() => onDelete(comment.id)}
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Delete
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -164,6 +268,10 @@ function CommentItem({
               replies={[]}
               onReply={onReply}
               canReply={canReply}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           ))}
         </div>

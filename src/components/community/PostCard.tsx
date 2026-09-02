@@ -6,6 +6,7 @@ import { MessageSquare } from "lucide-react";
 import { ReactionButtons } from "./ReactionButtons";
 import { Link } from "@tanstack/react-router";
 import { sanitize } from "@/lib/security/sanitizeHtml";
+import { PostActions } from "./PostActions";
 
 interface PostCardProps {
   post: Post;
@@ -25,6 +26,9 @@ export function PostCard({ post }: PostCardProps) {
             {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
             {post.initiatives && ` • in ${post.initiatives.title}`}
           </span>
+        </div>
+        <div className="ml-auto">
+          <PostActions post={post} />
         </div>
       </CardHeader>
       <Link to="/community-hub/$postId" params={{ postId: post.id }} className="block">
