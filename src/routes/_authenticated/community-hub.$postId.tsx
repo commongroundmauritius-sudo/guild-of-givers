@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { PostActions } from "@/components/community/PostActions";
 
 export const Route = createFileRoute("/_authenticated/community-hub/$postId")({
   component: PostDetailPage,
@@ -94,10 +95,13 @@ function PostDetailPage() {
                   </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={handleShare}>
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleShare}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+                <PostActions post={post} redirectAfterDelete />
+              </div>
             </div>
 
             <h1 className="text-3xl font-bold leading-tight md:text-4xl">{post.title}</h1>

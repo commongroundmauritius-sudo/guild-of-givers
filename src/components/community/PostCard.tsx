@@ -6,6 +6,7 @@ import { MessageSquare } from "lucide-react";
 import { ReactionButtons } from "./ReactionButtons";
 import { Link } from "@tanstack/react-router";
 import { sanitize } from "@/lib/security/sanitizeHtml";
+import { PostActions } from "./PostActions";
 
 interface PostCardProps {
   post: Post;
