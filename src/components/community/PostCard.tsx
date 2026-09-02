@@ -26,6 +26,9 @@ export function PostCard({ post }: PostCardProps) {
             {post.initiatives && ` • in ${post.initiatives.title}`}
           </span>
         </div>
+        <div className="ml-auto">
+          <PostActions post={post} />
+        </div>
       </CardHeader>
       <Link to="/community-hub/$postId" params={{ postId: post.id }} className="block">
         <CardContent className="p-4 pt-0 space-y-3">
