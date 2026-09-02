@@ -149,3 +149,44 @@ export async function toggleReaction(postId: string, userId: string, reactionTyp
     });
   }
 }
+
+// --- Edit / delete window helpers -------------------------------------------------
+
+export const EDIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+export function isWithinEditWindow(createdAt: string) {
+  return Date.now() - new Date(createdAt).getTime() <= EDIT_WINDOW_MS;
+}
+
+export function editWindowRemaining(createdAt: string) {
+  return Math.max(0, EDIT_WINDOW_MS - (Date.now() - new Date(createdAt).getTime()));
+}
+
+export async function updatePost(
+  postId: string,
+  values: { title: string; content: string },
+) {
+  const { error } = await supabase.from("community_posts").update(values).eq("id", postId);
+  if (error) throw error;
+}
+
+export async function deletePost(postId: string) {
+  const { error } = await supabase
+    .from("community_posts")
+    .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+    .eq("id", postId);
+  if (error) throw error;
+}
+
+export async function updateComment(commentId: string, content: string) {
+  const { error } = await supabase.from("post_comments").update({ content }).eq("id", commentId);
+  if (error) throw error;
+}
+
+export async function deleteComment(commentId: string) {
+  const { error } = await supabase
+    .from("post_comments")
+    .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+    .eq("id", commentId);
+  if (error) throw error;
+}

@@ -110,3 +110,52 @@ export function useReactionMutation(postId: string) {
     },
   });
 }
+
+export function usePostEditMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      postId,
+      values,
+    }: {
+      postId: string;
+      values: { title: string; content: string };
+    }) => updatePost(postId, values),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["post", variables.postId] });
+    },
+  });
+}
+
+export function usePostDeleteMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (postId: string) => deletePost(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
+}
+
+export function useCommentEditMutation(postId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId, content }: { commentId: string; content: string }) =>
+      updateComment(commentId, content),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+    },
+  });
+}
+
+export function useCommentDeleteMutation(postId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (commentId: string) => deleteComment(commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
+}
