@@ -1,355 +1,565 @@
-import { isUUID } from "@/lib/identifiers";
-import { SiteLayout } from "@/components/site/SiteLayout";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useEffect, useState } from 'react';
+import { useParams } from '@tanstack/react-router';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import {
-  ArrowRight,
-  ShieldCheck,
-  FileText,
-  ExternalLink,
-  CheckCircle2,
-  AlertCircle,
+  Edit,
+  X,
+  Loader,
   Mail,
   Phone,
-  CheckCircle,
+  Globe,
   Facebook,
-  Instagram,
   Linkedin,
-} from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "sonner";
-import { updateReportStatus } from "@/lib/security/auth-actions";
-import { format } from "date-fns";
-export function OrganizationProfile({ organization }) {
-  const hasWebsite = Boolean(organization.website_url && organization.website_url.trim() !== '');
-  const socialLinks = organization.transparency_content?.social_links || {};
+  Instagram,
+  CheckCircle,
+} from 'lucide-react';
+import { toast } from 'sonner';
 
-  return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* 1. Official Page Banner (Only shown when website_url is absent) */}
-      {!hasWebsite && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 rounded-xl mb-6 flex items-center gap-2.5 text-sm font-medium shadow-sm">
-          <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0" />
-          <span>This is {organization.organization_name}'s official page on CommonGround</span>
-        </div>
-      )}
-
-      {/* Header Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{organization.organization_name}</h1>
-          <p className="text-gray-600 mt-1">{organization.description}</p>
-        </div>
-
-        {/* 2. Action Area: Visit Website OR Contact & Socials */}
-        <div className="flex flex-wrap items-center gap-3">
-          {hasWebsite ? (
-            /* ONLY render Visit Website button if website_url exists & is non-empty */
-            <a
-              href={organization.website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-800 text-white rounded-lg hover:bg-emerald-900 text-sm font-medium transition shadow-sm"
-            >
-              <span>Visit Website</span>
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          ) : (
-            /* Fallback Space when website_url is absent */
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/* Verified Organization Badge */}
-              {organization.is_verified && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" />
-                  Verified Organization
-                </span>
-              )}
-
-              {/* Clickable Email */}
-              {organization.contact_email && (
-                <a
-                  href={`mailto:${organization.contact_email}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-xs font-medium transition"
-                >
-                  <Mail className="w-4 h-4 text-gray-600" />
-                  {organization.contact_email}
-                </a>
-              )}
-
-              {/* Clickable Phone */}
-              {organization.contact_phone && (
-                <a
-                  href={`tel:${organization.contact_phone}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-xs font-medium transition"
-                >
-                  <Phone className="w-4 h-4 text-gray-600" />
-                  {organization.contact_phone}
-                </a>
-              )}
-
-              {/* Social Media Links */}
-              {socialLinks.facebook && (
-                <a href={socialLinks.facebook} target="_blank" rel="noreferrer" className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition">
-                  <Facebook className="w-4 h-4" />
-                </a>
-              )}
-              {socialLinks.instagram && (
-                <a href={socialLinks.instagram} target="_blank" rel="noreferrer" className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition">
-                  <Instagram className="w-4 h-4" />
-                </a>
-              )}
-              {socialLinks.linkedin && (
-                <a href={socialLinks.linkedin} target="_blank" rel="noreferrer" className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition">
-                  <Linkedin className="w-4 h-4" />
-                </a>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 3. Fully Populated Sections */}
-      <div className="mt-8 space-y-8">
-        {/* Mission Statement & Description */}
-        <section className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-3">Our Mission</h2>
-          <p className="text-gray-700 leading-relaxed">{organization.mission}</p>
-        </section>
-      </div>
-    </div>
-  );
+interface Organization {
+  id: string;
+  organization_name: string;
+  description: string | null;
+  logo_url: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  website_url: string | null;
+  is_verified: boolean;
+  owner_user_id: string | null;
+  transparency_content: {
+    social_links?: {
+      facebook?: string;
+      instagram?: string;
+      linkedin?: string;
+    };
+  } | null;
 }
 
-export const Route = createFileRoute("/entities/$id")({
-  component: OrganizationProfilePage,
-});
+interface FormData {
+  organization_name: string;
+  description: string;
+  logo_url: string;
+  contact_email: string;
+  contact_phone: string;
+  website_url: string;
+  is_verified: boolean;
+  facebook: string;
+  instagram: string;
+  linkedin: string;
+}
 
-function OrganizationProfilePage() {
-  const { id } = Route.useParams();
-  const { role } = useAuth();
-  const queryClient = useQueryClient();
-  const isAdmin = role === "admin" || role === "super_admin";
+export function Route() {
+  const { id } = useParams({ from: '/entities/$id' });
+  const { user, userRole } = useAuth();
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    organization_name: '',
+    description: '',
+    logo_url: '',
+    contact_email: '',
+    contact_phone: '',
+    website_url: '',
+    is_verified: false,
+    facebook: '',
+    instagram: '',
+    linkedin: '',
+  });
 
-  const { data: organization, isLoading } = useQuery({
-    queryKey: ["organization", id],
-    queryFn: async () => {
-      if (!isUUID(id)) return null;
-      const { data, error } = await supabase
-        .from("organizations")
-        .select("*, initiatives(*), reports(*)")
-        .eq("id", id)
-        .maybeSingle();
+  // Load organization data
+  useEffect(() => {
+    async function loadOrganization() {
+      try {
+        const { data, error } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setOrganization(data as Organization);
+          setFormData({
+            organization_name: data.organization_name || '',
+            description: data.description || '',
+            logo_url: data.logo_url || '',
+            contact_email: data.contact_email || '',
+            contact_phone: data.contact_phone || '',
+            website_url: data.website_url || '',
+            is_verified: data.is_verified || false,
+            facebook: data.transparency_content?.social_links?.facebook || '',
+            instagram: data.transparency_content?.social_links?.instagram || '',
+            linkedin: data.transparency_content?.social_links?.linkedin || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error loading organization:', error);
+        toast.error('Failed to load organization');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (id) {
+      loadOrganization();
+    }
+  }, [id]);
+
+  // Determine if user can edit
+  const isAdmin =
+    userRole === 'admin' || userRole === 'super_admin';
+  const isOwner =
+    user?.id && organization?.owner_user_id && user.id === organization.owner_user_id;
+  const canEdit = isAdmin || isOwner;
+
+  // Handle form submission
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!organization) return;
+
+    try {
+      setIsSaving(true);
+
+      const updatePayload: any = {
+        organization_name: formData.organization_name,
+        description: formData.description || null,
+        logo_url: formData.logo_url || null,
+        contact_email: formData.contact_email || null,
+        contact_phone: formData.contact_phone || null,
+        website_url: formData.website_url || null,
+        transparency_content: {
+          ...(organization.transparency_content || {}),
+          social_links: {
+            facebook: formData.facebook || null,
+            instagram: formData.instagram || null,
+            linkedin: formData.linkedin || null,
+          },
+        },
+      };
+
+      // Only include is_verified if user is admin
+      if (isAdmin) {
+        updatePayload.is_verified = formData.is_verified;
+      }
+
+      const { error } = await supabase
+        .from('organizations')
+        .update(updatePayload)
+        .eq('id', organization.id);
+
       if (error) throw error;
-      return data;
-    },
-  });
 
-  const updateReportMutation = useMutation({
-    mutationFn: async ({ reportId, status }: { reportId: string; status: any }) => {
-      await updateReportStatus({ data: { id: reportId, status } });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["organization", id] });
-      toast.success("Report status updated");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
+      toast.success('Organization profile updated successfully');
+      setIsEditing(false);
 
-  if (isLoading) {
+      // Refresh organization data
+      const { data } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', organization.id)
+        .single();
+
+      if (data) {
+        setOrganization(data as Organization);
+      }
+    } catch (error) {
+      console.error('Error saving organization:', error);
+      toast.error('Failed to save changes');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <SiteLayout>
-        <div className="p-24">
-          <Skeleton className="h-64 w-full rounded-3xl" />
+      <div className="max-w-5xl mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader className="w-8 h-8 text-emerald-800 animate-spin" />
+          <p className="text-gray-600">Loading organization...</p>
         </div>
-      </SiteLayout>
+      </div>
     );
   }
 
   if (!organization) {
     return (
-      <SiteLayout>
-        <div className="p-24 text-center">
-          <h2 className="text-2xl font-bold">Organization not found</h2>
-          <Link to="/" className="text-primary hover:underline mt-4 block">
-            Return home
-          </Link>
-        </div>
-      </SiteLayout>
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <p className="text-center text-gray-600">Organization not found</p>
+      </div>
     );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-50 text-green-700 border-green-100";
-      case "reviewing":
-        return "bg-blue-50 text-blue-700 border-blue-100";
-      case "returned_for_revision":
-        return "bg-amber-50 text-amber-700 border-amber-100";
-      default:
-        return "bg-slate-50 text-slate-700 border-slate-100";
-    }
-  };
-
   return (
-    <SiteLayout>
-      <div className="mx-auto max-w-7xl px-4 py-20">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-          <div className="flex items-center gap-6">
-            <div className="h-24 w-24 rounded-3xl bg-muted flex items-center justify-center border border-border/40 shrink-0">
-              {organization.logo_url ? (
-                <img
-                  src={organization.logo_url}
-                  className="h-full w-full object-cover rounded-3xl"
-                  alt=""
-                />
-              ) : (
-                <FileText className="h-10 w-10 text-muted-foreground" />
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      {/* Header Section */}
+      <div className="flex items-start justify-between mb-8">
+        <div className="flex items-start gap-4">
+          {organization.logo_url ? (
+            <img
+              src={organization.logo_url}
+              alt={organization.organization_name}
+              className="w-20 h-20 rounded-full object-cover border border-gray-200"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+              <span className="text-gray-400 text-sm font-bold">
+                {organization.organization_name.slice(0, 2).toUpperCase()}
+              </span>
+            </div>
+          )}
+
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-900">
+                {organization.organization_name}
+              </h1>
+              {organization.is_verified && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-800 text-xs font-semibold rounded-full">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  Verified
+                </span>
               )}
             </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="font-display text-4xl font-bold">
-                  {organization.organization_name}
-                </h1>
-                {organization.is_verified && (
-                  <span
-                    className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold border border-indigo-100 shadow-sm"
-                    title="Verified & Vetted Organization"
-                  >
-                    <ShieldCheck className="h-4 w-4" /> Vetted
-                  </span>
-                )}
-              </div>
-              <p className="text-muted-foreground mt-2 max-w-2xl">{organization.description}</p>
-            </div>
           </div>
-
-          {organization.website_url && (
-            <Button asChild variant="outline" className="rounded-full px-8">
-              <a href={organization.website_url} target="_blank" rel="noopener noreferrer">
-                Visit Website <ExternalLink className="ml-2 h-4 w-4" />
-              </a>
-            </Button>
-          )}
         </div>
 
-        {/* Initiatives Section */}
-        <h2 className="font-display text-2xl font-bold mb-8">Active Initiatives</h2>
-        <div className="grid gap-8 lg:grid-cols-2">
-          {organization.initiatives
-            ?.filter((i: any) => i.is_published)
-            .map((i: any) => (
-              <Link
-                key={i.id}
-                to="/initiatives/$slug"
-                params={{ slug: i.slug || i.id }}
-                className="block rounded-[2.5rem] border border-border/40 p-8 hover:border-primary/40 transition group bg-white shadow-sm"
-              >
-                <h3 className="font-display text-2xl font-bold group-hover:text-primary transition-colors">
-                  {i.title}
-                </h3>
-                <p className="mt-2 text-muted-foreground line-clamp-2">{i.summary}</p>
-                <div className="mt-8 flex items-center justify-between border-t border-border/40 pt-6">
-                  <span className="font-bold text-lg">
-                    Rs {Number(i.current_amount_mur).toLocaleString()} raised
-                  </span>
-                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                </div>
-              </Link>
-            ))}
+        {/* Edit Button - Only for Admin or Assigned Owner */}
+        {canEdit && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 text-sm font-medium transition-colors"
+          >
+            <Edit className="w-4 h-4" />
+            Edit Profile
+          </button>
+        )}
+      </div>
+
+      {/* Organization Details */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-8 space-y-6">
+        {/* Description */}
+        {organization.description && (
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">About</h2>
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+              {organization.description}
+            </p>
+          </div>
+        )}
+
+        {/* Contact Information */}
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Contact</h2>
+          <div className="space-y-3">
+            {organization.contact_email && (
+              <div className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-gray-400" />
+                <a
+                  href={`mailto:${organization.contact_email}`}
+                  className="text-emerald-800 hover:text-emerald-900"
+                >
+                  {organization.contact_email}
+                </a>
+              </div>
+            )}
+            {organization.contact_phone && (
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-gray-400" />
+                <a
+                  href={`tel:${organization.contact_phone}`}
+                  className="text-emerald-800 hover:text-emerald-900"
+                >
+                  {organization.contact_phone}
+                </a>
+              </div>
+            )}
+            {organization.website_url && (
+              <div className="flex items-center gap-3">
+                <Globe className="w-5 h-5 text-gray-400" />
+                <a
+                  href={organization.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-800 hover:text-emerald-900"
+                >
+                  {organization.website_url}
+                </a>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Admin Reports Section */}
-        {isAdmin && (
-          <div className="mt-24 pt-20 border-t border-border/40">
-            <div className="flex items-center gap-3 mb-8">
-              <FileText className="h-6 w-6 text-indigo-600" />
-              <h2 className="font-display text-2xl font-bold">Organization Reports (Admin)</h2>
-            </div>
-
-            <div className="grid gap-4">
-              {organization.reports?.length > 0 ? (
-                organization.reports.map((report: any) => (
-                  <Card key={report.id} className="rounded-3xl border-border/40">
-                    <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-                          <FileText className="h-5 w-5 text-indigo-500" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-primary">{report.title}</h4>
-                          <p className="text-xs text-muted-foreground">
-                            Submitted {format(new Date(report.created_at), "MMM d, yyyy")}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(report.status)}`}
-                        >
-                          {report.status.replace(/_/g, " ")}
-                        </span>
-
-                        <div className="flex gap-2">
-                          {report.status !== "approved" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="rounded-full border-green-200 text-green-700 hover:bg-green-50"
-                              onClick={() =>
-                                updateReportMutation.mutate({
-                                  reportId: report.id,
-                                  status: "approved",
-                                })
-                              }
-                            >
-                              <CheckCircle2 className="h-4 w-4 mr-1" /> Approve
-                            </Button>
-                          )}
-                          {report.status !== "returned_for_revision" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="rounded-full border-amber-200 text-amber-700 hover:bg-amber-50"
-                              onClick={() =>
-                                updateReportMutation.mutate({
-                                  reportId: report.id,
-                                  status: "returned_for_revision",
-                                })
-                              }
-                            >
-                              <AlertCircle className="h-4 w-4 mr-1" /> Return
-                            </Button>
-                          )}
-                          <Button size="sm" variant="ghost" className="rounded-full" asChild>
-                            <a href={report.file_url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4 mr-1" /> View
-                            </a>
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <div className="text-center py-12 bg-muted/20 rounded-[2rem] border border-dashed border-border/60">
-                  <p className="text-muted-foreground">No reports found for this organization.</p>
-                </div>
+        {/* Social Links */}
+        {(formData.facebook || formData.instagram || formData.linkedin) && (
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Follow Us</h2>
+            <div className="flex gap-4">
+              {formData.facebook && (
+                <a
+                  href={formData.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-gray-900"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="w-6 h-6" />
+                </a>
+              )}
+              {formData.instagram && (
+                <a
+                  href={formData.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-gray-900"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-6 h-6" />
+                </a>
+              )}
+              {formData.linkedin && (
+                <a
+                  href={formData.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-gray-900"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin className="w-6 h-6" />
+                </a>
               )}
             </div>
           </div>
         )}
       </div>
-    </SiteLayout>
+
+      {/* Edit Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">
+                Edit Organization Profile
+              </h2>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="p-1 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSave} className="space-y-4">
+              {/* Organization Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Organization Name *
+                </label>
+                <input
+                  type="text"
+                  value={formData.organization_name}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      organization_name: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Logo URL */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Logo URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.logo_url}
+                  onChange={(e) =>
+                    setFormData({ ...formData, logo_url: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="https://..."
+                />
+              </div>
+
+              {/* Contact Information Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Contact Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.contact_email}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        contact_email: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Contact Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.contact_phone}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        contact_phone: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Website URL */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Website URL (Optional)
+                </label>
+                <input
+                  type="url"
+                  value={formData.website_url}
+                  onChange={(e) =>
+                    setFormData({ ...formData, website_url: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="https://..."
+                />
+              </div>
+
+              {/* Social Links */}
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                  Social Links (Optional)
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Facebook
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.facebook}
+                      onChange={(e) =>
+                        setFormData({ ...formData, facebook: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                      placeholder="https://facebook.com/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Instagram
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.instagram}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          instagram: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                      placeholder="https://instagram.com/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      LinkedIn
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.linkedin}
+                      onChange={(e) =>
+                        setFormData({ ...formData, linkedin: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                      placeholder="https://linkedin.com/..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Admin Only: Verification Toggle */}
+              {isAdmin && (
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="is_verified"
+                      checked={formData.is_verified}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          is_verified: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                    />
+                    <label
+                      htmlFor="is_verified"
+                      className="text-sm font-medium text-gray-900"
+                    >
+                      Verified Organization
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1 ml-7">
+                    Only administrators can change verification status
+                  </p>
+                </div>
+              )}
+
+              {/* Form Actions */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-emerald-800 text-white rounded-lg hover:bg-emerald-900 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors inline-flex items-center gap-2"
+                >
+                  {isSaving && <Loader className="w-4 h-4 animate-spin" />}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
