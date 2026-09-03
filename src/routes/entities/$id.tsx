@@ -19,8 +19,14 @@ import {
   Target,
   ArrowRight,
   ShieldCheck,
+  Award,
+  FileText,
+  DollarSign,
+  Layers,
+  Activity,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { sanitize } from '@/lib/security/sanitizeHtml';
 
 interface Organization {
   id: string;
@@ -35,14 +41,16 @@ interface Organization {
   contact_phone: string | null;
   website_url: string | null;
   is_verified: boolean;
+  status: string | null;
   owner_user_id: string | null;
-  transparency_content: {
-    social_links?: {
-      facebook?: string;
-      instagram?: string;
-      linkedin?: string;
-    };
-  } | null;
+  impact_metrics: string | null;
+  milestones: string | null;
+  expected_outcomes: string | null;
+  transparency_content: any;
+  allocation_summary: string | null;
+  monthly_target_amount: number | null;
+  current_collected_amount: number | null;
+  supporters_count: number | null;
 }
 
 interface Initiative {
@@ -61,6 +69,7 @@ interface FormData {
   organization_name: string;
   description: string;
   category: string;
+  status: string;
   mission: string;
   goals: string;
   address: string;
@@ -69,6 +78,11 @@ interface FormData {
   contact_phone: string;
   website_url: string;
   is_verified: boolean;
+  monthly_target_amount: string;
+  impact_metrics: string;
+  milestones: string;
+  expected_outcomes: string;
+  allocation_summary: string;
   facebook: string;
   instagram: string;
   linkedin: string;
@@ -90,6 +104,7 @@ function OrganizationProfilePage() {
     organization_name: '',
     description: '',
     category: '',
+    status: 'active',
     mission: '',
     goals: '',
     address: '',
@@ -98,6 +113,11 @@ function OrganizationProfilePage() {
     contact_phone: '',
     website_url: '',
     is_verified: false,
+    monthly_target_amount: '0',
+    impact_metrics: '',
+    milestones: '',
+    expected_outcomes: '',
+    allocation_summary: '',
     facebook: '',
     instagram: '',
     linkedin: '',
@@ -123,6 +143,7 @@ function OrganizationProfilePage() {
             organization_name: orgData.organization_name || '',
             description: orgData.description || '',
             category: orgData.category || '',
+            status: orgData.status || 'active',
             mission: orgData.mission || '',
             goals: orgData.goals || '',
             address: orgData.address || '',
@@ -131,6 +152,13 @@ function OrganizationProfilePage() {
             contact_phone: orgData.contact_phone || '',
             website_url: orgData.website_url || '',
             is_verified: orgData.is_verified || false,
+            monthly_target_amount: orgData.monthly_target_amount
+              ? String(orgData.monthly_target_amount)
+              : '0',
+            impact_metrics: orgData.impact_metrics || '',
+            milestones: orgData.milestones || '',
+            expected_outcomes: orgData.expected_outcomes || '',
+            allocation_summary: orgData.allocation_summary || '',
             facebook: orgData.transparency_content?.social_links?.facebook || '',
             instagram: orgData.transparency_content?.social_links?.instagram || '',
             linkedin: orgData.transparency_content?.social_links?.linkedin || '',
@@ -178,28 +206,36 @@ function OrganizationProfilePage() {
       setIsSaving(true);
 
       const updatePayload: any = {
-        organization_name: formData.organization_name,
-        description: formData.description || null,
-        category: formData.category || null,
-        mission: formData.mission || null,
-        goals: formData.goals || null,
-        address: formData.address || null,
-        logo_url: formData.logo_url || null,
-        contact_email: formData.contact_email || null,
-        contact_phone: formData.contact_phone || null,
-        website_url: formData.website_url || null,
+        organization_name: sanitize(formData.organization_name),
+        description: formData.description ? sanitize(formData.description) : null,
+        category: formData.category ? sanitize(formData.category) : null,
+        mission: formData.mission ? sanitize(formData.mission) : null,
+        goals: formData.goals ? sanitize(formData.goals) : null,
+        address: formData.address ? sanitize(formData.address) : null,
+        logo_url: formData.logo_url ? sanitize(formData.logo_url) : null,
+        contact_email: formData.contact_email ? sanitize(formData.contact_email) : null,
+        contact_phone: formData.contact_phone ? sanitize(formData.contact_phone) : null,
+        website_url: formData.website_url ? sanitize(formData.website_url) : null,
+        impact_metrics: formData.impact_metrics ? sanitize(formData.impact_metrics) : null,
+        milestones: formData.milestones ? sanitize(formData.milestones) : null,
+        expected_outcomes: formData.expected_outcomes ? sanitize(formData.expected_outcomes) : null,
+        allocation_summary: formData.allocation_summary ? sanitize(formData.allocation_summary) : null,
+        monthly_target_amount: parseFloat(formData.monthly_target_amount) || 0,
         transparency_content: {
-          ...(organization.transparency_content || {}),
+          ...(typeof organization.transparency_content === 'object' && organization.transparency_content !== null
+            ? organization.transparency_content
+            : {}),
           social_links: {
-            facebook: formData.facebook || null,
-            instagram: formData.instagram || null,
-            linkedin: formData.linkedin || null,
+            facebook: formData.facebook ? sanitize(formData.facebook) : null,
+            instagram: formData.instagram ? sanitize(formData.instagram) : null,
+            linkedin: formData.linkedin ? sanitize(formData.linkedin) : null,
           },
         },
       };
 
       if (isAdmin) {
         updatePayload.is_verified = formData.is_verified;
+        updatePayload.status = formData.status;
       }
 
       const { error } = await supabase
@@ -222,9 +258,9 @@ function OrganizationProfilePage() {
       if (data) {
         setOrganization(data as Organization);
       }
-    } catch (error) {
-      console.error('Error saving organization:', error);
-      toast.error('Failed to save changes');
+    } catch (error: any) {
+      console.error('Error updating organization:', error);
+      toast.error(error.message || 'Failed to update organization profile');
     } finally {
       setIsSaving(false);
     }
@@ -233,11 +269,8 @@ function OrganizationProfilePage() {
   if (loading) {
     return (
       <SiteLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 flex items-center justify-center min-h-[50vh]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-muted-foreground">Loading organization profile...</p>
-          </div>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader className="w-8 h-8 animate-spin text-primary" />
         </div>
       </SiteLayout>
     );
@@ -246,311 +279,314 @@ function OrganizationProfilePage() {
   if (!organization) {
     return (
       <SiteLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <Building2 className="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
-          <h1 className="font-display text-3xl font-bold text-primary">Organization Not Found</h1>
-          <p className="mt-2 text-muted-foreground">
-            The page you are looking for does not exist or is not publicly accessible.
+        <div className="container mx-auto px-4 py-16 text-center">
+          <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-primary mb-2">Organization Not Found</h1>
+          <p className="text-muted-foreground mb-6">
+            The entity profile you are looking for does not exist or has been removed.
           </p>
-          <div className="mt-6">
-            <Link
-              to="/entities"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-primary/90 transition-colors"
-            >
-              Browse Organizations
-            </Link>
-          </div>
+          <Link
+            to="/admin-dashboard/organizations"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full hover:bg-primary/90 font-bold"
+          >
+            Back to Registry
+          </Link>
         </div>
       </SiteLayout>
     );
   }
 
+  const socialLinks = organization.transparency_content?.social_links || {};
+
   return (
     <SiteLayout>
-      <div className="bg-white pb-24">
-        {/* Banner / Header Section */}
-        <div className="relative bg-muted/40 border-b border-border/40 py-12 sm:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="flex items-start sm:items-center gap-6">
-                <div className="h-24 w-24 sm:h-28 sm:w-28 shrink-0 overflow-hidden rounded-3xl border-4 border-white shadow-xl bg-white flex items-center justify-center">
-                  {organization.logo_url ? (
-                    <img
-                      src={organization.logo_url}
-                      alt={organization.organization_name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-primary text-white text-3xl font-bold">
-                      {organization.organization_name.charAt(0)}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-primary">
-                      {organization.organization_name}
-                    </h1>
-                    {organization.is_verified && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-forest/10 text-forest text-xs font-bold rounded-full">
-                        <CheckCircle className="w-3.5 h-3.5 text-forest" />
-                        Verified Partner
-                      </span>
-                    )}
-                  </div>
-
-                  {organization.category && (
-                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                      {organization.category}
-                    </p>
-                  )}
-
-                  {organization.address && (
-                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4 text-primary/60 shrink-0" />
-                      {organization.address}
-                    </p>
-                  )}
-                </div>
+      <div className="min-h-screen bg-muted/20 pb-20">
+        {/* Header Hero Banner */}
+        <div className="bg-primary text-white pt-12 pb-20 px-4 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 p-2 flex items-center justify-center shrink-0">
+                {organization.logo_url ? (
+                  <img
+                    src={organization.logo_url}
+                    alt={organization.organization_name}
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                ) : (
+                  <Building2 className="w-12 h-12 text-white/80" />
+                )}
               </div>
-
-              {canEdit && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-full hover:bg-primary/90 text-sm font-bold transition-all shadow-md"
-                >
-                  <Edit className="w-4 h-4" />
-                  Edit Organization Profile
-                </button>
-              )}
+              <div>
+                <div className="flex items-center gap-3 flex-wrap mb-2">
+                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold uppercase tracking-wider text-white/90">
+                    {organization.category || 'Non-Profit Partner'}
+                  </span>
+                  {organization.is_verified && (
+                    <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full text-xs font-bold uppercase tracking-wider">
+                      <ShieldCheck className="w-4 h-4" /> Vetted Partner
+                    </span>
+                  )}
+                  {isAdmin && (
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                      organization.status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+                    }`}>
+                      Status: {organization.status || 'active'}
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-3xl md:text-5xl font-bold font-display">
+                  {organization.organization_name}
+                </h1>
+                {organization.address && (
+                  <p className="flex items-center gap-2 text-white/80 text-sm mt-2">
+                    <MapPin className="w-4 h-4" /> {organization.address}
+                  </p>
+                )}
+              </div>
             </div>
+
+            {canEdit && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-6 py-3 bg-white text-primary rounded-full hover:bg-white/90 font-bold flex items-center gap-2 transition-all shadow-lg shrink-0"
+              >
+                <Edit className="w-4 h-4" /> {isAdmin ? 'Admin Edit Profile' : 'Edit Profile'}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Main Content Body */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Left Column: Organization Story, Mission, & Child Initiatives */}
-            <div className="lg:col-span-2 space-y-12">
-              {/* Mission Statement */}
-              {organization.mission && (
-                <div className="rounded-[2.5rem] bg-forest/5 border border-forest/10 p-8 sm:p-10">
-                  <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-forest mb-4">
-                    <Target className="w-4 h-4" /> Our Mission
-                  </h2>
-                  <p className="text-lg leading-relaxed text-forest/90 font-medium whitespace-pre-wrap">
-                    {organization.mission}
-                  </p>
-                </div>
-              )}
-
-              {/* About / Description */}
-              {organization.description && (
-                <div className="space-y-4">
-                  <h2 className="font-display text-2xl font-bold text-primary">About {organization.organization_name}</h2>
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap text-base">
-                    {organization.description}
-                  </p>
-                </div>
-              )}
-
-              {/* Strategic Goals */}
-              {organization.goals && (
-                <div className="space-y-4">
-                  <h2 className="font-display text-2xl font-bold text-primary">Strategic Goals</h2>
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap text-base">
-                    {organization.goals}
-                  </p>
-                </div>
-              )}
-
-              {/* Child Initiatives Section */}
-              <div className="space-y-6 pt-6 border-t border-border/40">
-                <div className="flex items-center justify-between">
+        {/* Main Content Layout */}
+        <div className="max-w-7xl mx-auto px-4 -mt-10 relative z-20">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left/Middle Column (Primary Details) */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Mission & About */}
+              <div className="bg-white rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                {organization.mission && (
                   <div>
-                    <h2 className="font-display text-2xl sm:text-3xl font-bold text-primary">
-                      Initiatives & Programs
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
+                      <Target className="w-4 h-4" /> Mission Statement
                     </h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Active projects spearheaded by {organization.organization_name}
+                    <p className="text-lg font-medium text-foreground/90 italic leading-relaxed">
+                      "{organization.mission}"
                     </p>
                   </div>
-                  <span className="rounded-full bg-primary/10 text-primary font-bold text-xs px-3 py-1">
-                    {initiatives.length} {initiatives.length === 1 ? 'Initiative' : 'Initiatives'}
-                  </span>
+                )}
+
+                <div>
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-primary mb-3">
+                    About the Organization
+                  </h2>
+                  <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+                    {organization.description || 'No description provided.'}
+                  </p>
                 </div>
 
-                {initiatives.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-border/60 p-8 text-center bg-muted/20">
-                    <p className="text-muted-foreground text-sm">
-                      No active initiatives published yet for this organization.
+                {organization.goals && (
+                  <div className="pt-4 border-t border-border/40">
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
+                      <Award className="w-4 h-4" /> Strategic Goals
+                    </h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                      {organization.goals}
                     </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Impact Metrics & Outcomes */}
+              {(organization.impact_metrics || organization.milestones || organization.expected_outcomes || organization.allocation_summary) && (
+                <div className="bg-white rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                  <h2 className="text-lg font-bold text-primary flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-indigo-500" /> Organizational Impact & Operations
+                  </h2>
+
+                  {organization.impact_metrics && (
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-1">
+                        Impact Metrics
+                      </h3>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">
+                        {organization.impact_metrics}
+                      </p>
+                    </div>
+                  )}
+
+                  {organization.milestones && (
+                    <div className="pt-4 border-t border-border/40">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-1">
+                        Key Milestones
+                      </h3>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">
+                        {organization.milestones}
+                      </p>
+                    </div>
+                  )}
+
+                  {organization.expected_outcomes && (
+                    <div className="pt-4 border-t border-border/40">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-1">
+                        Expected Outcomes
+                      </h3>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">
+                        {organization.expected_outcomes}
+                      </p>
+                    </div>
+                  )}
+
+                  {organization.allocation_summary && (
+                    <div className="pt-4 border-t border-border/40">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-1">
+                        Fund Allocation Summary
+                      </h3>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">
+                        {organization.allocation_summary}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Active Child Initiatives */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold font-display text-primary">
+                    Active Initiatives ({initiatives.length})
+                  </h2>
+                </div>
+
+                {initiatives.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {initiatives.map((init) => (
+                      <Link
+                        key={init.id}
+                        to="/initiatives/$slug"
+                        params={{ slug: init.slug }}
+                        className="bg-white rounded-3xl p-6 border border-border/50 hover:border-primary/40 transition-all group block shadow-sm"
+                      >
+                        <div className="h-40 rounded-2xl bg-muted overflow-hidden mb-4 relative">
+                          {init.image_url ? (
+                            <img
+                              src={init.image_url}
+                              alt={init.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                              <Building2 className="w-8 h-8" />
+                            </div>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-primary text-lg mb-2 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                          {init.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mb-4 h-8">
+                          {init.description}
+                        </p>
+
+                        <div className="flex items-center justify-between text-xs font-bold text-primary pt-2 border-t border-border/40">
+                          <span>
+                            MUR {(init.current_amount_mur || 0).toLocaleString()} raised
+                          </span>
+                          <span className="flex items-center gap-1 text-indigo-600">
+                            View <ArrowRight className="w-3 h-3" />
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {initiatives.map((init) => {
-                      const progress =
-                        init.goal_amount_mur > 0
-                          ? (init.current_amount_mur / init.goal_amount_mur) * 100
-                          : 0;
-
-                      return (
-                        <div
-                          key={init.id}
-                          className="group flex flex-col justify-between rounded-3xl border border-border/40 bg-card overflow-hidden shadow-sm hover:shadow-md transition-all hover:border-primary/40"
-                        >
-                          <div>
-                            <div className="relative aspect-[16/9] overflow-hidden bg-muted">
-                              <img
-                                src={
-                                  init.image_url ||
-                                  'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&q=80&w=800'
-                                }
-                                alt={init.title}
-                                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                            </div>
-                            <div className="p-6 space-y-3">
-                              <h3 className="font-display text-xl font-bold text-primary group-hover:text-forest transition-colors line-clamp-1">
-                                {init.title}
-                              </h3>
-                              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                                {init.description}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="p-6 pt-0 space-y-4">
-                            <div className="space-y-1.5">
-                              <div className="flex justify-between text-xs font-bold">
-                                <span className="text-primary">
-                                  Rs {Number(init.current_amount_mur || 0).toLocaleString()}
-                                </span>
-                                <span className="text-forest">{Math.round(progress)}%</span>
-                              </div>
-                              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-forest transition-all duration-500"
-                                  style={{ width: `${progress}%` }}
-                                />
-                              </div>
-                            </div>
-
-                            <Link
-                              to="/initiatives/$slug"
-                              params={{ slug: init.slug || init.id }}
-                              className="inline-flex items-center justify-between w-full rounded-2xl bg-muted/50 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary hover:text-white transition-all group-hover:bg-primary group-hover:text-white"
-                            >
-                              <span>View Initiative Details</span>
-                              <ArrowRight className="w-4 h-4" />
-                            </Link>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="bg-white rounded-3xl p-8 text-center border border-border/50">
+                    <p className="text-muted-foreground text-sm">
+                      No active public initiatives registered under this organization at this time.
+                    </p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Right Column: Contact & Verification Sidebar */}
-            <div className="space-y-8">
-              {/* Contact Card */}
-              <div className="rounded-[2.5rem] border border-border/40 bg-card p-8 shadow-sm space-y-6">
-                <h3 className="font-display text-xl font-bold text-primary">Contact & Links</h3>
+            {/* Right Column (Contact & Verification Badge) */}
+            <div className="space-y-6">
+              {/* Contact Information */}
+              <div className="bg-white rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                <h2 className="text-xs font-bold uppercase tracking-widest text-primary">
+                  Contact & Online Presence
+                </h2>
 
                 <div className="space-y-4 text-sm">
                   {organization.contact_email && (
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                        <Mail className="w-5 h-5" />
+                    <a
+                      href={`mailto:${organization.contact_email}`}
+                      className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                        <Mail className="w-4 h-4 text-primary" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-muted-foreground font-medium">Email</p>
-                        <a
-                          href={`mailto:${organization.contact_email}`}
-                          className="font-bold text-primary hover:underline truncate block"
-                        >
-                          {organization.contact_email}
-                        </a>
-                      </div>
-                    </div>
+                      <span className="truncate">{organization.contact_email}</span>
+                    </a>
                   )}
 
                   {organization.contact_phone && (
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                        <Phone className="w-5 h-5" />
+                    <a
+                      href={`tel:${organization.contact_phone}`}
+                      className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4 text-primary" />
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground font-medium">Phone</p>
-                        <a
-                          href={`tel:${organization.contact_phone}`}
-                          className="font-bold text-primary hover:underline"
-                        >
-                          {organization.contact_phone}
-                        </a>
-                      </div>
-                    </div>
+                      <span>{organization.contact_phone}</span>
+                    </a>
                   )}
 
                   {organization.website_url && (
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                        <Globe className="w-5 h-5" />
+                    <a
+                      href={organization.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 text-indigo-600 font-bold hover:underline"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+                        <Globe className="w-4 h-4 text-indigo-600" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-muted-foreground font-medium">Website</p>
-                        <a
-                          href={organization.website_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-bold text-primary hover:underline truncate block"
-                        >
-                          {organization.website_url.replace(/^https?:\/\//, '')}
-                        </a>
-                      </div>
-                    </div>
+                      <span className="truncate">Official Website</span>
+                    </a>
                   )}
                 </div>
 
                 {/* Social Links */}
-                {(formData.facebook || formData.instagram || formData.linkedin) && (
+                {(socialLinks.facebook || socialLinks.instagram || socialLinks.linkedin) && (
                   <div className="pt-4 border-t border-border/40">
-                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                      Follow Online
-                    </p>
-                    <div className="flex gap-3">
-                      {formData.facebook && (
+                    <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground block mb-3">
+                      Social Channels
+                    </span>
+                    <div className="flex gap-2">
+                      {socialLinks.facebook && (
                         <a
-                          href={formData.facebook}
+                          href={socialLinks.facebook}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="h-10 w-10 rounded-2xl bg-muted/60 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors"
-                          aria-label="Facebook"
+                          className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted/80 transition-all"
                         >
                           <Facebook className="w-5 h-5" />
                         </a>
                       )}
-                      {formData.instagram && (
+                      {socialLinks.instagram && (
                         <a
-                          href={formData.instagram}
+                          href={socialLinks.instagram}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="h-10 w-10 rounded-2xl bg-muted/60 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors"
-                          aria-label="Instagram"
+                          className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted/80 transition-all"
                         >
                           <Instagram className="w-5 h-5" />
                         </a>
                       )}
-                      {formData.linkedin && (
+                      {socialLinks.linkedin && (
                         <a
-                          href={formData.linkedin}
+                          href={socialLinks.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="h-10 w-10 rounded-2xl bg-muted/60 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors"
-                          aria-label="LinkedIn"
+                          className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted/80 transition-all"
                         >
                           <Linkedin className="w-5 h-5" />
                         </a>
@@ -584,9 +620,11 @@ function OrganizationProfilePage() {
         {/* Edit Profile Modal */}
         {isEditing && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-6">
+            <div className="bg-white rounded-3xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto space-y-6">
               <div className="flex items-center justify-between pb-4 border-b">
-                <h2 className="text-xl font-bold text-primary">Edit Organization Profile</h2>
+                <h2 className="text-xl font-bold text-primary">
+                  {isAdmin ? 'Admin Organization Editor' : 'Edit Organization Profile'}
+                </h2>
                 <button
                   onClick={() => setIsEditing(false)}
                   className="p-2 hover:bg-muted rounded-full text-muted-foreground"
@@ -674,7 +712,78 @@ function OrganizationProfilePage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* Extended DB Fields for Full Field Management */}
+                <div className="space-y-4 pt-4 border-t border-border">
+                  <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-wider">
+                    Impact & Governance Metrics
+                  </h3>
+
+                  <div>
+                    <label className="block text-xs font-bold text-primary uppercase tracking-widest mb-1">
+                      Impact Metrics
+                    </label>
+                    <textarea
+                      value={formData.impact_metrics}
+                      onChange={(e) => setFormData({ ...formData, impact_metrics: e.target.value })}
+                      rows={2}
+                      className="w-full px-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary text-sm"
+                      placeholder="e.g. 5,000 meals distributed monthly"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-primary uppercase tracking-widest mb-1">
+                        Key Milestones
+                      </label>
+                      <textarea
+                        value={formData.milestones}
+                        onChange={(e) => setFormData({ ...formData, milestones: e.target.value })}
+                        rows={2}
+                        className="w-full px-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-primary uppercase tracking-widest mb-1">
+                        Expected Outcomes
+                      </label>
+                      <textarea
+                        value={formData.expected_outcomes}
+                        onChange={(e) => setFormData({ ...formData, expected_outcomes: e.target.value })}
+                        rows={2}
+                        className="w-full px-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-primary uppercase tracking-widest mb-1">
+                        Fund Allocation Summary
+                      </label>
+                      <textarea
+                        value={formData.allocation_summary}
+                        onChange={(e) => setFormData({ ...formData, allocation_summary: e.target.value })}
+                        rows={2}
+                        className="w-full px-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-primary uppercase tracking-widest mb-1">
+                        Monthly Target Amount (MUR)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.monthly_target_amount}
+                        onChange={(e) => setFormData({ ...formData, monthly_target_amount: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                   <div>
                     <label className="block text-xs font-bold text-primary uppercase tracking-widest mb-1">
                       Contact Email
@@ -727,17 +836,39 @@ function OrganizationProfilePage() {
                 </div>
 
                 {isAdmin && (
-                  <div className="bg-muted/40 p-4 rounded-xl border border-border flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="is_verified"
-                      checked={formData.is_verified}
-                      onChange={(e) => setFormData({ ...formData, is_verified: e.target.checked })}
-                      className="w-4 h-4 text-primary rounded border-border"
-                    />
-                    <label htmlFor="is_verified" className="text-sm font-bold text-primary">
-                      Verified Partner Organization
-                    </label>
+                  <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-3">
+                    <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider block">
+                      Admin Governance & Status Controls
+                    </span>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id="is_verified"
+                          checked={formData.is_verified}
+                          onChange={(e) => setFormData({ ...formData, is_verified: e.target.checked })}
+                          className="w-4 h-4 text-primary rounded border-border"
+                        />
+                        <label htmlFor="is_verified" className="text-sm font-bold text-primary">
+                          Verified / Vetted Partner
+                        </label>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs font-bold text-primary uppercase tracking-widest">
+                          Status:
+                        </label>
+                        <select
+                          value={formData.status}
+                          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                          className="px-3 py-1.5 border border-border rounded-lg text-sm bg-white font-bold"
+                        >
+                          <option value="active">Active</option>
+                          <option value="pending">Pending</option>
+                          <option value="suspended">Suspended</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -755,7 +886,7 @@ function OrganizationProfilePage() {
                     className="px-6 py-2.5 bg-primary text-white rounded-full hover:bg-primary/90 disabled:opacity-50 font-bold text-sm inline-flex items-center gap-2"
                   >
                     {isSaving && <Loader className="w-4 h-4 animate-spin" />}
-                    Save Profile
+                    Save Profile Changes
                   </button>
                 </div>
               </form>
