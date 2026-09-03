@@ -18,6 +18,117 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { updateReportStatus } from "@/lib/security/auth-actions";
 import { format } from "date-fns";
+import React from 'react';
+import { 
+  ShieldCheck, 
+  ExternalLink, 
+  Mail, 
+  Phone, 
+  CheckCircle,
+  Facebook,
+  Instagram,
+  Linkedin 
+} from 'lucide-react';
+
+export function OrganizationProfile({ organization }) {
+  const hasWebsite = Boolean(organization.website_url && organization.website_url.trim() !== '');
+  const socialLinks = organization.transparency_content?.social_links || {};
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      {/* 1. Official Page Banner (Only shown when website_url is absent) */}
+      {!hasWebsite && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 rounded-xl mb-6 flex items-center gap-2.5 text-sm font-medium shadow-sm">
+          <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0" />
+          <span>This is {organization.organization_name}'s official page on CommonGround</span>
+        </div>
+      )}
+
+      {/* Header Info */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{organization.organization_name}</h1>
+          <p className="text-gray-600 mt-1">{organization.description}</p>
+        </div>
+
+        {/* 2. Action Area: Visit Website OR Contact & Socials */}
+        <div className="flex flex-wrap items-center gap-3">
+          {hasWebsite ? (
+            /* ONLY render Visit Website button if website_url exists & is non-empty */
+            <a
+              href={organization.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-800 text-white rounded-lg hover:bg-emerald-900 text-sm font-medium transition shadow-sm"
+            >
+              <span>Visit Website</span>
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          ) : (
+            /* Fallback Space when website_url is absent */
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Verified Organization Badge */}
+              {organization.is_verified && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  Verified Organization
+                </span>
+              )}
+
+              {/* Clickable Email */}
+              {organization.contact_email && (
+                <a
+                  href={`mailto:${organization.contact_email}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-xs font-medium transition"
+                >
+                  <Mail className="w-4 h-4 text-gray-600" />
+                  {organization.contact_email}
+                </a>
+              )}
+
+              {/* Clickable Phone */}
+              {organization.contact_phone && (
+                <a
+                  href={`tel:${organization.contact_phone}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-xs font-medium transition"
+                >
+                  <Phone className="w-4 h-4 text-gray-600" />
+                  {organization.contact_phone}
+                </a>
+              )}
+
+              {/* Social Media Links */}
+              {socialLinks.facebook && (
+                <a href={socialLinks.facebook} target="_blank" rel="noreferrer" className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition">
+                  <Facebook className="w-4 h-4" />
+                </a>
+              )}
+              {socialLinks.instagram && (
+                <a href={socialLinks.instagram} target="_blank" rel="noreferrer" className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition">
+                  <Instagram className="w-4 h-4" />
+                </a>
+              )}
+              {socialLinks.linkedin && (
+                <a href={socialLinks.linkedin} target="_blank" rel="noreferrer" className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition">
+                  <Linkedin className="w-4 h-4" />
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Fully Populated Sections */}
+      <div className="mt-8 space-y-8">
+        {/* Mission Statement & Description */}
+        <section className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900 mb-3">Our Mission</h2>
+          <p className="text-gray-700 leading-relaxed">{organization.mission}</p>
+        </section>
+      </div>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/entities/$id")({
   component: OrganizationProfilePage,
