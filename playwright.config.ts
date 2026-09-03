@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "list",
   use: {
-    baseURL: "http://localhost:8788",
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || "http://localhost:8080",
     trace: "on-first-retry",
   },
   projects: [
