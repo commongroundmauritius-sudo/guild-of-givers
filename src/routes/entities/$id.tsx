@@ -10,6 +10,12 @@ import {
   ExternalLink,
   CheckCircle2,
   AlertCircle,
+  Mail,
+  Phone,
+  CheckCircle,
+  Facebook,
+  Instagram,
+  Linkedin,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,18 +24,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { updateReportStatus } from "@/lib/security/auth-actions";
 import { format } from "date-fns";
-import React from 'react';
-import { 
-  ShieldCheck, 
-  ExternalLink, 
-  Mail, 
-  Phone, 
-  CheckCircle,
-  Facebook,
-  Instagram,
-  Linkedin 
-} from 'lucide-react';
-
 export function OrganizationProfile({ organization }) {
   const hasWebsite = Boolean(organization.website_url && organization.website_url.trim() !== '');
   const socialLinks = organization.transparency_content?.social_links || {};
