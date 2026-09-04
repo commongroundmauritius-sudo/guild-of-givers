@@ -8,8 +8,7 @@ test.describe("Authentication Tests", () => {
 
   test("unauthorized access redirects to login", async ({ page }) => {
     await page.goto("/admin-dashboard");
-    // Depending on implementation, it might be a redirect or a protected message
-    // Usually it redirects to login or shows unauthorized
+    await page.waitForURL((url) => url.toString().includes("/login"));
     await expect(page.url()).toContain("/login");
   });
 });

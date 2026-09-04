@@ -46,7 +46,7 @@ export function useReactions(postId: string) {
   });
 }
 
-export function useCommunityRealtime(queryKey: unknown[], table: string, filter?: string) {
+export function useCommunityRealtime(queryKey: any[], table: string, filter?: string) {
   const queryClient = useQueryClient();
 
   // Memoize queryKey to prevent unnecessary re-subscriptions

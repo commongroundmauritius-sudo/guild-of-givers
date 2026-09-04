@@ -162,10 +162,7 @@ export function editWindowRemaining(createdAt: string) {
   return Math.max(0, EDIT_WINDOW_MS - (Date.now() - new Date(createdAt).getTime()));
 }
 
-export async function updatePost(
-  postId: string,
-  values: { title: string; content: string },
-) {
+export async function updatePost(postId: string, values: { title: string; content: string }) {
   const { error } = await supabase.from("community_posts").update(values).eq("id", postId);
   if (error) throw error;
 }

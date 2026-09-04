@@ -5,10 +5,10 @@ test.describe("Organization Profile Page", () => {
     await page.goto("/entities/a1111111-1111-4111-a111-111111111111");
 
     // Expect organization title
-    await expect(page.locator("h1")).toContainText(/Association Rays of Hope Port Louis/i);
+    await expect(page.locator("h1")).toContainText(/Fondation Rays of Hope Port Louis/i);
 
     // Expect verified badge
-    await expect(page.getByText("Verified Partner")).toBeVisible();
+    await expect(page.getByText("Verified Organization")).toBeVisible();
 
     // Expect child initiative heading
     await expect(page.getByRole("heading", { name: "Port Louis Community Kitchen" })).toBeVisible();

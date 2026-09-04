@@ -21,6 +21,7 @@ import { Route as FaqRouteImport } from './routes/faq'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrganizationsIndexRouteImport } from './routes/organizations/index'
 import { Route as InitiativesIndexRouteImport } from './routes/initiatives/index'
 import { Route as EntitiesIndexRouteImport } from './routes/entities/index'
 import { Route as InitiativesSlugRouteImport } from './routes/initiatives/$slug'
@@ -109,6 +110,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationsIndexRoute = OrganizationsIndexRouteImport.update({
+  id: '/organizations/',
+  path: '/organizations/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InitiativesIndexRoute = InitiativesIndexRouteImport.update({
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/initiatives/$slug': typeof InitiativesSlugRoute
   '/entities/': typeof EntitiesIndexRoute
   '/initiatives/': typeof InitiativesIndexRoute
+  '/organizations/': typeof OrganizationsIndexRoute
   '/admin-dashboard/analytics': typeof AuthenticatedAdminDashboardAnalyticsRoute
   '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
@@ -348,6 +355,7 @@ export interface FileRoutesByTo {
   '/initiatives/$slug': typeof InitiativesSlugRoute
   '/entities': typeof EntitiesIndexRoute
   '/initiatives': typeof InitiativesIndexRoute
+  '/organizations': typeof OrganizationsIndexRoute
   '/admin-dashboard/analytics': typeof AuthenticatedAdminDashboardAnalyticsRoute
   '/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
@@ -393,6 +401,7 @@ export interface FileRoutesById {
   '/initiatives/$slug': typeof InitiativesSlugRoute
   '/entities/': typeof EntitiesIndexRoute
   '/initiatives/': typeof InitiativesIndexRoute
+  '/organizations/': typeof OrganizationsIndexRoute
   '/_authenticated/admin-dashboard/analytics': typeof AuthenticatedAdminDashboardAnalyticsRoute
   '/_authenticated/admin-dashboard/announcements': typeof AuthenticatedAdminDashboardAnnouncementsRoute
   '/_authenticated/admin-dashboard/community-posts': typeof AuthenticatedAdminDashboardCommunityPostsRoute
@@ -438,6 +447,7 @@ export interface FileRouteTypes {
     | '/initiatives/$slug'
     | '/entities/'
     | '/initiatives/'
+    | '/organizations/'
     | '/admin-dashboard/analytics'
     | '/admin-dashboard/announcements'
     | '/admin-dashboard/community-posts'
@@ -480,6 +490,7 @@ export interface FileRouteTypes {
     | '/initiatives/$slug'
     | '/entities'
     | '/initiatives'
+    | '/organizations'
     | '/admin-dashboard/analytics'
     | '/admin-dashboard/announcements'
     | '/admin-dashboard/community-posts'
@@ -524,6 +535,7 @@ export interface FileRouteTypes {
     | '/initiatives/$slug'
     | '/entities/'
     | '/initiatives/'
+    | '/organizations/'
     | '/_authenticated/admin-dashboard/analytics'
     | '/_authenticated/admin-dashboard/announcements'
     | '/_authenticated/admin-dashboard/community-posts'
@@ -565,6 +577,7 @@ export interface RootRouteChildren {
   InitiativesSlugRoute: typeof InitiativesSlugRoute
   EntitiesIndexRoute: typeof EntitiesIndexRoute
   InitiativesIndexRoute: typeof InitiativesIndexRoute
+  OrganizationsIndexRoute: typeof OrganizationsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -651,6 +664,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organizations/': {
+      id: '/organizations/'
+      path: '/organizations'
+      fullPath: '/organizations/'
+      preLoaderRoute: typeof OrganizationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/initiatives/': {
@@ -997,6 +1017,7 @@ const rootRouteChildren: RootRouteChildren = {
   InitiativesSlugRoute: InitiativesSlugRoute,
   EntitiesIndexRoute: EntitiesIndexRoute,
   InitiativesIndexRoute: InitiativesIndexRoute,
+  OrganizationsIndexRoute: OrganizationsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

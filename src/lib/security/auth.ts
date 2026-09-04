@@ -25,7 +25,6 @@ function applySupabaseBearer(token: string) {
   const authorization = `Bearer ${token}`;
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
     client.headers = { ...(client.headers ?? {}), Authorization: authorization };
 
@@ -79,7 +78,6 @@ export async function getSessionUser() {
       const cookies = parseCookie(cookieHeader);
 
       // Extract project ref dynamically from supabase client URL to avoid hardcoding errors
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const supabaseUrl = (supabase as any).supabaseUrl;
       const projectRef = supabaseUrl
         ? new URL(supabaseUrl).hostname.split(".")[0]
