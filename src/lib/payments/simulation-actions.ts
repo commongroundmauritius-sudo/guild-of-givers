@@ -14,7 +14,7 @@ export const simulatePaymentEvent = async (params: { data: any }) => {
       payload: { simulated: true, ...data },
     });
     return { success: true };
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Simulation failed:", error);
     throw error;
   }
@@ -24,7 +24,7 @@ export const simulateBillingCycle = async () => {
   try {
     await subscriptionEngine.runBillingCycle();
     return { success: true };
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Billing cycle failed:", error);
     throw error;
   }
@@ -40,7 +40,7 @@ export const simulateSuccessfulPayment = async (userId: string, amount: number) 
       },
     });
     toast.success("Payment simulation successful. Check the ledger for events.");
-  } catch (error: unknown) {
+  } catch (error: any) {
     toast.error(`Simulation failed: ${(error as any).message}`);
   }
 };
@@ -49,7 +49,7 @@ export const runBillingCycleSimulation = async () => {
   try {
     await simulateBillingCycle();
     toast.success("Billing cycle simulation triggered.");
-  } catch (error: unknown) {
+  } catch (error: any) {
     toast.error(`Billing cycle failed: ${(error as any).message}`);
   }
 };

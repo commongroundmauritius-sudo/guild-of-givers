@@ -8,7 +8,7 @@ test.describe("Growth & Attribution Foundation", () => {
 
   test("initiatives discovery page loads", async ({ page }) => {
     await page.goto("/initiatives");
-    await expect(page.getByRole("heading", { name: "Vetted Initiatives" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Find Your Impact Focus/i })).toBeVisible();
   });
 
   test("signup page loads successfully", async ({ page }) => {

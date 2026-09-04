@@ -187,7 +187,9 @@ function AdminOrganizationsPage() {
                       </div>
 
                       <div className="flex items-center justify-between pt-2">
-                        <span className="text-[11px] font-medium text-muted-foreground">Admin Quick Actions</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">
+                          Admin Quick Actions
+                        </span>
                         <div className="flex gap-2">
                           <Button
                             variant="ghost"

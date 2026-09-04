@@ -10,7 +10,7 @@ interface WebhookPayload {
   [key: string]: any;
 }
 
-function isWebhookPayload(payload: unknown): payload is WebhookPayload {
+function isWebhookPayload(payload: any): payload is WebhookPayload {
   return typeof payload === "object" && payload !== null;
 }
 
@@ -18,7 +18,7 @@ function isWebhookPayload(payload: unknown): payload is WebhookPayload {
  * PRODUCTION NOTE: Webhook signature validation should be implemented here
  * using the provider's specific signing secret.
  */
-async function validateWebhookSignature(payload: unknown, signature?: string): Promise<boolean> {
+async function validateWebhookSignature(payload: any, signature?: string): Promise<boolean> {
   // Mock implementation for development
   if (import.meta.env.DEV) return true;
 
@@ -34,7 +34,7 @@ async function validateWebhookSignature(payload: unknown, signature?: string): P
 }
 
 export async function handlePaymentWebhook(
-  payload: unknown,
+  payload: any,
   signature?: string,
 ): Promise<{ success: boolean }> {
   if (!isWebhookPayload(payload)) {

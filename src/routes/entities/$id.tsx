@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { createFileRoute, Link, useParams } from '@tanstack/react-router';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
-import { SiteLayout } from '@/components/site/SiteLayout';
+import React, { useEffect, useState } from "react";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { SiteLayout } from "@/components/site/SiteLayout";
 import {
   Edit,
   X,
@@ -24,9 +24,9 @@ import {
   DollarSign,
   Layers,
   Activity,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { sanitize } from '@/lib/security/sanitizeHtml';
+} from "lucide-react";
+import { toast } from "sonner";
+import { sanitize } from "@/lib/security/sanitizeHtml";
 
 interface Organization {
   id: string;
@@ -88,12 +88,12 @@ interface FormData {
   linkedin: string;
 }
 
-export const Route = createFileRoute('/entities/$id')({
+export const Route = createFileRoute("/entities/$id")({
   component: OrganizationProfilePage,
 });
 
 function OrganizationProfilePage() {
-  const { id } = useParams({ from: '/entities/$id' });
+  const { id } = useParams({ from: "/entities/$id" });
   const { user, role: userRole } = useAuth();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
@@ -101,26 +101,26 @@ function OrganizationProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<FormData>({
-    organization_name: '',
-    description: '',
-    category: '',
-    status: 'active',
-    mission: '',
-    goals: '',
-    address: '',
-    logo_url: '',
-    contact_email: '',
-    contact_phone: '',
-    website_url: '',
+    organization_name: "",
+    description: "",
+    category: "",
+    status: "active",
+    mission: "",
+    goals: "",
+    address: "",
+    logo_url: "",
+    contact_email: "",
+    contact_phone: "",
+    website_url: "",
     is_verified: false,
-    monthly_target_amount: '0',
-    impact_metrics: '',
-    milestones: '',
-    expected_outcomes: '',
-    allocation_summary: '',
-    facebook: '',
-    instagram: '',
-    linkedin: '',
+    monthly_target_amount: "0",
+    impact_metrics: "",
+    milestones: "",
+    expected_outcomes: "",
+    allocation_summary: "",
+    facebook: "",
+    instagram: "",
+    linkedin: "",
   });
 
   // Load organization and child initiatives
@@ -130,9 +130,9 @@ function OrganizationProfilePage() {
         setLoading(true);
 
         const { data: orgData, error: orgError } = await supabase
-          .from('organizations')
-          .select('*')
-          .eq('id', id)
+          .from("organizations")
+          .select("*")
+          .eq("id", id)
           .single();
 
         if (orgError) throw orgError;
@@ -140,46 +140,48 @@ function OrganizationProfilePage() {
         if (orgData) {
           setOrganization(orgData as Organization);
           setFormData({
-            organization_name: orgData.organization_name || '',
-            description: orgData.description || '',
-            category: orgData.category || '',
-            status: orgData.status || 'active',
-            mission: orgData.mission || '',
-            goals: orgData.goals || '',
-            address: orgData.address || '',
-            logo_url: orgData.logo_url || '',
-            contact_email: orgData.contact_email || '',
-            contact_phone: orgData.contact_phone || '',
-            website_url: orgData.website_url || '',
+            organization_name: orgData.organization_name || "",
+            description: orgData.description || "",
+            category: orgData.category || "",
+            status: orgData.status || "active",
+            mission: orgData.mission || "",
+            goals: orgData.goals || "",
+            address: orgData.address || "",
+            logo_url: orgData.logo_url || "",
+            contact_email: orgData.contact_email || "",
+            contact_phone: orgData.contact_phone || "",
+            website_url: orgData.website_url || "",
             is_verified: orgData.is_verified || false,
             monthly_target_amount: orgData.monthly_target_amount
               ? String(orgData.monthly_target_amount)
-              : '0',
-            impact_metrics: orgData.impact_metrics || '',
-            milestones: orgData.milestones || '',
-            expected_outcomes: orgData.expected_outcomes || '',
-            allocation_summary: orgData.allocation_summary || '',
-            facebook: orgData.transparency_content?.social_links?.facebook || '',
-            instagram: orgData.transparency_content?.social_links?.instagram || '',
-            linkedin: orgData.transparency_content?.social_links?.linkedin || '',
+              : "0",
+            impact_metrics: orgData.impact_metrics || "",
+            milestones: orgData.milestones || "",
+            expected_outcomes: orgData.expected_outcomes || "",
+            allocation_summary: orgData.allocation_summary || "",
+            facebook: orgData.transparency_content?.social_links?.facebook || "",
+            instagram: orgData.transparency_content?.social_links?.instagram || "",
+            linkedin: orgData.transparency_content?.social_links?.linkedin || "",
           });
         }
 
         // Fetch initiatives belonging exclusively to this organization
         const { data: initData, error: initError } = await supabase
-          .from('initiatives')
-          .select('id, title, slug, description, image_url, goal_amount_mur, current_amount_mur, active_supporter_count, status')
-          .eq('organization_id', id)
-          .eq('status', 'active');
+          .from("initiatives")
+          .select(
+            "id, title, slug, description, image_url, goal_amount_mur, current_amount_mur, active_supporter_count, status",
+          )
+          .eq("organization_id", id)
+          .eq("status", "active");
 
         if (initError) {
-          console.error('Error loading child initiatives:', initError);
+          console.error("Error loading child initiatives:", initError);
         } else {
           setInitiatives((initData as Initiative[]) || []);
         }
       } catch (error) {
-        console.error('Error loading organization:', error);
-        toast.error('Failed to load organization');
+        console.error("Error loading organization:", error);
+        toast.error("Failed to load organization");
       } finally {
         setLoading(false);
       }
@@ -191,9 +193,8 @@ function OrganizationProfilePage() {
   }, [id]);
 
   // Determine if user can edit
-  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
-  const isOwner =
-    user?.id && organization?.owner_user_id && user.id === organization.owner_user_id;
+  const isAdmin = userRole === "admin" || userRole === "super_admin";
+  const isOwner = user?.id && organization?.owner_user_id && user.id === organization.owner_user_id;
   const canEdit = isAdmin || isOwner;
 
   // Handle form submission
@@ -219,10 +220,13 @@ function OrganizationProfilePage() {
         impact_metrics: formData.impact_metrics ? sanitize(formData.impact_metrics) : null,
         milestones: formData.milestones ? sanitize(formData.milestones) : null,
         expected_outcomes: formData.expected_outcomes ? sanitize(formData.expected_outcomes) : null,
-        allocation_summary: formData.allocation_summary ? sanitize(formData.allocation_summary) : null,
+        allocation_summary: formData.allocation_summary
+          ? sanitize(formData.allocation_summary)
+          : null,
         monthly_target_amount: parseFloat(formData.monthly_target_amount) || 0,
         transparency_content: {
-          ...(typeof organization.transparency_content === 'object' && organization.transparency_content !== null
+          ...(typeof organization.transparency_content === "object" &&
+          organization.transparency_content !== null
             ? organization.transparency_content
             : {}),
           social_links: {
@@ -239,28 +243,28 @@ function OrganizationProfilePage() {
       }
 
       const { error } = await supabase
-        .from('organizations')
+        .from("organizations")
         .update(updatePayload)
-        .eq('id', organization.id);
+        .eq("id", organization.id);
 
       if (error) throw error;
 
-      toast.success('Organization profile updated successfully');
+      toast.success("Organization profile updated successfully");
       setIsEditing(false);
 
       // Refresh organization data
       const { data } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', organization.id)
+        .from("organizations")
+        .select("*")
+        .eq("id", organization.id)
         .single();
 
       if (data) {
         setOrganization(data as Organization);
       }
     } catch (error: any) {
-      console.error('Error updating organization:', error);
-      toast.error(error.message || 'Failed to update organization profile');
+      console.error("Error updating organization:", error);
+      toast.error(error.message || "Failed to update organization profile");
     } finally {
       setIsSaving(false);
     }
@@ -319,7 +323,7 @@ function OrganizationProfilePage() {
               <div>
                 <div className="flex items-center gap-3 flex-wrap mb-2">
                   <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold uppercase tracking-wider text-white/90">
-                    {organization.category || 'Non-Profit Partner'}
+                    {organization.category || "Non-Profit Partner"}
                   </span>
                   {organization.is_verified && (
                     <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full text-xs font-bold uppercase tracking-wider">
@@ -327,10 +331,14 @@ function OrganizationProfilePage() {
                     </span>
                   )}
                   {isAdmin && (
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                      organization.status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
-                    }`}>
-                      Status: {organization.status || 'active'}
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        organization.status === "active"
+                          ? "bg-emerald-500/20 text-emerald-300"
+                          : "bg-amber-500/20 text-amber-300"
+                      }`}
+                    >
+                      Status: {organization.status || "active"}
                     </span>
                   )}
                 </div>
@@ -350,7 +358,7 @@ function OrganizationProfilePage() {
                 onClick={() => setIsEditing(true)}
                 className="px-6 py-3 bg-white text-primary rounded-full hover:bg-white/90 font-bold flex items-center gap-2 transition-all shadow-lg shrink-0"
               >
-                <Edit className="w-4 h-4" /> {isAdmin ? 'Admin Edit Profile' : 'Edit Profile'}
+                <Edit className="w-4 h-4" /> {isAdmin ? "Admin Edit Profile" : "Edit Profile"}
               </button>
             )}
           </div>
@@ -379,7 +387,7 @@ function OrganizationProfilePage() {
                     About the Organization
                   </h2>
                   <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
-                    {organization.description || 'No description provided.'}
+                    {organization.description || "No description provided."}
                   </p>
                 </div>
 
@@ -396,10 +404,14 @@ function OrganizationProfilePage() {
               </div>
 
               {/* Impact Metrics & Outcomes */}
-              {(organization.impact_metrics || organization.milestones || organization.expected_outcomes || organization.allocation_summary) && (
+              {(organization.impact_metrics ||
+                organization.milestones ||
+                organization.expected_outcomes ||
+                organization.allocation_summary) && (
                 <div className="bg-white rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
                   <h2 className="text-lg font-bold text-primary flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-indigo-500" /> Organizational Impact & Operations
+                    <Activity className="w-5 h-5 text-indigo-500" /> Organizational Impact &
+                    Operations
                   </h2>
 
                   {organization.impact_metrics && (
@@ -486,9 +498,7 @@ function OrganizationProfilePage() {
                         </p>
 
                         <div className="flex items-center justify-between text-xs font-bold text-primary pt-2 border-t border-border/40">
-                          <span>
-                            MUR {(init.current_amount_mur || 0).toLocaleString()} raised
-                          </span>
+                          <span>MUR {(init.current_amount_mur || 0).toLocaleString()} raised</span>
                           <span className="flex items-center gap-1 text-indigo-600">
                             View <ArrowRight className="w-3 h-3" />
                           </span>
@@ -610,7 +620,8 @@ function OrganizationProfilePage() {
                   </div>
                 </div>
                 <p className="text-xs leading-relaxed text-primary/80">
-                  {organization.organization_name} has passed our verification process, including financial audit and governance review.
+                  {organization.organization_name} has passed our verification process, including
+                  financial audit and governance review.
                 </p>
               </div>
             </div>
@@ -623,7 +634,7 @@ function OrganizationProfilePage() {
             <div className="bg-white rounded-3xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto space-y-6">
               <div className="flex items-center justify-between pb-4 border-b">
                 <h2 className="text-xl font-bold text-primary">
-                  {isAdmin ? 'Admin Organization Editor' : 'Edit Organization Profile'}
+                  {isAdmin ? "Admin Organization Editor" : "Edit Organization Profile"}
                 </h2>
                 <button
                   onClick={() => setIsEditing(false)}
@@ -749,7 +760,9 @@ function OrganizationProfilePage() {
                       </label>
                       <textarea
                         value={formData.expected_outcomes}
-                        onChange={(e) => setFormData({ ...formData, expected_outcomes: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, expected_outcomes: e.target.value })
+                        }
                         rows={2}
                         className="w-full px-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary text-sm"
                       />
@@ -763,7 +776,9 @@ function OrganizationProfilePage() {
                       </label>
                       <textarea
                         value={formData.allocation_summary}
-                        onChange={(e) => setFormData({ ...formData, allocation_summary: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, allocation_summary: e.target.value })
+                        }
                         rows={2}
                         className="w-full px-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary text-sm"
                       />
@@ -776,7 +791,9 @@ function OrganizationProfilePage() {
                         type="number"
                         min="0"
                         value={formData.monthly_target_amount}
-                        onChange={(e) => setFormData({ ...formData, monthly_target_amount: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, monthly_target_amount: e.target.value })
+                        }
                         className="w-full px-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary text-sm"
                       />
                     </div>
@@ -846,7 +863,9 @@ function OrganizationProfilePage() {
                           type="checkbox"
                           id="is_verified"
                           checked={formData.is_verified}
-                          onChange={(e) => setFormData({ ...formData, is_verified: e.target.checked })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, is_verified: e.target.checked })
+                          }
                           className="w-4 h-4 text-primary rounded border-border"
                         />
                         <label htmlFor="is_verified" className="text-sm font-bold text-primary">
