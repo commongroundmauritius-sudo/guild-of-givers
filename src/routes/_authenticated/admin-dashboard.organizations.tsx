@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Info,
   ShieldCheck,
+  Edit,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -114,9 +115,9 @@ function AdminOrganizationsPage() {
               {filteredOrgs.map((org) => (
                 <Card
                   key={org.id}
-                  className="rounded-[2.5rem] border-border/40 overflow-hidden group relative hover:border-primary/40 transition-colors"
+                  className="rounded-[2.5rem] border-border/40 overflow-hidden group relative hover:border-primary/40 transition-colors flex flex-col justify-between"
                 >
-                  <CardContent className="p-8">
+                  <CardContent className="p-8 flex flex-col h-full justify-between">
                     <RouterLink
                       to="/entities/$id"
                       params={{ id: org.id }}
@@ -160,14 +161,39 @@ function AdminOrganizationsPage() {
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-6 h-10">
                         {org.description || "No description provided."}
                       </p>
+                    </div>
 
-                      <div className="flex items-center justify-between border-t border-border/40 pt-6">
-                        <div className="flex gap-2 relative z-20">
+                    <div className="relative z-20 space-y-4 pt-4 border-t border-border/40">
+                      <div className="flex items-center justify-between">
+                        <RouterLink
+                          to="/entities/$id"
+                          params={{ id: org.id }}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
+                        >
+                          <Edit className="h-3.5 w-3.5" /> View & Edit Profile
+                        </RouterLink>
+
+                        {org.website_url && (
+                          <a
+                            href={org.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1.5"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Website <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2">
+                        <span className="text-[11px] font-medium text-muted-foreground">Admin Quick Actions</span>
+                        <div className="flex gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
                             title={org.is_verified ? "Remove Vetted Badge" : "Mark as Vetted"}
-                            className={`rounded-full h-9 w-9 ${org.is_verified ? "text-indigo-600 bg-indigo-50" : "text-muted-foreground hover:bg-muted"}`}
+                            className={`rounded-full h-8 w-8 ${org.is_verified ? "text-indigo-600 bg-indigo-50" : "text-muted-foreground hover:bg-muted"}`}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -177,48 +203,39 @@ function AdminOrganizationsPage() {
                               });
                             }}
                           >
-                            <ShieldCheck className="h-5 w-5" />
+                            <ShieldCheck className="h-4 w-4" />
                           </Button>
                           {org.status !== "active" && (
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="rounded-full text-green-600 hover:bg-green-50 h-9 w-9"
+                              title="Activate Organization"
+                              className="rounded-full text-green-600 hover:bg-green-50 h-8 w-8"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 updateStatusMutation.mutate({ id: org.id, status: "active" });
                               }}
                             >
-                              <CheckCircle2 className="h-5 w-5" />
+                              <CheckCircle2 className="h-4 w-4" />
                             </Button>
                           )}
                           {org.status !== "suspended" && (
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="rounded-full text-red-600 hover:bg-red-50 h-9 w-9"
+                              title="Suspend Organization"
+                              className="rounded-full text-red-600 hover:bg-red-50 h-8 w-8"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 updateStatusMutation.mutate({ id: org.id, status: "suspended" });
                               }}
                             >
-                              <XCircle className="h-5 w-5" />
+                              <XCircle className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
-                        {org.website_url && (
-                          <a
-                            href={org.website_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1.5 relative z-20"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            Website <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
                       </div>
                     </div>
                   </CardContent>
