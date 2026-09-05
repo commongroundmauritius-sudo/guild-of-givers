@@ -1,3 +1,4 @@
+import { useMemberCheck } from "@/hooks/use-member-check";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
@@ -84,6 +85,7 @@ const Organization_NAV = [
 ] as const;
 
 export function Header() {
+  const { handleMemberAction } = useMemberCheck();
   const [open, setOpen] = useState(false);
   const { user, role, profile, isSubscribed, signOut } = useAuth();
   const location = useLocation();
@@ -168,6 +170,7 @@ export function Header() {
               </Link>
               <Link
                 to="/signup"
+                onClick={handleMemberAction}
                 className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md active:scale-95"
               >
                 Become a Member
@@ -370,7 +373,10 @@ export function Header() {
                   </Link>
                   <Link
                     to="/signup"
-                    onClick={() => setOpen(false)}
+                    onClick={(e) => {
+                      setOpen(false);
+                      handleMemberAction(e);
+                    }}
                     className="inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground shadow-sm active:scale-[0.98] transition-transform"
                   >
                     Become a Member

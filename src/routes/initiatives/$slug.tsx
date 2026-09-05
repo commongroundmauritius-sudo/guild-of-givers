@@ -1,3 +1,4 @@
+import { useMemberCheck } from "@/hooks/use-member-check";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
@@ -47,6 +48,7 @@ export const Route = createFileRoute("/initiatives/$slug")({
 });
 
 function InitiativeDetailPage() {
+  const { handleMemberAction } = useMemberCheck();
   const { initiativeId } = Route.useLoaderData();
   const navigate = useNavigate();
   const { slug } = Route.useParams();
@@ -344,7 +346,10 @@ function InitiativeDetailPage() {
                 <div className="mt-8 space-y-4">
                   <Link
                     to="/signup"
-                    onClick={trackCtaClick}
+                    onClick={(e) => {
+                      trackCtaClick();
+                      handleMemberAction(e);
+                    }}
                     className="flex w-full items-center justify-center rounded-full bg-primary py-4 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-xl active:scale-[0.98]"
                   >
                     Support this Initiative

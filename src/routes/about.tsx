@@ -1,3 +1,4 @@
+import { useMemberCheck } from "@/hooks/use-member-check";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { ShieldCheck, Target, Users, TrendingUp, Globe, Heart, ArrowRight } from "lucide-react";
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/about")({
 });
 
 function AboutPage() {
+  const { handleMemberAction } = useMemberCheck();
   return (
     <SiteLayout>
       <div className="bg-background min-h-screen">
@@ -95,6 +97,7 @@ function AboutPage() {
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <Link
                 to="/signup"
+                onClick={handleMemberAction}
                 className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-bold text-white shadow-xl shadow-primary/20 transition hover:bg-primary/90"
               >
                 Become a Member <ArrowRight className="h-5 w-5" />

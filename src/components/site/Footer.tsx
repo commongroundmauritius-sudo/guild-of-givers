@@ -1,7 +1,9 @@
+import { useMemberCheck } from "@/hooks/use-member-check";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 
 export function Footer() {
+  const { handleMemberAction } = useMemberCheck();
   return (
     <footer className="border-t border-border/60 bg-cream-deep/30">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-4 lg:px-8">
@@ -71,7 +73,7 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/signup" className="font-semibold text-primary hover:underline">
+              <Link to="/signup" onClick={handleMemberAction} className="font-semibold text-primary hover:underline">
                 Become a member
               </Link>
             </li>

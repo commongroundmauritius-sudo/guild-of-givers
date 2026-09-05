@@ -41,10 +41,17 @@ function SignupPage() {
   const [isPartnerSignup, setIsPartnerSignup] = useState(!!search.code);
   const [partnerData, setPartnerData] = useState<any>(null);
 
-  const { signUp } = useAuth();
+  const { user, isSubscribed, loading, signUp } = useAuth();
   const navigate = useNavigate();
 
   const [sourceInitiativeId, setSourceInitiativeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loading && user && isSubscribed && !isPartnerSignup) {
+      toast.info("You're already a member");
+      navigate({ to: "/dashboard", replace: true });
+    }
+  }, [user, isSubscribed, loading, isPartnerSignup, navigate]);
 
   useEffect(() => {
     attributionService.captureFromUrl();

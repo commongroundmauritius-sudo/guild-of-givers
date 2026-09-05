@@ -1,3 +1,4 @@
+import { useMemberCheck } from "@/hooks/use-member-check";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
+  const { handleMemberAction } = useMemberCheck();
   const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -111,6 +113,7 @@ function LoginPage() {
             New here?{" "}
             <Link
               to="/signup"
+              onClick={handleMemberAction}
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
               Become a member

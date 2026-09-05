@@ -1,3 +1,4 @@
+import { useMemberCheck } from "@/hooks/use-member-check";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -114,6 +115,7 @@ function renderSection(section: any) {
 }
 
 function Hero({ settings }: { settings: any }) {
+  const { handleMemberAction } = useMemberCheck();
   return (
     <section className="relative overflow-hidden bg-cream-deep pb-20 pt-32 lg:pt-48">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -132,6 +134,7 @@ function Hero({ settings }: { settings: any }) {
           <div className="mt-12 flex flex-wrap gap-4">
             <Link
               to={settings.primaryCTA?.link || "/signup"}
+              onClick={handleMemberAction}
               className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-10 text-sm font-bold text-white shadow-xl shadow-primary/20 transition hover:bg-primary/90 hover:shadow-2xl active:scale-95"
             >
               {settings.primaryCTA?.text || "Start Supporting"}
@@ -507,6 +510,7 @@ function FAQ({ settings }: { settings: any }) {
 }
 
 function FinalCTA() {
+  const { handleMemberAction } = useMemberCheck();
   return (
     <section className="border-t border-border/60 bg-cream-deep/20">
       <div className="mx-auto max-w-5xl px-4 py-24 text-center sm:px-6 lg:px-8">
@@ -520,6 +524,7 @@ function FinalCTA() {
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
             to="/signup"
+            onClick={handleMemberAction}
             className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             Become a Member
