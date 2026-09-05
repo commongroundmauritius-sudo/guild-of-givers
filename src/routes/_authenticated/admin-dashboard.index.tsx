@@ -54,7 +54,7 @@ function AdminDashboard() {
         supabase
           .from("reports")
           .select("id", { count: "exact", head: true })
-          .eq("status", "pending_review"),
+          .eq("status", "pending"),
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("status", "started"),
       ]);
       return {
@@ -100,8 +100,8 @@ function AdminDashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("reports")
-        .select("*, profile:profiles(full_name)")
-        .eq("status", "pending_review")
+        .select("*, organizations(organization_name)")
+        .eq("status", "pending")
         .limit(5);
       return data || [];
     },
