@@ -157,7 +157,7 @@ DROP TABLE IF EXISTS organization_audit_log CASCADE;
 CREATE TABLE organization_audit_log (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  changed_by uuid NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+  changed_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   action text NOT NULL,
   old_values jsonb,
   new_values jsonb,
