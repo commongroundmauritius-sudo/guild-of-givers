@@ -1,32 +1,57 @@
-# Logs
-logs
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
+
+# Production
+build/
+dist/
+.output/
+.nuxt/
+.next/
+out/
+
+# Misc
+.DS_Store
+*.pem
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+.env
+.env.local
+.env.*.local
+.cache/
 
-node_modules
-dist
-dist-ssr
-.output
-.vinxi
-.tanstack/**
-.nitro
-*.local
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
 
-# Wrangler / Cloudflare
-.wrangler/
-.dev.vars
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# OS
+Thumbs.db
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+
+# Lock files (use bun.lock)
+package-lock.json
+pnpm-lock.yaml
+
+# Agent sessions and temporary directories
+jules_session_*/
+agent_sessions/
+.lovable/
+
+# Supabase local
+.supabase/
+
+# Build output
+_worker_bundle.json
+.wrangler/
