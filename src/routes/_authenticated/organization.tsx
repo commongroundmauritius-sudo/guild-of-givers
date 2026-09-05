@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { uploadReport } from "@/lib/security/auth-actions";
+import { TeamMemberEditor } from "@/components/organization/TeamManager";
 
 export const Route = createFileRoute("/_authenticated/organization")({
   component: OrganizationDashboard,
@@ -207,12 +208,15 @@ function OrganizationDashboard() {
               </DialogContent>
             </Dialog>
 
-            <Link
-              to="/organization"
-              className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-muted transition"
-            >
-              <Settings className="h-4 w-4" /> Manage Profile
-            </Link>
+            {profile?.organization_id && (
+              <Link
+                to="/entities/$id"
+                params={{ id: profile.organization_id }}
+                className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-muted transition"
+              >
+                <Settings className="h-4 w-4" /> Manage Profile
+              </Link>
+            )}
           </div>
         </div>
 
@@ -342,6 +346,12 @@ function OrganizationDashboard() {
             </div>
           </div>
         </div>
+
+        {profile?.organization_id && (
+          <div className="mt-12 rounded-[2.5rem] border border-border/40 bg-card p-8 shadow-sm">
+            <TeamMemberEditor organizationId={profile.organization_id} />
+          </div>
+        )}
       </div>
     </SiteLayout>
   );

@@ -27,6 +27,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { sanitize } from "@/lib/security/sanitizeHtml";
+import {
+  TeamMemberGrid,
+  TeamMemberEditor,
+  TeamMember,
+} from "@/components/organization/TeamManager";
 
 interface Organization {
   id: string;
@@ -97,6 +102,7 @@ function OrganizationProfilePage() {
   const { user, role: userRole } = useAuth();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -139,6 +145,18 @@ function OrganizationProfilePage() {
 
         if (orgData) {
           setOrganization(orgData as Organization);
+
+          // Fetch team members
+          const { data: teamData, error: teamError } = await supabase
+            .from("organization_team_members")
+            .select("*")
+            .eq("organization_id", id)
+            .order("display_order", { ascending: true })
+            .order("created_at", { ascending: true });
+
+          if (!teamError) {
+            setTeamMembers((teamData as TeamMember[]) || []);
+          }
           setFormData({
             organization_name: orgData.organization_name || "",
             description: orgData.description || "",
@@ -459,6 +477,9 @@ function OrganizationProfilePage() {
                   )}
                 </div>
               )}
+
+              {/* Meet the Team Leadership Section */}
+              <TeamMemberGrid members={teamMembers} />
 
               {/* Active Child Initiatives */}
               <div className="space-y-4">
@@ -890,6 +911,14 @@ function OrganizationProfilePage() {
                     </div>
                   </div>
                 )}
+
+                {/* Team Members Management Section in Modal */}
+                <div className="pt-6 border-t border-border">
+                  <TeamMemberEditor
+                    organizationId={organization.id}
+                    onMembersUpdated={setTeamMembers}
+                  />
+                </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t">
                   <button
