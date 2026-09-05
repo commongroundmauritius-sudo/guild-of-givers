@@ -52,6 +52,7 @@ async function build() {
   const serverEntryCandidates = [
     path.join(rootDir, "dist/server/index.mjs"),
     path.join(rootDir, "dist/server/server.js"),
+    path.join(rootDir, ".output/server/index.mjs"),
   ];
   const serverEntry = serverEntryCandidates.find((candidate) => fs.existsSync(candidate));
   const workerOutput = path.join(rootDir, "dist/client/_worker.js");
