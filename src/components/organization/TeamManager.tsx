@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit2, Loader, Users, Quote, User } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus, Trash2, Edit2, Loader, Users, Quote, User, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { sanitize } from "@/lib/security/sanitizeHtml";
 
@@ -30,63 +31,140 @@ function getInitials(name: string): string {
 
 interface TeamMemberGridProps {
   members: TeamMember[];
+  organizationId?: string;
+  canEdit?: boolean;
+  onMembersUpdated?: (members: TeamMember[]) => void;
   title?: string;
   subtitle?: string;
 }
 
 export function TeamMemberGrid({
   members,
+  organizationId,
+  canEdit = false,
+  onMembersUpdated,
   title = "Meet the Team",
   subtitle = "Leadership and visionaries behind our mission",
 }: TeamMemberGridProps) {
-  if (!members || members.length === 0) return null;
+  const [isManageOpen, setIsManageOpen] = useState(false);
+
+  // If no members and user cannot edit, don't display section
+  if ((!members || members.length === 0) && !canEdit) {
+    return null;
+  }
+
+  // Placeholder banner for admins/owners when 0 team members exist
+  if ((!members || members.length === 0) && canEdit && organizationId) {
+    return (
+      <>
+        <div className="bg-white rounded-[2.5rem] p-8 border border-dashed border-primary/30 shadow-xs text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+            <Users className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="font-display text-xl font-bold text-primary">{title}</h3>
+            <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+              Introduce leadership and key team members to supporters on your organization profile.
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => setIsManageOpen(true)}
+            className="rounded-full bg-primary hover:bg-primary/90 text-sm font-bold gap-2 px-6"
+          >
+            <Plus className="w-4 h-4" /> Add Team Members
+          </Button>
+        </div>
+
+        <Dialog open={isManageOpen} onOpenChange={setIsManageOpen}>
+          <DialogContent className="sm:max-w-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-primary flex items-center gap-2">
+                <Users className="w-5 h-5" /> Manage Team Members
+              </DialogTitle>
+            </DialogHeader>
+            <TeamMemberEditor organizationId={organizationId} onMembersUpdated={onMembersUpdated} />
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold font-display text-primary flex items-center gap-2">
-          <Users className="w-6 h-6 text-primary" /> {title}
-        </h2>
-        {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-        {members.map((member) => (
-          <div
-            key={member.id}
-            className="flex flex-col items-center text-center p-6 rounded-3xl bg-muted/20 border border-border/40 hover:border-primary/20 transition-all shadow-2xs"
-          >
-            {/* Avatar / Photo */}
-            <Avatar className="w-20 h-20 mb-4 border-2 border-primary/20 shadow-sm">
-              <AvatarImage
-                src={member.photo_url || ""}
-                alt={member.name}
-                className="object-cover"
-              />
-              <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg font-display">
-                {getInitials(member.name)}
-              </AvatarFallback>
-            </Avatar>
-
-            {/* Name */}
-            <h3 className="font-bold text-primary text-base line-clamp-1">{member.name}</h3>
-
-            {/* Title / Position */}
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 line-clamp-1">
-              {member.title}
-            </p>
-
-            {/* Quote in Italics */}
-            <div className="mt-4 pt-3 border-t border-border/30 w-full relative">
-              <Quote className="w-4 h-4 text-primary/30 mx-auto mb-1 rotate-180" />
-              <p className="text-xs italic text-foreground/80 leading-relaxed line-clamp-4">
-                "{member.quote}"
-              </p>
-            </div>
+    <>
+      <div className="bg-white rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
+          <div>
+            <h2 className="text-2xl font-bold font-display text-primary flex items-center gap-2">
+              <Users className="w-6 h-6 text-primary" /> {title}
+            </h2>
+            {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
           </div>
-        ))}
+
+          {canEdit && organizationId && (
+            <Button
+              type="button"
+              onClick={() => setIsManageOpen(true)}
+              variant="outline"
+              size="sm"
+              className="rounded-full border-primary/30 text-primary hover:bg-primary/5 font-bold text-xs gap-2 shrink-0 self-start sm:self-auto"
+            >
+              <Settings2 className="w-4 h-4" /> Manage Team
+            </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+          {members.map((member) => (
+            <div
+              key={member.id}
+              className="flex flex-col items-center text-center p-6 rounded-3xl bg-muted/20 border border-border/40 hover:border-primary/20 transition-all shadow-2xs"
+            >
+              {/* Avatar / Photo */}
+              <Avatar className="w-20 h-20 mb-4 border-2 border-primary/20 shadow-sm">
+                <AvatarImage
+                  src={member.photo_url || ""}
+                  alt={member.name}
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg font-display">
+                  {getInitials(member.name)}
+                </AvatarFallback>
+              </Avatar>
+
+              {/* Name */}
+              <h3 className="font-bold text-primary text-base line-clamp-1">{member.name}</h3>
+
+              {/* Title / Position */}
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 line-clamp-1">
+                {member.title}
+              </p>
+
+              {/* Quote in Italics */}
+              <div className="mt-4 pt-3 border-t border-border/30 w-full relative">
+                <Quote className="w-4 h-4 text-primary/30 mx-auto mb-1 rotate-180" />
+                <p className="text-xs italic text-foreground/80 leading-relaxed line-clamp-4">
+                  "{member.quote}"
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {canEdit && organizationId && (
+        <Dialog open={isManageOpen} onOpenChange={setIsManageOpen}>
+          <DialogContent className="sm:max-w-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-primary flex items-center gap-2">
+                <Users className="w-5 h-5" /> Manage Team Members
+              </DialogTitle>
+            </DialogHeader>
+            <TeamMemberEditor organizationId={organizationId} onMembersUpdated={onMembersUpdated} />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
 
