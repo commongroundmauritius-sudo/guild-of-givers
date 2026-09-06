@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 
 const GUEST_NAV = [
   { label: "About Us", to: "/about" },
+  { label: "Meet Our Partners", to: "/organizations" },
   { label: "Partner with Us", to: "/partner" },
   { label: "FAQ", to: "/faq" },
 ] as const;
@@ -115,17 +116,31 @@ export function Header() {
           </Link>
 
           <nav className="hidden items-center gap-6 lg:flex">
-            {navItems.map((item) => (
-              <Link
-                key={item.label + item.to}
-                to={item.to}
-                className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
-                activeOptions={item.to === "/admin-dashboard" ? { exact: true } : {}}
-                activeProps={{ className: "text-primary font-bold" }}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              if (item.to === "/partner") {
+                return (
+                  <Link
+                    key={item.label + item.to}
+                    to={item.to}
+                    className="inline-flex items-center justify-center rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-xs font-bold text-primary transition-all hover:bg-primary hover:text-primary-foreground shadow-xs"
+                    activeProps={{ className: "bg-primary text-primary-foreground font-bold" }}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              }
+              return (
+                <Link
+                  key={item.label + item.to}
+                  to={item.to}
+                  className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
+                  activeOptions={item.to === "/admin-dashboard" ? { exact: true } : {}}
+                  activeProps={{ className: "text-primary font-bold" }}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
 
             {isAdmin && (
               <DropdownMenu>
@@ -282,18 +297,33 @@ export function Header() {
       {open && (
         <div className="lg:hidden border-t border-border/60 bg-background shadow-lg">
           <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.label + item.to}
-                to={item.to}
-                onClick={() => setOpen(false)}
-                className="rounded-xl px-4 py-3 text-base font-medium text-foreground/80 hover:bg-muted"
-                activeOptions={item.to === "/admin-dashboard" ? { exact: true } : {}}
-                activeProps={{ className: "bg-primary/5 text-primary font-bold" }}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              if (item.to === "/partner") {
+                return (
+                  <Link
+                    key={item.label + item.to}
+                    to={item.to}
+                    onClick={() => setOpen(false)}
+                    className="my-1 inline-flex items-center justify-center rounded-full border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm font-bold text-primary transition-all hover:bg-primary hover:text-primary-foreground"
+                    activeProps={{ className: "bg-primary text-primary-foreground font-bold" }}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              }
+              return (
+                <Link
+                  key={item.label + item.to}
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-4 py-3 text-base font-medium text-foreground/80 hover:bg-muted"
+                  activeOptions={item.to === "/admin-dashboard" ? { exact: true } : {}}
+                  activeProps={{ className: "bg-primary/5 text-primary font-bold" }}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
 
             {isAdmin && (
               <Accordion type="single" collapsible className="w-full">

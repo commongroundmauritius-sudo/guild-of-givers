@@ -35,7 +35,7 @@ CREATE POLICY "Org owners, admins, and staff can update organizations"
     -- Organization staff members can update
     EXISTS (
       SELECT 1 FROM profiles p
-      WHERE p.user_id = auth.uid()
+      WHERE p.id = auth.uid()
         AND p.organization_id = organizations.id
     )
   );
@@ -157,7 +157,7 @@ DROP TABLE IF EXISTS organization_audit_log CASCADE;
 CREATE TABLE organization_audit_log (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  changed_by uuid NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+  changed_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   action text NOT NULL,
   old_values jsonb,
   new_values jsonb,
@@ -177,7 +177,7 @@ CREATE POLICY "Admins and org staff can view audit logs"
     OR
     EXISTS (
       SELECT 1 FROM profiles p
-      WHERE p.user_id = auth.uid()
+      WHERE p.id = auth.uid()
         AND p.organization_id = organization_audit_log.organization_id
     )
   );
@@ -243,7 +243,7 @@ BEGIN
   -- Check if user is organization owner
   SELECT EXISTS(
     SELECT 1 FROM organizations
-    WHERE id = org_id AND owner_user_id = auth.uid()
+    WHERE id = org_id AND owner_id = auth.uid()
   ) INTO v_is_owner;
   
   IF v_is_owner THEN
@@ -253,7 +253,7 @@ BEGIN
   -- Check if user is organization staff
   SELECT EXISTS(
     SELECT 1 FROM profiles
-    WHERE user_id = auth.uid() AND organization_id = org_id
+    WHERE id = auth.uid() AND organization_id = org_id
   ) INTO v_is_staff;
 
   RETURN v_is_staff;
