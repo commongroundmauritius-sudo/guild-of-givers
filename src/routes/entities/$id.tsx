@@ -479,7 +479,12 @@ function OrganizationProfilePage() {
               )}
 
               {/* Meet the Team Leadership Section */}
-              <TeamMemberGrid members={teamMembers} />
+              <TeamMemberGrid
+                members={teamMembers}
+                organizationId={organization.id}
+                canEdit={canEdit}
+                onMembersUpdated={setTeamMembers}
+              />
 
               {/* Active Child Initiatives */}
               <div className="space-y-4">
@@ -911,14 +916,6 @@ function OrganizationProfilePage() {
                     </div>
                   </div>
                 )}
-
-                {/* Team Members Management Section in Modal */}
-                <div className="pt-6 border-t border-border">
-                  <TeamMemberEditor
-                    organizationId={organization.id}
-                    onMembersUpdated={setTeamMembers}
-                  />
-                </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t">
                   <button

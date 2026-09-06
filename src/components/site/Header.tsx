@@ -44,8 +44,8 @@ import { cn } from "@/lib/utils";
 const GUEST_NAV = [
   { label: "About Us", to: "/about" },
   { label: "Meet Our Partners", to: "/organizations" },
-  { label: "FAQ", to: "/faq" },
   { label: "Partner with Us", to: "/partner" },
+  { label: "FAQ", to: "/faq" },
 ] as const;
 
 const PRIMARY_ADMIN_NAV = [
