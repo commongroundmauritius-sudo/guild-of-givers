@@ -6,7 +6,9 @@ test.describe("Member Checkpoint Tests", () => {
     await expect(page.locator("h2")).toContainText(/Monthly Contribution/i);
   });
 
-  test("unauthenticated user clicking 'Become a member' in footer goes to signup", async ({ page }) => {
+  test("unauthenticated user clicking 'Become a member' in footer goes to signup", async ({
+    page,
+  }) => {
     await page.goto("/");
     const memberLink = page.locator("footer").getByRole("link", { name: /Become a member/i });
     await expect(memberLink).toBeVisible();

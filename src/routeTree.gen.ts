@@ -9,8 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
@@ -18,6 +21,7 @@ import { Route as LegalRouteImport } from './routes/legal'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ForOrgsRouteImport } from './routes/for-orgs'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as CookiesPolicyRouteImport } from './routes/cookies-policy'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -53,6 +57,11 @@ import { Route as AuthenticatedAdminDashboardMembersIdRouteImport } from './rout
 import { Route as AuthenticatedAdminDashboardInitiativesNewRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.new'
 import { Route as AuthenticatedAdminDashboardInitiativesIdManageRouteImport } from './routes/_authenticated/admin-dashboard.initiatives.$id.manage'
 
+const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
+  id: '/terms-and-conditions',
+  path: '/terms-and-conditions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -61,6 +70,16 @@ const SignupRoute = SignupRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundPolicyRoute = RefundPolicyRouteImport.update({
+  id: '/refund-policy',
+  path: '/refund-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnerRoute = PartnerRouteImport.update({
@@ -96,6 +115,11 @@ const ForOrgsRoute = ForOrgsRouteImport.update({
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesPolicyRoute = CookiesPolicyRouteImport.update({
+  id: '/cookies-policy',
+  path: '/cookies-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -295,6 +319,7 @@ const AuthenticatedAdminDashboardInitiativesIdManageRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cookies-policy': typeof CookiesPolicyRoute
   '/faq': typeof FaqRoute
   '/for-orgs': typeof ForOrgsRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -302,8 +327,11 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/partner': typeof PartnerRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRouteWithChildren
@@ -339,6 +367,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cookies-policy': typeof CookiesPolicyRoute
   '/faq': typeof FaqRoute
   '/for-orgs': typeof ForOrgsRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -346,8 +375,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/partner': typeof PartnerRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/member': typeof AuthenticatedMemberRouteWithChildren
   '/organization': typeof AuthenticatedOrganizationRoute
@@ -384,6 +416,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
+  '/cookies-policy': typeof CookiesPolicyRoute
   '/faq': typeof FaqRoute
   '/for-orgs': typeof ForOrgsRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -391,8 +424,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/partner': typeof PartnerRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/member': typeof AuthenticatedMemberRouteWithChildren
@@ -430,6 +466,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/cookies-policy'
     | '/faq'
     | '/for-orgs'
     | '/forgot-password'
@@ -437,8 +474,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/notifications'
     | '/partner'
+    | '/privacy-policy'
+    | '/refund-policy'
     | '/reset-password'
     | '/signup'
+    | '/terms-and-conditions'
     | '/admin-dashboard'
     | '/dashboard'
     | '/member'
@@ -474,6 +514,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/cookies-policy'
     | '/faq'
     | '/for-orgs'
     | '/forgot-password'
@@ -481,8 +522,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/notifications'
     | '/partner'
+    | '/privacy-policy'
+    | '/refund-policy'
     | '/reset-password'
     | '/signup'
+    | '/terms-and-conditions'
     | '/dashboard'
     | '/member'
     | '/organization'
@@ -518,6 +562,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/cookies-policy'
     | '/faq'
     | '/for-orgs'
     | '/forgot-password'
@@ -525,8 +570,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/notifications'
     | '/partner'
+    | '/privacy-policy'
+    | '/refund-policy'
     | '/reset-password'
     | '/signup'
+    | '/terms-and-conditions'
     | '/_authenticated/admin-dashboard'
     | '/_authenticated/dashboard'
     | '/_authenticated/member'
@@ -564,6 +612,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AboutRoute: typeof AboutRoute
+  CookiesPolicyRoute: typeof CookiesPolicyRoute
   FaqRoute: typeof FaqRoute
   ForOrgsRoute: typeof ForOrgsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -571,8 +620,11 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   PartnerRoute: typeof PartnerRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  RefundPolicyRoute: typeof RefundPolicyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   EntitiesIdRoute: typeof EntitiesIdRoute
   InitiativesSlugRoute: typeof InitiativesSlugRoute
   EntitiesIndexRoute: typeof EntitiesIndexRoute
@@ -582,6 +634,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms-and-conditions': {
+      id: '/terms-and-conditions'
+      path: '/terms-and-conditions'
+      fullPath: '/terms-and-conditions'
+      preLoaderRoute: typeof TermsAndConditionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -594,6 +653,20 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund-policy': {
+      id: '/refund-policy'
+      path: '/refund-policy'
+      fullPath: '/refund-policy'
+      preLoaderRoute: typeof RefundPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner': {
@@ -643,6 +716,13 @@ declare module '@tanstack/react-router' {
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies-policy': {
+      id: '/cookies-policy'
+      path: '/cookies-policy'
+      fullPath: '/cookies-policy'
+      preLoaderRoute: typeof CookiesPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -1004,6 +1084,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AboutRoute: AboutRoute,
+  CookiesPolicyRoute: CookiesPolicyRoute,
   FaqRoute: FaqRoute,
   ForOrgsRoute: ForOrgsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
@@ -1011,8 +1092,11 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   PartnerRoute: PartnerRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
+  RefundPolicyRoute: RefundPolicyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  TermsAndConditionsRoute: TermsAndConditionsRoute,
   EntitiesIdRoute: EntitiesIdRoute,
   InitiativesSlugRoute: InitiativesSlugRoute,
   EntitiesIndexRoute: EntitiesIndexRoute,

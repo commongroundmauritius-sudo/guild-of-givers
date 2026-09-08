@@ -1,11 +1,14 @@
 import { useMemberCheck } from "@/hooks/use-member-check";
+import { useCookieConsent } from "@/hooks/use-cookie-consent";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 
 export function Footer() {
   const { handleMemberAction } = useMemberCheck();
+  const { openModal } = useCookieConsent();
+
   return (
-    <footer className="border-t border-border/60 bg-cream-deep/30">
+    <footer className="border-t border-border/60 bg-cream-deep/30 text-foreground">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-4 lg:px-8">
         <div className="md:col-span-2">
           <Logo />
@@ -21,14 +24,17 @@ export function Footer() {
           </h4>
           <ul className="mt-6 space-y-3 text-sm">
             <li>
-              <Link to="/about" className="text-foreground/70 transition-colors hover:text-primary">
+              <Link
+                to="/about"
+                className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+              >
                 About our mission
               </Link>
             </li>
             <li>
               <Link
                 to="/initiatives"
-                className="text-foreground/70 transition-colors hover:text-primary"
+                className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
               >
                 Verified Initiatives
               </Link>
@@ -36,7 +42,7 @@ export function Footer() {
             <li>
               <Link
                 to="/for-orgs"
-                className="text-foreground/70 transition-colors hover:text-primary"
+                className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
               >
                 For Organizations
               </Link>
@@ -44,9 +50,18 @@ export function Footer() {
             <li>
               <Link
                 to="/partner"
-                className="text-foreground/70 transition-colors hover:text-primary"
+                className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
               >
                 Partner With Us
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/signup"
+                onClick={handleMemberAction}
+                className="font-semibold text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+              >
+                Become a member
               </Link>
             </li>
           </ul>
@@ -54,28 +69,48 @@ export function Footer() {
 
         <div>
           <h4 className="font-display text-sm font-bold uppercase tracking-wider text-primary">
-            Resources
+            Governance & Legal
           </h4>
           <ul className="mt-6 space-y-3 text-sm">
             <li>
-              <Link to="/faq" className="text-foreground/70 transition-colors hover:text-primary">
-                Common Questions
+              <Link
+                to="/privacy-policy"
+                className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+              >
+                Privacy Policy
               </Link>
             </li>
             <li>
-              <Link to="/legal" className="text-foreground/70 transition-colors hover:text-primary">
-                Legal & Compliance
+              <Link
+                to="/terms-and-conditions"
+                className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+              >
+                Terms & Conditions
               </Link>
             </li>
             <li>
-              <Link to="/login" className="text-foreground/70 transition-colors hover:text-primary">
-                Member Login
+              <Link
+                to="/refund-policy"
+                className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+              >
+                Refund & Cancellation Policy
               </Link>
             </li>
             <li>
-              <Link to="/signup" onClick={handleMemberAction} className="font-semibold text-primary hover:underline">
-                Become a member
+              <Link
+                to="/cookies-policy"
+                className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+              >
+                Cookies Policy
               </Link>
+            </li>
+            <li>
+              <button
+                onClick={openModal}
+                className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded text-left"
+              >
+                Cookie Preferences
+              </button>
             </li>
           </ul>
         </div>
@@ -86,14 +121,32 @@ export function Footer() {
             <span>© {new Date().getFullYear()} CommonGround Mauritius. All rights reserved.</span>
             <span>Registered social infrastructure platform.</span>
           </div>
-          <div className="flex items-center gap-6">
-            <Link to="/legal" className="hover:text-primary">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+            <Link
+              to="/privacy-policy"
+              className="hover:text-primary focus:outline-none focus:ring-1 focus:ring-primary rounded"
+            >
               Privacy
             </Link>
-            <Link to="/legal" className="hover:text-primary">
+            <Link
+              to="/terms-and-conditions"
+              className="hover:text-primary focus:outline-none focus:ring-1 focus:ring-primary rounded"
+            >
               Terms
             </Link>
-            <span className="font-medium text-primary/40">Rooted in impact.</span>
+            <Link
+              to="/refund-policy"
+              className="hover:text-primary focus:outline-none focus:ring-1 focus:ring-primary rounded"
+            >
+              Refunds
+            </Link>
+            <Link
+              to="/cookies-policy"
+              className="hover:text-primary focus:outline-none focus:ring-1 focus:ring-primary rounded"
+            >
+              Cookies
+            </Link>
+            <span className="font-medium text-primary/60">Rooted in impact.</span>
           </div>
         </div>
       </div>

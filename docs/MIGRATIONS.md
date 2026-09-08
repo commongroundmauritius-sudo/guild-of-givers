@@ -11,6 +11,7 @@ CommonGround uses Supabase migrations with strict naming conventions and idempot
 **Example:** `20260605000000_create_financial_events_table.sql`
 
 **Requirements:**
+
 - 14-digit timestamp (`YYYYMMDDHHMMSS`) for correct ordering
 - Snake_case description
 - Must be compatible with Supabase CLI
@@ -35,6 +36,7 @@ END $$;
 ## RLS Requirements
 
 **Every new table MUST have:**
+
 1. RLS enabled
 2. Appropriate policies for each role: `member`, `organization`, `admin`
 3. Explicit policies for public access (if applicable)
@@ -77,12 +79,14 @@ CREATE POLICY "Admins can view all"
 ### Example: Organization Rename (2026-05-18)
 
 All migrations **before** `20260518075811` must use original naming:
+
 ```sql
 -- Before 2026-05-18
 CREATE TABLE organizations ( ... );
 ```
 
 All migrations **after** `20260518075811` must use updated naming:
+
 ```sql
 -- After 2026-05-18
 CREATE TABLE organizations ( ... );
@@ -93,12 +97,14 @@ CREATE TABLE organizations ( ... );
 ## Migration Safeguards
 
 ### ❌ DO NOT
+
 - **Rename** migration files once pushed to production/staging
 - **Delete** migration files
 - Use conditional logic to detect and migrate between different schema versions
 - Modify migrations that have already been applied
 
 ### ✅ DO
+
 - **Create new migrations** to revert changes if needed
 - **Verify sequential timestamps** before pushing
 - **Test migrations** locally with `supabase db pull` and `supabase db push`
@@ -193,6 +199,7 @@ supabase db list tables
 **Latest Migration:** `20260903_organization_role_based_security.sql`
 
 **Key Tables:**
+
 - `auth.users` - Supabase Auth
 - `profiles` - User identity
 - `user_roles` - Role-based access control

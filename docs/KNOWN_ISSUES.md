@@ -3,6 +3,7 @@
 ## Header Component Fix
 
 ### Context
+
 The mobile header sign-out and authentication button layout needs refinement for better UX on smaller screens.
 
 ### Implementation
@@ -42,6 +43,7 @@ The mobile header sign-out and authentication button layout needs refinement for
 ```
 
 ### Status
+
 ✅ Implemented in `src/components/site/Header.tsx`
 
 ---
@@ -49,6 +51,7 @@ The mobile header sign-out and authentication button layout needs refinement for
 ## FAQ Component
 
 ### Overview
+
 Dynamic FAQ section for the homepage that supports both default content and customizable items via settings.
 
 ### Implementation
@@ -96,17 +99,11 @@ function FAQ({ settings }: { settings: any }) {
         </div>
         <Accordion type="single" collapsible className="w-full">
           {items.map((f: any, i: number) => (
-            <AccordionItem
-              key={i}
-              value={`q-${i}`}
-              className="border-b border-border/60"
-            >
+            <AccordionItem key={i} value={`q-${i}`} className="border-b border-border/60">
               <AccordionTrigger className="text-left font-display text-lg text-primary hover:no-underline">
                 {f.q}
               </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {f.a}
-              </AccordionContent>
+              <AccordionContent className="text-muted-foreground">{f.a}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
@@ -117,6 +114,7 @@ function FAQ({ settings }: { settings: any }) {
 ```
 
 ### Status
+
 ✅ Implemented in homepage management module
 
 ---
@@ -124,21 +122,25 @@ function FAQ({ settings }: { settings: any }) {
 ## Technical Debt & Future Work
 
 ### Performance Optimization
+
 - [ ] Implement Redis caching for frequently accessed metrics
 - [ ] Add database query optimization for financial reports
 - [ ] Lazy-load dashboard components
 
 ### Observability
+
 - [ ] Implement structured logging across all services
 - [ ] Add distributed tracing for payment flows
 - [ ] Create alerting rules for critical business metrics
 
 ### Scalability
+
 - [ ] Implement read replicas for analytics queries
 - [ ] Add connection pooling for database
 - [ ] Optimize webhook processing for high-volume scenarios
 
 ### Testing
+
 - [ ] Expand e2e test coverage for financial flows
 - [ ] Add stress testing for allocation engine
 - [ ] Implement chaos engineering tests for resilience

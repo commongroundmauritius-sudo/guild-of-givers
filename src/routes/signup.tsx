@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Check, Lock } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -391,6 +391,25 @@ function SignupPage() {
                 >
                   {submitting ? "Processing..." : "Complete Checkout (Mock)"}
                 </button>
+                <p className="mt-4 text-center text-xs text-muted-foreground">
+                  By completing payment, you agree to our{" "}
+                  <Link
+                    to="/terms-and-conditions"
+                    target="_blank"
+                    className="underline text-primary hover:text-primary/80"
+                  >
+                    Terms & Conditions
+                  </Link>{" "}
+                  and acknowledge our{" "}
+                  <Link
+                    to="/refund-policy"
+                    target="_blank"
+                    className="underline text-primary hover:text-primary/80"
+                  >
+                    Refund & Cancellation Policy
+                  </Link>
+                  .
+                </p>
               </div>
             )}
 
@@ -431,6 +450,26 @@ function SignupPage() {
                   >
                     {submitting ? "Setting up…" : "Complete setup"}
                   </button>
+                  <p className="mt-4 text-center text-xs text-muted-foreground">
+                    By creating an account, you agree to our{" "}
+                    <Link
+                      to="/privacy-policy"
+                      target="_blank"
+                      className="underline text-primary hover:text-primary/80"
+                    >
+                      Privacy Policy
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      to="/terms-and-conditions"
+                      target="_blank"
+                      className="underline text-primary hover:text-primary/80"
+                    >
+                      Terms of Service
+                    </Link>
+                    .
+                  </p>
+
                   {!isPartnerSignup && (
                     <button
                       type="button"
