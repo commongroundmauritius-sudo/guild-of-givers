@@ -5,7 +5,7 @@ test.describe("Organization Profile Page", () => {
     await page.goto("/entities/a1111111-1111-4111-a111-111111111111");
 
     // Expect organization title
-    await expect(page.locator("h1")).toContainText(/Fondation Rays of Hope Port Louis/i);
+    await expect(page.locator("h1")).toContainText(/Rays of Hope Foundation/i);
 
     // Expect verified badge
     await expect(page.getByText("Verified Organization")).toBeVisible();

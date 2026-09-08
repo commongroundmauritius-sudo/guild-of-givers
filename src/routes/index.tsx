@@ -313,7 +313,7 @@ function SuccessStories({ settings }: { settings: any }) {
                   <div className="aspect-[16/10] overflow-hidden">
                     <img
                       src={story.image_url || ""}
-                      alt=""
+                      alt={story.title || "Success story image"}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   </div>

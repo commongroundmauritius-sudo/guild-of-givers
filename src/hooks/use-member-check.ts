@@ -19,7 +19,7 @@ export function useMemberCheck() {
       }
       return false;
     },
-    [user, isSubscribed, navigate]
+    [user, isSubscribed, navigate],
   );
 
   return {

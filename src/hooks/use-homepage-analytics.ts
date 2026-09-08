@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isAnalyticsAllowed } from "@/lib/cookie-consent";
 
 export function useHomepageAnalytics(versionId: string | undefined) {
   useEffect(() => {
-    if (!versionId) return;
+    if (!versionId || !isAnalyticsAllowed()) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -26,7 +27,7 @@ export function useHomepageAnalytics(versionId: string | undefined) {
   }, [versionId]);
 
   const trackEvent = async (sectionId: string, eventType: string, metadata: any = {}) => {
-    if (!versionId) return;
+    if (!versionId || !isAnalyticsAllowed()) return;
 
     await supabase.from("homepage_analytics").insert({
       version_id: versionId,

@@ -237,7 +237,11 @@ function InitiativeDetailPage() {
                         <img
                           src={organization.logo_url}
                           className="h-full w-full object-cover"
-                          alt=""
+                          alt={
+                            organization.organization_name
+                              ? `${organization.organization_name} logo`
+                              : "Organization logo"
+                          }
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-primary text-white text-3xl font-bold">
