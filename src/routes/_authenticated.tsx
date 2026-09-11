@@ -1,34 +1,23 @@
-import { createFileRoute, Navigate, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: () => {
-    // Fast client-side gate for protected routes. Supabase persists its
-    // session in localStorage; this prevents protected pages from remaining
-    // visible while the async auth provider is still hydrating. RLS remains
-    // the authoritative backend authorization layer.
-    if (typeof window !== "undefined") {
-      const hasSupabaseSession = Object.keys(window.localStorage).some((key) =>
-        /^sb-.+-auth-token$/.test(key),
-      );
-
-      if (!hasSupabaseSession) {
-        const current = `${window.location.pathname}${window.location.search}`;
-        throw redirect({
-          to: "/login",
-          search: { redirect: current },
-        });
-      }
-    }
-  },
   component: AuthenticatedLayout,
 });
 
 function AuthenticatedLayout() {
   const { user, sessionReady } = useAuth();
 
-  if (!sessionReady) {
+  useEffect(() => {
+    if (!sessionReady || user || typeof window === "undefined") return;
+
+    const redirectPath = `${window.location.pathname}${window.location.search}`;
+    window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+  }, [sessionReady, user]);
+
+  if (!sessionReady || !user) {
     return (
       <SiteLayout>
         <div className="mx-auto max-w-3xl px-4 py-32 text-center text-muted-foreground">
@@ -36,13 +25,6 @@ function AuthenticatedLayout() {
         </div>
       </SiteLayout>
     );
-  }
-
-  if (!user) {
-    const redirectPath =
-      typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/";
-
-    return <Navigate to="/login" search={{ redirect: redirectPath }} replace />;
   }
 
   return <Outlet />;
