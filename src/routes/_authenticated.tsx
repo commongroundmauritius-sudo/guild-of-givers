@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -9,13 +9,14 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
-      void navigate({ to: "/login", replace: true });
+    if (!loading && !user && typeof window !== "undefined") {
+      // Use a full navigation so an unauthenticated protected route cannot
+      // remain mounted in the authenticated route tree.
+      window.location.replace(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
     }
-  }, [loading, user, navigate]);
+  }, [loading, user]);
 
   if (loading && !user) {
     return (
