@@ -8,7 +8,6 @@ test.describe("Authentication Tests", () => {
 
   test("unauthorized access redirects to login", async ({ page }) => {
     await page.goto("/admin-dashboard");
-    await page.waitForURL((url) => url.toString().includes("/login"));
-    await expect(page.url()).toContain("/login");
+    await expect(page).toHaveURL(/\/login/);
   });
 });
