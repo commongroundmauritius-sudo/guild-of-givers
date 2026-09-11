@@ -1,0 +1,65 @@
+name: Refresh npm lockfile
+
+on:
+  push:
+    branches:
+      - production-readiness-finalization
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/workflows/refresh-lockfile.yml
+  pull_request:
+    branches:
+      - main
+      - production-readiness-finalization
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/workflows/refresh-lockfile.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-lockfile-production-readiness
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: production-readiness-finalization
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Regenerate package-lock.json from clean state
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Verify clean-install compatibility
+        run: npm ci --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+
+      - name: Commit refreshed lockfile
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "package-lock.json is already synchronized and npm ci passes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore: rebuild npm lockfile"
+          git fetch origin production-readiness-finalization
+          git rebase origin/production-readiness-finalization
+          git push origin HEAD:production-readiness-finalization

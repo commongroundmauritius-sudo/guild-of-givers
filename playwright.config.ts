@@ -5,9 +5,10 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 2 : undefined,
-  timeout: 45_000,
-  expect: { timeout: 10_000 },
+  // Keep CI feedback bounded while retaining a retry for transient browser failures.
+  workers: process.env.CI ? 4 : undefined,
+  timeout: 20_000,
+  expect: { timeout: 5_000 },
   reporter: "list",
   use: {
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || "http://localhost:8080",

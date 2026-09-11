@@ -8,16 +8,19 @@ export const Route = createFileRoute("/_authenticated/admin-dashboard")({
 });
 
 function AdminDashboardLayout() {
-  const { user, role, loading: authLoading } = useAuth();
+  const { user, role, loading: authLoading, sessionReady } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!authLoading && (!user || (role !== "admin" && role !== "super_admin"))) {
+    if (!sessionReady || !user || authLoading) return;
+
+    if (role !== "admin" && role !== "super_admin") {
       navigate({ to: "/dashboard", replace: true });
     }
-  }, [user, role, authLoading, navigate]);
+  }, [user, role, authLoading, sessionReady, navigate]);
 
-  if (authLoading) {
+  // The _authenticated parent owns unauthenticated -> /login routing.
+  if (!sessionReady || authLoading) {
     return (
       <SiteLayout>
         <div className="mx-auto max-w-7xl px-4 py-32 text-center text-muted-foreground">
@@ -27,7 +30,8 @@ function AdminDashboardLayout() {
     );
   }
 
-  if (!authLoading && role !== "admin" && role !== "super_admin") return null;
+  if (!user) return null;
+  if (role !== "admin" && role !== "super_admin") return null;
 
   return <Outlet />;
 }

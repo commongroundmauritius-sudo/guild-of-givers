@@ -5,6 +5,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { createLead, convertLead } from "@/lib/auth-actions";
 import { attributionService } from "@/lib/attribution-service";
+import { paymentService } from "@/lib/payments/service";
 import { toast } from "sonner";
 import { emailSchema, nameSchema } from "@/lib/security/validators";
 import { z } from "zod";
@@ -40,10 +41,9 @@ function SignupPage() {
   const [signupCode, setSignupCode] = useState(search.code || "");
   const [isPartnerSignup, setIsPartnerSignup] = useState(!!search.code);
   const [partnerData, setPartnerData] = useState<any>(null);
-
+  const [paymentTransactionId, setPaymentTransactionId] = useState<string | null>(null);
   const { user, isSubscribed, loading, signUp } = useAuth();
   const navigate = useNavigate();
-
   const [sourceInitiativeId, setSourceInitiativeId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,10 +57,7 @@ function SignupPage() {
     attributionService.captureFromUrl();
     const stored = localStorage.getItem("source_initiative_id");
     if (stored) setSourceInitiativeId(stored);
-
-    if (signupCode) {
-      verifySignupCode(signupCode);
-    }
+    if (signupCode) verifySignupCode(signupCode);
   }, [signupCode]);
 
   const verifySignupCode = async (code: string) => {
@@ -90,18 +87,9 @@ function SignupPage() {
 
   const submitDetails = async () => {
     if (submitting) return;
-
     const validation = z
-      .object({
-        email: emailSchema,
-        fullName: nameSchema,
-        amount: z.number().positive(),
-      })
-      .safeParse({
-        email,
-        fullName,
-        amount: finalAmount,
-      });
+      .object({ email: emailSchema, fullName: nameSchema, amount: z.number().positive() })
+      .safeParse({ email, fullName, amount: finalAmount });
 
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
@@ -135,12 +123,38 @@ function SignupPage() {
     if (submitting) return;
     setSubmitting(true);
     try {
+      // The mock provider exercises the same abstraction that will later be backed by Peach.
+      const payment = await paymentService.startPayment(finalAmount, "MUR", {
+        email: email.trim().toLowerCase(),
+        fullName: fullName.trim(),
+        sourceInitiativeId,
+        coversFees,
+      });
+
+      const subscription = await paymentService.subscribe({
+        userId: email.trim().toLowerCase(),
+        amount: finalAmount,
+        billingDate: 7,
+        coversFees,
+        priorityInitiatives: sourceInitiativeId ? [sourceInitiativeId] : [],
+      });
+
+      if (!payment.transactionId || subscription.status !== "active") {
+        throw new Error("Payment provider did not confirm the subscription.");
+      }
+
+      setPaymentTransactionId(payment.transactionId);
       await convertLead({
-        data: { email: email.trim().toLowerCase(), status: "converted", sourceInitiativeId },
+        data: {
+          email: email.trim().toLowerCase(),
+          status: "converted",
+          sourceInitiativeId,
+        },
       });
       setStep(3);
     } catch (err) {
-      toast.error("Failed to process payment status.");
+      console.error("Payment completion failed:", err);
+      toast.error(err instanceof Error ? err.message : "Payment could not be completed.");
     } finally {
       setSubmitting(false);
     }
@@ -148,14 +162,17 @@ function SignupPage() {
 
   const submitAccount = async () => {
     if (submitting) return;
-
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
       return;
     }
+    if (!isPartnerSignup && !paymentTransactionId) {
+      toast.error("Please complete payment before creating your member account.");
+      setStep(2);
+      return;
+    }
 
     setSubmitting(true);
-
     const role = isPartnerSignup ? "organization" : "member";
     const signUpData: any = {
       full_name: fullName.trim(),
@@ -163,7 +180,7 @@ function SignupPage() {
       subscription_amount: isPartnerSignup ? 0 : finalAmount,
       covers_fees: isPartnerSignup ? false : coversFees,
       source_initiative_id: sourceInitiativeId,
-      role: role,
+      role,
     };
 
     if (isPartnerSignup && partnerData?.converted_organization_id) {
@@ -171,7 +188,6 @@ function SignupPage() {
     }
 
     const { error } = await signUp(email.trim().toLowerCase(), password, signUpData);
-
     if (error) {
       toast.error((error as Error).message);
       setSubmitting(false);
@@ -179,7 +195,6 @@ function SignupPage() {
     }
 
     if (isPartnerSignup) {
-      // Clear code after use
       await supabase
         .from("partner_applications")
         .update({ signup_code: null } as any)
@@ -200,9 +215,7 @@ function SignupPage() {
                 {STEPS.map((s, i) => (
                   <div
                     key={s}
-                    className={`h-1.5 flex-1 rounded-full ${
-                      i <= step ? "bg-primary" : "bg-primary/10"
-                    }`}
+                    className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-primary" : "bg-primary/10"}`}
                   />
                 ))}
               </div>
@@ -239,7 +252,6 @@ function SignupPage() {
                   Pick an amount that reflects the impact you want to make. You can adjust this
                   anytime.
                 </p>
-
                 <div className="mt-10">
                   <div className="grid gap-3 sm:grid-cols-3">
                     {PRESETS.map((p) => {
@@ -251,18 +263,13 @@ function SignupPage() {
                             setAmount(p);
                             setCustomAmount("");
                           }}
-                          className={`rounded-2xl border px-4 py-4 text-sm font-medium transition ${
-                            active
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-background hover:border-primary/40"
-                          }`}
+                          className={`rounded-2xl border px-4 py-4 text-sm font-medium transition ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:border-primary/40"}`}
                         >
                           Rs {p.toLocaleString()}
                         </button>
                       );
                     })}
                   </div>
-
                   <label className="mt-6 block">
                     <span className="text-sm font-medium">Or enter custom amount (MUR)</span>
                     <div className="mt-2 flex overflow-hidden rounded-xl border border-input bg-background">
@@ -277,12 +284,10 @@ function SignupPage() {
                       <span className="px-4 py-2.5 text-sm text-muted-foreground">/ month</span>
                     </div>
                   </label>
-
                   <p className="mt-3 text-xs text-muted-foreground">
                     Flexible monthly contribution. Cancel anytime.
                   </p>
                 </div>
-
                 <div className="mt-8 rounded-2xl bg-primary/5 p-4 border border-primary/10">
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
@@ -296,13 +301,12 @@ function SignupPage() {
                         I want to cover the processing fee
                       </span>
                       <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                        This adds a small amount (approx. 3.5%) to your contribution so 100% of your
-                        Rs {finalAmount.toLocaleString()} goes to the initiatives.
+                        This adds a small amount to your contribution so more of your selected
+                        amount reaches initiatives.
                       </p>
                     </div>
                   </label>
                 </div>
-
                 <button
                   disabled={finalAmount <= 0}
                   onClick={() => setStep(1)}
@@ -365,7 +369,7 @@ function SignupPage() {
               <div>
                 <h2 className="font-display text-4xl font-bold text-primary">Secure Payment</h2>
                 <p className="mt-4 text-muted-foreground">
-                  Complete your checkout via our secure payment gateway.
+                  Complete your checkout via our configured payment provider.
                 </p>
                 <div className="mt-10 rounded-3xl border border-primary/10 bg-primary/5 p-8">
                   <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
@@ -392,6 +396,11 @@ function SignupPage() {
                   {submitting ? "Processing..." : "Complete Checkout (Mock)"}
                 </button>
                 <p className="mt-4 text-center text-xs text-muted-foreground">
+                  The current checkout uses the mock provider for end-to-end testing. The provider
+                  interface is isolated so a future Peach integration can replace it without
+                  changing the membership/allocation workflow.
+                </p>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
                   By completing payment, you agree to our{" "}
                   <Link
                     to="/terms-and-conditions"
@@ -469,7 +478,6 @@ function SignupPage() {
                     </Link>
                     .
                   </p>
-
                   {!isPartnerSignup && (
                     <button
                       type="button"

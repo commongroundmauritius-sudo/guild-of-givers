@@ -2,14 +2,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
+  Navigate,
   createRootRouteWithContext,
-  useRouter,
+  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -37,7 +38,6 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
-  const router = useRouter();
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -49,10 +49,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
+            onClick={reset}
             className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Try again
@@ -118,13 +115,45 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
+  const { user, sessionReady } = useAuth();
+  const { pathname, search } = useLocation();
+  const isProtectedPath = /^(\/admin-dashboard|\/member|\/notifications|\/community-hub|\/dashboard|\/organization)(\/|$)/.test(
+    pathname,
+  );
+
+  if (!isProtectedPath) return <>{children}</>;
+
+  if (!sessionReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <p className="text-sm text-muted-foreground">Checking your account…</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Navigate
+        to="/login"
+        search={{ redirect: `${pathname}${search}` }}
+        replace
+      />
+    );
+  }
+
+  return <>{children}</>;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <Outlet />
+          <ProtectedRouteGuard>
+            <Outlet />
+          </ProtectedRouteGuard>
           <Toaster />
         </TooltipProvider>
       </AuthProvider>

@@ -1,12 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type LifecycleStage =
-  | "Visitor"
-  | "Lead"
-  | "Registered User"
-  | "Supporter"
-  | "Recurring Contributor"
-  | "Ambassador";
+  "Visitor" | "Lead" | "Registered User" | "Supporter" | "Recurring Contributor" | "Ambassador";
 
 export const supporterService = {
   /**

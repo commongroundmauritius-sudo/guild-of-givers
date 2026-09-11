@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   getConsentState,
+  getStoredConsent,
   subscribeConsent,
   saveConsentPreferences,
   openConsentBanner,
@@ -9,12 +10,17 @@ import {
 } from "@/lib/cookie-consent";
 
 export function useCookieConsent() {
-  const [state, setState] = useState(() => getConsentState());
+  const [state, setState] = useState(() => ({
+    consent: null as ReturnType<typeof getStoredConsent>,
+    isBannerOpen: false,
+    isModalOpen: false,
+  }));
 
   useEffect(() => {
-    return subscribeConsent(() => {
-      setState({ ...getConsentState() });
-    });
+    const syncState = () => setState({ ...getConsentState() });
+    const unsubscribe = subscribeConsent(syncState);
+    syncState();
+    return unsubscribe;
   }, []);
 
   return {

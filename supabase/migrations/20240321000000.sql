@@ -62,7 +62,7 @@ BEGIN
 
   RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Trigger the function every time a user is created
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

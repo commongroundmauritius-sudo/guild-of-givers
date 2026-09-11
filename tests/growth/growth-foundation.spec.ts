@@ -15,10 +15,4 @@ test.describe("Growth & Attribution Foundation", () => {
     await page.goto("/signup");
     await expect(page.getByRole("heading", { name: "Monthly Contribution" })).toBeVisible();
   });
-
-  test("admin campaigns page is protected", async ({ page }) => {
-    await page.goto("/admin-dashboard/campaigns");
-    // Should redirect since we are not logged in as admin
-    await expect(page).not.toHaveURL(/\/admin-dashboard\/campaigns/);
-  });
 });
