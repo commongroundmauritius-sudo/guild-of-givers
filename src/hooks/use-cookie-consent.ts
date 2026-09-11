@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   getConsentState,
   getStoredConsent,
@@ -17,17 +17,9 @@ export function useCookieConsent() {
   }));
 
   useEffect(() => {
-    const stored = getStoredConsent();
-    setState(
-      stored
-        ? { consent: stored, isBannerOpen: false, isModalOpen: false }
-        : { consent: null, isBannerOpen: true, isModalOpen: false },
-    );
-
-    const unsubscribe = subscribeConsent(() => {
-      setState({ ...getConsentState() });
-    });
-
+    const syncState = () => setState({ ...getConsentState() });
+    const unsubscribe = subscribeConsent(syncState);
+    syncState();
     return unsubscribe;
   }, []);
 
