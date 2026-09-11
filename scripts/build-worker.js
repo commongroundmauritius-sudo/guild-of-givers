@@ -107,7 +107,6 @@ async function build() {
       banner: {
         js: `
 import { Buffer } from 'node:buffer';
-import process from 'node:process';
 globalThis.Buffer = Buffer;
 globalThis.process = process;
 globalThis.setImmediate = (cb, ...args) => setTimeout(cb, 0, ...args);
