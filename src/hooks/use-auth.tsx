@@ -57,7 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
-  // Use React Query for auth data to get better caching and stale-while-revalidate behavior
   const { data: authData, isLoading: authDataLoading } = useQuery({
     queryKey: ["auth-data", user?.id],
     queryFn: async () => {
@@ -81,15 +80,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     },
     enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false, // Prevent focus-triggered full reloads
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const refreshAuth = useCallback(async () => {
     try {
+      // Auth.js can wait on a browser storage lock indefinitely if another
+      // tab/process owns it. Protected routes must never remain in a loading
+      // state forever, so treat an unresolved initial session lookup as signed
+      // out and allow a later explicit sign-in to establish a real session.
+      const sessionResult = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<never>((_, reject) =>
+          window.setTimeout(() => reject(new Error("AUTH_SESSION_TIMEOUT")), 5000),
+        ),
+      ]);
+
       const {
         data: { session: s },
-      } = await supabase.auth.getSession();
+      } = sessionResult;
 
       setSession(s);
       setUser(s?.user ?? null);
@@ -99,16 +109,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("refreshAuth error:", error);
+      setSession(null);
+      setUser(null);
     } finally {
       setSessionLoading(false);
     }
   }, [queryClient]);
 
   useEffect(() => {
-    // Initial session fetch
     refreshAuth();
 
-    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
@@ -124,7 +134,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [refreshAuth, queryClient]);
 
-  // Combined loading state: session must be loaded AND if user exists, authData must be loaded
   const loading = sessionLoading || (!!user && authDataLoading);
 
   const value: AuthContextValue = {
@@ -176,7 +185,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error("Supabase signOut error:", error);
       } finally {
-        // queryClient.clear() is handled in onAuthStateChange SIGNED_OUT
         setUser(null);
         setSession(null);
         setSessionLoading(false);
