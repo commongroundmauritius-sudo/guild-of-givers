@@ -5,6 +5,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { createLead, convertLead } from "@/lib/auth-actions";
 import { attributionService } from "@/lib/attribution-service";
+import { paymentService } from "@/lib/payments/service";
 import { toast } from "sonner";
 import { emailSchema, nameSchema } from "@/lib/security/validators";
 import { z } from "zod";
@@ -40,6 +41,7 @@ function SignupPage() {
   const [signupCode, setSignupCode] = useState(search.code || "");
   const [isPartnerSignup, setIsPartnerSignup] = useState(!!search.code);
   const [partnerData, setPartnerData] = useState<any>(null);
+  const [paymentTransactionId, setPaymentTransactionId] = useState<string | null>(null);
 
   const { user, isSubscribed, loading, signUp } = useAuth();
   const navigate = useNavigate();
@@ -135,12 +137,42 @@ function SignupPage() {
     if (submitting) return;
     setSubmitting(true);
     try {
-      await convertLead({
-        data: { email: email.trim().toLowerCase(), status: "converted", sourceInitiativeId },
+      // The mock provider deliberately exercises the same provider abstraction
+      // that will later be backed by Peach Payments. Nothing is marked paid or
+      // converted until the provider returns a successful checkout/subscription.
+      const payment = await paymentService.startPayment(finalAmount, "MUR", {
+        email: email.trim().toLowerCase(),
+        fullName: fullName.trim(),
+        sourceInitiativeId,
+        coversFees,
       });
+
+      const subscription = await paymentService.subscribe({
+        userId: email.trim().toLowerCase(),
+        amount: finalAmount,
+        billingDate: 7,
+        coversFees,
+        priorityInitiatives: sourceInitiativeId ? [sourceInitiativeId] : [],
+      });
+
+      if (!payment.transactionId || subscription.status !== "active") {
+        throw new Error("Payment provider did not confirm the subscription.");
+      }
+
+      setPaymentTransactionId(payment.transactionId);
+
+      await convertLead({
+        data: {
+          email: email.trim().toLowerCase(),
+          status: "converted",
+          sourceInitiativeId,
+        },
+      });
+
       setStep(3);
     } catch (err) {
-      toast.error("Failed to process payment status.");
+      console.error("Payment completion failed:", err);
+      toast.error(err instanceof Error ? err.message : "Payment could not be completed.");
     } finally {
       setSubmitting(false);
     }
@@ -154,6 +186,12 @@ function SignupPage() {
       return;
     }
 
+    if (!isPartnerSignup && !paymentTransactionId) {
+      toast.error("Please complete payment before creating your member account.");
+      setStep(2);
+      return;
+    }
+
     setSubmitting(true);
 
     const role = isPartnerSignup ? "organization" : "member";
@@ -164,6 +202,7 @@ function SignupPage() {
       covers_fees: isPartnerSignup ? false : coversFees,
       source_initiative_id: sourceInitiativeId,
       role: role,
+      payment_transaction_id: isPartnerSignup ? null : paymentTransactionId,
     };
 
     if (isPartnerSignup && partnerData?.converted_organization_id) {
@@ -179,7 +218,6 @@ function SignupPage() {
     }
 
     if (isPartnerSignup) {
-      // Clear code after use
       await supabase
         .from("partner_applications")
         .update({ signup_code: null } as any)
@@ -232,14 +270,10 @@ function SignupPage() {
 
             {step === 0 && (
               <div>
-                <h2 className="font-display text-4xl font-bold text-primary">
-                  Monthly Contribution
-                </h2>
+                <h2 className="font-display text-4xl font-bold text-primary">Monthly Contribution</h2>
                 <p className="mt-4 text-muted-foreground">
-                  Pick an amount that reflects the impact you want to make. You can adjust this
-                  anytime.
+                  Pick an amount that reflects the impact you want to make. You can adjust this anytime.
                 </p>
-
                 <div className="mt-10">
                   <div className="grid gap-3 sm:grid-cols-3">
                     {PRESETS.map((p) => {
@@ -262,7 +296,6 @@ function SignupPage() {
                       );
                     })}
                   </div>
-
                   <label className="mt-6 block">
                     <span className="text-sm font-medium">Or enter custom amount (MUR)</span>
                     <div className="mt-2 flex overflow-hidden rounded-xl border border-input bg-background">
@@ -277,12 +310,8 @@ function SignupPage() {
                       <span className="px-4 py-2.5 text-sm text-muted-foreground">/ month</span>
                     </div>
                   </label>
-
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Flexible monthly contribution. Cancel anytime.
-                  </p>
+                  <p className="mt-3 text-xs text-muted-foreground">Flexible monthly contribution. Cancel anytime.</p>
                 </div>
-
                 <div className="mt-8 rounded-2xl bg-primary/5 p-4 border border-primary/10">
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
@@ -292,17 +321,13 @@ function SignupPage() {
                       className="mt-1 h-4 w-4 rounded border-primary text-primary focus:ring-primary"
                     />
                     <div>
-                      <span className="text-sm font-semibold text-primary">
-                        I want to cover the processing fee
-                      </span>
+                      <span className="text-sm font-semibold text-primary">I want to cover the processing fee</span>
                       <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                        This adds a small amount (approx. 3.5%) to your contribution so 100% of your
-                        Rs {finalAmount.toLocaleString()} goes to the initiatives.
+                        This adds a small amount to your contribution so more of your selected amount reaches initiatives.
                       </p>
                     </div>
                   </label>
                 </div>
-
                 <button
                   disabled={finalAmount <= 0}
                   onClick={() => setStep(1)}
@@ -316,45 +341,18 @@ function SignupPage() {
             {step === 1 && (
               <div>
                 <h2 className="font-display text-4xl font-bold text-primary">Your details</h2>
-                <p className="mt-4 text-muted-foreground">
-                  Contributing Rs {finalAmount.toLocaleString()} / month.
-                </p>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    submitDetails();
-                  }}
-                  className="mt-10 space-y-5"
-                >
+                <p className="mt-4 text-muted-foreground">Contributing Rs {finalAmount.toLocaleString()} / month.</p>
+                <form onSubmit={(e) => { e.preventDefault(); submitDetails(); }} className="mt-10 space-y-5">
                   <Field label="Full name">
-                    <input
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className={inputCls}
-                    />
+                    <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} />
                   </Field>
                   <Field label="Email">
-                    <input
-                      required
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className={inputCls}
-                    />
+                    <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
                   </Field>
                   <Field label="Phone number (optional)">
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className={inputCls}
-                    />
+                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} />
                   </Field>
-                  <button
-                    disabled={submitting}
-                    className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
-                  >
+                  <button disabled={submitting} className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">
                     {submitting ? "Saving details…" : "Continue to payment"}
                   </button>
                 </form>
@@ -364,120 +362,47 @@ function SignupPage() {
             {step === 2 && (
               <div>
                 <h2 className="font-display text-4xl font-bold text-primary">Secure Payment</h2>
-                <p className="mt-4 text-muted-foreground">
-                  Complete your checkout via our secure payment gateway.
-                </p>
+                <p className="mt-4 text-muted-foreground">Complete your checkout via our configured payment provider.</p>
                 <div className="mt-10 rounded-3xl border border-primary/10 bg-primary/5 p-8">
-                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
-                    Order Summary
-                  </p>
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Order Summary</p>
                   <div className="mt-6 flex justify-between border-b border-primary/10 pb-4">
                     <span className="text-muted-foreground">Contribution</span>
-                    <span className="font-bold text-primary">
-                      Rs {finalAmount.toLocaleString()}
-                    </span>
+                    <span className="font-bold text-primary">Rs {finalAmount.toLocaleString()}</span>
                   </div>
                   <div className="mt-4 flex justify-between">
                     <span className="font-bold text-primary">Total Recurring</span>
-                    <span className="font-bold text-primary text-xl">
-                      Rs {finalAmount.toLocaleString()}
-                    </span>
+                    <span className="font-bold text-primary text-xl">Rs {finalAmount.toLocaleString()}</span>
                   </div>
                 </div>
-                <button
-                  onClick={handlePaymentCompletion}
-                  disabled={submitting}
-                  className="mt-10 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
-                >
+                <button onClick={handlePaymentCompletion} disabled={submitting} className="mt-10 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">
                   {submitting ? "Processing..." : "Complete Checkout (Mock)"}
                 </button>
                 <p className="mt-4 text-center text-xs text-muted-foreground">
-                  By completing payment, you agree to our{" "}
-                  <Link
-                    to="/terms-and-conditions"
-                    target="_blank"
-                    className="underline text-primary hover:text-primary/80"
-                  >
-                    Terms & Conditions
-                  </Link>{" "}
-                  and acknowledge our{" "}
-                  <Link
-                    to="/refund-policy"
-                    target="_blank"
-                    className="underline text-primary hover:text-primary/80"
-                  >
-                    Refund & Cancellation Policy
-                  </Link>
-                  .
+                  The current checkout uses the mock provider for end-to-end testing. The provider interface is intentionally isolated so a future Peach integration can replace it without changing the membership/allocation workflow.
+                </p>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  By completing payment, you agree to our <Link to="/terms-and-conditions" target="_blank" className="underline text-primary hover:text-primary/80">Terms & Conditions</Link> and acknowledge our <Link to="/refund-policy" target="_blank" className="underline text-primary hover:text-primary/80">Refund & Cancellation Policy</Link>.
                 </p>
               </div>
             )}
 
             {step === 3 && (
               <div>
-                <h2 className="font-display text-4xl font-bold text-primary">
-                  Create your account
-                </h2>
-                <p className="mt-4 text-muted-foreground">
-                  Set a password to manage your {isPartnerSignup ? "organization" : "membership"}{" "}
-                  and track your impact.
-                </p>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    submitAccount();
-                  }}
-                  className="mt-10 space-y-5"
-                >
+                <h2 className="font-display text-4xl font-bold text-primary">Create your account</h2>
+                <p className="mt-4 text-muted-foreground">Set a password to manage your {isPartnerSignup ? "organization" : "membership"} and track your impact.</p>
+                <form onSubmit={(e) => { e.preventDefault(); submitAccount(); }} className="mt-10 space-y-5">
                   {isPartnerSignup && (
-                    <Field label="Email Address">
-                      <input disabled value={email} className={inputCls + " opacity-60"} />
-                    </Field>
+                    <Field label="Email Address"><input disabled value={email} className={inputCls + " opacity-60"} /></Field>
                   )}
                   <Field label="Password">
-                    <input
-                      required
-                      minLength={6}
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className={inputCls}
-                    />
+                    <input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
                   </Field>
-                  <button
-                    disabled={submitting}
-                    className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
-                  >
+                  <button disabled={submitting} className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">
                     {submitting ? "Setting up…" : "Complete setup"}
                   </button>
-                  <p className="mt-4 text-center text-xs text-muted-foreground">
-                    By creating an account, you agree to our{" "}
-                    <Link
-                      to="/privacy-policy"
-                      target="_blank"
-                      className="underline text-primary hover:text-primary/80"
-                    >
-                      Privacy Policy
-                    </Link>{" "}
-                    and{" "}
-                    <Link
-                      to="/terms-and-conditions"
-                      target="_blank"
-                      className="underline text-primary hover:text-primary/80"
-                    >
-                      Terms of Service
-                    </Link>
-                    .
-                  </p>
-
+                  <p className="mt-4 text-center text-xs text-muted-foreground">By creating an account, you agree to our <Link to="/privacy-policy" target="_blank" className="underline text-primary hover:text-primary/80">Privacy Policy</Link> and <Link to="/terms-and-conditions" target="_blank" className="underline text-primary hover:text-primary/80">Terms of Service</Link>.</p>
                   {!isPartnerSignup && (
-                    <button
-                      type="button"
-                      onClick={() => setStep(4)}
-                      className="mt-6 block w-full text-center text-sm font-bold text-primary hover:underline"
-                    >
-                      I'll set it up later via email
-                    </button>
+                    <button type="button" onClick={() => setStep(4)} className="mt-6 block w-full text-center text-sm font-bold text-primary hover:underline">I'll set it up later via email</button>
                   )}
                 </form>
               </div>
@@ -485,23 +410,12 @@ function SignupPage() {
 
             {step === 4 && (
               <div className="text-center py-10">
-                <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-forest/10 text-forest mb-8">
-                  <Check className="h-12 w-12" />
-                </div>
-                <h2 className="font-display text-4xl font-bold text-primary">
-                  Welcome to CommonGround
-                </h2>
+                <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-forest/10 text-forest mb-8"><Check className="h-12 w-12" /></div>
+                <h2 className="font-display text-4xl font-bold text-primary">Welcome to CommonGround</h2>
                 <p className="mt-4 text-muted-foreground leading-relaxed max-w-sm mx-auto">
-                  {isPartnerSignup
-                    ? `Your organization account for ${partnerData?.organization_name} is ready.`
-                    : "Your monthly impact has started. Check your email for your receipt and account confirmation."}
+                  {isPartnerSignup ? `Your organization account for ${partnerData?.organization_name} is ready.` : "Your monthly impact has started. Check your email for your receipt and account confirmation."}
                 </p>
-                <button
-                  onClick={() => navigate({ to: isPartnerSignup ? "/organization" : "/dashboard" })}
-                  className="mt-10 inline-flex items-center justify-center rounded-full bg-primary px-10 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
-                >
-                  Go to my Dashboard
-                </button>
+                <button onClick={() => navigate({ to: isPartnerSignup ? "/organization" : "/dashboard" })} className="mt-10 inline-flex items-center justify-center rounded-full bg-primary px-10 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95">Go to my Dashboard</button>
               </div>
             )}
           </div>
@@ -511,8 +425,7 @@ function SignupPage() {
   );
 }
 
-const inputCls =
-  "w-full rounded-2xl border border-input bg-background px-5 py-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-sm transition-all";
+const inputCls = "w-full rounded-2xl border border-input bg-background px-5 py-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-sm transition-all";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
