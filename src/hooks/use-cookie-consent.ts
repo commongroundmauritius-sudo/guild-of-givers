@@ -12,17 +12,19 @@ export function useCookieConsent() {
   const [state, setState] = useState(() => getConsentState());
 
   useEffect(() => {
-    // Reconcile the client-side consent state after hydration. The initial
-    // server render cannot read localStorage, so an untouched client must
-    // explicitly open the banner when no consent exists.
-    const current = getConsentState();
-    if (current.consent === null && !current.isModalOpen) {
-      openConsentBanner();
-    }
-
-    return subscribeConsent(() => {
+    // Subscribe before reconciling hydration so the initial banner-opening
+    // event cannot be missed by the first client render.
+    const unsubscribe = subscribeConsent(() => {
       setState({ ...getConsentState() });
     });
+
+    const current = getConsentState();
+    if (current.consent === null && !current.isModalOpen && !current.isBannerOpen) {
+      openConsentBanner();
+      setState({ ...getConsentState() });
+    }
+
+    return unsubscribe;
   }, []);
 
   return {
