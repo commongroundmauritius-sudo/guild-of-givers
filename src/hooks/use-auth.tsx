@@ -24,6 +24,7 @@ interface AuthContextValue {
   profile: Profile | null;
   isSubscribed: boolean;
   loading: boolean;
+  sessionReady: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (
     email: string,
@@ -86,10 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshAuth = useCallback(async () => {
     try {
-      // Auth.js can wait on a browser storage lock indefinitely if another
-      // tab/process owns it. Protected routes must never remain in a loading
-      // state forever, so treat an unresolved initial session lookup as signed
-      // out and allow a later explicit sign-in to establish a real session.
       const sessionResult = await Promise.race([
         supabase.auth.getSession(),
         new Promise<never>((_, reject) =>
@@ -143,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile: authData?.profile ?? null,
     isSubscribed: authData?.isSubscribed ?? false,
     loading,
+    sessionReady: !sessionLoading,
     signIn: async (email, password) => {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       return { error, data } as { error: Error | null };
