@@ -1,0 +1,46 @@
+name: CI Format
+
+on:
+  pull_request:
+    branches:
+      - main
+      - production-readiness-finalization
+    paths:
+      - "scripts/security-audit.mjs"
+      - "src/integrations/supabase/types.ts"
+      - "src/lib/crm/supporter-service.ts"
+      - "src/lib/partner/service.ts"
+      - ".prettierrc"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-format-production-readiness
+  cancel-in-progress: true
+
+jobs:
+  format:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: Check CI-blocking files are formatted
+        run: npx prettier --check scripts/security-audit.mjs src/integrations/supabase/types.ts src/lib/crm/supporter-service.ts src/lib/partner/service.ts
