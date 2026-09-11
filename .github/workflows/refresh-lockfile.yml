@@ -28,7 +28,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -44,13 +44,16 @@ jobs:
 
       - name: Regenerate package-lock.json from clean state
         run: |
-          rm -f package-lock.json
-          npm install --package-lock-only --ignore-scripts
+          rm -rf node_modules package-lock.json
+          npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Verify clean-install compatibility
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Commit refreshed lockfile
         run: |
           if git diff --quiet -- package-lock.json; then
-            echo "package-lock.json is already synchronized"
+            echo "package-lock.json is already synchronized and npm ci passes"
             exit 0
           fi
           git config user.name "github-actions[bot]"
