@@ -7,10 +7,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -119,44 +118,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  const isProtectedPath =
-    typeof window !== "undefined" &&
-    (/^\/admin-dashboard(?:\/|$)/.test(window.location.pathname) ||
-      /^\/member(?:\/|$)/.test(window.location.pathname) ||
-      /^\/notifications(?:\/|$)/.test(window.location.pathname) ||
-      /^\/community-hub(?:\/|$)/.test(window.location.pathname));
-
-  useEffect(() => {
-    if (!isProtectedPath || loading || user || typeof window === "undefined") return;
-
-    const redirect = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-    window.location.replace(redirect);
-  }, [isProtectedPath, loading, user]);
-
-  if (isProtectedPath && loading && !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <p className="text-sm text-muted-foreground">Checking your account…</p>
-      </div>
-    );
-  }
-
-  if (isProtectedPath && !loading && !user) return null;
-
-  return <>{children}</>;
-}
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <ProtectedRouteGuard>
-            <Outlet />
-          </ProtectedRouteGuard>
+          <Outlet />
           <Toaster />
         </TooltipProvider>
       </AuthProvider>
