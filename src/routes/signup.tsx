@@ -45,7 +45,6 @@ function SignupPage() {
 
   const { user, isSubscribed, loading, signUp } = useAuth();
   const navigate = useNavigate();
-
   const [sourceInitiativeId, setSourceInitiativeId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -59,10 +58,7 @@ function SignupPage() {
     attributionService.captureFromUrl();
     const stored = localStorage.getItem("source_initiative_id");
     if (stored) setSourceInitiativeId(stored);
-
-    if (signupCode) {
-      verifySignupCode(signupCode);
-    }
+    if (signupCode) verifySignupCode(signupCode);
   }, [signupCode]);
 
   const verifySignupCode = async (code: string) => {
@@ -92,18 +88,9 @@ function SignupPage() {
 
   const submitDetails = async () => {
     if (submitting) return;
-
     const validation = z
-      .object({
-        email: emailSchema,
-        fullName: nameSchema,
-        amount: z.number().positive(),
-      })
-      .safeParse({
-        email,
-        fullName,
-        amount: finalAmount,
-      });
+      .object({ email: emailSchema, fullName: nameSchema, amount: z.number().positive() })
+      .safeParse({ email, fullName, amount: finalAmount });
 
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
@@ -137,9 +124,6 @@ function SignupPage() {
     if (submitting) return;
     setSubmitting(true);
     try {
-      // The mock provider deliberately exercises the same provider abstraction
-      // that will later be backed by Peach Payments. Nothing is marked paid or
-      // converted until the provider returns a successful checkout/subscription.
       const payment = await paymentService.startPayment(finalAmount, "MUR", {
         email: email.trim().toLowerCase(),
         fullName: fullName.trim(),
@@ -160,7 +144,6 @@ function SignupPage() {
       }
 
       setPaymentTransactionId(payment.transactionId);
-
       await convertLead({
         data: {
           email: email.trim().toLowerCase(),
@@ -168,7 +151,6 @@ function SignupPage() {
           sourceInitiativeId,
         },
       });
-
       setStep(3);
     } catch (err) {
       console.error("Payment completion failed:", err);
@@ -180,12 +162,10 @@ function SignupPage() {
 
   const submitAccount = async () => {
     if (submitting) return;
-
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
       return;
     }
-
     if (!isPartnerSignup && !paymentTransactionId) {
       toast.error("Please complete payment before creating your member account.");
       setStep(2);
@@ -193,7 +173,6 @@ function SignupPage() {
     }
 
     setSubmitting(true);
-
     const role = isPartnerSignup ? "organization" : "member";
     const signUpData: any = {
       full_name: fullName.trim(),
@@ -201,8 +180,7 @@ function SignupPage() {
       subscription_amount: isPartnerSignup ? 0 : finalAmount,
       covers_fees: isPartnerSignup ? false : coversFees,
       source_initiative_id: sourceInitiativeId,
-      role: role,
-      payment_transaction_id: isPartnerSignup ? null : paymentTransactionId,
+      role,
     };
 
     if (isPartnerSignup && partnerData?.converted_organization_id) {
@@ -210,7 +188,6 @@ function SignupPage() {
     }
 
     const { error } = await signUp(email.trim().toLowerCase(), password, signUpData);
-
     if (error) {
       toast.error((error as Error).message);
       setSubmitting(false);
@@ -236,19 +213,11 @@ function SignupPage() {
             <div className="mb-12">
               <div className="flex gap-2 mb-8">
                 {STEPS.map((s, i) => (
-                  <div
-                    key={s}
-                    className={`h-1.5 flex-1 rounded-full ${
-                      i <= step ? "bg-primary" : "bg-primary/10"
-                    }`}
-                  />
+                  <div key={s} className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-primary" : "bg-primary/10"}`} />
                 ))}
               </div>
               {step > 0 && step < 4 && !isPartnerSignup && (
-                <button
-                  onClick={() => setStep(step - 1)}
-                  className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition"
-                >
+                <button onClick={() => setStep(step - 1)} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition">
                   <ArrowLeft className="h-4 w-4" /> Back
                 </button>
               )}
@@ -256,14 +225,10 @@ function SignupPage() {
 
             {isPartnerSignup && step === 3 && (
               <div className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center gap-4">
-                <div className="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shrink-0">
-                  <Lock className="h-5 w-5" />
-                </div>
+                <div className="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shrink-0"><Lock className="h-5 w-5" /></div>
                 <div>
                   <p className="text-sm font-bold text-indigo-900">Partner Access Verified</p>
-                  <p className="text-xs text-indigo-700">
-                    Setting up account for: {partnerData?.organization_name}
-                  </p>
+                  <p className="text-xs text-indigo-700">Setting up account for: {partnerData?.organization_name}</p>
                 </div>
               </div>
             )}
@@ -271,42 +236,19 @@ function SignupPage() {
             {step === 0 && (
               <div>
                 <h2 className="font-display text-4xl font-bold text-primary">Monthly Contribution</h2>
-                <p className="mt-4 text-muted-foreground">
-                  Pick an amount that reflects the impact you want to make. You can adjust this anytime.
-                </p>
+                <p className="mt-4 text-muted-foreground">Pick an amount that reflects the impact you want to make. You can adjust this anytime.</p>
                 <div className="mt-10">
                   <div className="grid gap-3 sm:grid-cols-3">
                     {PRESETS.map((p) => {
                       const active = !customAmount && p === amount;
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => {
-                            setAmount(p);
-                            setCustomAmount("");
-                          }}
-                          className={`rounded-2xl border px-4 py-4 text-sm font-medium transition ${
-                            active
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-background hover:border-primary/40"
-                          }`}
-                        >
-                          Rs {p.toLocaleString()}
-                        </button>
-                      );
+                      return <button key={p} onClick={() => { setAmount(p); setCustomAmount(""); }} className={`rounded-2xl border px-4 py-4 text-sm font-medium transition ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:border-primary/40"}`}>Rs {p.toLocaleString()}</button>;
                     })}
                   </div>
                   <label className="mt-6 block">
                     <span className="text-sm font-medium">Or enter custom amount (MUR)</span>
                     <div className="mt-2 flex overflow-hidden rounded-xl border border-input bg-background">
                       <span className="px-4 py-2.5 text-sm text-muted-foreground">Rs</span>
-                      <input
-                        inputMode="numeric"
-                        value={customAmount}
-                        onChange={(e) => setCustomAmount(e.target.value.replace(/\D/g, ""))}
-                        placeholder=""
-                        className="w-full bg-transparent px-2 py-2.5 text-sm outline-none"
-                      />
+                      <input inputMode="numeric" value={customAmount} onChange={(e) => setCustomAmount(e.target.value.replace(/\D/g, ""))} placeholder="" className="w-full bg-transparent px-2 py-2.5 text-sm outline-none" />
                       <span className="px-4 py-2.5 text-sm text-muted-foreground">/ month</span>
                     </div>
                   </label>
@@ -314,27 +256,14 @@ function SignupPage() {
                 </div>
                 <div className="mt-8 rounded-2xl bg-primary/5 p-4 border border-primary/10">
                   <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={coversFees}
-                      onChange={(e) => setCoversFees(e.target.checked)}
-                      className="mt-1 h-4 w-4 rounded border-primary text-primary focus:ring-primary"
-                    />
+                    <input type="checkbox" checked={coversFees} onChange={(e) => setCoversFees(e.target.checked)} className="mt-1 h-4 w-4 rounded border-primary text-primary focus:ring-primary" />
                     <div>
                       <span className="text-sm font-semibold text-primary">I want to cover the processing fee</span>
-                      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                        This adds a small amount to your contribution so more of your selected amount reaches initiatives.
-                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">This adds a small amount to your contribution so more of your selected amount reaches initiatives.</p>
                     </div>
                   </label>
                 </div>
-                <button
-                  disabled={finalAmount <= 0}
-                  onClick={() => setStep(1)}
-                  className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
-                >
-                  Start my monthly impact
-                </button>
+                <button disabled={finalAmount <= 0} onClick={() => setStep(1)} className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">Start my monthly impact</button>
               </div>
             )}
 
@@ -343,18 +272,10 @@ function SignupPage() {
                 <h2 className="font-display text-4xl font-bold text-primary">Your details</h2>
                 <p className="mt-4 text-muted-foreground">Contributing Rs {finalAmount.toLocaleString()} / month.</p>
                 <form onSubmit={(e) => { e.preventDefault(); submitDetails(); }} className="mt-10 space-y-5">
-                  <Field label="Full name">
-                    <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} />
-                  </Field>
-                  <Field label="Email">
-                    <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
-                  </Field>
-                  <Field label="Phone number (optional)">
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} />
-                  </Field>
-                  <button disabled={submitting} className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">
-                    {submitting ? "Saving details…" : "Continue to payment"}
-                  </button>
+                  <Field label="Full name"><input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} /></Field>
+                  <Field label="Email"><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} /></Field>
+                  <Field label="Phone number (optional)"><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} /></Field>
+                  <button disabled={submitting} className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">{submitting ? "Saving details…" : "Continue to payment"}</button>
                 </form>
               </div>
             )}
@@ -365,24 +286,12 @@ function SignupPage() {
                 <p className="mt-4 text-muted-foreground">Complete your checkout via our configured payment provider.</p>
                 <div className="mt-10 rounded-3xl border border-primary/10 bg-primary/5 p-8">
                   <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Order Summary</p>
-                  <div className="mt-6 flex justify-between border-b border-primary/10 pb-4">
-                    <span className="text-muted-foreground">Contribution</span>
-                    <span className="font-bold text-primary">Rs {finalAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="mt-4 flex justify-between">
-                    <span className="font-bold text-primary">Total Recurring</span>
-                    <span className="font-bold text-primary text-xl">Rs {finalAmount.toLocaleString()}</span>
-                  </div>
+                  <div className="mt-6 flex justify-between border-b border-primary/10 pb-4"><span className="text-muted-foreground">Contribution</span><span className="font-bold text-primary">Rs {finalAmount.toLocaleString()}</span></div>
+                  <div className="mt-4 flex justify-between"><span className="font-bold text-primary">Total Recurring</span><span className="font-bold text-primary text-xl">Rs {finalAmount.toLocaleString()}</span></div>
                 </div>
-                <button onClick={handlePaymentCompletion} disabled={submitting} className="mt-10 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">
-                  {submitting ? "Processing..." : "Complete Checkout (Mock)"}
-                </button>
-                <p className="mt-4 text-center text-xs text-muted-foreground">
-                  The current checkout uses the mock provider for end-to-end testing. The provider interface is intentionally isolated so a future Peach integration can replace it without changing the membership/allocation workflow.
-                </p>
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                  By completing payment, you agree to our <Link to="/terms-and-conditions" target="_blank" className="underline text-primary hover:text-primary/80">Terms & Conditions</Link> and acknowledge our <Link to="/refund-policy" target="_blank" className="underline text-primary hover:text-primary/80">Refund & Cancellation Policy</Link>.
-                </p>
+                <button onClick={handlePaymentCompletion} disabled={submitting} className="mt-10 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">{submitting ? "Processing..." : "Complete Checkout (Mock)"}</button>
+                <p className="mt-4 text-center text-xs text-muted-foreground">The current checkout uses the mock provider for end-to-end testing. The provider interface is isolated so a future Peach integration can replace it without changing the membership/allocation workflow.</p>
+                <p className="mt-2 text-center text-xs text-muted-foreground">By completing payment, you agree to our <Link to="/terms-and-conditions" target="_blank" className="underline text-primary hover:text-primary/80">Terms & Conditions</Link> and acknowledge our <Link to="/refund-policy" target="_blank" className="underline text-primary hover:text-primary/80">Refund & Cancellation Policy</Link>.</p>
               </div>
             )}
 
@@ -391,19 +300,11 @@ function SignupPage() {
                 <h2 className="font-display text-4xl font-bold text-primary">Create your account</h2>
                 <p className="mt-4 text-muted-foreground">Set a password to manage your {isPartnerSignup ? "organization" : "membership"} and track your impact.</p>
                 <form onSubmit={(e) => { e.preventDefault(); submitAccount(); }} className="mt-10 space-y-5">
-                  {isPartnerSignup && (
-                    <Field label="Email Address"><input disabled value={email} className={inputCls + " opacity-60"} /></Field>
-                  )}
-                  <Field label="Password">
-                    <input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
-                  </Field>
-                  <button disabled={submitting} className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">
-                    {submitting ? "Setting up…" : "Complete setup"}
-                  </button>
+                  {isPartnerSignup && <Field label="Email Address"><input disabled value={email} className={inputCls + " opacity-60"} /></Field>}
+                  <Field label="Password"><input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} /></Field>
+                  <button disabled={submitting} className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">{submitting ? "Setting up…" : "Complete setup"}</button>
                   <p className="mt-4 text-center text-xs text-muted-foreground">By creating an account, you agree to our <Link to="/privacy-policy" target="_blank" className="underline text-primary hover:text-primary/80">Privacy Policy</Link> and <Link to="/terms-and-conditions" target="_blank" className="underline text-primary hover:text-primary/80">Terms of Service</Link>.</p>
-                  {!isPartnerSignup && (
-                    <button type="button" onClick={() => setStep(4)} className="mt-6 block w-full text-center text-sm font-bold text-primary hover:underline">I'll set it up later via email</button>
-                  )}
+                  {!isPartnerSignup && <button type="button" onClick={() => setStep(4)} className="mt-6 block w-full text-center text-sm font-bold text-primary hover:underline">I'll set it up later via email</button>}
                 </form>
               </div>
             )}
@@ -412,9 +313,7 @@ function SignupPage() {
               <div className="text-center py-10">
                 <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-forest/10 text-forest mb-8"><Check className="h-12 w-12" /></div>
                 <h2 className="font-display text-4xl font-bold text-primary">Welcome to CommonGround</h2>
-                <p className="mt-4 text-muted-foreground leading-relaxed max-w-sm mx-auto">
-                  {isPartnerSignup ? `Your organization account for ${partnerData?.organization_name} is ready.` : "Your monthly impact has started. Check your email for your receipt and account confirmation."}
-                </p>
+                <p className="mt-4 text-muted-foreground leading-relaxed max-w-sm mx-auto">{isPartnerSignup ? `Your organization account for ${partnerData?.organization_name} is ready.` : "Your monthly impact has started. Check your email for your receipt and account confirmation."}</p>
                 <button onClick={() => navigate({ to: isPartnerSignup ? "/organization" : "/dashboard" })} className="mt-10 inline-flex items-center justify-center rounded-full bg-primary px-10 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95">Go to my Dashboard</button>
               </div>
             )}
@@ -428,10 +327,5 @@ function SignupPage() {
 const inputCls = "w-full rounded-2xl border border-input bg-background px-5 py-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-sm transition-all";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="text-xs font-bold text-primary uppercase tracking-widest">{label}</span>
-      <div className="mt-2">{children}</div>
-    </label>
-  );
+  return <label className="block"><span className="text-xs font-bold text-primary uppercase tracking-widest">{label}</span><div className="mt-2">{children}</div></label>;
 }
