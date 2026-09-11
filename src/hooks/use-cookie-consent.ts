@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   getConsentState,
+  getStoredConsent,
   subscribeConsent,
   saveConsentPreferences,
   openConsentBanner,
@@ -9,20 +10,23 @@ import {
 } from "@/lib/cookie-consent";
 
 export function useCookieConsent() {
-  const [state, setState] = useState(() => getConsentState());
+  const [state, setState] = useState(() => ({
+    consent: null as ReturnType<typeof getStoredConsent>,
+    isBannerOpen: false,
+    isModalOpen: false,
+  }));
 
   useEffect(() => {
-    // Subscribe before reconciling hydration so the initial banner-opening
-    // event cannot be missed by the first client render.
+    const stored = getStoredConsent();
+    setState(
+      stored
+        ? { consent: stored, isBannerOpen: false, isModalOpen: false }
+        : { consent: null, isBannerOpen: true, isModalOpen: false },
+    );
+
     const unsubscribe = subscribeConsent(() => {
       setState({ ...getConsentState() });
     });
-
-    const current = getConsentState();
-    if (current.consent === null && !current.isModalOpen && !current.isBannerOpen) {
-      openConsentBanner();
-      setState({ ...getConsentState() });
-    }
 
     return unsubscribe;
   }, []);
