@@ -37,6 +37,27 @@ export function subscribeConsent(listener: () => void) {
 }
 
 export function getConsentState() {
+  if (typeof window !== "undefined") {
+    const stored = getStoredConsent();
+
+    // Reconcile the in-memory singleton with browser storage on every read.
+    // This prevents SSR/hydration module state from suppressing the initial
+    // banner when the visitor has not yet made a choice.
+    if (stored) {
+      globalState = {
+        consent: stored,
+        isBannerOpen: false,
+        isModalOpen: globalState.isModalOpen,
+      };
+    } else if (!globalState.consent && !globalState.isModalOpen) {
+      globalState = {
+        ...globalState,
+        consent: null,
+        isBannerOpen: true,
+      };
+    }
+  }
+
   return globalState;
 }
 
