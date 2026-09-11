@@ -1,7 +1,6 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -9,15 +8,6 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   const { user, sessionReady } = useAuth();
-
-  useEffect(() => {
-    if (!sessionReady || user || typeof window === "undefined") return;
-
-    // The auth provider has finished its bounded session lookup. Redirect at
-    // the route boundary instead of waiting on profile/role queries that are
-    // irrelevant to an unauthenticated visitor.
-    window.location.replace(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
-  }, [sessionReady, user]);
 
   if (!sessionReady) {
     return (
@@ -29,7 +19,14 @@ function AuthenticatedLayout() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    const redirect =
+      typeof window !== "undefined"
+        ? `${window.location.pathname}${window.location.search}`
+        : "/";
+
+    return <Navigate to="/login" search={{ redirect }} replace />;
+  }
 
   return <Outlet />;
 }
