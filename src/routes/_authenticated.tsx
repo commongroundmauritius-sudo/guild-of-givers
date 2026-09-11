@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -13,8 +13,6 @@ function AuthenticatedLayout() {
 
   useEffect(() => {
     if (!loading && !user) {
-      // A hard navigation is intentional here: protected routes must leave the
-      // authenticated route tree even when the router has no loaded session.
       void navigate({ to: "/login", replace: true });
     }
   }, [loading, user, navigate]);
