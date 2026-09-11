@@ -1,6 +1,13 @@
 -- Production-readiness hardening
 -- Safe, idempotent constraints for the existing payment-event and priority models.
 
+-- Payment events predate provider-specific identifiers in the base schema.
+-- Keep the audit trail backward-compatible while adding the fields required
+-- for provider-agnostic idempotency (Mock now, Peach later).
+ALTER TABLE public.payment_events
+  ADD COLUMN IF NOT EXISTS provider TEXT,
+  ADD COLUMN IF NOT EXISTS provider_event_id TEXT;
+
 -- Webhook delivery is at-least-once. A provider event must therefore be uniquely
 -- identifiable so retries cannot create a second financial side effect.
 CREATE UNIQUE INDEX IF NOT EXISTS payment_events_provider_event_id_uidx
