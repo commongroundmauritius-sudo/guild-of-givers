@@ -20,9 +20,8 @@ function AuthenticatedLayout() {
   }
 
   if (!user) {
-    const redirect = typeof window !== "undefined"
-      ? `${window.location.pathname}${window.location.search}`
-      : "/";
+    const redirect =
+      typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/";
 
     return <Navigate to="/login" search={{ redirect }} replace />;
   }
