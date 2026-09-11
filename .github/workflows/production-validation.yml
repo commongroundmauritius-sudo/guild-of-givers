@@ -45,8 +45,10 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      - name: Start production preview
-        run: npm run preview -- --host 0.0.0.0 --port 8080 > /tmp/preview.log 2>&1 &
+      - name: Start production worker preview
+        run: |
+          cd dist/client
+          npx wrangler dev --config wrangler.json --local --ip 0.0.0.0 --port 8080 > /tmp/preview.log 2>&1 &
 
       - name: Wait for preview
         run: |
