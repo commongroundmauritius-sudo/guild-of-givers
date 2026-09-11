@@ -23,7 +23,10 @@ test.describe("Partner Application Security", () => {
     await page.selectOption('select[name="organization_type"]', "NGO / Nonprofit");
     await page.fill('input[name="registration_number"]', "12345");
     await page.fill('input[name="email"]', "test@example.com");
-    await page.fill('textarea[name="message"]', "This is a valid long message for the partner application submission.");
+    await page.fill(
+      'textarea[name="message"]',
+      "This is a valid long message for the partner application submission.",
+    );
     await page.getByRole("button", { name: "Submit application" }).click();
     const toast = page.locator("ol[data-sonner-toaster]");
     if (await toast.isVisible()) await expect(toast).toContainText(/forbidden characters/i);
