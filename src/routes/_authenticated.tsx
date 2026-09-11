@@ -8,27 +8,28 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
-  const { user, loading } = useAuth();
+  const { user, sessionReady } = useAuth();
 
   useEffect(() => {
-    if (!loading && !user && typeof window !== "undefined") {
-      // Use a full navigation so an unauthenticated protected route cannot
-      // remain mounted in the authenticated route tree.
-      window.location.replace(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
-    }
-  }, [loading, user]);
+    if (!sessionReady || user || typeof window === "undefined") return;
 
-  if (loading && !user) {
+    // The auth provider has finished its bounded session lookup. Redirect at
+    // the route boundary instead of waiting on profile/role queries that are
+    // irrelevant to an unauthenticated visitor.
+    window.location.replace(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+  }, [sessionReady, user]);
+
+  if (!sessionReady) {
     return (
       <SiteLayout>
         <div className="mx-auto max-w-3xl px-4 py-32 text-center text-muted-foreground">
-          Loading your account…
+          Checking your account…
         </div>
       </SiteLayout>
     );
   }
 
-  if (!loading && !user) return null;
+  if (!user) return null;
 
   return <Outlet />;
 }
