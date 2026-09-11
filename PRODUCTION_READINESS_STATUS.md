@@ -17,7 +17,7 @@ This is the current source-of-truth checklist. Older audit reports are historica
 | Membership / Organization / Community | 🟡 Validation | Core flows exist; final E2E/permission regression checks remain in the production gate. |
 | Compliance / accessibility / cookies | 🟡 Validation | WCAG/cookie implementation exists; final browser regression validation remains. |
 | Documentation cleanup | 🟢 Complete | This document separates current validation from historical reports. |
-| Final validation | ⏳ Running | GitHub Production Validation is the remaining gate. |
+| Final validation | ⏳ Pending | Production Validation must pass after the migration-version correction. |
 
 ## Payment architecture decision
 
