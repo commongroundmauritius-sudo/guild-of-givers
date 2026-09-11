@@ -48,7 +48,7 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
 
       - name: Verify clean-install compatibility
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm ci --legacy-peer-deps --ignore-scripts --no-audit --no-fund
 
       - name: Commit refreshed lockfile
         run: |
