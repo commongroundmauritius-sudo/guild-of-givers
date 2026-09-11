@@ -1,0 +1,66 @@
+name: Production Validation
+
+on:
+  push:
+    branches:
+      - main
+      - production-readiness-finalization
+  pull_request:
+    branches:
+      - main
+      - production-readiness-finalization
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Production build
+        run: npm run build
+
+      - name: Verify worker output
+        run: |
+          test -f dist/client/_worker.js
+          test -f dist/client/wrangler.json
+          grep -q '"main": "_worker.js"' dist/client/wrangler.json
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Start production preview
+        run: npm run preview -- --host 0.0.0.0 --port 8080 > /tmp/preview.log 2>&1 &
+
+      - name: Wait for preview
+        run: npx playwright install --with-deps chromium >/dev/null 2>&1 || true; npx wait-on http://127.0.0.1:8080
+
+      - name: Run end-to-end tests
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npm run test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
