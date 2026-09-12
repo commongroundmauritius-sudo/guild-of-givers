@@ -1,12 +1,6 @@
--- Fix: allow CommonGround admins (including super_admin) to manage initiatives.
---
--- The admin UI and server action already authenticate admins, but the server-side
--- Supabase client still uses the authenticated user's JWT, so initiatives remain
--- subject to RLS. The existing initiatives policies only allow organization staff
--- to mutate their own initiatives. This migration adds an explicit admin policy.
---
--- Cast role to text so this migration remains compatible with environments where
--- app_role was created before super_admin was introduced.
+-- Allow CommonGround admins (including super_admin) to manage initiatives.
+-- The authenticated server-side client is still subject to RLS, so the policy
+-- must explicitly grant admin/super_admin access.
 
 BEGIN;
 
