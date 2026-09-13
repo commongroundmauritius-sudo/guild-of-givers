@@ -18,12 +18,13 @@ Database/RLS, RPC execution grants, financial integrity, initiative deletion, or
 - Added indexes for all remaining unindexed foreign keys; current FK coverage query returns zero missing supporting indexes.
 - Limited `community-posts` storage bucket to JPEG/PNG/WebP images with a 5 MiB object limit.
 - Tightened SECURITY DEFINER RPC execution grants; sensitive financial/admin RPCs are no longer callable by anon/authenticated roles.
+- Added a production guard so the mock payment provider throws instead of creating fake active subscriptions/payments in production.
 
 ## CI finding fixed
 The production-validation workflow previously failed at lint before build/E2E. The root route formatting issue was fixed in commit `6f81572c1d1cc4a836f085cb6bf734f48a9c6603` so a fresh CI run can validate lint/build/E2E.
 
 ## Critical production blocker: payment provider
-The repository payment layer is still backed by a mock provider (`src/lib/payments/mock-provider.ts`). The webhook handler also contains placeholder signature verification. Therefore CommonGround must NOT treat the current application payment flow as production payment processing until the real Peach Payments integration is connected and verified.
+The repository payment layer is still backed by a mock provider for development. The mock provider is now explicitly blocked in production, which prevents fake payment/subscription activation. The webhook handler also contains placeholder signature verification. Therefore CommonGround must NOT accept real money until the real Peach Payments integration is connected and verified.
 
 Required before accepting real money:
 1. Real Peach payment initiation/server-side credentials.
@@ -45,4 +46,4 @@ Required before accepting real money:
 Production migration history was re-read on 2026-09-13. Latest observed migration is `20260913110622 consolidate_reports_and_initiative_read_policies`. The current production history contains the initiative deletion fixes, security hardening and performance index migrations. No migration repair was performed.
 
 ## Final readiness decision
-**NOT READY FOR REAL PAYMENTS YET.** Database security and integrity have been materially hardened, but the payment provider/webhook implementation is still mock/placeholder and must be completed and sandbox-verified before launch.
+**NOT READY FOR REAL PAYMENTS YET.** Database security and integrity have been materially hardened, and CI/security checks have been addressed, but the real Peach Payments/webhook implementation is still required before launch.
