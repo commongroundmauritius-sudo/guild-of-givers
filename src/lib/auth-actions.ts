@@ -62,7 +62,6 @@ export const createLead = createServerFn({ method: "POST" })
       attribution,
     } = data;
 
-    // Rate limit lead creation to prevent spam
     await rateLimit(email, "create_lead", { windowMs: 3600000, max: 5 });
 
     const trimmedEmail = email.trim().toLowerCase();
@@ -119,7 +118,6 @@ export const convertLead = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { email, status = "converted", sourceInitiativeId } = data;
 
-    // Use the secure RPC instead of direct update to avoid permissive RLS
     const { error } = await supabase.rpc("secure_convert_lead", {
       p_email: email,
       p_status: status,
@@ -142,8 +140,15 @@ export const startMembershipSubscription = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const user = await ensureAuthenticated();
 
-    // Rate limit subscription attempts
     await rateLimit(user.id, "start_subscription", { windowMs: 3600000, max: 3 });
+
+    // Never create or activate a subscription from unverified client input.
+    // Production membership activation must come from a verified Peach Payments
+    // checkout/webhook flow. The development mock provider is intentionally
+    // blocked from production in mock-provider.ts.
+    if (import.meta.env.PROD) {
+      throw new Error("Production payments are not configured yet");
+    }
 
     const result = await paymentService.subscribe({
       userId: user.id,
