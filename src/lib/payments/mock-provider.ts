@@ -7,6 +7,12 @@ import {
   PaymentEventType,
 } from "./types";
 
+function assertDevelopmentOnly(): void {
+  if (import.meta.env.PROD) {
+    throw new Error("Mock payment provider is disabled in production");
+  }
+}
+
 export class MockPaymentProvider implements PaymentProvider {
   name = "MockProvider";
 
@@ -15,7 +21,8 @@ export class MockPaymentProvider implements PaymentProvider {
     currency: string,
     metadata: Record<string, unknown>,
   ): Promise<{ checkoutUrl: string; transactionId: string }> {
-    console.log(`[MockProvider] Initializing payment of ${amount} ${currency}`);
+    assertDevelopmentOnly();
+    console.log(`[MockProvider] Initializing payment of ${amount} ${currency}`, metadata);
     const transactionId = `mock_txn_${Math.random().toString(36).substr(2, 9)}`;
     return {
       checkoutUrl: `/mock-checkout?txn=${transactionId}&amount=${amount}`,
@@ -24,10 +31,10 @@ export class MockPaymentProvider implements PaymentProvider {
   }
 
   async createSubscription(request: SubscriptionRequest): Promise<SubscriptionResult> {
+    assertDevelopmentOnly();
     console.log(`[MockProvider] Creating subscription for user ${request.userId}`);
     const subscriptionId = `mock_sub_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Set next billing date to the next occurrence of billingDate
     const now = new Date();
     const nextBilling = new Date(now.getFullYear(), now.getMonth(), request.billingDate);
     if (nextBilling <= now) {
@@ -42,20 +49,24 @@ export class MockPaymentProvider implements PaymentProvider {
   }
 
   async cancelSubscription(subscriptionId: string): Promise<boolean> {
+    assertDevelopmentOnly();
     console.log(`[MockProvider] Cancelling subscription ${subscriptionId}`);
     return true;
   }
 
   async resumeSubscription(subscriptionId: string): Promise<boolean> {
+    assertDevelopmentOnly();
     console.log(`[MockProvider] Resuming subscription ${subscriptionId}`);
     return true;
   }
 
   async getSubscriptionStatus(subscriptionId: string): Promise<SubscriptionStatus> {
+    assertDevelopmentOnly();
     return "active";
   }
 
   async handleWebhook(payload: Record<string, unknown>): Promise<PaymentEvent> {
+    assertDevelopmentOnly();
     const type = payload.event_type as PaymentEventType;
     return {
       type,
@@ -67,11 +78,11 @@ export class MockPaymentProvider implements PaymentProvider {
     };
   }
 
-  // Helper for simulation
   static generateMockEvent(
     type: PaymentEventType,
     data: Partial<PaymentEvent>,
   ): Record<string, unknown> {
+    assertDevelopmentOnly();
     return {
       event_type: type,
       user_id: data.userId || "mock_user",
