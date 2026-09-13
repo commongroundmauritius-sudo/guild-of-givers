@@ -134,13 +134,7 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return (
-      <Navigate
-        to="/login"
-        search={{ redirect: `${pathname}${search}` }}
-        replace
-      />
-    );
+    return <Navigate to="/login" search={{ redirect: `${pathname}${search}` }} replace />;
   }
 
   return <>{children}</>;
