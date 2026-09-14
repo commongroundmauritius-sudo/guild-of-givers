@@ -25,16 +25,15 @@ for (const match of migrationText.matchAll(/ALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?(
 
 const missingRls = [...createdTables].filter((table) => !rlsTables.has(table));
 
-// Parse each CREATE FUNCTION statement independently. A naive regex can consume
-// multiple functions and report false positives when a later statement contains
-// the hardening clause.
-const functionStatements = migrationText.match(/CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION[\s\S]*?(?=\n\s*(?:CREATE|ALTER|DROP)\s+(?:OR\s+REPLACE\s+)?(?:FUNCTION|TABLE|TYPE)|\Z)/gi) ?? [];
+// Parse each function independently so a later hardening statement cannot
+// accidentally make an earlier SECURITY DEFINER function look safe.
+const functionStatements = migrationText.match(/CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION[\s\S]*?(?=\n\s*(?:CREATE|ALTER|DROP)\s+(?:OR\s+REPLACE\s+)?(?:FUNCTION|TABLE|TYPE)|$)/gi) ?? [];
 const securityDefiners = functionStatements.filter((fn) => /SECURITY\s+DEFINER/i.test(fn));
-const unsafeDefiners = securityDefiners.filter((fn) => !/SET\s+(?:search_path\s*(?:TO|=)|search_path\s+TO)\s*public\b/i.test(fn));
+const unsafeDefiners = securityDefiners.filter((fn) => !/SET\s+search_path\s*(?:TO|=)\s*public\b/i.test(fn));
 
-// partner_applications is intentionally reachable through the public application
-// flow; the table itself is protected by RLS and the write is constrained by its
-// policy/RPC validation. Other anonymous writes remain a hard failure.
+// partner_applications is intentionally reachable through the public
+// application flow; the table remains protected by RLS and its insert path is
+// constrained by the application validation. Other anonymous writes fail.
 const intentionalAnonWriteTables = new Set(["public.partner_applications"]);
 const anonWriteGrants = [...migrationText.matchAll(/GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER)[^;]*\s+TO\s+anon/gi)]
   .map((m) => m[0])
