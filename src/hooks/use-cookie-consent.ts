@@ -17,8 +17,16 @@ export function useCookieConsent() {
   }));
 
   useEffect(() => {
+    // Initialise from this browser context rather than inheriting modal/banner
+    // state from the module-level singleton used by another mounted context.
+    const stored = getStoredConsent();
+    setState({
+      consent: stored,
+      isBannerOpen: stored === null,
+      isModalOpen: false,
+    });
+
     const syncState = () => setState({ ...getConsentState() });
-    syncState();
     const unsubscribe = subscribeConsent(syncState);
     return unsubscribe;
   }, []);
