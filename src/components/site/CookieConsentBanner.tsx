@@ -6,7 +6,6 @@ import { Cookie, Settings, ShieldCheck, X } from "lucide-react";
 export function CookieConsentBanner() {
   const {
     consent,
-    isBannerOpen,
     isModalOpen,
     acceptAll,
     rejectOptional,
@@ -15,15 +14,22 @@ export function CookieConsentBanner() {
     closeModal,
   } = useCookieConsent();
 
-  const [analyticsChecked, setAnalyticsChecked] = useState(consent?.analytics ?? false);
+  const [hydrated, setHydrated] = useState(false);
+  const [analyticsChecked, setAnalyticsChecked] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     setAnalyticsChecked(consent?.analytics ?? false);
   }, [consent]);
 
-  const shouldShowBanner = isBannerOpen && !isModalOpen;
+  // Consent is the source of truth. If there is no stored decision, the banner
+  // must be available even if a stale in-memory singleton state says otherwise.
+  const shouldShowBanner = hydrated && consent === null && !isModalOpen;
 
-  if (!shouldShowBanner && !isModalOpen) return null;
+  if (!hydrated || (!shouldShowBanner && !isModalOpen)) return null;
 
   const handleSaveCustom = () => {
     updatePreferences(analyticsChecked);
