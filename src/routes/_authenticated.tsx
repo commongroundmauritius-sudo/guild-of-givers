@@ -1,5 +1,4 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -9,13 +8,6 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   const { user, sessionReady } = useAuth();
-
-  useEffect(() => {
-    if (!sessionReady || user || typeof window === "undefined") return;
-
-    const redirectPath = `${window.location.pathname}${window.location.search}`;
-    window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
-  }, [sessionReady, user]);
 
   if (!sessionReady || !user) {
     return (
