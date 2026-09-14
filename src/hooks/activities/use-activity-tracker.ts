@@ -7,15 +7,21 @@ export function useActivityTracker(params?: {
   organizationId?: string;
   metadata?: Record<string, any>;
 }) {
+  const eventType = params?.eventType;
+  const initiativeId = params?.initiativeId;
+  const organizationId = params?.organizationId;
+  const metadata = params?.metadata;
+
   useEffect(() => {
-    if (params?.eventType) {
+    if (eventType) {
       activityService.logEvent({
-        eventType: params.eventType,
-        initiativeId: params.initiativeId,
-        organizationId: params.organizationId,
-        metadata: params.metadata,
+        eventType,
+        initiativeId,
+        organizationId,
+        metadata,
       });
     }
-  }, [params?.eventType, params?.initiativeId]);
+  }, [eventType, initiativeId, organizationId, metadata]);
+
   return { trackEvent: activityService.logEvent };
 }
