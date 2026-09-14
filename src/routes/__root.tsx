@@ -7,12 +7,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import appCss from "../styles.css?url";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -85,18 +86,40 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
-  const { user, sessionReady } = useAuth();
   const { pathname, search } = useLocation();
   const isProtectedPath = /^(\/admin-dashboard|\/member|\/notifications|\/community-hub|\/dashboard|\/organization)(\/|$)/.test(pathname);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
-    if (!isProtectedPath || !sessionReady || user || typeof window === "undefined") return;
-    const redirectPath = `${pathname}${search}`;
-    window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
-  }, [isProtectedPath, pathname, search, sessionReady, user]);
+    let active = true;
+
+    if (!isProtectedPath) {
+      setAuthChecked(true);
+      setHasSession(true);
+      return () => { active = false; };
+    }
+
+    const checkSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (!active) return;
+
+      if (error || !data.session) {
+        const redirectPath = `${pathname}${search}`;
+        window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+        return;
+      }
+
+      setHasSession(true);
+      setAuthChecked(true);
+    };
+
+    checkSession();
+    return () => { active = false; };
+  }, [isProtectedPath, pathname, search]);
 
   if (!isProtectedPath) return <>{children}</>;
-  if (!sessionReady || !user) {
+  if (!authChecked || !hasSession) {
     return <div className="flex min-h-screen items-center justify-center bg-background px-4"><p className="text-sm text-muted-foreground">Checking your account…</p></div>;
   }
   return <>{children}</>;
