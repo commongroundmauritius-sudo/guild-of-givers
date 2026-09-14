@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, type AppRole } from "@/integrations/supabase/client";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { isMockPaymentsEnabled } from "@/lib/payments/mock-provider";
 
 interface Profile {
   id: string;
@@ -123,10 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: { emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/dashboard` : undefined, data: metadata },
       });
 
-      // Development-only bridge: the public signup page creates the Auth account only after
-      // mock checkout succeeds. Once the new session exists, finalize the membership atomically
-      // through the protected database function using the real checkout transaction ID.
-      if (!error && import.meta.env.DEV && metadata?.role === "member" && Number(metadata?.subscription_amount) >= 167) {
+      if (!error && isMockPaymentsEnabled() && metadata?.role === "member" && Number(metadata?.subscription_amount) >= 167) {
         if (!data?.session) {
           return { error: new Error("Your account was created, but the mock membership could not be finalized because no active session was returned."), data };
         }
