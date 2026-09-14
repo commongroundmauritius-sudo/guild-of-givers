@@ -9,14 +9,24 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
   test("Legal Hub and all four standalone policy pages load correctly", async ({ page }) => {
     await page.goto("/legal");
     await expect(page.locator("h1")).toContainText("Legal Framework & Policies");
-    await expect(page.getByRole("link", { name: /Privacy Policy/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /Terms & Conditions/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /Refund & Cancellation Policy/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /Cookies Policy/i }).first()).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Privacy Policy/i }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Terms & Conditions/i }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Refund & Cancellation Policy/i }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Cookies Policy/i }).first(),
+    ).toBeVisible();
 
     await page.goto("/privacy-policy");
     await expect(page.locator("h1")).toContainText("Privacy Policy");
-    await expect(page.getByText("Mauritius Data Protection Act 2017").first()).toBeVisible();
+    await expect(
+      page.getByText("Mauritius Data Protection Act 2017").first(),
+    ).toBeVisible();
 
     await page.goto("/refund-policy");
     await expect(page.locator("h1")).toContainText("Refund & Cancellation Policy");
