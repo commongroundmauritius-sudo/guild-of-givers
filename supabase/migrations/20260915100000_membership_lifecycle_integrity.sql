@@ -110,6 +110,7 @@ DECLARE
   v_effective_amount numeric;
   v_effective_day integer;
   v_next_date timestamptz;
+  v_receipt_number text;
 BEGIN
   IF EXISTS (SELECT 1 FROM public.billing_runs WHERE run_date=CURRENT_DATE AND status='completed') THEN RETURN; END IF;
   INSERT INTO public.billing_runs (run_date,status) VALUES (CURRENT_DATE,'running') RETURNING id INTO v_run_id;
@@ -129,6 +130,10 @@ BEGIN
       RETURNING id INTO v_payment_id;
 
       PERFORM public.allocate_payment_funds(v_payment_id,v_sub.user_id,v_effective_amount);
+
+      v_receipt_number := 'CG-REC-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,8));
+      INSERT INTO public.receipts (payment_id,user_id,receipt_number,amount_mur)
+      VALUES (v_payment_id,v_sub.user_id,v_receipt_number,v_effective_amount);
 
       v_next_date := date_trunc('month',v_sub.next_billing_date) + interval '1 month' + make_interval(days=>v_effective_day-1);
       UPDATE public.subscriptions
