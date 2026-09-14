@@ -33,6 +33,20 @@ function MemberProfile() {
     enabled: !!user?.id,
   });
 
+  const { data: preferences } = useQuery({
+    queryKey: ["member-supported-initiatives", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("member_preferences")
+        .select("*, initiatives(*, organizations(organization_name))")
+        .eq("user_id", user?.id ?? "")
+        .order("priority_level", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
   const manage = async (action: "pause" | "resume" | "cancel" | "update") => {
     setSaving(true); setMessage(null);
     const { error } = await supabase.rpc("manage_member_subscription", {
@@ -52,7 +66,6 @@ function MemberProfile() {
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "Member";
   const initials = displayName.substring(0, 2).toUpperCase();
   const currentAmount = subscription ? Number(subscription.amount_mur) : amount;
-  const currentBillingDay = subscription?.next_billing_date ? new Date(subscription.next_billing_date).getDate() : 7;
   const hasPendingChanges = !!subscription?.pending_amount_mur || !!subscription?.pending_billing_day;
 
   return (
