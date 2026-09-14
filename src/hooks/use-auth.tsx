@@ -123,11 +123,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: { emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/dashboard` : undefined, data: metadata },
       });
 
-      // Development-only bridge: the public signup page intentionally creates the Auth account
-      // after the mock checkout. Once the new session exists, finalize the mock payment atomically
-      // through the protected database function. This path never runs in production.
-      if (!error && import.meta.env.DEV && metadata?.role === "member" && Number(metadata?.subscription_amount) >= 167 && data?.session) {
-        const transactionId = `mock_txn_${Math.random().toString(36).slice(2, 11)}`;
+      // Development-only bridge: the public signup page creates the Auth account only after
+      // mock checkout succeeds. Once the new session exists, finalize the membership atomically
+      // through the protected database function using the real checkout transaction ID.
+      if (!error && import.meta.env.DEV && metadata?.role === "member" && Number(metadata?.subscription_amount) >= 167) {
+        if (!data?.session) {
+          return { error: new Error("Your account was created, but the mock membership could not be finalized because no active session was returned."), data };
+        }
+
+        const transactionId = typeof metadata.mock_transaction_id === "string" && metadata.mock_transaction_id.startsWith("mock_txn_")
+          ? metadata.mock_transaction_id
+          : `mock_txn_${Math.random().toString(36).slice(2, 11)}`;
         const { error: finalizeError } = await supabase.rpc("dev_complete_mock_membership", {
           p_amount_mur: Number(metadata.subscription_amount),
           p_billing_date: 7,
