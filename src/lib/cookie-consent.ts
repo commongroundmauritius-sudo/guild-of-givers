@@ -7,6 +7,13 @@ export type CookieConsentPreferences = {
 const CONSENT_STORAGE_KEY = "cg_cookie_consent_v1";
 const CONSENT_EVENT = "commonground:cookie-consent";
 
+type ConsentEventAction = "save" | "open-banner" | "open-modal" | "close-modal";
+
+function dispatchConsentEvent(action: ConsentEventAction) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: { action } }));
+}
+
 export function getStoredConsent(): CookieConsentPreferences | null {
   if (typeof window === "undefined") return null;
   try {
@@ -17,58 +24,30 @@ export function getStoredConsent(): CookieConsentPreferences | null {
     return {
       necessary: true,
       analytics: parsed.analytics,
-      timestamp: typeof parsed.timestamp === "string" ? parsed.timestamp : new Date(0).toISOString(),
+      timestamp:
+        typeof parsed.timestamp === "string" ? parsed.timestamp : new Date(0).toISOString(),
     };
   } catch {
     return null;
   }
 }
 
-let listeners: Array<() => void> = [];
+export function subscribeConsent(listener: (action?: ConsentEventAction) => void) {
+  if (typeof window === "undefined") return () => undefined;
 
-let globalState = {
-  consent: null as CookieConsentPreferences | null,
-  isBannerOpen: true,
-  isModalOpen: false,
-};
+  const handleStorage = () => listener("save");
+  const handleConsentEvent = (event: Event) => {
+    const action = (event as CustomEvent<{ action?: ConsentEventAction }>).detail?.action;
+    listener(action);
+  };
 
-function notify() {
-  listeners.forEach((listener) => listener());
-  if (typeof window !== "undefined") window.dispatchEvent(new Event(CONSENT_EVENT));
-}
-
-export function subscribeConsent(listener: () => void) {
-  listeners.push(listener);
-
-  if (typeof window !== "undefined") {
-    const handleStorage = () => listener();
-    const handleConsentEvent = () => listener();
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener(CONSENT_EVENT, handleConsentEvent);
-    return () => {
-      listeners = listeners.filter((item) => item !== listener);
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(CONSENT_EVENT, handleConsentEvent);
-    };
-  }
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(CONSENT_EVENT, handleConsentEvent);
 
   return () => {
-    listeners = listeners.filter((item) => item !== listener);
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(CONSENT_EVENT, handleConsentEvent);
   };
-}
-
-export function getConsentState() {
-  const stored = getStoredConsent();
-
-  if (typeof window !== "undefined") {
-    globalState = {
-      consent: stored,
-      isBannerOpen: stored === null,
-      isModalOpen: globalState.isModalOpen,
-    };
-  }
-
-  return globalState;
 }
 
 export function saveConsentPreferences(analytics: boolean): CookieConsentPreferences {
@@ -86,41 +65,20 @@ export function saveConsentPreferences(analytics: boolean): CookieConsentPrefere
     }
   }
 
-  globalState = {
-    consent: preferences,
-    isBannerOpen: false,
-    isModalOpen: false,
-  };
-  notify();
-
+  dispatchConsentEvent("save");
   return preferences;
 }
 
 export function openConsentBanner() {
-  globalState = {
-    ...globalState,
-    consent: getStoredConsent(),
-    isBannerOpen: true,
-  };
-  notify();
+  dispatchConsentEvent("open-banner");
 }
 
 export function openConsentModal() {
-  globalState = {
-    ...globalState,
-    consent: getStoredConsent(),
-    isBannerOpen: false,
-    isModalOpen: true,
-  };
-  notify();
+  dispatchConsentEvent("open-modal");
 }
 
 export function closeConsentModal() {
-  globalState = {
-    ...globalState,
-    isModalOpen: false,
-  };
-  notify();
+  dispatchConsentEvent("close-modal");
 }
 
 export function isAnalyticsAllowed(): boolean {
