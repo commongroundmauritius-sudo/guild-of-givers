@@ -8,7 +8,7 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
   });
 
   test("Legal Hub and all four standalone policy pages load correctly", async ({ page }) => {
-    await page.goto("http://localhost:8080/legal");
+    await page.goto("/legal");
     await expect(page.locator("h1")).toContainText("Legal Framework & Policies");
     await expect(page.getByRole("link", { name: /Privacy Policy/i }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Terms & Conditions/i }).first()).toBeVisible();
@@ -17,27 +17,25 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
     ).toBeVisible();
     await expect(page.getByRole("link", { name: /Cookies Policy/i }).first()).toBeVisible();
 
-    await page.goto("http://localhost:8080/privacy-policy");
+    await page.goto("/privacy-policy");
     await expect(page.locator("h1")).toContainText("Privacy Policy");
     await expect(page.getByText("Mauritius Data Protection Act 2017").first()).toBeVisible();
 
-    await page.goto("http://localhost:8080/refund-policy");
+    await page.goto("/refund-policy");
     await expect(page.locator("h1")).toContainText("Refund & Cancellation Policy");
     await expect(page.getByText("14 calendar days")).toBeVisible();
 
-    await page.goto("http://localhost:8080/terms-and-conditions");
+    await page.goto("/terms-and-conditions");
     await expect(page.locator("h1")).toContainText("Terms & Conditions");
     await expect(page.getByText("Peach Payments")).toBeVisible();
 
-    await page.goto("http://localhost:8080/cookies-policy");
+    await page.goto("/cookies-policy");
     await expect(page.locator("h1")).toContainText("Cookies Policy");
     await expect(page.getByText("Category 1: Essential Cookies")).toBeVisible();
   });
 
-  test("Cookie banner appears on initial visit and allows accepting or rejecting", async ({
-    page,
-  }) => {
-    await page.goto("http://localhost:8080/");
+  test("Cookie banner appears on initial visit and allows accepting or rejecting", async ({ page }) => {
+    await page.goto("/");
     const banner = page.getByRole("region", { name: "Cookie Consent Banner" });
     await expect(banner).toBeVisible();
     await expect(banner).toContainText("We respect your privacy");
@@ -53,7 +51,7 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
   });
 
   test("Cookie preference modal can be opened from footer and updated", async ({ page }) => {
-    await page.goto("http://localhost:8080/");
+    await page.goto("/");
     await page.getByRole("button", { name: "Reject Optional" }).click();
 
     const footerLink = page.getByRole("button", { name: "Cookie Preferences" });
