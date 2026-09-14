@@ -66,7 +66,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" },
       { rel: "stylesheet", href: appCss },
     ],
   }),
@@ -100,13 +100,32 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
       return () => { active = false; };
     }
 
+    const redirectToLogin = () => {
+      const redirectPath = `${pathname}${search}`;
+      window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+    };
+
+    const hasStoredSession = Object.keys(localStorage).some((key) => {
+      if (!key.startsWith("sb-") || !key.endsWith("-auth-token")) return false;
+      try {
+        const value = JSON.parse(localStorage.getItem(key) || "null");
+        return Boolean(value?.access_token);
+      } catch {
+        return false;
+      }
+    });
+
+    if (!hasStoredSession) {
+      redirectToLogin();
+      return () => { active = false; };
+    }
+
     const checkSession = async () => {
       const { data, error } = await supabase.auth.getSession();
       if (!active) return;
 
       if (error || !data.session) {
-        const redirectPath = `${pathname}${search}`;
-        window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+        redirectToLogin();
         return;
       }
 
