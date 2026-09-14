@@ -22,9 +22,7 @@ function NotFoundComponent() {
         <h1 className="font-display text-7xl font-semibold text-primary">404</h1>
         <h2 className="mt-4 font-display text-xl font-semibold text-foreground">Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground">The page you're looking for doesn't exist or has been moved.</p>
-        <div className="mt-6">
-          <Link to="/" className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">Go home</Link>
-        </div>
+        <div className="mt-6"><Link to="/" className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">Go home</Link></div>
       </div>
     </div>
   );
@@ -77,11 +75,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head><HeadContent /></head>
       <body>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(() => { const protectedPath = /^(\\/admin-dashboard|\\/member|\\/notifications|\\/community-hub|\\/dashboard|\\/organization)(\\/|$)/.test(location.pathname); if (!protectedPath) return; const hasSession = Object.keys(localStorage).some((key) => key.startsWith("sb-") && key.includes("-auth-token")); if (!hasSession) location.replace("/login?redirect=" + encodeURIComponent(location.pathname + location.search)); })();`,
-          }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: `(() => { const protectedPath = /^(\\/admin-dashboard|\\/member|\\/notifications|\\/community-hub|\\/dashboard|\\/organization)(\\/|$)/.test(location.pathname); if (!protectedPath) return; const hasSession = Object.keys(localStorage).some((key) => key.startsWith("sb-") && key.includes("-auth-token")); if (!hasSession) location.replace("/login?redirect=" + encodeURIComponent(location.pathname + location.search)); })();` }} />
         {children}
         <Scripts />
       </body>
@@ -123,19 +117,31 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
       return () => { active = false; };
     }
 
-    const checkSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
+    const timeoutId = window.setTimeout(() => {
       if (!active) return;
-      if (error || !data.session) {
+      redirectToLogin();
+    }, 5000);
+
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (!active) return;
+        window.clearTimeout(timeoutId);
+        if (error || !data.session) {
+          redirectToLogin();
+          return;
+        }
+        setHasSession(true);
+        setAuthChecked(true);
+      } catch {
+        if (!active) return;
+        window.clearTimeout(timeoutId);
         redirectToLogin();
-        return;
       }
-      setHasSession(true);
-      setAuthChecked(true);
     };
 
     checkSession();
-    return () => { active = false; };
+    return () => { active = false; window.clearTimeout(timeoutId); };
   }, [isProtectedPath, pathname, search]);
 
   if (!isProtectedPath) return <>{children}</>;
