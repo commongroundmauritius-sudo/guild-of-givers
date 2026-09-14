@@ -26,11 +26,15 @@ for (const match of migrationText.matchAll(/ALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?(
 const missingRls = [...createdTables].filter((table) => !rlsTables.has(table));
 
 // Split on function declarations and inspect each declaration independently.
-// This avoids false positives caused by SQL bodies containing semicolons.
+// Search for the hardening clause between SECURITY DEFINER and the function body.
 const functionSections = migrationText.split(/(?=CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\b)/gi).filter((section) => /CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\b/i.test(section));
 const securityDefiners = functionSections.filter((fn) => /SECURITY\s+DEFINER/i.test(fn));
 const unsafeDefiners = securityDefiners.filter((fn) => {
-  const header = fn.slice(0, fn.search(/AS\s+\$\$|AS\s+'|LANGUAGE\s+/i) > -1 ? fn.search(/AS\s+\$\$|AS\s+'|LANGUAGE\s+/i) : fn.length);
+  const securityIndex = fn.search(/SECURITY\s+DEFINER/i);
+  if (securityIndex < 0) return false;
+  const afterSecurity = fn.slice(securityIndex, securityIndex + 1200);
+  const bodyStart = afterSecurity.search(/AS\s+\$\$|AS\s+'|AS\s+\$[A-Za-z_][\w]*\$/i);
+  const header = bodyStart >= 0 ? afterSecurity.slice(0, bodyStart) : afterSecurity;
   return !/SET\s+search_path\s*(?:TO|=)\s*public\b/i.test(header);
 });
 
