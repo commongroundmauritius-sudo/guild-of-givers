@@ -25,18 +25,39 @@ for (const match of migrationText.matchAll(/ALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?(
 
 const missingRls = [...createdTables].filter((table) => !rlsTables.has(table));
 
-// Track the final migration state rather than only the CREATE FUNCTION header.
-// A later ALTER FUNCTION can establish the secure search_path for an earlier
-// SECURITY DEFINER declaration, so both forms are accepted and resolved by name.
+// Parse each CREATE FUNCTION as an isolated section so SECURITY DEFINER and
+// search_path clauses cannot accidentally match across function boundaries.
+const functionSections = migrationText
+  .split(/(?=CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\b)/gi)
+  .filter((section) => /CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\b/i.test(section));
+
 const securityDefiners = new Set();
-for (const match of migrationText.matchAll(/CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\([^)]*\)[\s\S]*?SECURITY\s+DEFINER/gi)) {
-  securityDefiners.add(match[1].toLowerCase());
+for (const section of functionSections) {
+  if (!/SECURITY\s+DEFINER/i.test(section)) continue;
+  const match = section.match(
+    /CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\(/i,
+  );
+  if (match) securityDefiners.add(match[1].toLowerCase());
 }
 
 const secureSearchPathFunctions = new Set();
-for (const match of migrationText.matchAll(/(?:CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\([^)]*\)|ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\([^)]*\))[\s\S]*?SET\s+search_path\s*(?:TO|=)\s*public\b/gi)) {
-  secureSearchPathFunctions.add((match[1] || match[2]).toLowerCase());
+for (const section of functionSections) {
+  if (!/SECURITY\s+DEFINER/i.test(section)) continue;
+  const match = section.match(
+    /CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\(/i,
+  );
+  if (match && /SET\s+search_path\s*(?:TO|=)\s*public\b/i.test(section)) {
+    secureSearchPathFunctions.add(match[1].toLowerCase());
+  }
 }
+
+// Some migrations apply the security setting separately with ALTER FUNCTION.
+for (const match of migrationText.matchAll(
+  /ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\([^;]*?\)\s+SET\s+search_path\s*(?:TO|=)\s*public\b/gi,
+)) {
+  secureSearchPathFunctions.add(match[1].toLowerCase());
+}
+
 const unsafeDefiners = [...securityDefiners].filter((name) => !secureSearchPathFunctions.has(name));
 
 const intentionalAnonWriteTables = new Set(["public.leads", "public.partner_applications"]);
@@ -52,7 +73,7 @@ const serviceRoleClientLeak = /SUPABASE_SERVICE_ROLE_KEY|service_role[^\n]*(?:cr
 const failures = [];
 if (missingRls.length) failures.push(`Tables without RLS: ${missingRls.join(", ")}`);
 if (anonWriteGrants.length) failures.push(`Anonymous write grants detected: ${anonWriteGrants.join(" | ")}`);
-if (unsafeDefiners.length) failures.push(`SECURITY DEFINER functions without an explicit public search_path: ${unsafeDefiners.length}`);
+if (unsafeDefiners.length) failures.push(`SECURITY DEFINER functions without an explicit public search_path: ${unsafeDefiners.length} (${unsafeDefiners.join(", ")})`);
 if (serviceRoleClientLeak) failures.push("Potential service-role credential usage detected in client source.");
 
 console.log(`Security audit: ${createdTables.size} public tables found; ${rlsTables.size} explicitly protected with RLS.`);
