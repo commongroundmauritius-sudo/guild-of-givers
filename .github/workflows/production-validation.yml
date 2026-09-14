@@ -31,7 +31,7 @@ jobs:
         run: npm ci --legacy-peer-deps --no-audit --no-fund
 
       - name: Format sources
-        run: npx prettier --write src scripts
+        run: npx prettier --write src scripts tests
 
       - name: Lint
         run: npm run lint
