@@ -12,7 +12,9 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
     await expect(page.locator("h1")).toContainText("Legal Framework & Policies");
     await expect(page.getByRole("link", { name: /Privacy Policy/i }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Terms & Conditions/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /Refund & Cancellation Policy/i }).first()).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Refund & Cancellation Policy/i }).first(),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: /Cookies Policy/i }).first()).toBeVisible();
 
     await page.goto("http://localhost:8080/privacy-policy");
