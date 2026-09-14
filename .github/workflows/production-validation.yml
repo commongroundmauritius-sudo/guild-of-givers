@@ -37,6 +37,8 @@ jobs:
         run: npm run lint
 
       - name: Production build
+        env:
+          VITE_ENABLE_MOCK_PAYMENTS: "true"
         run: npm run build
 
       - name: Verify worker output
@@ -49,6 +51,8 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Start production worker preview
+        env:
+          VITE_ENABLE_MOCK_PAYMENTS: "true"
         run: |
           cd dist/client
           npx wrangler dev --config wrangler.json --local --ip 0.0.0.0 --port 8080 > /tmp/preview.log 2>&1 &
