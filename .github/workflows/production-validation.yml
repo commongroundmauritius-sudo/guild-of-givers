@@ -1,6 +1,7 @@
 name: Production Validation
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
