@@ -64,11 +64,65 @@ jobs:
           cat /tmp/preview.log
           exit 1
 
-      - name: Run end-to-end tests
+      - name: E2E — admin
         env:
           CI: true
           PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
-        run: npm run test:e2e
+        run: npx playwright test tests/admin.spec.ts
+
+      - name: E2E — auth
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/auth.spec.ts
+
+      - name: E2E — compliance and cookies
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/compliance-cookie-consent.spec.ts
+
+      - name: E2E — signup journey
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/e2e-signup-journey.spec.ts
+
+      - name: E2E — financial trace
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/financial-trace.spec.ts
+
+      - name: E2E — member checkpoint
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/member-checkpoint.spec.ts
+
+      - name: E2E — member
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/member.spec.ts
+
+      - name: E2E — partner security
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/partner-security.spec.ts
+
+      - name: E2E — smoke
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/smoke.spec.ts
+
+      - name: E2E — system
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/system.spec.ts
 
       - name: Upload Playwright report on failure
         if: failure()
