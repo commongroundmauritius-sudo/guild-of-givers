@@ -7,9 +7,13 @@ import {
   PaymentEventType,
 } from "./types";
 
-function assertDevelopmentOnly(): void {
-  if (import.meta.env.PROD) {
-    throw new Error("Mock payment provider is disabled in production");
+export function isMockPaymentsEnabled(): boolean {
+  return import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCK_PAYMENTS === "true";
+}
+
+function assertMockPaymentsEnabled(): void {
+  if (!isMockPaymentsEnabled()) {
+    throw new Error("Mock payment provider is disabled in this build");
   }
 }
 
@@ -21,7 +25,7 @@ export class MockPaymentProvider implements PaymentProvider {
     currency: string,
     metadata: Record<string, unknown>,
   ): Promise<{ checkoutUrl: string; transactionId: string }> {
-    assertDevelopmentOnly();
+    assertMockPaymentsEnabled();
     console.log(`[MockProvider] Initializing payment of ${amount} ${currency}`, metadata);
     const transactionId = `mock_txn_${Math.random().toString(36).substr(2, 9)}`;
     return {
@@ -31,42 +35,34 @@ export class MockPaymentProvider implements PaymentProvider {
   }
 
   async createSubscription(request: SubscriptionRequest): Promise<SubscriptionResult> {
-    assertDevelopmentOnly();
+    assertMockPaymentsEnabled();
     console.log(`[MockProvider] Creating subscription for user ${request.userId}`);
     const subscriptionId = `mock_sub_${Math.random().toString(36).substr(2, 9)}`;
-
     const now = new Date();
     const nextBilling = new Date(now.getFullYear(), now.getMonth(), request.billingDate);
-    if (nextBilling <= now) {
-      nextBilling.setMonth(nextBilling.getMonth() + 1);
-    }
-
-    return {
-      subscriptionId,
-      status: "active",
-      nextBillingDate: nextBilling.toISOString(),
-    };
+    if (nextBilling <= now) nextBilling.setMonth(nextBilling.getMonth() + 1);
+    return { subscriptionId, status: "active", nextBillingDate: nextBilling.toISOString() };
   }
 
   async cancelSubscription(subscriptionId: string): Promise<boolean> {
-    assertDevelopmentOnly();
+    assertMockPaymentsEnabled();
     console.log(`[MockProvider] Cancelling subscription ${subscriptionId}`);
     return true;
   }
 
   async resumeSubscription(subscriptionId: string): Promise<boolean> {
-    assertDevelopmentOnly();
+    assertMockPaymentsEnabled();
     console.log(`[MockProvider] Resuming subscription ${subscriptionId}`);
     return true;
   }
 
   async getSubscriptionStatus(subscriptionId: string): Promise<SubscriptionStatus> {
-    assertDevelopmentOnly();
+    assertMockPaymentsEnabled();
     return "active";
   }
 
   async handleWebhook(payload: Record<string, unknown>): Promise<PaymentEvent> {
-    assertDevelopmentOnly();
+    assertMockPaymentsEnabled();
     const type = payload.event_type as PaymentEventType;
     return {
       type,
@@ -78,11 +74,8 @@ export class MockPaymentProvider implements PaymentProvider {
     };
   }
 
-  static generateMockEvent(
-    type: PaymentEventType,
-    data: Partial<PaymentEvent>,
-  ): Record<string, unknown> {
-    assertDevelopmentOnly();
+  static generateMockEvent(type: PaymentEventType, data: Partial<PaymentEvent>): Record<string, unknown> {
+    assertMockPaymentsEnabled();
     return {
       event_type: type,
       user_id: data.userId || "mock_user",
