@@ -34,24 +34,23 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
     await expect(page.getByText("Category 1: Essential Cookies")).toBeVisible();
   });
 
-  test(
-    "Cookie banner appears on initial visit and allows accepting or rejecting",
-    async ({ page }) => {
-      await page.goto("http://localhost:8080/");
-      const banner = page.getByRole("region", { name: "Cookie Consent Banner" });
-      await expect(banner).toBeVisible();
-      await expect(banner).toContainText("We respect your privacy");
+  test("Cookie banner appears on initial visit and allows accepting or rejecting", async ({
+    page,
+  }) => {
+    await page.goto("http://localhost:8080/");
+    const banner = page.getByRole("region", { name: "Cookie Consent Banner" });
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText("We respect your privacy");
 
-      await page.getByRole("button", { name: "Reject Optional" }).click();
-      await expect(banner).not.toBeVisible();
+    await page.getByRole("button", { name: "Reject Optional" }).click();
+    await expect(banner).not.toBeVisible();
 
-      const consentState = await page.evaluate(() => localStorage.getItem("cg_cookie_consent_v1"));
-      expect(consentState).not.toBeNull();
-      const parsed = JSON.parse(consentState!);
-      expect(parsed.necessary).toBe(true);
-      expect(parsed.analytics).toBe(false);
-    },
-  );
+    const consentState = await page.evaluate(() => localStorage.getItem("cg_cookie_consent_v1"));
+    expect(consentState).not.toBeNull();
+    const parsed = JSON.parse(consentState!);
+    expect(parsed.necessary).toBe(true);
+    expect(parsed.analytics).toBe(false);
+  });
 
   test("Cookie preference modal can be opened from footer and updated", async ({ page }) => {
     await page.goto("http://localhost:8080/");
