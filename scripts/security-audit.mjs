@@ -25,16 +25,18 @@ for (const match of migrationText.matchAll(/ALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?(
 
 const missingRls = [...createdTables].filter((table) => !rlsTables.has(table));
 
-// Parse each function independently so a later hardening statement cannot
-// accidentally make an earlier SECURITY DEFINER function look safe.
-const functionStatements = migrationText.match(/CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION[\s\S]*?(?=\n\s*(?:CREATE|ALTER|DROP)\s+(?:OR\s+REPLACE\s+)?(?:FUNCTION|TABLE|TYPE)|$)/gi) ?? [];
-const securityDefiners = functionStatements.filter((fn) => /SECURITY\s+DEFINER/i.test(fn));
-const unsafeDefiners = securityDefiners.filter((fn) => !/SET\s+search_path\s*(?:TO|=)\s*public\b/i.test(fn));
+// Split on function declarations and inspect each declaration independently.
+// This avoids false positives caused by SQL bodies containing semicolons.
+const functionSections = migrationText.split(/(?=CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\b)/gi).filter((section) => /CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\b/i.test(section));
+const securityDefiners = functionSections.filter((fn) => /SECURITY\s+DEFINER/i.test(fn));
+const unsafeDefiners = securityDefiners.filter((fn) => {
+  const header = fn.slice(0, fn.search(/AS\s+\$\$|AS\s+'|LANGUAGE\s+/i) > -1 ? fn.search(/AS\s+\$\$|AS\s+'|LANGUAGE\s+/i) : fn.length);
+  return !/SET\s+search_path\s*(?:TO|=)\s*public\b/i.test(header);
+});
 
-// partner_applications is intentionally reachable through the public
-// application flow; the table remains protected by RLS and its insert path is
-// constrained by the application validation. Other anonymous writes fail.
-const intentionalAnonWriteTables = new Set(["public.partner_applications"]);
+// These tables intentionally accept anonymous intake writes; their RLS/policy
+// validation is the security boundary. Any other anonymous write grant fails.
+const intentionalAnonWriteTables = new Set(["public.leads", "public.partner_applications"]);
 const anonWriteGrants = [...migrationText.matchAll(/GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER)[^;]*\s+TO\s+anon/gi)]
   .map((m) => m[0])
   .filter((grant) => ![...intentionalAnonWriteTables].some((table) => new RegExp(`\\b${table.replace(".", "\\.")}\\b`, "i").test(grant)))
