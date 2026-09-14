@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  getConsentState,
   getStoredConsent,
   subscribeConsent,
   saveConsentPreferences,
@@ -9,26 +8,65 @@ import {
   closeConsentModal,
 } from "@/lib/cookie-consent";
 
+type ConsentAction = "save" | "open-banner" | "open-modal" | "close-modal";
+
+type CookieConsentState = {
+  consent: ReturnType<typeof getStoredConsent>;
+  isBannerOpen: boolean;
+  isModalOpen: boolean;
+};
+
+const emptyState = (): CookieConsentState => ({
+  consent: null,
+  isBannerOpen: false,
+  isModalOpen: false,
+});
+
 export function useCookieConsent() {
-  const [state, setState] = useState(() => ({
-    consent: null as ReturnType<typeof getStoredConsent>,
-    isBannerOpen: false,
-    isModalOpen: false,
-  }));
+  const [state, setState] = useState<CookieConsentState>(emptyState);
 
   useEffect(() => {
-    // Initialise from this browser context rather than inheriting modal/banner
-    // state from the module-level singleton used by another mounted context.
-    const stored = getStoredConsent();
-    setState({
-      consent: stored,
-      isBannerOpen: stored === null,
-      isModalOpen: false,
-    });
+    const syncFromStorage = () => {
+      const consent = getStoredConsent();
+      setState((current) => ({
+        consent,
+        isBannerOpen: consent === null && !current.isModalOpen,
+        isModalOpen: current.isModalOpen,
+      }));
+    };
 
-    const syncState = () => setState({ ...getConsentState() });
-    const unsubscribe = subscribeConsent(syncState);
-    return unsubscribe;
+    const handleAction = (action?: ConsentAction) => {
+      if (action === "open-modal") {
+        setState((current) => ({
+          ...current,
+          consent: getStoredConsent(),
+          isBannerOpen: false,
+          isModalOpen: true,
+        }));
+        return;
+      }
+
+      if (action === "close-modal") {
+        setState((current) => ({ ...current, isModalOpen: false }));
+        return;
+      }
+
+      if (action === "open-banner") {
+        setState((current) => ({
+          ...current,
+          consent: getStoredConsent(),
+          isBannerOpen: true,
+          isModalOpen: false,
+        }));
+        return;
+      }
+
+      syncFromStorage();
+      setState((current) => ({ ...current, isModalOpen: false }));
+    };
+
+    syncFromStorage();
+    return subscribeConsent(handleAction);
   }, []);
 
   return {
