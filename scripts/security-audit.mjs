@@ -25,18 +25,20 @@ for (const match of migrationText.matchAll(/ALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?(
 
 const missingRls = [...createdTables].filter((table) => !rlsTables.has(table));
 
-// PostgreSQL permits SET clauses either before or after the function body.
-// Keep each CREATE FUNCTION section isolated and inspect the complete section.
-const functionSections = migrationText
-  .split(/(?=CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\b)/gi)
-  .filter((section) => /CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\b/i.test(section));
-const securityDefiners = functionSections.filter((fn) => /SECURITY\s+DEFINER/i.test(fn));
-const unsafeDefiners = securityDefiners.filter(
-  (fn) => !/SET\s+search_path\s*(?:TO|=)\s*public\b/i.test(fn),
-);
+// Track the final migration state rather than only the CREATE FUNCTION header.
+// A later ALTER FUNCTION can establish the secure search_path for an earlier
+// SECURITY DEFINER declaration, so both forms are accepted and resolved by name.
+const securityDefiners = new Set();
+for (const match of migrationText.matchAll(/CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\([^)]*\)[\s\S]*?SECURITY\s+DEFINER/gi)) {
+  securityDefiners.add(match[1].toLowerCase());
+}
 
-// These tables intentionally accept anonymous intake writes; their RLS/policy
-// validation is the security boundary. Any other anonymous write grant fails.
+const secureSearchPathFunctions = new Set();
+for (const match of migrationText.matchAll(/(?:CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\([^)]*\)|ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\([^)]*\))[\s\S]*?SET\s+search_path\s*(?:TO|=)\s*public\b/gi)) {
+  secureSearchPathFunctions.add((match[1] || match[2]).toLowerCase());
+}
+const unsafeDefiners = [...securityDefiners].filter((name) => !secureSearchPathFunctions.has(name));
+
 const intentionalAnonWriteTables = new Set(["public.leads", "public.partner_applications"]);
 const anonWriteGrants = [...migrationText.matchAll(/GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER)[^;]*\s+TO\s+anon/gi)]
   .map((m) => m[0])
@@ -54,8 +56,8 @@ if (unsafeDefiners.length) failures.push(`SECURITY DEFINER functions without an 
 if (serviceRoleClientLeak) failures.push("Potential service-role credential usage detected in client source.");
 
 console.log(`Security audit: ${createdTables.size} public tables found; ${rlsTables.size} explicitly protected with RLS.`);
-console.log(`Security audit: ${securityDefiners.length} SECURITY DEFINER functions inspected.`);
-console.log(`Security audit: ${securityDefiners.length - unsafeDefiners.length} SECURITY DEFINER functions with explicit public search_path.`);
+console.log(`Security audit: ${securityDefiners.size} SECURITY DEFINER functions inspected.`);
+console.log(`Security audit: ${securityDefiners.size - unsafeDefiners.length} SECURITY DEFINER functions with explicit public search_path.`);
 if (failures.length) {
   console.error(failures.map((f) => `FAIL: ${f}`).join("\n"));
   process.exit(1);
