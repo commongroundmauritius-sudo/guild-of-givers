@@ -20,26 +20,15 @@ const migrationText = (await Promise.all(migrationFiles.map((f) => readFile(f, "
 
 const createdTables = new Set();
 const rlsTables = new Set();
-for (const match of migrationText.matchAll(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public\.)?([a-zA-Z_][\w]*)/gi))
-  createdTables.add(match[1].toLowerCase());
-for (const match of migrationText.matchAll(/ALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?(?:public\.)?([a-zA-Z_][\w]*)\s+ENABLE\s+ROW\s+LEVEL\s+SECURITY/gi))
-  rlsTables.add(match[1].toLowerCase());
+for (const match of migrationText.matchAll(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public\.)?([a-zA-Z_][\w]*)/gi)) createdTables.add(match[1].toLowerCase());
+for (const match of migrationText.matchAll(/ALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?(?:public\.)?([a-zA-Z_][\w]*)\s+ENABLE\s+ROW\s+LEVEL\s+SECURITY/gi)) rlsTables.add(match[1].toLowerCase());
 
 const missingRls = [...createdTables].filter((table) => !rlsTables.has(table));
-const finalDefinerHardening = /ALTER\s+FUNCTION\s+%s\s+SET\s+search_path\s*=\s*public/i.test(migrationText);
-const anonWriteGrants = [
-  ...migrationText.matchAll(/GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER)[^;]*\s+TO\s+anon/gi),
-]
-  .map((m) => m[0])
-  .filter((grant) => !/public\.leads\b/i.test(grant))
-  .filter((grant) => !(finalDefinerHardening && /public\.partner_applications\b/i.test(grant)));
+const definerHardeningStatements = [...migrationText.matchAll(/(?:ALTER\s+FUNCTION|CREATE\s+OR\s+REPLACE\s+FUNCTION)[\s\S]*?SECURITY\s+DEFINER[\s\S]*?(?:SET\s+search_path\s*(?:TO|=)\s*public)/gi)];
+const securityDefiners = [...migrationText.matchAll(/CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+[\s\S]*?SECURITY\s+DEFINER[\s\S]*?(?=;)/gi)].map((m) => m[0]);
+const unsafeDefiners = securityDefiners.filter((fn) => !/search_path\s*(?:TO|=)\s*[^\n;]+/i.test(fn));
 
-const securityDefiners = [
-  ...migrationText.matchAll(/CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+[\s\S]*?SECURITY\s+DEFINER[\s\S]*?(?=;)/gi),
-].map((m) => m[0]);
-const unsafeDefiners = finalDefinerHardening
-  ? []
-  : securityDefiners.filter((fn) => !/search_path\s*=\s*[^\n;]+/i.test(fn));
+const anonWriteGrants = [...migrationText.matchAll(/GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER)[^;]*\s+TO\s+anon/gi)].map((m) => m[0]).filter((grant) => !/public\.leads\b/i.test(grant));
 
 const sourceFiles = (await walk(srcDir)).filter((f) => /\.(ts|tsx|js|jsx)$/.test(f));
 const sourceText = (await Promise.all(sourceFiles.map((f) => readFile(f, "utf8")))).join("\n");
@@ -53,7 +42,7 @@ if (serviceRoleClientLeak) failures.push("Potential service-role credential usag
 
 console.log(`Security audit: ${createdTables.size} public tables found; ${rlsTables.size} explicitly protected with RLS.`);
 console.log(`Security audit: ${securityDefiners.length} SECURITY DEFINER functions inspected.`);
-console.log(`Security audit: final SECURITY DEFINER hardening migration ${finalDefinerHardening ? "present" : "missing"}.`);
+console.log(`Security audit: ${definerHardeningStatements.length} SECURITY DEFINER statements with explicit public search_path found.`);
 if (failures.length) {
   console.error(failures.map((f) => `FAIL: ${f}`).join("\n"));
   process.exit(1);
