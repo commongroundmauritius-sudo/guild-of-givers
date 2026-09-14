@@ -34,7 +34,9 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
     await expect(page.getByText("Category 1: Essential Cookies")).toBeVisible();
   });
 
-  test("Cookie banner appears on initial visit and allows accepting or rejecting", async ({ page }) => {
+  test("Cookie banner appears on initial visit and allows accepting or rejecting", async ({
+    page,
+  }) => {
     await page.goto("/");
     const banner = page.getByRole("region", { name: "Cookie Consent Banner" });
     await expect(banner).toBeVisible();
