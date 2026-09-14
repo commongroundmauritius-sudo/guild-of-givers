@@ -76,7 +76,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head><HeadContent /></head>
-      <body>{children}<Scripts /></body>
+      <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => { const protectedPath = /^(\\/admin-dashboard|\\/member|\\/notifications|\\/community-hub|\\/dashboard|\\/organization)(\\/|$)/.test(location.pathname); if (!protectedPath) return; const hasSession = Object.keys(localStorage).some((key) => key.startsWith("sb-") && key.includes("-auth-token")); if (!hasSession) location.replace("/login?redirect=" + encodeURIComponent(location.pathname + location.search)); })();`,
+          }}
+        />
+        {children}
+        <Scripts />
+      </body>
     </html>
   );
 }
@@ -89,7 +97,6 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let active = true;
-
     if (!isProtectedPath) {
       setAuthChecked(true);
       setHasSession(true);
@@ -102,12 +109,12 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
     };
 
     const hasStoredSession = Object.keys(localStorage).some((key) => {
-      if (!key.startsWith("sb-") || !key.endsWith("-auth-token")) return false;
+      if (!key.startsWith("sb-") || !key.includes("-auth-token")) return false;
       try {
         const value = JSON.parse(localStorage.getItem(key) || "null");
-        return Boolean(value?.access_token);
+        return Boolean(value?.access_token) || Boolean(value?.refresh_token);
       } catch {
-        return false;
+        return true;
       }
     });
 
