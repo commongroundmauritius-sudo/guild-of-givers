@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test";
 
-async function resetCookieConsent(page: import("@playwright/test").Page) {
+async function startWithoutCookieConsent(page: import("@playwright/test").Page) {
+  await page.addInitScript(() => {
+    localStorage.removeItem("cg_cookie_consent_v1");
+  });
   await page.goto("/");
-  await page.evaluate(() => localStorage.removeItem("cg_cookie_consent_v1"));
-  await page.reload();
 }
 
 test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
@@ -33,7 +34,7 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
   });
 
   test("Cookie banner appears on initial visit and allows accepting or rejecting", async ({ page }) => {
-    await resetCookieConsent(page);
+    await startWithoutCookieConsent(page);
 
     const banner = page.getByRole("region", { name: "Cookie Consent Banner" });
     await expect(banner).toBeVisible();
@@ -50,7 +51,8 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
   });
 
   test("Cookie preference modal can be opened from footer and updated", async ({ page }) => {
-    await resetCookieConsent(page);
+    await startWithoutCookieConsent(page);
+    await expect(page.getByRole("region", { name: "Cookie Consent Banner" })).toBeVisible();
     await page.getByRole("button", { name: "Reject Optional" }).click();
 
     const footerLink = page.getByRole("button", { name: "Cookie Preferences" });
