@@ -10,19 +10,16 @@ import {
 } from "@/lib/cookie-consent";
 
 export function useCookieConsent() {
-  const [state, setState] = useState(() => {
-    const consent = getStoredConsent();
-    return {
-      consent,
-      isBannerOpen: typeof window !== "undefined" && consent === null,
-      isModalOpen: false,
-    };
-  });
+  const [state, setState] = useState(() => ({
+    consent: null as ReturnType<typeof getStoredConsent>,
+    isBannerOpen: false,
+    isModalOpen: false,
+  }));
 
   useEffect(() => {
     const syncState = () => setState({ ...getConsentState() });
-    const unsubscribe = subscribeConsent(syncState);
     syncState();
+    const unsubscribe = subscribeConsent(syncState);
     return unsubscribe;
   }, []);
 
