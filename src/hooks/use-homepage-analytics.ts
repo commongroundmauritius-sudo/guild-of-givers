@@ -1,8 +1,22 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isAnalyticsAllowed } from "@/lib/cookie-consent";
 
 export function useHomepageAnalytics(versionId: string | undefined) {
+  const trackEvent = useCallback(
+    async (sectionId: string, eventType: string, metadata: any = {}) => {
+      if (!versionId || !isAnalyticsAllowed()) return;
+
+      await supabase.from("homepage_analytics").insert({
+        version_id: versionId,
+        section_id: sectionId,
+        event_type: eventType,
+        metadata,
+      });
+    },
+    [versionId],
+  );
+
   useEffect(() => {
     if (!versionId || !isAnalyticsAllowed()) return;
 
@@ -11,9 +25,7 @@ export function useHomepageAnalytics(versionId: string | undefined) {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const sectionId = entry.target.getAttribute("data-section");
-            if (sectionId) {
-              trackEvent(sectionId, "view");
-            }
+            if (sectionId) trackEvent(sectionId, "view");
           }
         });
       },
@@ -21,21 +33,10 @@ export function useHomepageAnalytics(versionId: string | undefined) {
     );
 
     const sections = document.querySelectorAll("[data-section]");
-    sections.forEach((s) => observer.observe(s));
+    sections.forEach((section) => observer.observe(section));
 
     return () => observer.disconnect();
-  }, [versionId]);
-
-  const trackEvent = async (sectionId: string, eventType: string, metadata: any = {}) => {
-    if (!versionId || !isAnalyticsAllowed()) return;
-
-    await supabase.from("homepage_analytics").insert({
-      version_id: versionId,
-      section_id: sectionId,
-      event_type: eventType,
-      metadata,
-    });
-  };
+  }, [trackEvent, versionId]);
 
   return { trackEvent };
 }
