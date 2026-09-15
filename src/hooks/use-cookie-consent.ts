@@ -24,6 +24,7 @@ const emptyState = (): CookieConsentState => ({
 
 export function useCookieConsent() {
   const [state, setState] = useState<CookieConsentState>(emptyState);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const syncFromStorage = () => {
@@ -66,6 +67,7 @@ export function useCookieConsent() {
     };
 
     syncFromStorage();
+    setHydrated(true);
     return subscribeConsent(handleAction);
   }, []);
 
@@ -75,6 +77,7 @@ export function useCookieConsent() {
     isAnalyticsAllowed: state.consent?.analytics ?? false,
     isBannerOpen: state.isBannerOpen,
     isModalOpen: state.isModalOpen,
+    isHydrated: hydrated,
     acceptAll: () => saveConsentPreferences(true),
     rejectOptional: () => saveConsentPreferences(false),
     updatePreferences: (analytics: boolean) => saveConsentPreferences(analytics),
