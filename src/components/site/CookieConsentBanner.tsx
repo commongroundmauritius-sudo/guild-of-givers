@@ -23,9 +23,12 @@ export function CookieConsentBanner() {
     setAnalyticsChecked(consent?.analytics ?? false);
   }, [consent]);
 
-  const shouldShowBanner = isHydrated && isBannerOpen && consent === null && !isModalOpen;
+  // Render the banner during SSR/pre-hydration too, so it does not depend on
+  // client hydration succeeding. An inline script hides it instantly when
+  // consent was already stored (see __root.tsx + .cg-consent-given rule).
+  const shouldShowBanner = !isHydrated || (isBannerOpen && consent === null && !isModalOpen);
 
-  if (!isHydrated || (!shouldShowBanner && !isModalOpen)) return null;
+  if (!shouldShowBanner && !isModalOpen) return null;
 
   const handleSaveCustom = () => {
     updatePreferences(analyticsChecked);
@@ -38,7 +41,7 @@ export function CookieConsentBanner() {
         <aside
           role="region"
           aria-label="Cookie Consent Banner"
-          className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 p-4 shadow-2xl backdrop-blur-md sm:p-6"
+          className="cg-consent-banner fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 p-4 shadow-2xl backdrop-blur-md sm:p-6"
         >
           <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 md:flex-row md:items-center">
             <div className="flex max-w-3xl items-start gap-3.5">
