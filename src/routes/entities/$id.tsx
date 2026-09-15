@@ -213,7 +213,7 @@ function OrganizationProfilePage() {
   // Determine if user can edit
   const isAdmin = userRole === "admin" || userRole === "super_admin";
   const isOwner = user?.id && organization?.owner_user_id && user.id === organization.owner_user_id;
-  const canEdit = isAdmin || isOwner;
+  const canEdit = Boolean(isAdmin || isOwner);
 
   // Handle form submission
   const handleSave = async (e: React.FormEvent) => {

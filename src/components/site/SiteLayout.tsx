@@ -1,7 +1,7 @@
 import { ReactNode, useEffect } from "react";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
-import { CookieConsentBanner } from "./CookieConsentBanner";
+
 import { attributionService } from "@/lib/attribution-service";
 
 interface SiteLayoutProps {
@@ -27,7 +27,7 @@ export function SiteLayout({ children }: SiteLayoutProps) {
         {children}
       </main>
       <Footer />
-      <CookieConsentBanner />
+      
     </div>
   );
 }
