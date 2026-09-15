@@ -9,75 +9,45 @@ import {
 } from "@/lib/cookie-consent";
 
 type ConsentAction = "save" | "open-banner" | "open-modal" | "close-modal";
-
-type CookieConsentState = {
-  consent: ReturnType<typeof getStoredConsent>;
-  isBannerOpen: boolean;
-  isModalOpen: boolean;
-};
-
-const emptyState = (): CookieConsentState => ({
-  consent: null,
-  isBannerOpen: false,
-  isModalOpen: false,
-});
+type CookieConsent = ReturnType<typeof getStoredConsent>;
 
 export function useCookieConsent() {
-  const [state, setState] = useState<CookieConsentState>(emptyState);
-  const [hydrated, setHydrated] = useState(false);
+  const [consent, setConsent] = useState<CookieConsent>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    const syncFromStorage = () => {
-      const consent = getStoredConsent();
-      setState((current) => ({
-        consent,
-        isBannerOpen: consent === null && !current.isModalOpen,
-        isModalOpen: current.isModalOpen,
-      }));
-    };
+    const syncFromStorage = () => setConsent(getStoredConsent());
 
     const handleAction = (action?: ConsentAction) => {
-      if (action === "open-modal") {
-        setState((current) => ({
-          ...current,
-          consent: getStoredConsent(),
-          isBannerOpen: false,
-          isModalOpen: true,
-        }));
-        return;
-      }
-
-      if (action === "close-modal") {
-        setState((current) => ({ ...current, isModalOpen: false }));
-        return;
-      }
-
-      if (action === "open-banner") {
-        setState((current) => ({
-          ...current,
-          consent: getStoredConsent(),
-          isBannerOpen: true,
-          isModalOpen: false,
-        }));
-        return;
-      }
-
       syncFromStorage();
-      setState((current) => ({ ...current, isModalOpen: false }));
+      if (action === "open-modal") {
+        setIsModalOpen(true);
+        return;
+      }
+      if (action === "close-modal") {
+        setIsModalOpen(false);
+        return;
+      }
+      if (action === "open-banner" || action === "save") {
+        setIsModalOpen(false);
+      }
     };
 
     syncFromStorage();
-    setHydrated(true);
+    setIsHydrated(true);
     return subscribeConsent(handleAction);
   }, []);
 
+  const isBannerOpen = isHydrated && consent === null && !isModalOpen;
+
   return {
-    consent: state.consent,
-    hasResponded: state.consent !== null,
-    isAnalyticsAllowed: state.consent?.analytics ?? false,
-    isBannerOpen: state.isBannerOpen,
-    isModalOpen: state.isModalOpen,
-    isHydrated: hydrated,
+    consent,
+    hasResponded: consent !== null,
+    isAnalyticsAllowed: consent?.analytics ?? false,
+    isBannerOpen,
+    isModalOpen,
+    isHydrated,
     acceptAll: () => saveConsentPreferences(true),
     rejectOptional: () => saveConsentPreferences(false),
     updatePreferences: (analytics: boolean) => saveConsentPreferences(analytics),
