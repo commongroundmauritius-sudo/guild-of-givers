@@ -82,7 +82,7 @@ export const convertLead = createServerFn({ method: "POST" })
     if (!lead) throw new Error("Lead not found");
     const { error } = await supabase.from("leads").update({ status, lead_stage: "Subscriber", converted_at: new Date().toISOString(), last_activity_at: new Date().toISOString() }).eq("id", lead.id);
     if (error) throw error;
-    await activityService.logEvent({ userId: user.id, initiativeId: sourceInitiativeId || undefined, eventType: "payment_completed", metadata: { lead_id: lead.id, email: email.trim().toLowerCase() }, source: "backend" });
+    await activityService.logEvent({ initiativeId: sourceInitiativeId || undefined, eventType: "payment_completed", metadata: { user_id: user.id, lead_id: lead.id, email: email.trim().toLowerCase() }, source: "backend" });
     return { success: true };
   });
 

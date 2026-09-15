@@ -17,6 +17,7 @@ export function CookieConsentBanner() {
   } = useCookieConsent();
 
   const [analyticsChecked, setAnalyticsChecked] = useState(false);
+  const currentAnalytics = consent?.analytics ?? false;
 
   useEffect(() => {
     setAnalyticsChecked(consent?.analytics ?? false);
@@ -71,7 +72,7 @@ export function CookieConsentBanner() {
             <div className="flex w-full shrink-0 flex-wrap items-center justify-end gap-2.5 md:w-auto">
               <button
                 onClick={() => {
-                  setAnalyticsChecked(consent?.analytics ?? false);
+                  setAnalyticsChecked(currentAnalytics);
                   openModal();
                 }}
                 className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"

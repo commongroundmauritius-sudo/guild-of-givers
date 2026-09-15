@@ -6,9 +6,6 @@ export default defineConfig({
       entry: "server",
     },
   },
-  ssr: {
-    noExternal: true,
-  },
   build: {
     rollupOptions: {
       output: {
