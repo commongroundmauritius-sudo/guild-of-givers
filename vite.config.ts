@@ -6,11 +6,4 @@ export default defineConfig({
       entry: "server",
     },
   },
-  build: {
-    rollupOptions: {
-      output: {
-        inlineDynamicImports: true,
-      },
-    },
-  },
 });
