@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
+import { CookieConsentBanner } from "@/components/site/CookieConsentBanner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -158,6 +159,7 @@ function RootComponent() {
       <AuthProvider>
         <TooltipProvider>
           <ProtectedRouteGuard><Outlet /></ProtectedRouteGuard>
+          <CookieConsentBanner />
           <Toaster />
         </TooltipProvider>
       </AuthProvider>
