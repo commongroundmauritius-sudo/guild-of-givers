@@ -40,11 +40,13 @@ for (const section of functionSections) {
   if (/SET\s+search_path\s*(?:TO|=)\s*public\b/i.test(section)) secureSearchPathFunctions.add(name);
 }
 
-// Some migrations apply the security setting separately with ALTER FUNCTION.
-// Match the function name and the entire ALTER statement, allowing arbitrary
-// argument lists and line breaks between the signature and SET clause.
-for (const match of migrationText.matchAll(/ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\b[\s\S]*?SET\s+search_path\s*(?:TO|=)\s*public\b/gi)) {
-  secureSearchPathFunctions.add(match[1].toLowerCase());
+// Some migrations apply function security settings separately with ALTER FUNCTION.
+// Evaluate each statement independently so a SET clause from a later statement
+// cannot accidentally satisfy an earlier function.
+for (const statement of migrationText.split(";")) {
+  if (!/ALTER\s+FUNCTION\b/i.test(statement)) continue;
+  const match = statement.match(/ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\b[\s\S]*?SET\s+search_path\s*(?:TO|=)\s*public\b/i);
+  if (match) secureSearchPathFunctions.add(match[1].toLowerCase());
 }
 
 const unsafeDefiners = [...securityDefiners].filter((name) => !secureSearchPathFunctions.has(name));
