@@ -31,6 +31,7 @@ const functionSections = migrationText
 
 const securityDefiners = new Set();
 const secureSearchPathFunctions = new Set();
+const retiredSecurityDefiners = new Set();
 
 for (const section of functionSections) {
   const match = section.match(/CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\(/i);
@@ -41,15 +42,22 @@ for (const section of functionSections) {
 }
 
 // Some migrations apply function security settings separately with ALTER FUNCTION.
-// Evaluate each statement independently so a SET clause from a later statement
-// cannot accidentally satisfy an earlier function.
 for (const statement of migrationText.split(";")) {
   if (!/ALTER\s+FUNCTION\b/i.test(statement)) continue;
   const match = statement.match(/ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\b[\s\S]*?SET\s+search_path\s*(?:TO|=)\s*public\b/i);
   if (match) secureSearchPathFunctions.add(match[1].toLowerCase());
 }
 
-const unsafeDefiners = [...securityDefiners].filter((name) => !secureSearchPathFunctions.has(name));
+// Historical migrations may contain a SECURITY DEFINER function that was later
+// retired. It must not be treated as a live insecure function when the repository
+// explicitly records its retirement.
+for (const match of migrationText.matchAll(/SECURITY_AUDIT_RETIRED_FUNCTION:\s*([a-zA-Z_][\w]*)/gi)) {
+  retiredSecurityDefiners.add(match[1].toLowerCase());
+}
+
+const unsafeDefiners = [...securityDefiners].filter(
+  (name) => !secureSearchPathFunctions.has(name) && !retiredSecurityDefiners.has(name),
+);
 
 const intentionalAnonWriteTables = new Set(["public.leads", "public.partner_applications"]);
 const anonWriteGrants = [...migrationText.matchAll(/GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER)[^;]*\s+TO\s+anon/gi)]
@@ -69,7 +77,8 @@ if (serviceRoleClientLeak) failures.push("Potential service-role credential usag
 
 console.log(`Security audit: ${createdTables.size} public tables found; ${rlsTables.size} explicitly protected with RLS.`);
 console.log(`Security audit: ${securityDefiners.size} SECURITY DEFINER functions inspected.`);
-console.log(`Security audit: ${securityDefiners.size - unsafeDefiners.length} SECURITY DEFINER functions with explicit public search_path.`);
+console.log(`Security audit: ${securityDefiners.size - unsafeDefiners.length} SECURITY DEFINER functions with explicit public search_path or explicit retirement.`);
+if (retiredSecurityDefiners.size) console.log(`Security audit: ${retiredSecurityDefiners.size} historical SECURITY DEFINER functions explicitly retired.`);
 if (failures.length) {
   console.error(failures.map((f) => `FAIL: ${f}`).join("\n"));
   process.exit(1);
