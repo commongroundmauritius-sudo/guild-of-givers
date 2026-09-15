@@ -1,10 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 async function startWithoutCookieConsent(page: import("@playwright/test").Page) {
-  await page.addInitScript(() => {
-    localStorage.removeItem("cg_cookie_consent_v1");
-  });
   await page.goto("/");
+  await page.evaluate(() => localStorage.removeItem("cg_cookie_consent_v1"));
+  await page.reload();
 }
 
 test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
