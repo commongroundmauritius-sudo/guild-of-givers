@@ -25,36 +25,25 @@ for (const match of migrationText.matchAll(/ALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?(
 
 const missingRls = [...createdTables].filter((table) => !rlsTables.has(table));
 
-// Parse each CREATE FUNCTION as an isolated section so SECURITY DEFINER and
-// search_path clauses cannot accidentally match across function boundaries.
 const functionSections = migrationText
   .split(/(?=CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\b)/gi)
   .filter((section) => /CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\b/i.test(section));
 
 const securityDefiners = new Set();
-for (const section of functionSections) {
-  if (!/SECURITY\s+DEFINER/i.test(section)) continue;
-  const match = section.match(
-    /CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\(/i,
-  );
-  if (match) securityDefiners.add(match[1].toLowerCase());
-}
-
 const secureSearchPathFunctions = new Set();
+
 for (const section of functionSections) {
-  if (!/SECURITY\s+DEFINER/i.test(section)) continue;
-  const match = section.match(
-    /CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\(/i,
-  );
-  if (match && /SET\s+search_path\s*(?:TO|=)\s*public\b/i.test(section)) {
-    secureSearchPathFunctions.add(match[1].toLowerCase());
-  }
+  const match = section.match(/CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\(/i);
+  if (!match || !/SECURITY\s+DEFINER/i.test(section)) continue;
+  const name = match[1].toLowerCase();
+  securityDefiners.add(name);
+  if (/SET\s+search_path\s*(?:TO|=)\s*public\b/i.test(section)) secureSearchPathFunctions.add(name);
 }
 
 // Some migrations apply the security setting separately with ALTER FUNCTION.
-for (const match of migrationText.matchAll(
-  /ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\s*\([^;]*?\)\s+SET\s+search_path\s*(?:TO|=)\s*public\b/gi,
-)) {
+// Match the function name and the entire ALTER statement, allowing arbitrary
+// argument lists and line breaks between the signature and SET clause.
+for (const match of migrationText.matchAll(/ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\b[\s\S]*?SET\s+search_path\s*(?:TO|=)\s*public\b/gi)) {
   secureSearchPathFunctions.add(match[1].toLowerCase());
 }
 
