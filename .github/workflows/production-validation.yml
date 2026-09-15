@@ -1,4 +1,5 @@
 name: Production Validation
+run-name: Production validation (${{ github.sha }})
 
 on:
   workflow_dispatch:
