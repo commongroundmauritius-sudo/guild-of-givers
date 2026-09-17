@@ -106,6 +106,7 @@ export function Footer() {
             </li>
             <li>
               <button
+                data-cg-consent="open-modal"
                 onClick={openModal}
                 className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded text-left"
               >
