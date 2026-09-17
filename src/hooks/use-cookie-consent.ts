@@ -36,6 +36,15 @@ export function useCookieConsent() {
 
     syncFromStorage();
     setIsHydrated(true);
+
+    const pending = (window as unknown as { __cgPendingConsentAction?: string })
+      .__cgPendingConsentAction;
+    if (pending === "open-modal") {
+      (window as unknown as { __cgPendingConsentAction?: string }).__cgPendingConsentAction =
+        undefined;
+      setIsModalOpen(true);
+    }
+
     return subscribeConsent(handleAction);
   }, []);
 
