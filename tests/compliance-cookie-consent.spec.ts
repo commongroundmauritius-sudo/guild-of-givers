@@ -3,6 +3,7 @@ import { test, expect } from "@playwright/test";
 async function startWithoutCookieConsent(page: import("@playwright/test").Page) {
   await page.addInitScript(() => {
     localStorage.removeItem("cg_cookie_consent_v1");
+    document.documentElement.classList.remove("cg-consent-given");
   });
   await page.goto("/");
 }
