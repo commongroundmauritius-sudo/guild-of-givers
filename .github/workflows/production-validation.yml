@@ -38,12 +38,23 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Production build
+      - name: Production build (mock payments disabled)
+        env:
+          VITE_ENABLE_MOCK_PAYMENTS: "false"
+        run: npm run build
+
+      - name: Verify production worker output
+        run: |
+          test -f dist/client/_worker.js
+          test -f dist/client/wrangler.json
+          grep -q '"main": "_worker.js"' dist/client/wrangler.json
+
+      - name: Test build (mock payments enabled)
         env:
           VITE_ENABLE_MOCK_PAYMENTS: "true"
         run: npm run build
 
-      - name: Verify worker output
+      - name: Verify test worker output
         run: |
           test -f dist/client/_worker.js
           test -f dist/client/wrangler.json
