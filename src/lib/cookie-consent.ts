@@ -6,12 +6,18 @@ export type CookieConsentPreferences = {
 
 const CONSENT_STORAGE_KEY = "cg_cookie_consent_v1";
 const CONSENT_EVENT = "commonground:cookie-consent";
+const CONSENT_CLASS = "cg-consent-given";
 
 type ConsentEventAction = "save" | "open-banner" | "open-modal" | "close-modal";
 
 function dispatchConsentEvent(action: ConsentEventAction) {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: { action } }));
+}
+
+function setConsentClass(hasConsent: boolean) {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle(CONSENT_CLASS, hasConsent);
 }
 
 export function getStoredConsent(): CookieConsentPreferences | null {
@@ -60,6 +66,7 @@ export function saveConsentPreferences(analytics: boolean): CookieConsentPrefere
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(preferences));
+      setConsentClass(true);
     } catch (error) {
       console.error("Failed to save cookie consent preferences", error);
     }
@@ -70,6 +77,7 @@ export function saveConsentPreferences(analytics: boolean): CookieConsentPrefere
 }
 
 export function openConsentBanner() {
+  setConsentClass(false);
   dispatchConsentEvent("open-banner");
 }
 
