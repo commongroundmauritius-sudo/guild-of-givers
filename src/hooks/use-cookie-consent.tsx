@@ -5,59 +5,97 @@ import {
 } from "@/lib/cookie-consent";
 
 type CookieConsent = ReturnType<typeof getStoredConsent>;
-type CookieConsentContextValue = ReturnType<typeof createCookieConsentController>;
+
+type CookieConsentContextValue = {
+  consent: CookieConsent;
+  hasResponded: boolean;
+  isAnalyticsAllowed: boolean;
+  isBannerOpen: boolean;
+  isModalOpen: boolean;
+  isHydrated: boolean;
+  acceptAll: () => void;
+  rejectOptional: () => void;
+  updatePreferences: (analytics: boolean) => void;
+  openBanner: () => void;
+  openModal: () => void;
+  closeModal: () => void;
+};
 
 const CookieConsentContext = createContext<CookieConsentContextValue | null>(null);
 
-function useCookieConsentController() {
+export function CookieConsentProvider({ children }: { children: React.ReactNode }) {
   const [consent, setConsent] = useState<CookieConsent>(null);
+  const [isBannerOpen, setIsBannerOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    setConsent(getStoredConsent());
+    const stored = getStoredConsent();
+    setConsent(stored);
+    setIsBannerOpen(stored === null);
     setIsHydrated(true);
   }, []);
 
-  const value = useMemo(() => {
-    const acceptAll = () => {
-      setConsent(saveConsentPreferences(true));
-      setIsModalOpen(false);
-    };
-    const rejectOptional = () => {
-      setConsent(saveConsentPreferences(false));
-      setIsModalOpen(false);
-    };
-    const updatePreferences = (analytics: boolean) => {
-      setConsent(saveConsentPreferences(analytics));
-      setIsModalOpen(false);
-    };
-    return {
+  const acceptAll = () => {
+    const next = saveConsentPreferences(true);
+    setConsent(next);
+    setIsBannerOpen(false);
+    setIsModalOpen(false);
+  };
+
+  const rejectOptional = () => {
+    const next = saveConsentPreferences(false);
+    setConsent(next);
+    setIsBannerOpen(false);
+    setIsModalOpen(false);
+  };
+
+  const updatePreferences = (analytics: boolean) => {
+    const next = saveConsentPreferences(analytics);
+    setConsent(next);
+    setIsBannerOpen(false);
+    setIsModalOpen(false);
+  };
+
+  const openBanner = () => {
+    setIsModalOpen(false);
+    setIsBannerOpen(true);
+  };
+
+  const openModal = () => {
+    setIsBannerOpen(false);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const value = useMemo<CookieConsentContextValue>(
+    () => ({
       consent,
       hasResponded: consent !== null,
       isAnalyticsAllowed: consent?.analytics ?? false,
-      isBannerOpen: isHydrated && consent === null && !isModalOpen,
+      isBannerOpen: isHydrated && isBannerOpen,
       isModalOpen,
       isHydrated,
       acceptAll,
       rejectOptional,
       updatePreferences,
-      openBanner: () => { setConsent(null); setIsModalOpen(false); },
-      openModal: () => setIsModalOpen(true),
-      closeModal: () => setIsModalOpen(false),
-    };
-  }, [consent, isHydrated, isModalOpen]);
+      openBanner,
+      openModal,
+      closeModal,
+    }),
+    [consent, isBannerOpen, isModalOpen, isHydrated],
+  );
 
-  return value;
-}
-
-export function CookieConsentProvider({ children }: { children: React.ReactNode }) {
-  const value = useCookieConsentController();
   return <CookieConsentContext.Provider value={value}>{children}</CookieConsentContext.Provider>;
 }
 
 export function useCookieConsent() {
   const context = useContext(CookieConsentContext);
-  if (!context) throw new Error("useCookieConsent must be used within CookieConsentProvider");
+  if (!context) {
+    throw new Error("useCookieConsent must be used within CookieConsentProvider");
+  }
   return context;
 }
