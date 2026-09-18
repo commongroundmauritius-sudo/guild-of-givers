@@ -6,7 +6,6 @@ import { Cookie, Settings, ShieldCheck, X } from "lucide-react";
 export function CookieConsentBanner() {
   const {
     consent,
-    isHydrated,
     isBannerOpen,
     isModalOpen,
     acceptAll,
@@ -23,15 +22,10 @@ export function CookieConsentBanner() {
     setAnalyticsChecked(consent?.analytics ?? false);
   }, [consent]);
 
-  // Render the banner during SSR/pre-hydration so the consent control is present
-  // immediately. Once hydration completes, React becomes authoritative and removes
-  // it when stored consent exists.
-  const shouldShowBanner =
-    !isHydrated || (isBannerOpen && consent === null && !isModalOpen);
+  const shouldShowBanner = isBannerOpen && !isModalOpen;
 
   const handleSaveCustom = () => {
     updatePreferences(analyticsChecked);
-    closeModal();
   };
 
   return (
