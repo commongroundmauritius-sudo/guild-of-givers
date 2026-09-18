@@ -187,7 +187,3 @@
   font-weight: 600;
   color: var(--color-muted-foreground);
 }
-
-.cg-consent-given .cg-consent-banner {
-  display: none !important;
-}
