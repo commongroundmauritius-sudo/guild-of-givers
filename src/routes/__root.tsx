@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsentBanner } from "@/components/site/CookieConsentBanner";
+import { CookieConsentProvider } from "@/hooks/use-cookie-consent";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -210,13 +211,15 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <ProtectedRouteGuard>
-            <Outlet />
-          </ProtectedRouteGuard>
-          <CookieConsentBanner />
-          <Toaster />
-        </TooltipProvider>
+        <CookieConsentProvider>
+          <TooltipProvider>
+            <ProtectedRouteGuard>
+              <Outlet />
+            </ProtectedRouteGuard>
+            <CookieConsentBanner />
+            <Toaster />
+          </TooltipProvider>
+        </CookieConsentProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
