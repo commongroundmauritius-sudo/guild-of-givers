@@ -12,6 +12,7 @@ test.describe("End-to-End Member Signup Journey", () => {
     await startButton.click();
 
     await expect(page.getByRole("heading", { name: "Your details" })).toBeVisible();
+    await expect(page).toHaveURL(/\/signup(?:\?.*)?$/);
     await page.getByLabel("Full name").fill("E2E Test Member");
     await page.getByLabel("Email").fill(email);
     await page.getByRole("button", { name: "Continue to payment" }).click();
