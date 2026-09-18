@@ -48,7 +48,7 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
     await startWithoutCookieConsent(page);
 
     const banner = page.getByRole("region", { name: "Cookie Consent Banner" });
-    await expect(banner).toBeVisible();
+    await expect(banner).toHaveRole("region");\n    await expect(banner).toHaveAccessibleName("Cookie Consent Banner");\n    await expect(banner).toBeVisible({ timeout: 10000 });
     await expect(banner).toContainText("We respect your privacy");
 
     await page.getByRole("button", { name: "Reject Optional" }).click();
