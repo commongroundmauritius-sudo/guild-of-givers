@@ -23,9 +23,11 @@ export function CookieConsentBanner() {
     setAnalyticsChecked(consent?.analytics ?? false);
   }, [consent]);
 
-  // Consent state is client-authoritative. Wait for hydration before deciding
-  // whether the banner should exist, avoiding a second SSR/DOM source of truth.
-  const shouldShowBanner = isHydrated && isBannerOpen && consent === null && !isModalOpen;
+  // Render the banner during SSR/pre-hydration so the consent control is present
+  // immediately. Once hydration completes, React becomes authoritative and removes
+  // it when stored consent exists.
+  const shouldShowBanner =
+    !isHydrated || (isBannerOpen && consent === null && !isModalOpen);
 
   const handleSaveCustom = () => {
     updatePreferences(analyticsChecked);
