@@ -25,7 +25,7 @@ const CookieConsentContext = createContext<CookieConsentContextValue | null>(nul
 
 export function CookieConsentProvider({ children }: { children: React.ReactNode }) {
   const [consent, setConsent] = useState<CookieConsent>(null);
-  const [isBannerOpen, setIsBannerOpen] = useState(false);
+  const [isBannerOpen, setIsBannerOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
