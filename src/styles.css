@@ -152,7 +152,11 @@
   --sidebar-ring: oklch(0.82 0.05 152);
 }
 
-.cg-consent-given .cg-consent-banner {\n  display: none;\n}\n\n@layer base {
+.cg-consent-given .cg-consent-banner {
+  display: none;
+}
+
+@layer base {
   * {
     border-color: var(--color-border);
   }
