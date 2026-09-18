@@ -152,9 +152,6 @@
   --sidebar-ring: oklch(0.82 0.05 152);
 }
 
-.cg-consent-given .cg-consent-banner {
-  display: none;
-}
 
 @layer base {
   * {

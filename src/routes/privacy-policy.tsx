@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { useCookieConsent } from "@/hooks/use-cookie-consent";
 
 export const Route = createFileRoute("/privacy-policy")({
   head: () => ({
@@ -17,8 +16,6 @@ export const Route = createFileRoute("/privacy-policy")({
 });
 
 function PrivacyPolicyPage() {
-  const { openBanner } = useCookieConsent();
-
   return (
     <SiteLayout>
       <section className="bg-background">
@@ -83,7 +80,7 @@ function PrivacyPolicyPage() {
                 </li>
                 <li>
                   <strong>Technical & Usage Data:</strong> Session state, essential authentication
-                  cookies, and section analytics (only when explicit consent is provided).
+                  and security data, and limited operational information required to run and protect the platform.
                 </li>
               </ul>
             </div>
@@ -174,16 +171,7 @@ function PrivacyPolicyPage() {
                   Request erasure of your personal data ("right to be forgotten"), subject to
                   statutory compliance obligations.
                 </li>
-                <li>Withdraw consent for optional processing or analytics at any time.</li>
               </ul>
-              <div className="mt-4">
-                <button
-                  onClick={openBanner}
-                  className="inline-flex items-center justify-center rounded-full border border-primary px-4 py-2 text-xs font-bold text-primary hover:bg-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-primary min-h-[44px]"
-                >
-                  Manage Cookie Consent Preferences
-                </button>
-              </div>
             </div>
 
             <div className="rounded-2xl border border-border/60 bg-muted/30 p-6">

@@ -101,11 +101,10 @@ export function LegalPage() {
                 <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
               </div>
               <h2 className="mt-4 font-display text-xl font-bold text-foreground group-hover:text-primary">
-                Cookies Policy
+                Cookies & Browser Storage
               </h2>
               <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                Detailed breakdown of essential cookies vs. optional opt-in analytics, and instant
-                access to consent management settings.
+                How CommonGround uses essential browser storage and payment-provider technologies, with no optional analytics cookies or consent banner.
               </p>
             </Link>
           </div>
