@@ -114,7 +114,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
       <body>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(() => { const protectedPath = /^(\\/admin-dashboard|\\/member|\\/notifications|\\/community-hub|\\/dashboard|\\/organization)(\\/|$)/.test(location.pathname); if (!protectedPath) return; const hasSession = Object.keys(localStorage).some((key) => key.startsWith("sb-") && key.includes("-auth-token")); if (!hasSession) location.replace("/login?redirect=" + encodeURIComponent(location.pathname + location.search)); })();`,
+            __html: `(() => { try { const consent = localStorage.getItem("cg_cookie_consent_v1"); if (consent) { const parsed = JSON.parse(consent); if (parsed?.necessary === true && typeof parsed?.analytics === "boolean") document.documentElement.classList.add("cg-consent-given"); } } catch {} const protectedPath = /^(\\/admin-dashboard|\\/member|\\/notifications|\\/community-hub|\\/dashboard|\\/organization)(\\/|$)/.test(location.pathname); if (!protectedPath) return; const hasSession = Object.keys(localStorage).some((key) => key.startsWith("sb-") && key.includes("-auth-token")); if (!hasSession) location.replace("/login?redirect=" + encodeURIComponent(location.pathname + location.search)); })();`,
           }}
         />
         {children}
