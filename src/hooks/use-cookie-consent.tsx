@@ -9,7 +9,7 @@ type CookieConsentContextValue = ReturnType<typeof createCookieConsentController
 
 const CookieConsentContext = createContext<CookieConsentContextValue | null>(null);
 
-function createCookieConsentController() {
+function useCookieConsentController() {
   const [consent, setConsent] = useState<CookieConsent>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -52,7 +52,7 @@ function createCookieConsentController() {
 }
 
 export function CookieConsentProvider({ children }: { children: React.ReactNode }) {
-  const value = createCookieConsentController();
+  const value = useCookieConsentController();
   return <CookieConsentContext.Provider value={value}>{children}</CookieConsentContext.Provider>;
 }
 
