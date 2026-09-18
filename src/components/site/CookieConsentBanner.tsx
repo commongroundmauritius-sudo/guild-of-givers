@@ -30,11 +30,11 @@ export function CookieConsentBanner() {
 
   return (
     <>
-      {shouldShowBanner && (
-        <aside
+      <aside
           role="region"
-          aria-label="Cookie Consent Banner"
-          className="cg-consent-banner fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 p-4 shadow-2xl backdrop-blur-md sm:p-6"
+        aria-label="Cookie Consent Banner"
+        hidden={!shouldShowBanner}
+        className="cg-consent-banner fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 p-4 shadow-2xl backdrop-blur-md sm:p-6"
         >
           <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 md:flex-row md:items-center">
             <div className="flex max-w-3xl items-start gap-3.5">
@@ -93,15 +93,14 @@ export function CookieConsentBanner() {
               </button>
             </div>
           </div>
-        </aside>
-      )}
+      </aside>
 
-      {isModalOpen && (
-        <div
+      <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="cookie-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+        aria-labelledby="cookie-modal-title"
+        hidden={!isModalOpen}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
         >
           <div className="relative w-full max-w-lg space-y-6 rounded-2xl border border-border bg-card p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-border pb-4">
@@ -183,8 +182,7 @@ export function CookieConsentBanner() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+      </div>
     </>
   );
 }
