@@ -1,101 +1,63 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
   getStoredConsent,
-  subscribeConsent,
   saveConsentPreferences,
-  openConsentBanner,
-  openConsentModal,
-  closeConsentModal,
 } from "@/lib/cookie-consent";
 
-type ConsentAction = "save" | "open-banner" | "open-modal" | "close-modal";
 type CookieConsent = ReturnType<typeof getStoredConsent>;
+type CookieConsentContextValue = ReturnType<typeof createCookieConsentController>;
 
-export function useCookieConsent() {
+const CookieConsentContext = createContext<CookieConsentContextValue | null>(null);
+
+function createCookieConsentController() {
   const [consent, setConsent] = useState<CookieConsent>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    const syncFromStorage = () => setConsent(getStoredConsent());
-
-    const handleAction = (action?: ConsentAction) => {
-      syncFromStorage();
-      if (action === "open-modal") {
-        setIsModalOpen(true);
-        return;
-      }
-      if (action === "close-modal") {
-        setIsModalOpen(false);
-        return;
-      }
-      if (action === "open-banner" || action === "save") {
-        setIsModalOpen(false);
-      }
-    };
-
-    syncFromStorage();
+    setConsent(getStoredConsent());
     setIsHydrated(true);
-
-    const pending = (window as unknown as { __cgPendingConsentAction?: string })
-      .__cgPendingConsentAction;
-    if (pending === "open-modal") {
-      (window as unknown as { __cgPendingConsentAction?: string }).__cgPendingConsentAction =
-        undefined;
-      setIsModalOpen(true);
-    }
-
-    return subscribeConsent(handleAction);
   }, []);
 
-  const isBannerOpen = isHydrated && consent === null && !isModalOpen;
+  const value = useMemo(() => {
+    const acceptAll = () => {
+      setConsent(saveConsentPreferences(true));
+      setIsModalOpen(false);
+    };
+    const rejectOptional = () => {
+      setConsent(saveConsentPreferences(false));
+      setIsModalOpen(false);
+    };
+    const updatePreferences = (analytics: boolean) => {
+      setConsent(saveConsentPreferences(analytics));
+      setIsModalOpen(false);
+    };
+    return {
+      consent,
+      hasResponded: consent !== null,
+      isAnalyticsAllowed: consent?.analytics ?? false,
+      isBannerOpen: isHydrated && consent === null && !isModalOpen,
+      isModalOpen,
+      isHydrated,
+      acceptAll,
+      rejectOptional,
+      updatePreferences,
+      openBanner: () => { setConsent(null); setIsModalOpen(false); },
+      openModal: () => setIsModalOpen(true),
+      closeModal: () => setIsModalOpen(false),
+    };
+  }, [consent, isHydrated, isModalOpen]);
 
-  const acceptAll = () => {
-    const next = saveConsentPreferences(true);
-    setConsent(next);
-    setIsModalOpen(false);
-  };
+  return value;
+}
 
-  const rejectOptional = () => {
-    const next = saveConsentPreferences(false);
-    setConsent(next);
-    setIsModalOpen(false);
-  };
+export function CookieConsentProvider({ children }: { children: React.ReactNode }) {
+  const value = createCookieConsentController();
+  return <CookieConsentContext.Provider value={value}>{children}</CookieConsentContext.Provider>;
+}
 
-  const updatePreferences = (analytics: boolean) => {
-    const next = saveConsentPreferences(analytics);
-    setConsent(next);
-    setIsModalOpen(false);
-  };
-
-  const openModal = () => {
-    setIsModalOpen(true);
-    openConsentModal();
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    closeConsentModal();
-  };
-
-  const openBanner = () => {
-    setConsent(null);
-    setIsModalOpen(false);
-    openConsentBanner();
-  };
-
-  return {
-    consent,
-    hasResponded: consent !== null,
-    isAnalyticsAllowed: consent?.analytics ?? false,
-    isBannerOpen,
-    isModalOpen,
-    isHydrated,
-    acceptAll,
-    rejectOptional,
-    updatePreferences,
-    openBanner,
-    openModal,
-    closeModal,
-  };
+export function useCookieConsent() {
+  const context = useContext(CookieConsentContext);
+  if (!context) throw new Error("useCookieConsent must be used within CookieConsentProvider");
+  return context;
 }
