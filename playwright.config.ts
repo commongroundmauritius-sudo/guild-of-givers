@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+import { existsSync } from "node:fs";
+
+const systemChromium = existsSync("/bin/chromium") ? "/bin/chromium" : undefined;
 
 export default defineConfig({
   testDir: "./tests",
@@ -17,7 +20,10 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: systemChromium ? { executablePath: systemChromium } : undefined,
+      },
     },
   ],
 });
