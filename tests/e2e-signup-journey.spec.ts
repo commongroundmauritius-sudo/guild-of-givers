@@ -7,7 +7,8 @@ test.describe("End-to-End Member Signup Journey", () => {
     await page.goto("/signup");
     await expect(page.locator("h2")).toContainText(/Monthly Contribution/i);
     const startButton = page.getByRole("button", { name: "Start my monthly impact" });
-    await expect(startButton).toBeEnabled({ timeout: 10000 });
+    await expect(startButton).toBeVisible();
+    await expect(startButton).toBeEnabled();
     await startButton.click();
 
     await expect(page.getByRole("heading", { name: "Your details" })).toBeVisible();
