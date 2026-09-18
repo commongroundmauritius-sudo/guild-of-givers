@@ -50,6 +50,40 @@ export function useCookieConsent() {
 
   const isBannerOpen = isHydrated && consent === null && !isModalOpen;
 
+  const acceptAll = () => {
+    const next = saveConsentPreferences(true);
+    setConsent(next);
+    setIsModalOpen(false);
+  };
+
+  const rejectOptional = () => {
+    const next = saveConsentPreferences(false);
+    setConsent(next);
+    setIsModalOpen(false);
+  };
+
+  const updatePreferences = (analytics: boolean) => {
+    const next = saveConsentPreferences(analytics);
+    setConsent(next);
+    setIsModalOpen(false);
+  };
+
+  const openModal = () => {
+    setIsModalOpen(true);
+    openConsentModal();
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    closeConsentModal();
+  };
+
+  const openBanner = () => {
+    setConsent(null);
+    setIsModalOpen(false);
+    openConsentBanner();
+  };
+
   return {
     consent,
     hasResponded: consent !== null,
@@ -57,11 +91,11 @@ export function useCookieConsent() {
     isBannerOpen,
     isModalOpen,
     isHydrated,
-    acceptAll: () => saveConsentPreferences(true),
-    rejectOptional: () => saveConsentPreferences(false),
-    updatePreferences: (analytics: boolean) => saveConsentPreferences(analytics),
-    openBanner: openConsentBanner,
-    openModal: openConsentModal,
-    closeModal: closeConsentModal,
+    acceptAll,
+    rejectOptional,
+    updatePreferences,
+    openBanner,
+    openModal,
+    closeModal,
   };
 }
