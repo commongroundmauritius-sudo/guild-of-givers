@@ -23,10 +23,9 @@ export function CookieConsentBanner() {
     setAnalyticsChecked(consent?.analytics ?? false);
   }, [consent]);
 
-  // Render the banner during SSR/pre-hydration too, so it does not depend on
-  // client hydration succeeding. An inline script hides it instantly when
-  // consent was already stored (see __root.tsx + .cg-consent-given rule).
-  const shouldShowBanner = !isHydrated || (isBannerOpen && consent === null && !isModalOpen);
+  // Consent state is client-authoritative. Wait for hydration before deciding
+  // whether the banner should exist, avoiding a second SSR/DOM source of truth.
+  const shouldShowBanner = isHydrated && isBannerOpen && consent === null && !isModalOpen;
 
   const handleSaveCustom = () => {
     updatePreferences(analyticsChecked);
