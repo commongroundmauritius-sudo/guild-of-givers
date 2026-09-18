@@ -27,7 +27,6 @@ export function SiteLayout({ children }: SiteLayoutProps) {
         {children}
       </main>
       <Footer />
-      
     </div>
   );
 }

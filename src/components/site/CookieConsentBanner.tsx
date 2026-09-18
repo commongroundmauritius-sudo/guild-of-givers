@@ -28,8 +28,6 @@ export function CookieConsentBanner() {
   // consent was already stored (see __root.tsx + .cg-consent-given rule).
   const shouldShowBanner = !isHydrated || (isBannerOpen && consent === null && !isModalOpen);
 
-  if (!shouldShowBanner && !isModalOpen) return null;
-
   const handleSaveCustom = () => {
     updatePreferences(analyticsChecked);
     closeModal();
@@ -154,12 +152,10 @@ export function CookieConsentBanner() {
               </div>
               <div className="flex items-start justify-between gap-4 rounded-xl border border-border bg-card p-4">
                 <div>
-                  <span className="text-sm font-bold text-foreground">
-                    Analytics & Performance
-                  </span>
+                  <span className="text-sm font-bold text-foreground">Analytics & Performance</span>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    Helps us understand section engagement and campaign effectiveness on CommonGround.
-                    No third-party ad networks are used.
+                    Helps us understand section engagement and campaign effectiveness on
+                    CommonGround. No third-party ad networks are used.
                   </p>
                 </div>
                 <button
