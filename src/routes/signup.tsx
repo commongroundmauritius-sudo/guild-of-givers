@@ -38,6 +38,7 @@ function SignupPage() {
   const [phone, setPhone] = useState("");
   const [coversFees, setCoversFees] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isClientReady, setIsClientReady] = useState(false);
   const [signupCode, setSignupCode] = useState(search.code || "");
   const [isPartnerSignup, setIsPartnerSignup] = useState(!!search.code);
   const [partnerData, setPartnerData] = useState<any>(null);
@@ -54,6 +55,7 @@ function SignupPage() {
   }, [user, isSubscribed, loading, isPartnerSignup, navigate]);
 
   useEffect(() => {
+    setIsClientReady(true);
     attributionService.captureFromUrl();
     const stored = localStorage.getItem("source_initiative_id");
     if (stored) setSourceInitiativeId(stored);
@@ -307,11 +309,11 @@ function SignupPage() {
                   </label>
                 </div>
                 <button
-                  disabled={finalAmount <= 0}
+                  disabled={finalAmount <= 0 || !isClientReady}
                   onClick={() => setStep(1)}
                   className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
                 >
-                  Start my monthly impact
+                  {isClientReady ? "Start my monthly impact" : "Loading…"}
                 </button>
               </div>
             )}
