@@ -27,7 +27,7 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
   const [consent, setConsent] = useState<CookieConsent>(null);
   const [isBannerOpen, setIsBannerOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(true);
 
   useEffect(() => {
     const stored = getStoredConsent();
@@ -76,7 +76,7 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
       consent,
       hasResponded: consent !== null,
       isAnalyticsAllowed: consent?.analytics ?? false,
-      isBannerOpen: isHydrated && isBannerOpen,
+      isBannerOpen,
       isModalOpen,
       isHydrated,
       acceptAll,
