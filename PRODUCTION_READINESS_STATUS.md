@@ -7,17 +7,17 @@ This is the current source-of-truth checklist. Older audit reports are historica
 
 ## Phase status
 
-| Phase | Status | Current result |
-|---|---|---|
-| Repository / architecture audit | ✅ Complete | Architecture and repository baseline reviewed. |
-| Production branch | ✅ Complete | Dedicated finalization branch maintained. |
-| Build & CI infrastructure | 🟢 Complete | Node 22, reproducible `npm ci`, lint, production build, Worker validation, preview readiness and Playwright pipeline are implemented. |
-| Security / RLS | 🟢 Complete | Automated audit passes; RLS/function hardening and payment/priority constraints are in place. |
-| Payment & allocation | 🟢 Mock-ready | Payment is intentionally provider-agnostic and uses MockPaymentProvider for end-to-end testing. Peach is a future provider implementation, not a current blocker. |
-| Membership / Organization / Community | 🟡 Validation | Core flows exist; final E2E/permission regression checks remain in the production gate. |
-| Compliance / accessibility / cookies | 🟡 Validation | WCAG/cookie implementation exists; final browser regression validation remains. |
-| Documentation cleanup | 🟢 Complete | This document separates current validation from historical reports. |
-| Final validation | ⏳ Pending | Production Validation must pass after the migration-version correction. |
+| Phase                                 | Status        | Current result                                                                                                                                                    |
+| ------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository / architecture audit       | ✅ Complete   | Architecture and repository baseline reviewed.                                                                                                                    |
+| Production branch                     | ✅ Complete   | Dedicated finalization branch maintained.                                                                                                                         |
+| Build & CI infrastructure             | 🟢 Complete   | Node 22, reproducible `npm ci`, lint, production build, Worker validation, preview readiness and Playwright pipeline are implemented.                             |
+| Security / RLS                        | 🟢 Complete   | Automated audit passes; RLS/function hardening and payment/priority constraints are in place.                                                                     |
+| Payment & allocation                  | 🟢 Mock-ready | Payment is intentionally provider-agnostic and uses MockPaymentProvider for end-to-end testing. Peach is a future provider implementation, not a current blocker. |
+| Membership / Organization / Community | 🟡 Validation | Core flows exist; final E2E/permission regression checks remain in the production gate.                                                                           |
+| Compliance / accessibility / cookies  | 🟡 Validation | WCAG/cookie implementation exists; final browser regression validation remains.                                                                                   |
+| Documentation cleanup                 | 🟢 Complete   | This document separates current validation from historical reports.                                                                                               |
+| Final validation                      | ⏳ Pending    | Production Validation must pass after the migration-version correction.                                                                                           |
 
 ## Payment architecture decision
 

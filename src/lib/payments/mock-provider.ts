@@ -74,7 +74,10 @@ export class MockPaymentProvider implements PaymentProvider {
     };
   }
 
-  static generateMockEvent(type: PaymentEventType, data: Partial<PaymentEvent>): Record<string, unknown> {
+  static generateMockEvent(
+    type: PaymentEventType,
+    data: Partial<PaymentEvent>,
+  ): Record<string, unknown> {
     assertMockPaymentsEnabled();
     return {
       event_type: type,

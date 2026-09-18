@@ -14,7 +14,9 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
     await expect(page.locator("h1")).toContainText("Legal Framework & Policies");
     await expect(page.getByRole("link", { name: /Privacy Policy/i }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Terms & Conditions/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /Refund & Cancellation Policy/i }).first()).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Refund & Cancellation Policy/i }).first(),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: /Cookies Policy/i }).first()).toBeVisible();
 
     await page.goto("/privacy-policy");
@@ -34,7 +36,9 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
     await expect(page.getByText("Category 1: Essential Cookies")).toBeVisible();
   });
 
-  test("Cookie banner appears on initial visit and allows accepting or rejecting", async ({ page }) => {
+  test("Cookie banner appears on initial visit and allows accepting or rejecting", async ({
+    page,
+  }) => {
     await startWithoutCookieConsent(page);
 
     const banner = page.getByRole("region", { name: "Cookie Consent Banner" });

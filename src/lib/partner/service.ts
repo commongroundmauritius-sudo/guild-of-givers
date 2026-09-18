@@ -2,7 +2,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { communicationDispatcher } from "@/lib/communication/dispatcher";
 
 export type PartnerApplicationStatus =
-  "submitted" | "under_review" | "contacted" | "approved" | "rejected" | "converted" | "archived";
+  | "submitted"
+  | "under_review"
+  | "contacted"
+  | "approved"
+  | "rejected"
+  | "converted"
+  | "archived";
 
 export interface PartnerApplicationInput {
   organization_name: string;
