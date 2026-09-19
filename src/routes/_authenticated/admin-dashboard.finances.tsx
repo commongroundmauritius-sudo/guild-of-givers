@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import {
   CreditCard,
   TrendingUp,
@@ -90,7 +89,7 @@ function AdminFinancesPage() {
   });
 
   return (
-    <SiteLayout>
+    
       <section className="bg-muted/30 min-h-screen py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-4">
@@ -254,7 +253,7 @@ function AdminFinancesPage() {
           </Card>
         </div>
       </section>
-    </SiteLayout>
+    
   );
 }
 
