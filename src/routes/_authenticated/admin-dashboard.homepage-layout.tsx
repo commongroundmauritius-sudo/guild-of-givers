@@ -58,8 +58,7 @@ const PanelFallback = () => (
 );
 
 const CMSLoadingState = () => (
-  
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+  <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
       <div className="relative">
         <div className="h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
         <Home className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
@@ -70,8 +69,7 @@ const CMSLoadingState = () => (
           Syncing configuration with database...
         </p>
       </div>
-    </div>
-  
+  </div>
 );
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/homepage-layout")({
@@ -154,7 +152,7 @@ function HomepageCMS() {
   if (!config) return <CMSLoadingState />;
 
   return (
-    
+    <>
       <section className="bg-muted/30 min-h-screen py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-6 mb-12">
@@ -364,6 +362,6 @@ function HomepageCMS() {
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
       />
-    
+    </>
   );
 }
