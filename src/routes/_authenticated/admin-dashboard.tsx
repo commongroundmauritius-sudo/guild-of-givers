@@ -1,7 +1,6 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteLayout } from "@/components/site/SiteLayout";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard")({
   component: AdminDashboardLayout,
@@ -22,12 +21,10 @@ function AdminDashboardLayout() {
   // The _authenticated parent owns unauthenticated -> /login routing.
   if (!sessionReady || authLoading) {
     return (
-      <SiteLayout>
         <div className="mx-auto max-w-7xl px-4 py-32 text-center text-muted-foreground">
           Verifying administrative access...
         </div>
-      </SiteLayout>
-    );
+      );
   }
 
   if (!user) return null;
