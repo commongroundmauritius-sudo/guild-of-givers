@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -132,19 +131,19 @@ function AdminPartnerApplicationsPage() {
 
   if (isLoading) {
     return (
-      <SiteLayout>
+      
         <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <div className="space-y-4">
             <Skeleton className="h-12 w-1/4" />
             <Skeleton className="h-64 w-full" />
           </div>
         </div>
-      </SiteLayout>
+      
     );
   }
 
   return (
-    <SiteLayout>
+    
       <section className="bg-muted/30 min-h-screen py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -371,6 +370,6 @@ function AdminPartnerApplicationsPage() {
           </div>
         </div>
       </section>
-    </SiteLayout>
+    
   );
 }
