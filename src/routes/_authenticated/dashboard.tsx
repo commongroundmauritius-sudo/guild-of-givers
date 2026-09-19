@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteLayout } from "@/components/site/SiteLayout";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardRouter,
@@ -23,10 +22,8 @@ function DashboardRouter() {
   }, [role, loading, navigate]);
 
   return (
-    <SiteLayout>
       <div className="mx-auto max-w-3xl px-4 py-32 text-center text-muted-foreground">
         Routing you to your dashboard…
       </div>
-    </SiteLayout>
-  );
+    );
 }
