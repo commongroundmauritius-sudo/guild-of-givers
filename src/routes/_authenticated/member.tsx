@@ -1,7 +1,6 @@
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 import { useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -124,7 +123,6 @@ function MemberDashboard() {
   const selectedIds = new Set(preferences?.map((p) => p.initiative_id));
 
   return (
-    <SiteLayout>
       <section className="min-h-screen bg-muted/30 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
@@ -262,6 +260,5 @@ function MemberDashboard() {
           </div>
         </div>
       </section>
-    </SiteLayout>
   );
 }
