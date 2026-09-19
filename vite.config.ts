@@ -6,4 +6,16 @@ export default defineConfig({
       entry: "server",
     },
   },
+  vite: {
+    ssr: {
+      noExternal: true,
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          inlineDynamicImports: true,
+        },
+      },
+    },
+  },
 });

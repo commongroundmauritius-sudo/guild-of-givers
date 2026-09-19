@@ -12,8 +12,6 @@ import { useEffect, useState } from "react";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
-import { CookieConsentBanner } from "@/components/site/CookieConsentBanner";
-import { CookieConsentProvider } from "@/hooks/use-cookie-consent";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -112,9 +110,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(() => { const protectedPath = /^(\\/admin-dashboard|\\/member|\\/notifications|\\/community-hub|\\/dashboard|\\/organization)(\\/|$)/.test(location.pathname); if (!protectedPath) return; const hasSession = Object.keys(localStorage).some((key) => key.startsWith("sb-") && key.includes("-auth-token")); if (!hasSession) location.replace("/login?redirect=" + encodeURIComponent(location.pathname + location.search)); })();`,
+        <script dangerouslySetInnerHTML={{ __html: `(() => { const protectedPath = /^(\\/admin-dashboard|\\/member|\\/notifications|\\/community-hub|\\/dashboard|\\/organization)(\\/|$)/.test(location.pathname); if (!protectedPath) return; const hasSession = Object.keys(localStorage).some((key) => key.startsWith("sb-") && key.includes("-auth-token")); if (!hasSession) location.replace("/login?redirect=" + encodeURIComponent(location.pathname + location.search)); })();`,
           }}
         />
         {children}
@@ -211,15 +207,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <CookieConsentProvider>
-          <TooltipProvider>
-            <ProtectedRouteGuard>
-              <Outlet />
-            </ProtectedRouteGuard>
-            <CookieConsentBanner />
-            <Toaster />
-          </TooltipProvider>
-        </CookieConsentProvider>
+        <TooltipProvider>
+          <ProtectedRouteGuard>
+            <Outlet />
+          </ProtectedRouteGuard>
+          <Toaster />
+        </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

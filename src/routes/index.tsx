@@ -20,7 +20,6 @@ import { useCuratedInitiatives } from "@/hooks/initiatives/use-curated-initiativ
 import { useActivityTracker } from "@/hooks/activities/use-activity-tracker";
 import { useQuery } from "@tanstack/react-query";
 import { homepageService } from "@/lib/homepage-service";
-import { useHomepageAnalytics } from "@/hooks/use-homepage-analytics";
 import { successStoryService } from "@/lib/success-story-service";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -53,8 +52,6 @@ function Index() {
     queryKey: ["homepage", "published"],
     queryFn: () => homepageService.getPublishedVersion(),
   });
-
-  const { trackEvent } = useHomepageAnalytics(publishedVersion?.id);
 
   const config = publishedVersion?.configuration_json as any;
   const sections = config?.sections || [];

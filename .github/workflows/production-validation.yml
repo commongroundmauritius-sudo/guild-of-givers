@@ -69,6 +69,14 @@ jobs:
         run: |
           cd dist/client
           npx wrangler dev --config wrangler.json --local --ip 0.0.0.0 --port 8080 > /tmp/preview.log 2>&1 &
+          PREVIEW_PID=$!
+          echo "$PREVIEW_PID" > /tmp/preview.pid
+          sleep 2
+          if ! kill -0 "$PREVIEW_PID" 2>/dev/null; then
+            echo "ERROR: Wrangler preview process exited before binding to port 8080."
+            cat /tmp/preview.log
+            exit 1
+          fi
 
       - name: Wait for preview
         run: |
@@ -76,8 +84,14 @@ jobs:
             if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
               exit 0
             fi
+            if [ -f /tmp/preview.pid ] && ! kill -0 "$(cat /tmp/preview.pid)" 2>/dev/null; then
+              echo "ERROR: Wrangler preview process exited while waiting for port 8080."
+              cat /tmp/preview.log
+              exit 1
+            fi
             sleep 2
           done
+          echo "ERROR: Preview did not become reachable on 127.0.0.1:8080."
           cat /tmp/preview.log
           exit 1
 

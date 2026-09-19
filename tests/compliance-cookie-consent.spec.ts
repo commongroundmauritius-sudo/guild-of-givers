@@ -1,20 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-async function startWithoutCookieConsent(page: import("@playwright/test").Page) {
-  await page.context().clearCookies();
-  await page.addInitScript(() => {
-    localStorage.clear();
-    sessionStorage.clear();
-  });
-  await page.goto("/");
-  await page.evaluate(() => {
-    localStorage.removeItem("cg_cookie_consent_v1");
-    document.documentElement.classList.remove("cg-consent-given");
-  });
-  await page.reload();
-}
-
-test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
+test.describe("Website Compliance, Legal Policies & Cookie Storage", () => {
   test("Legal Hub and all four standalone policy pages load correctly", async ({ page }) => {
     await page.goto("/legal");
     await expect(page.locator("h1")).toContainText("Legal Framework & Policies");
@@ -38,46 +24,36 @@ test.describe("Website Compliance, Legal Policies & Cookie Consent", () => {
     await expect(page.getByText("Peach Payments")).toBeVisible();
 
     await page.goto("/cookies-policy");
-    await expect(page.locator("h1")).toContainText("Cookies Policy");
-    await expect(page.getByText("Category 1: Essential Cookies")).toBeVisible();
+    await expect(page.locator("h1")).toContainText("Cookies & Browser Storage");
+    await expect(page.getByText("Essential Browser Storage")).toBeVisible();
   });
 
-  test("Cookie banner appears on initial visit and allows accepting or rejecting", async ({
-    page,
-  }) => {
-    await startWithoutCookieConsent(page);
+  test("No optional cookie-consent UI is loaded", async ({ page }) => {
+    await page.goto("/");
 
-    const banner = page.getByRole("region", { name: "Cookie Consent Banner" });
-    await expect(banner).toBeVisible();
-    await expect(banner).toContainText("We respect your privacy");
-
-    await page.getByRole("button", { name: "Reject Optional" }).click();
-    await expect(banner).not.toBeVisible();
+    await expect(page.getByRole("region", { name: "Cookie Consent Banner" })).toHaveCount(0);
+    await expect(page.getByRole("dialog", { name: "Cookie Preferences" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Cookie Preferences" })).toHaveCount(0);
 
     const consentState = await page.evaluate(() => localStorage.getItem("cg_cookie_consent_v1"));
-    expect(consentState).not.toBeNull();
-    const parsed = JSON.parse(consentState!);
-    expect(parsed.necessary).toBe(true);
-    expect(parsed.analytics).toBe(false);
+    expect(consentState).toBeNull();
   });
 
-  test("Cookie preference modal can be opened from footer and updated", async ({ page }) => {
-    await startWithoutCookieConsent(page);
-    await expect(page.getByRole("region", { name: "Cookie Consent Banner" })).toBeVisible();
-    await page.getByRole("button", { name: "Reject Optional" }).click();
+  test("No optional analytics/tracking scripts are loaded by CommonGround", async ({ page }) => {
+    await page.goto("/");
 
-    const footerLink = page.getByRole("button", { name: "Cookie Preferences" });
-    await footerLink.click();
+    const thirdPartyTracking = await page.evaluate(() =>
+      Array.from(document.scripts)
+        .map((script) => script.src)
+        .filter(Boolean)
+        .filter((src) =>
+          /google-analytics|googletagmanager|facebook\.net|connect\.facebook|hotjar|clarity\.ms|plausible|posthog/i.test(
+            src,
+          ),
+        ),
+    );
 
-    const modal = page.getByRole("dialog", { name: "Cookie Preferences" });
-    await expect(modal).toBeVisible();
-
-    const switchBtn = modal.getByRole("switch", { name: "Analytics Cookies Switch" });
-    await switchBtn.click();
-    await page.getByRole("button", { name: "Save Preferences" }).click();
-
-    const consentState = await page.evaluate(() => localStorage.getItem("cg_cookie_consent_v1"));
-    const parsed = JSON.parse(consentState!);
-    expect(parsed.analytics).toBe(true);
+    expect(thirdPartyTracking).toEqual([]);
+    await expect(page.getByRole("link", { name: /Cookies Policy/i }).first()).toBeVisible();
   });
 });

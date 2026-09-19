@@ -1,11 +1,9 @@
 import { useMemberCheck } from "@/hooks/use-member-check";
-import { useCookieConsent } from "@/hooks/use-cookie-consent";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 
 export function Footer() {
   const { handleMemberAction } = useMemberCheck();
-  const { openModal } = useCookieConsent();
 
   return (
     <footer className="border-t border-border/60 bg-cream-deep/30 text-foreground">
@@ -103,15 +101,6 @@ export function Footer() {
               >
                 Cookies Policy
               </Link>
-            </li>
-            <li>
-              <button
-                data-cg-consent="open-modal"
-                onClick={openModal}
-                className="text-foreground/80 transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded text-left"
-              >
-                Cookie Preferences
-              </button>
             </li>
           </ul>
         </div>
