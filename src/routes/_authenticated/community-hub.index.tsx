@@ -30,6 +30,7 @@ function CommunityHubPage() {
   const recentAnnouncements = announcements.filter((a) => !a.pinned).slice(0, 5);
 
   return (
+    <div className="min-h-screen">
       <div className="bg-muted/30 border-b">
         <div className="mx-auto max-w-7xl px-4 py-12 md:py-16 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
@@ -120,5 +121,6 @@ function CommunityHubPage() {
           </div>
         </div>
       </div>
-    );
+    </div>
+  );
 }
