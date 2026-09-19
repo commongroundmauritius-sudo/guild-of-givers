@@ -1,7 +1,6 @@
 import { getJoinedField } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -103,7 +102,6 @@ function MemberProfile() {
     !!subscription?.pending_amount_mur || !!subscription?.pending_billing_day;
 
   return (
-    <SiteLayout>
       <section className="bg-muted/30 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="overflow-hidden rounded-3xl border border-teal-600/20 bg-card shadow-xl">
@@ -329,6 +327,5 @@ function MemberProfile() {
           </div>
         </div>
       </section>
-    </SiteLayout>
   );
 }
