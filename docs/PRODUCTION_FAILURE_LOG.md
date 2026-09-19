@@ -184,3 +184,19 @@ Classification: **infrastructure configuration / CI guard mismatch**. The guard 
 Review before change: current Lovable/TanStack configuration is wrapped by `@lovable.dev/vite-tanstack-config`; the intended extension point is its nested `vite` configuration. The corrective change should therefore add the required SSR and Rollup output settings through that supported extension point rather than weakening or deleting the guard.
 
 Hypothesis: adding `vite.ssr.noExternal = true` and `vite.build.rollupOptions.output.inlineDynamicImports = true` will satisfy the infrastructure contract while preserving the existing TanStack Start server entry and worker asset configuration. The next validation must confirm both the guard and the actual production worker/signup journey, because satisfying grep alone is not sufficient.
+### 2026-09-19 — Production preview did not bind to validation port
+
+Production validation run `35439229709`, job `105887047133`, reached the **Wait for preview** step after these gates passed: formatting, lint, production build, production worker output verification, test build, test worker output verification, and Playwright browser installation. **Start production worker preview** is marked successful, but **Wait for preview** remains in progress and repeatedly reports:
+
+```
+Run for i in {1..60}; do
+curl: (7) Failed to connect to 127.0.0.1 port 8080 after 0 ms: Couldn't connect to server
+```
+
+Classification: **CI/worker-preview startup or port-binding failure**. This is currently distinct from the previously confirmed missing-static-assets failure and from the signup application itself. The available job metadata proves that the preview-start step completed as a shell step but does not yet expose its command/output, so the exact process exit or port mismatch remains to be established.
+
+Current review: `package.json` defines `preview` as `vite preview`, while the production validation step is explicitly named **Start production worker preview**. The custom production artifact is `dist/client/_worker.js` with `dist/client/wrangler.json`; therefore the next investigation must inspect the workflow's exact preview command and Wrangler configuration rather than changing signup code.
+
+Falsifiable hypothesis: the validation script is waiting on port 8080 while the worker preview process either binds another port (for example Wrangler's default) or exits before binding. Workflow logs/command and the generated worker configuration must distinguish these cases before any code change.
+
+Required next validation: identify the actual preview command/port, make the smallest targeted CI or worker-preview correction if evidence supports it, then rerun the same production gate and continue until the complete E2E suite—including signup Amount → Details → Payment → Account → Done—passes.
