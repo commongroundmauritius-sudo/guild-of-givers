@@ -1,6 +1,5 @@
 import { createFileRoute, Link as RouterLink } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -73,7 +72,7 @@ function AdminOrganizationsPage() {
   );
 
   return (
-    <SiteLayout>
+    
       <section className="bg-muted/30 py-12 min-h-screen">
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
@@ -253,6 +252,6 @@ function AdminOrganizationsPage() {
           )}
         </div>
       </section>
-    </SiteLayout>
+    
   );
 }
