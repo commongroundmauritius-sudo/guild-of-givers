@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/lib/community";
@@ -43,18 +42,15 @@ function PostDetailPage() {
 
   if (isLoading) {
     return (
-      <SiteLayout>
         <div className="mx-auto max-w-4xl px-4 py-8 space-y-8">
           <Skeleton className="h-10 w-32" />
           <Skeleton className="h-96 w-full" />
         </div>
-      </SiteLayout>
-    );
+      );
   }
 
   if (!post) {
     return (
-      <SiteLayout>
         <div className="mx-auto max-w-4xl px-4 py-32 text-center">
           <h2 className="text-2xl font-bold">Post not found</h2>
           <p className="mt-2 text-muted-foreground">
@@ -64,12 +60,10 @@ function PostDetailPage() {
             <Link to="/community-hub">Back to Community Hub</Link>
           </Button>
         </div>
-      </SiteLayout>
-    );
+      );
   }
 
   return (
-    <SiteLayout>
       <div className="mx-auto max-w-4xl px-4 py-8">
         <Link
           to="/community-hub"
@@ -128,6 +122,5 @@ function PostDetailPage() {
           </section>
         </article>
       </div>
-    </SiteLayout>
-  );
+    );
 }
