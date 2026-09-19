@@ -165,3 +165,22 @@ The next production validation must prove:
 3. Amount → Details transition works;
 4. the complete signup journey passes;
 5. all existing production gates remain green.
+
+### 2026-09-19 — Infrastructure Guard failure: required Vite SSR bundling settings absent
+
+Production validation was not the only active gate. Infrastructure Guard run `35438765250`, job `105885845567`, failed in **Verify Vite Configuration** before the worker build/validation step.
+
+Exact failure:
+```
+Run grep -q 'noExternal: true' vite.config.ts || (echo 'ERROR: vite.config.ts missing noExternal' && false)
+ERROR: vite.config.ts missing noExternal
+Error: Process completed with exit code 1.
+```
+
+The checked-out PR merge commit was `21f8b669c1392e7f1bf31be235810689d1010944`, containing worker asset fix commit `c1f2d5a6117d057e480955d64c814c3c03adf053`.
+
+Classification: **infrastructure configuration / CI guard mismatch**. The guard explicitly requires both `ssr.noExternal: true` and `output.inlineDynamicImports: true`, while the current `vite.config.ts` contains neither. This is separate from the production asset-serving root cause, but it blocks the infrastructure gate and must be restored before the worker fix can be validated end-to-end.
+
+Review before change: current Lovable/TanStack configuration is wrapped by `@lovable.dev/vite-tanstack-config`; the intended extension point is its nested `vite` configuration. The corrective change should therefore add the required SSR and Rollup output settings through that supported extension point rather than weakening or deleting the guard.
+
+Hypothesis: adding `vite.ssr.noExternal = true` and `vite.build.rollupOptions.output.inlineDynamicImports = true` will satisfy the infrastructure contract while preserving the existing TanStack Start server entry and worker asset configuration. The next validation must confirm both the guard and the actual production worker/signup journey, because satisfying grep alone is not sufficient.
