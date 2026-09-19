@@ -58,6 +58,7 @@ async function build() {
   const workerOutput = path.join(rootDir, "dist/client/_worker.js");
   const wranglerConfigRoot = path.join(rootDir, "wrangler.json");
   const wranglerConfigDist = path.join(rootDir, "dist/client/wrangler.json");
+  const assetsIgnoreDist = path.join(rootDir, "dist/client/.assetsignore");
   const nodeBuiltIns = [
     "assert",
     "async_hooks",
@@ -122,7 +123,13 @@ globalThis.clearImmediate = (id) => clearTimeout(id);
       if (!config.compatibility_flags.includes("nodejs_compat"))
         config.compatibility_flags.push("nodejs_compat");
       config.main = "_worker.js";
+      delete config.pages_build_output_dir;
+      config.assets = {
+        ...(config.assets || {}),
+        directory: ".",
+      };
       fs.writeFileSync(wranglerConfigDist, JSON.stringify(config, null, 2));
+      fs.writeFileSync(assetsIgnoreDist, "_worker.js\nwrangler.json\n.assetsignore\n");
     }
     console.log("Build worker completed successfully.");
   } catch (error) {

@@ -125,3 +125,43 @@ This rules out the previously suspected button-disabled state and makes a client
 ### 2026-09-19 — control-test adjustment
 
 Commit `ef6bda00404c91e68d19426c8d41bf0f7b798ac2` changes only the diagnostic test timing: it waits up to 5 seconds for the Details heading before throwing diagnostics. No signup application code was changed.
+
+
+### 2026-09-19 — Root cause confirmed: production worker was not serving client assets
+
+The latest diagnostic run identified the failed resources exactly:
+
+- `/assets/index-BzHBiVog.js`
+- `/assets/signup-DKEB08k1.js`
+- `/assets/createServerFn-2LzDjJ8A.js`
+- `/assets/validators-BqsJtm68.js`
+- `/assets/arrow-left-CQ3I954W.js`
+- `/assets/index-qy_pPuS9.js`
+- `/assets/styles-ZuFrns6P.css`
+- `/assets/logo-B2qccutl.png`
+- `/favicon.svg`
+
+All returned HTTP 404 from the production preview.
+
+This explains the signup behavior: the server-rendered HTML is present, but the client JavaScript bundle containing React event handlers is not being served. Therefore the button is visible but its React `onClick` cannot execute.
+
+The existing custom worker build generated `dist/client/_worker.js` and a Wrangler config with `main: "_worker.js"`, but retained the Pages-only `pages_build_output_dir` configuration and did not configure Workers Static Assets. Current Cloudflare documentation states that a Worker with a `main` entry point needs an `assets.directory` configuration to serve static assets. citeturn0search0turn0search1
+
+### Corrective action
+
+The build-worker script is being changed so the generated Worker config:
+- removes `pages_build_output_dir`;
+- keeps `main: "_worker.js"`;
+- configures `assets.directory: "."` because the generated Wrangler config lives inside `dist/client`;
+- creates `.assetsignore` so the Worker/config files are not exposed as static assets.
+
+This is an infrastructure fix, not a signup-flow workaround.
+
+### Validation required
+
+The next production validation must prove:
+1. the generated asset URLs return HTTP 200;
+2. the signup React bundle loads;
+3. Amount → Details transition works;
+4. the complete signup journey passes;
+5. all existing production gates remain green.
