@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Search, Mail, Calendar, MapPin, Info } from "lucide-react";
@@ -50,7 +49,7 @@ function AdminMembersPage() {
   );
 
   return (
-    <SiteLayout>
+    
       <section className="bg-muted/30 min-h-screen py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
@@ -190,6 +189,6 @@ function AdminMembersPage() {
           </div>
         </div>
       </section>
-    </SiteLayout>
+    
   );
 }
