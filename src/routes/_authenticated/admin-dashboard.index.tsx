@@ -2,7 +2,6 @@ import { getJoinedField } from "@/lib/utils";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -175,7 +174,6 @@ function AdminDashboard() {
   }
 
   return (
-    <SiteLayout>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b pb-6">
           <div>
@@ -417,6 +415,5 @@ function AdminDashboard() {
           )}
         </div>
       </div>
-    </SiteLayout>
-  );
+    );
 }
