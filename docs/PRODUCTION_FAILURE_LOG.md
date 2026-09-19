@@ -200,3 +200,23 @@ Current review: `package.json` defines `preview` as `vite preview`, while the pr
 Falsifiable hypothesis: the validation script is waiting on port 8080 while the worker preview process either binds another port (for example Wrangler's default) or exits before binding. Workflow logs/command and the generated worker configuration must distinguish these cases before any code change.
 
 Required next validation: identify the actual preview command/port, make the smallest targeted CI or worker-preview correction if evidence supports it, then rerun the same production gate and continue until the complete E2E suite—including signup Amount → Details → Payment → Account → Done—passes.
+
+### 2026-09-19 — Production validation formatting failure after authenticated-shell cleanup
+
+Production validation run `35443176070`, job `105897466005`, failed in **Format sources** before lint/build/E2E.
+
+Exact Prettier error:
+```
+src/routes/_authenticated/admin-dashboard.homepage-layout.tsx: SyntaxError: JSX expressions must have one parent element. (158:7)
+```
+
+Root cause confirmed by reviewing the file: removing the child `SiteLayout` left the page with two top-level JSX siblings inside `return (...)` — the main `<section>` and `<HomepagePreview>`. The previous `SiteLayout` had provided the single parent. This is a source/JSX structure regression caused by the shell cleanup, not a production-worker or Playwright issue.
+
+Required correction: keep the authenticated parent route as the sole `SiteLayout`, and wrap the homepage CMS page's `<section>` plus `<HomepagePreview>` in a React fragment. No application behavior should otherwise change.
+
+Validation required after the correction:
+1. Format sources passes.
+2. Lint and both builds pass.
+3. Production worker output remains valid.
+4. Preview binds and is reachable.
+5. Complete production E2E suite passes.
