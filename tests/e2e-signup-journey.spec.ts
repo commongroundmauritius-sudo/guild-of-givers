@@ -2,6 +2,11 @@ import { test, expect } from "@playwright/test";
 
 test.describe("End-to-End Member Signup Journey", () => {
   test("completes member signup through mock payment and account creation", async ({ page }) => {
+    const runtimeErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") runtimeErrors.push(msg.text());
+    });
+    page.on("pageerror", (error) => runtimeErrors.push(`PAGEERROR: ${error.message}`));
     const email = `e2e-${Date.now()}@example.com`;
 
     await page.goto("/signup");
@@ -11,6 +16,15 @@ test.describe("End-to-End Member Signup Journey", () => {
     await expect(startButton).toBeEnabled();
     await startButton.click();
 
+    const diagnostic = await page.evaluate(() => ({
+      url: location.href,
+      headings: Array.from(document.querySelectorAll("h1,h2,h3")).map((el) => el.textContent?.trim()).filter(Boolean),
+      buttons: Array.from(document.querySelectorAll("button")).map((el) => ({ text: el.textContent?.trim(), disabled: (el as HTMLButtonElement).disabled })),
+      bodyText: document.body.innerText.slice(0, 3000),
+    }));
+    if (!diagnostic.headings.some((heading) => heading === "Your details")) {
+      throw new Error(`Signup did not transition to Details. Diagnostic=${JSON.stringify({ ...diagnostic, runtimeErrors })}`);
+    }
     await expect(page.getByRole("heading", { name: "Your details" })).toBeVisible();
     await expect(page).toHaveURL(/\/signup(?:\?.*)?$/);
     await page.getByLabel("Full name").fill("E2E Test Member");
