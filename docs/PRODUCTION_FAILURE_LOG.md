@@ -108,3 +108,20 @@ The signup journey remains **RED** until this complete sequence passes in produc
 **Amount → Details → Payment → Account → Done**
 
 No merge should occur while this gate is red.
+
+
+### 2026-09-19 diagnostic result — signup transition
+
+The diagnostic run confirmed:
+- URL remained `/signup`.
+- The DOM remained on **Monthly Contribution**.
+- The Start button was visible and enabled.
+- No application/page JavaScript exception was captured.
+- The only console errors were repeated **404 resource** responses.
+- The same result occurred on retry.
+
+This rules out the previously suspected button-disabled state and makes a client exception less likely. The next investigation must determine whether the click event itself fires and whether the React state update is being interrupted/re-rendered. The next test change therefore waits up to 5 seconds for the Details heading before collecting diagnostics, so the evidence distinguishes a transient render from a persistent state-transition failure.
+
+### 2026-09-19 — control-test adjustment
+
+Commit `ef6bda00404c91e68d19426c8d41bf0f7b798ac2` changes only the diagnostic test timing: it waits up to 5 seconds for the Details heading before throwing diagnostics. No signup application code was changed.
