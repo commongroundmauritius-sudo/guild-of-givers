@@ -3,6 +3,10 @@ import { test, expect } from "@playwright/test";
 test.describe("End-to-End Member Signup Journey", () => {
   test("completes member signup through mock payment and account creation", async ({ page }) => {
     const runtimeErrors: string[] = [];
+    const failedResponses: string[] = [];
+    page.on("response", (response) => {
+      if (response.status() >= 400) failedResponses.push(`${response.status()} ${response.url()}`);
+    });
     page.on("console", (msg) => {
       if (msg.type() === "error") runtimeErrors.push(msg.text());
     });
@@ -32,7 +36,7 @@ test.describe("End-to-End Member Signup Journey", () => {
         bodyText: document.body.innerText.slice(0, 3000),
       }));
       throw new Error(
-        `Signup did not transition to Details within 5s. Diagnostic=${JSON.stringify({ ...diagnostic, runtimeErrors })}`,
+        `Signup did not transition to Details within 5s. Diagnostic=${JSON.stringify({ ...diagnostic, runtimeErrors, failedResponses })}`,
         { cause: error },
       );
     }
