@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,7 +56,7 @@ function AdminSettings() {
   });
 
   return (
-    <SiteLayout>
+    
       <section className="py-16">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-8">
@@ -162,6 +161,6 @@ function AdminSettings() {
           </div>
         </div>
       </section>
-    </SiteLayout>
+    
   );
 }
