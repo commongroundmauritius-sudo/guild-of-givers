@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useState } from "react";
 import { simulatePaymentEvent, simulateBillingCycle } from "@/lib/payments/simulation-actions";
 import { useAuth } from "@/hooks/use-auth";
@@ -76,7 +75,7 @@ function VerifyPaymentsPage() {
   };
 
   return (
-    <SiteLayout>
+    
       <div className="mx-auto max-w-4xl px-4 py-16">
         <h1 className="text-3xl font-bold mb-8">Payment System Verification</h1>
 
@@ -113,6 +112,6 @@ function VerifyPaymentsPage() {
           </div>
         )}
       </div>
-    </SiteLayout>
+    
   );
 }
