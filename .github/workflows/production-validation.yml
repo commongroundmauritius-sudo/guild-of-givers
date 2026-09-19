@@ -74,25 +74,46 @@ jobs:
           sleep 2
           if ! kill -0 "$PREVIEW_PID" 2>/dev/null; then
             echo "ERROR: Wrangler preview process exited before binding to port 8080."
+            echo "===== Wrangler log ====="
             cat /tmp/preview.log
             exit 1
           fi
+          echo "Wrangler preview process started with PID $PREVIEW_PID."
 
       - name: Wait for preview
         run: |
           for i in {1..60}; do
-            if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
+            if curl -fsS --connect-timeout 2 --max-time 5 http://127.0.0.1:8080/ >/dev/null; then
+              echo "Preview is reachable on 127.0.0.1:8080."
               exit 0
             fi
+
             if [ -f /tmp/preview.pid ] && ! kill -0 "$(cat /tmp/preview.pid)" 2>/dev/null; then
               echo "ERROR: Wrangler preview process exited while waiting for port 8080."
+              echo "===== Wrangler log ====="
               cat /tmp/preview.log
               exit 1
             fi
+
+            if [ "$i" -eq 10 ] || [ "$i" -eq 30 ] || [ "$i" -eq 60 ]; then
+              echo "Preview still not reachable after $((i * 2)) seconds."
+              echo "===== Wrangler log ====="
+              cat /tmp/preview.log || true
+              echo "===== Listening ports ====="
+              ss -lntp || true
+            fi
+
             sleep 2
           done
+
           echo "ERROR: Preview did not become reachable on 127.0.0.1:8080."
-          cat /tmp/preview.log
+          echo "===== Wrangler log ====="
+          cat /tmp/preview.log || true
+          echo "===== Listening ports ====="
+          ss -lntp || true
+          if [ -f /tmp/preview.pid ]; then
+            kill "$(cat /tmp/preview.pid)" 2>/dev/null || true
+          fi
           exit 1
 
       - name: E2E — admin
