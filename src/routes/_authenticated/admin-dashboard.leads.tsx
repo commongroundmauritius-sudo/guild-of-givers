@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,7 +58,7 @@ function AdminLeadsPage() {
   };
 
   return (
-    <SiteLayout>
+    
       <section className="bg-muted/30 min-h-screen py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="space-y-8">
@@ -151,6 +150,6 @@ function AdminLeadsPage() {
           </div>
         </div>
       </section>
-    </SiteLayout>
+    
   );
 }
