@@ -1,7 +1,6 @@
 import { getJoinedField } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { History, Heart, CheckCircle2, User, Mail, Calendar } from "lucide-react";
@@ -44,7 +43,7 @@ function AdminProfile() {
   const initials = displayName.substring(0, 2).toUpperCase();
 
   return (
-    <SiteLayout>
+    
       <section className="bg-muted/30 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="overflow-hidden rounded-3xl border border-amber-500/20 bg-card shadow-xl">
@@ -170,6 +169,6 @@ function AdminProfile() {
           </div>
         </div>
       </section>
-    </SiteLayout>
+    
   );
 }
