@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { useHomepage } from "@/hooks/use-homepage";
 import { useState, useEffect, lazy, Suspense } from "react";
@@ -59,7 +58,7 @@ const PanelFallback = () => (
 );
 
 const CMSLoadingState = () => (
-  <SiteLayout>
+  
     <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
       <div className="relative">
         <div className="h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
@@ -72,7 +71,7 @@ const CMSLoadingState = () => (
         </p>
       </div>
     </div>
-  </SiteLayout>
+  
 );
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/homepage-layout")({
@@ -155,7 +154,7 @@ function HomepageCMS() {
   if (!config) return <CMSLoadingState />;
 
   return (
-    <SiteLayout>
+    
       <section className="bg-muted/30 min-h-screen py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-6 mb-12">
@@ -365,6 +364,6 @@ function HomepageCMS() {
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
       />
-    </SiteLayout>
+    
   );
 }
