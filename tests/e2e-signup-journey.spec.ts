@@ -16,16 +16,26 @@ test.describe("End-to-End Member Signup Journey", () => {
     await expect(startButton).toBeEnabled();
     await startButton.click();
 
-    const diagnostic = await page.evaluate(() => ({
-      url: location.href,
-      headings: Array.from(document.querySelectorAll("h1,h2,h3")).map((el) => el.textContent?.trim()).filter(Boolean),
-      buttons: Array.from(document.querySelectorAll("button")).map((el) => ({ text: el.textContent?.trim(), disabled: (el as HTMLButtonElement).disabled })),
-      bodyText: document.body.innerText.slice(0, 3000),
-    }));
-    if (!diagnostic.headings.some((heading) => heading === "Your details")) {
-      throw new Error(`Signup did not transition to Details. Diagnostic=${JSON.stringify({ ...diagnostic, runtimeErrors })}`);
+    const detailsHeading = page.getByRole("heading", { name: "Your details" });
+    try {
+      await expect(detailsHeading).toBeVisible({ timeout: 5000 });
+    } catch (error) {
+      const diagnostic = await page.evaluate(() => ({
+        url: location.href,
+        headings: Array.from(document.querySelectorAll("h1,h2,h3"))
+          .map((el) => el.textContent?.trim())
+          .filter(Boolean),
+        buttons: Array.from(document.querySelectorAll("button")).map((el) => ({
+          text: el.textContent?.trim(),
+          disabled: (el as HTMLButtonElement).disabled,
+        })),
+        bodyText: document.body.innerText.slice(0, 3000),
+      }));
+      throw new Error(
+        `Signup did not transition to Details within 5s. Diagnostic=${JSON.stringify({ ...diagnostic, runtimeErrors })}`,
+        { cause: error },
+      );
     }
-    await expect(page.getByRole("heading", { name: "Your details" })).toBeVisible();
     await expect(page).toHaveURL(/\/signup(?:\?.*)?$/);
     await page.getByLabel("Full name").fill("E2E Test Member");
     await page.getByLabel("Email").fill(email);
