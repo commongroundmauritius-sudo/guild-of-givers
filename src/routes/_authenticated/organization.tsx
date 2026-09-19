@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -142,7 +141,6 @@ function OrganizationDashboard() {
   };
 
   return (
-    <SiteLayout>
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-10">
           <div>
@@ -353,7 +351,6 @@ function OrganizationDashboard() {
           </div>
         )}
       </div>
-    </SiteLayout>
   );
 }
 
