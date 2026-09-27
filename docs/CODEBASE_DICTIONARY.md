@@ -631,6 +631,16 @@ Two points require follow-up testing:
 1. Idempotency is currently based on existing `financial_events` with `platform_share` or `allocation`; partial failure after one ledger event can therefore affect retry behavior and needs transaction-level failure testing.
 2. `v_org_pool_account_id` is resolved but not used for a ledger write. The actual 80% distribution is written directly to initiative/Impact Pool accounts; the unused account variable should be classified as legacy or removed after confirming no downstream reporting depends on it.
 
+### Subscription lifecycle audit
+
+`process_recurring_billing()` is the authoritative renewal path: it selects active subscriptions due for billing, creates a successful `payments` row, calls `allocate_payment_funds()`, creates a receipt, and advances `next_billing_date`. This is substantially more durable than the current initial signup mock flow.
+
+`SubscriptionEngine` handles webhook-driven success/failure/cancel/resume transitions, but `MockPaymentProvider.cancelSubscription()`, `resumeSubscription()`, and `getSubscriptionStatus()` only return simulated values and do not persist state. The member UI currently reads the database subscription directly, so provider state and DB state can diverge if these methods are used.
+
+Current member dashboard exposes subscription status and initiative preference management, but no direct cancel/resume mutation was found in the inspected dashboard route. Cancellation/resume therefore remains an engine/API capability rather than a complete member-facing lifecycle.
+
+Current RLS observations: members can view only their own subscription; member preferences are self-scoped for mutation; financial events are restricted to the member, organization allocation scope, or admins. No client-side preference write can directly change subscription status.
+
 ### Critical traceability rule
 For each domain, maintain a single authoritative transition for business state. UI state, provider-returned state and cached React Query state are representations, not the final source of truth. Database state and server-side authorization must win when they conflict.
 
