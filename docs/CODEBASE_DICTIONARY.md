@@ -555,6 +555,63 @@ The following appendix is generated from the repository tree so that new files c
 | `vite.config.ts` | Project configuration or supporting source |
 | `wrangler.json` | Project configuration or supporting source |
 
+## Traceability map — non-payment domains
+### Initiative discovery and attribution
+    /initiatives/$slug
+      -> initiative loader resolves canonical slug (UUID fallback retained for legacy URLs)
+      -> initiatives + organizations query
+      -> attributionService.captureFromUrl()
+      -> source_initiative_id stored in localStorage
+      -> logInitiativeEvent(page_view / cta_click / share)
+      -> signup reads source_initiative_id
+      -> createLead / convertLead carries source initiative
+
+**Audit note:** UUID fallback is intentional legacy compatibility. If canonical slugs are now guaranteed, this fallback should eventually be reviewed and covered by a redirect/legacy URL test rather than silently retained forever.
+
+### Organization dashboard
+    authenticated organization
+      -> profiles.organization_id
+      -> initiatives filtered by organization_id
+      -> reports filtered by organization_id
+      -> uploadReport(server action)
+      -> TeamManager
+
+**Security rule:** the UI filter is not the security boundary. RLS/server-side authorization must independently enforce organization tenancy.
+
+### Community
+    community-hub route
+      -> use-community
+      -> community.ts
+      -> community_posts / post_comments / post_reactions / announcements
+      -> realtime postgres_changes invalidation
+
+Community mutations are currently issued from the client through Supabase. The database RLS policies therefore remain the authoritative permission boundary for creating/editing/deleting posts, comments and reactions.
+
+**Audit note:** `useCommunityRealtime()` constructs a channel with a random suffix and receives a `queryKey` array from the caller. The hook's memoization does not guarantee stable identity if callers create a new array on every render; callers should use stable query keys or the hook may repeatedly unsubscribe/resubscribe.
+
+### CRM / leads
+    signup details
+      -> createLead()
+      -> leads.status = started
+      -> payment confirmation
+      -> convertLead()
+      -> leads.status = converted
+      -> admin-dashboard/leads reads CRM pipeline
+
+**Business rule:** failed/abandoned payment attempts should not be counted as converted supporters. The lead record may still exist for acquisition analysis.
+
+### Cookie consent
+    CookieConsentBanner
+      -> useCookieConsent()
+      -> cookie-consent state
+      -> Necessary always available
+      -> Analytics controlled by explicit preference
+
+Analytics/event tracking must check consent before optional analytics storage or dispatch. Authentication/session operation must not depend on optional analytics consent.
+
+### Critical traceability rule
+For each domain, maintain a single authoritative transition for business state. UI state, provider-returned state and cached React Query state are representations, not the final source of truth. Database state and server-side authorization must win when they conflict.
+
 ## Audit checklist generated from the dictionary
 
 ### A. Architecture
