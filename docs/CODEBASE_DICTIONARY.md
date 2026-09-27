@@ -585,6 +585,44 @@ The following appendix is generated from the repository tree so that new files c
 - [ ] Review root-level historical audit/report documents and mark which are archival versus current.
 - [ ] Remove temporary test/debug files if they are no longer required.
 
+## Traceability audit — verified findings
+
+### Critical: signup payment/subscription state has two sources of truth
+
+**Observed chain**
+
+```
+signup.tsx
+  -> paymentService.startPayment()
+  -> paymentService.subscribe()
+       -> MockPaymentProvider.createSubscription()
+            -> returns status: active + mock subscription ID
+  -> signUp()
+       -> Supabase auth.users INSERT
+            -> handle_new_user()
+                 -> subscriptions INSERT with status: pending
+```
+
+The frontend treats the mock provider's `active` result as proof that the subscription is active, but the database trigger deliberately creates the real `subscriptions` row as `pending`. The inspected signup path does not then update that database row to `active` or attach the returned mock subscription ID. Since `useAuth` determines `isSubscribed` from an active database subscription, this can produce a member account that has apparently completed payment but is not recognised as an active subscriber.
+
+**Required fix direction:** establish one authoritative post-payment transition. The payment confirmation must create/identify a durable payment record, create/activate the database subscription, and then allow membership access. Do not solve this by trusting client-controlled user metadata.
+
+**Related files:** `src/routes/signup.tsx`, `src/lib/payments/service.ts`, `src/lib/payments/mock-provider.ts`, `src/lib/auth-actions.ts`, `src/hooks/use-auth.tsx`, `supabase/migrations/20260513202826_robust_signup_trigger.sql`, `supabase/migrations/20260612000001_enhance_signup_trigger_for_organizations.sql`.
+
+### High: mock payment is not yet a durable payment transaction
+
+`MockPaymentProvider.initializePayment()` returns a transaction ID and checkout URL, but the inspected implementation does not persist a corresponding `payments` row. The durable payment/allocation path in `SubscriptionEngine.processSuccessfulPayment()` expects a transaction ID that corresponds to a database payment record and calls `allocate_payment_funds()` with that ID.
+
+**Implication:** the current mock provider can demonstrate provider abstraction and subscription-result behaviour, but it does not by itself prove the complete database payment -> allocation ledger path. The simulation tools exercise the event engine separately. The signup flow should eventually use a mock payment flow that persists the same durable records a real provider webhook would produce.
+
+### High: webhook authenticity is a placeholder
+
+`webhook-handler.ts` accepts any non-empty signature in production mode after checking that a secret exists. It does not perform cryptographic verification against the payload. This must remain disabled from real provider use until provider-specific signature verification is implemented.
+
+### Medium: terminology/storage boundary
+
+The database still contains provider-specific column names such as `peach_subscription_id` and `peach_payment_id` while the active provider is MockPaymentProvider. These names can be retained as future compatibility fields, but the dictionary should make clear that they are provider-specific legacy/future fields, not proof that Peach is currently integrated.
+
 ## Confirmed audit observations requiring follow-up
 
 1. **Webhook signature verification is not real provider verification yet.** The current handler contains a production note and placeholder validation. This is acceptable only while the mock provider is intentional; it must be replaced before a real provider/webhook is enabled.
