@@ -615,6 +615,22 @@ The live `handle_new_user()` trigger was audited against the signup route and fo
 
 **Important:** the member subscription created by the trigger is still initially `pending`. This remains a separate payment-state reconciliation issue documented in the payment traceability section; role hardening does not make a payment active by itself.
 
+### Payment lifecycle — unresolved architecture gap
+
+The live schema requires `payments.user_id` and `subscriptions.user_id` to reference an existing `auth.users` row. The current public signup intentionally creates the account only after the mock provider reports success, while `handle_new_user()` creates the DB subscription as `pending`. Therefore the current sequence cannot atomically establish pre-account payment, durable payment ledger, Auth user, and active subscription.
+
+**Do not fix this by simply changing the trigger-created subscription to `active`.** That would make membership access precede a durable payment record and allocation.
+
+**Required future shape:** create a durable payment/checkout intent before account creation, bind the successful payment to the newly created user, then atomically reconcile the pending subscription, payment ledger, and allocation. The mock provider should exercise that same lifecycle so Peach can replace it without changing business-state semantics.
+
+### Allocation engine audit
+
+`allocate_payment_funds()` is a privileged, service-role-only RPC and performs the 20/80 split, fee accounting, priority-order allocation, cap/overflow handling, and Impact Pool fallback.
+
+Two points require follow-up testing:
+1. Idempotency is currently based on existing `financial_events` with `platform_share` or `allocation`; partial failure after one ledger event can therefore affect retry behavior and needs transaction-level failure testing.
+2. `v_org_pool_account_id` is resolved but not used for a ledger write. The actual 80% distribution is written directly to initiative/Impact Pool accounts; the unused account variable should be classified as legacy or removed after confirming no downstream reporting depends on it.
+
 ### Critical traceability rule
 For each domain, maintain a single authoritative transition for business state. UI state, provider-returned state and cached React Query state are representations, not the final source of truth. Database state and server-side authorization must win when they conflict.
 
