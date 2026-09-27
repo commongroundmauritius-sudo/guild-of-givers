@@ -609,6 +609,12 @@ Community mutations are currently issued from the client through Supabase. The d
 
 Analytics/event tracking must check consent before optional analytics storage or dispatch. Authentication/session operation must not depend on optional analytics consent.
 
+### Authentication / role-assignment security finding
+
+The live `handle_new_user()` trigger was audited against the signup route and found to be receiving `role` and `organization_id` through Supabase `raw_user_meta_data`. The hardened version now accepts only `member`, or `organization` when a converted `partner_applications` record matches both the organization and signup email. Other requested roles are rejected. This is enforced in the database trigger, not only in the browser.
+
+**Important:** the member subscription created by the trigger is still initially `pending`. This remains a separate payment-state reconciliation issue documented in the payment traceability section; role hardening does not make a payment active by itself.
+
 ### Critical traceability rule
 For each domain, maintain a single authoritative transition for business state. UI state, provider-returned state and cached React Query state are representations, not the final source of truth. Database state and server-side authorization must win when they conflict.
 
