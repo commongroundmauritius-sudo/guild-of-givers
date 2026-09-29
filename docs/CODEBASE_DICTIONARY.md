@@ -671,6 +671,14 @@ A database migration now requires member/organization visibility of community po
 
 The same principle should be applied to any future moderated content: UI filters are convenience; RLS must enforce publication visibility.
 
+### Community moderation and admin-role follow-up
+
+The UI correctly hides community reaction controls from organization accounts, while RLS independently restricts reaction inserts to members/admins. Comment insertion is broader by design: active members and organization users may comment on their permitted posts, with RLS enforcing the ownership/tenant condition.
+
+**Unimplemented requirement:** the product specification calls for rejected posts to be editable and resubmittable with a moderation/review note. The current schema has no review-note field, the post update helper only edits title/content, and the RLS edit rule does not provide a dedicated rejected-post resubmission path. This should be implemented as an explicit resubmission transition rather than weakening the normal one-hour edit rule.
+
+**Admin hierarchy follow-up:** `ensureAdmin()` accepts both `admin` and `super_admin`, and the current `auth-actions.ts` uses `ensureAdmin()` for all 10 protected server actions inspected; `ensureSuperAdmin()` is defined but is not used there. Therefore the two roles currently have little server-action privilege separation. If super-admin is intended as a stronger role, each privileged operation should be classified explicitly as admin-allowed versus super-admin-only.
+
 ### Critical traceability rule
 For each domain, maintain a single authoritative transition for business state. UI state, provider-returned state and cached React Query state are representations, not the final source of truth. Database state and server-side authorization must win when they conflict.
 
