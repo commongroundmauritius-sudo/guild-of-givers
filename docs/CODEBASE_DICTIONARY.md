@@ -679,6 +679,18 @@ The UI correctly hides community reaction controls from organization accounts, w
 
 **Admin hierarchy note:** `ensureAdmin()` intentionally accepts both `admin` and `super_admin` for the current phase. `super_admin` is a reserved role for a later transition to finer-grained admin types; this is intentional, not currently treated as a defect. Future roles should be introduced by an explicit privilege matrix rather than ad-hoc role checks.
 
+### Organization and partner onboarding
+
+Partner application submission is protected by a SECURITY DEFINER RPC with email normalization and a 24-hour duplicate cooldown. Administrative status changes and conversion are server functions guarded by `ensureAdmin()`. RLS independently limits partner-application management to admin/super-admin roles.
+
+Organization/team-member RLS is tenant-scoped: organization owners or users whose profile belongs to the organization can manage team members; admins/super-admins can manage them globally. Public team-member SELECT is intentional for public organization profiles.
+
+Organization security fields (`is_verified`, `status`, `owner_user_id`, financial counters and monthly target) are additionally protected by database triggers from organization-staff modification.
+
+**Conversion transaction gap:** `convertToOrganization()` currently performs organization creation, partner-application update, email dispatch, and activity logging as separate operations. If the organization insert succeeds but the application update fails, an orphan organization can remain. If the database update succeeds but email/activity logging fails, the conversion can be partially completed. This should eventually move into a single transactional database function for state changes, with email dispatched after commit through the queue.
+
+Some organization RLS policies list `anon` in their role scope but still require `has_role('admin')`; anonymous callers cannot satisfy that role check. This is functionally restrictive but should be normalized during a future RLS cleanup to reduce ambiguity.
+
 ### Critical traceability rule
 For each domain, maintain a single authoritative transition for business state. UI state, provider-returned state and cached React Query state are representations, not the final source of truth. Database state and server-side authorization must win when they conflict.
 
