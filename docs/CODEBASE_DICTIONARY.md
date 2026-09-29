@@ -641,6 +641,16 @@ Current member dashboard exposes subscription status and initiative preference m
 
 Current RLS observations: members can view only their own subscription; member preferences are self-scoped for mutation; financial events are restricted to the member, organization allocation scope, or admins. No client-side preference write can directly change subscription status.
 
+### Priority allocation and organization reporting
+
+`allocate_payment_funds()` orders member preferences by `priority_level ASC`. Each initiative receives only up to the current billing cycle target; any remainder proceeds to the next priority, and any final remainder is recorded against the system-owned Impact Pool. The SQL therefore implements priority overflow rather than percentage splitting.
+
+The live `member_preferences` table had no database uniqueness/check constraints enforcing one initiative per member, one preference per priority slot, or the documented 1–4 priority range. A hardening migration now adds unique indexes on `(user_id, initiative_id)` and `(user_id, priority_level)` plus a `priority_level BETWEEN 1 AND 4` check.
+
+Organization dashboards derive engagement metrics from their organization-scoped initiatives. Report uploads use the authenticated user's `profiles.organization_id` as a server-side ownership check before inserting the report. The organization dashboard's initiative/report queries are UI filters and must continue to be backed by RLS.
+
+Current production data observed during this audit contains the system-owned CommonGround Impact Pool and an active partner initiative. The Impact Pool currently has a zero monthly target, which is consistent with its fallback role rather than a normal capped initiative.
+
 ### Critical traceability rule
 For each domain, maintain a single authoritative transition for business state. UI state, provider-returned state and cached React Query state are representations, not the final source of truth. Database state and server-side authorization must win when they conflict.
 
