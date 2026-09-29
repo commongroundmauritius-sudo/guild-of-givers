@@ -663,6 +663,14 @@ Campaign links are publicly readable only while active. Organization campaign-li
 
 `generateUniqueInitiativeSlug()` performs application-level collision detection, while the database unique constraint remains the final protection. The error path currently returns the candidate slug after a lookup failure, so slug uniqueness should be tested under transient database failure.
 
+### Community moderation security finding
+
+The community feed's client query filtered is_deleted = false but not moderation status. The previous RLS SELECT policy likewise allowed active members to read non-deleted posts regardless of pending/rejected status. This conflicted with the documented moderation model.
+
+A database migration now requires member/organization visibility of community posts to use status = 'published', while authors can still see their own posts and admins/super-admins retain moderation access. This makes RLS match the intended workflow: submit -> review -> published/rejected.
+
+The same principle should be applied to any future moderated content: UI filters are convenience; RLS must enforce publication visibility.
+
 ### Critical traceability rule
 For each domain, maintain a single authoritative transition for business state. UI state, provider-returned state and cached React Query state are representations, not the final source of truth. Database state and server-side authorization must win when they conflict.
 
