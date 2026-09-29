@@ -651,6 +651,18 @@ Organization dashboards derive engagement metrics from their organization-scoped
 
 Current production data observed during this audit contains the system-owned CommonGround Impact Pool and an active partner initiative. The Impact Pool currently has a zero monthly target, which is consistent with its fallback role rather than a normal capped initiative.
 
+### Initiative publishing and attribution
+
+Public initiative visibility is enforced by the `Public can view published initiatives` RLS policy: anonymous/authenticated users can read only `is_approved = true AND is_published = true`, while admins and the owning organization retain access. Therefore the detail route's lack of an explicit `is_published` filter is not by itself a public data leak; RLS is the authoritative boundary.
+
+`initiativeService` additionally filters public catalog queries to `status = active`. This is a presentation/business filter layered on top of RLS, not the security boundary.
+
+Campaign links are publicly readable only while active. Organization campaign-link writes are checked against the initiative's organization in both the server action and RLS, while admins have broader management access.
+
+`initiative_events` intentionally permits anonymous/authenticated inserts for page-view/CTA/share attribution. This is an analytics ingestion endpoint, so payload volume/rate-limiting and abuse monitoring should remain part of the production hardening checklist.
+
+`generateUniqueInitiativeSlug()` performs application-level collision detection, while the database unique constraint remains the final protection. The error path currently returns the candidate slug after a lookup failure, so slug uniqueness should be tested under transient database failure.
+
 ### Critical traceability rule
 For each domain, maintain a single authoritative transition for business state. UI state, provider-returned state and cached React Query state are representations, not the final source of truth. Database state and server-side authorization must win when they conflict.
 
