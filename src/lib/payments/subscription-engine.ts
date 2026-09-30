@@ -70,7 +70,10 @@ export class SubscriptionEngine {
     });
 
     if (allocError) {
+      // Allocation is part of successful-payment settlement. Do not mark the
+      // payment/subscription successful if the financial allocation failed.
       console.error("Fund allocation failed:", allocError);
+      throw allocError;
     }
 
     // 2. Update payment record with reliability metadata
