@@ -266,9 +266,6 @@ function HomepageCMS() {
                             onUpdate={(s) => handleUpdateSettings("hero", s)}
                           />
                         )}
-                            onUpdate={(s) => handleUpdateSettings("featured", s)}
-                          />
-                        )}
                         {activeSectionId === "stats" && (
                           <ImpactMetricsPanel
                             settings={config.sections.find((s: any) => s.id === "stats")?.settings}
@@ -281,9 +278,6 @@ function HomepageCMS() {
                               config.sections.find((s: any) => s.id === "volunteers")?.settings
                             }
                             onUpdate={(s) => handleUpdateSettings("volunteers", s)}
-                          />
-                        )}
-                            onUpdate={(s) => handleUpdateSettings("trending", s)}
                           />
                         )}
                         {activeSectionId === "success" && <SuccessStoriesManager />}
