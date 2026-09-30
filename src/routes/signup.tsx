@@ -42,6 +42,7 @@ function SignupPage() {
   const [isPartnerSignup, setIsPartnerSignup] = useState(!!search.code);
   const [partnerData, setPartnerData] = useState<any>(null);
   const [paymentTransactionId, setPaymentTransactionId] = useState<string | null>(null);
+  const [providerSubscriptionId, setProviderSubscriptionId] = useState<string | null>(null);
   const { user, isSubscribed, loading, signUp } = useAuth();
   const navigate = useNavigate();
   const [sourceInitiativeId, setSourceInitiativeId] = useState<string | null>(null);
@@ -144,6 +145,7 @@ function SignupPage() {
       }
 
       setPaymentTransactionId(payment.transactionId);
+      setProviderSubscriptionId(subscription.subscriptionId);
       setStep(3);
     } catch (err) {
       console.error("Payment completion failed:", err);
@@ -175,7 +177,7 @@ function SignupPage() {
       source_initiative_id: sourceInitiativeId,
       role,
       payment_transaction_id: isPartnerSignup ? undefined : paymentTransactionId,
-      provider_subscription_id: isPartnerSignup ? undefined : (window as any).__lastMockSubscriptionId,
+      provider_subscription_id: isPartnerSignup ? undefined : providerSubscriptionId,
     };
 
     if (isPartnerSignup && partnerData?.converted_organization_id) {
