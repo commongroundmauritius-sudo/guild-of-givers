@@ -729,6 +729,22 @@ The repository migration for this fix is `20260930000000_fix_lead_conversion_pro
 
 `crmService.getTasks()` and `updateTaskStatus()` authenticate the caller, while database RLS is expected to enforce organization scope. `updateTaskStatus()` itself does not verify that the task belongs to the caller's organization before updating it, so the database policy is the critical control. This path should have an explicit cross-organization negative test.
 
+### Payment settlement traceability
+
+Successful payment settlement is a financial boundary and must be fail-closed:
+
+```
+payment.success / subscription.renewal
+  -> allocate_payment_funds()
+  -> payment.status = success
+  -> subscription.status = active
+  -> supporter event
+```
+
+The allocation step must succeed before the payment is marked successful or the subscription is activated. A previous implementation logged allocation errors and continued, allowing a possible paid-but-unallocated state. `SubscriptionEngine.processSuccessfulPayment()` now throws on allocation failure, preventing the later success-state writes.
+
+Webhook event IDs are database-unique, providing an idempotency boundary for raw payment-event logging. The payment/allocation path still requires integration tests proving duplicate delivery does not double-allocate.
+
 ### Communication / notification traceability
 
 The communication boundary is:
