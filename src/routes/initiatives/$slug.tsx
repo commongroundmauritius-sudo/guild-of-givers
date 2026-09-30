@@ -21,7 +21,6 @@ import { logInitiativeEvent } from "@/lib/security/auth-actions";
 export const Route = createFileRoute("/initiatives/$slug")({
   loader: async ({ params }: { params: any }) => {
     const { slug } = params;
-
     const { data: initiativeBySlug } = await supabase
       .from("initiatives")
       .select("id, slug")
@@ -63,6 +62,27 @@ function InitiativeDetailPage() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const { data: currentCycle } = useQuery({
+    queryKey: ["initiative-funding-cycle", initiativeId],
+    queryFn: async () => {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+
+      const { data, error } = await supabase
+        .from("initiative_funding_cycles")
+        .select("target_amount_mur, received_amount_mur, status, month, year")
+        .eq("initiative_id", initiativeId)
+        .eq("month", month)
+        .eq("year", year)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!initiativeId,
   });
 
   useEffect(() => {
@@ -117,9 +137,13 @@ function InitiativeDetailPage() {
   if (isLoading) return <div className="p-20 text-center">Loading initiative...</div>;
   if (!initiative) return <div className="p-20 text-center">Initiative not found.</div>;
 
-  const goal = Number(initiative.goal_amount_mur) || 0;
-  const current = Number(initiative.current_amount_mur) || 0;
-  const progress = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
+  const monthlyTarget = Math.max(0, Number(initiative.monthly_target_mur) || 0);
+  const cycleReceived = Math.max(
+    0,
+    Number(currentCycle?.received_amount_mur) || 0,
+  );
+  const cycleProgress =
+    monthlyTarget > 0 ? Math.min(100, (cycleReceived / monthlyTarget) * 100) : 0;
 
   const organization = initiative.organizations;
   const gallery = Array.isArray(initiative.gallery_urls)
@@ -282,7 +306,7 @@ function InitiativeDetailPage() {
               <div className="rounded-[2.5rem] border border-border/40 bg-card p-8 shadow-2xl shadow-primary/5">
                 <div className="mb-8 flex items-center justify-between">
                   <div className="rounded-full bg-forest/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-forest">
-                    Funding Status
+                    Monthly Funding Cycle
                   </div>
                   <button
                     onClick={handleShare}
@@ -298,18 +322,18 @@ function InitiativeDetailPage() {
                   <div className="flex items-end justify-between">
                     <div>
                       <span className="block text-3xl font-bold tracking-tight text-primary">
-                        Rs {current.toLocaleString()}
+                        Rs {cycleReceived.toLocaleString()}
                       </span>
                       <span className="mt-1 block text-xs font-medium text-muted-foreground">
-                        raised of Rs {goal.toLocaleString()} goal
+                        received this month of Rs {monthlyTarget.toLocaleString()} target
                       </span>
                     </div>
                     <div className="text-right">
                       <span className="block text-2xl font-bold text-forest">
-                        {Math.round(progress)}%
+                        {Math.round(cycleProgress)}%
                       </span>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Funded
+                        This Month
                       </span>
                     </div>
                   </div>
@@ -317,7 +341,7 @@ function InitiativeDetailPage() {
                   <div className="h-3 w-full overflow-hidden rounded-full bg-muted/50">
                     <div
                       className="h-full bg-forest transition-all duration-1000"
-                      style={{ width: `${progress}%` }}
+                      style={{ width: `${cycleProgress}%` }}
                     />
                   </div>
 
