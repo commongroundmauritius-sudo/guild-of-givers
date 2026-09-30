@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, User, Mail, MapPin, Phone, CreditCard, ExternalLink, Calendar } from "lucide-react";
+import { Heart, Mail, MapPin, Phone, CreditCard, Calendar } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const Route = createFileRoute("/_authenticated/member/profile")({
@@ -21,6 +21,7 @@ function MemberProfile() {
         .from("subscriptions")
         .select("*")
         .eq("user_id", user?.id ?? "")
+        .in("status", ["active", "paused", "cancelled"])
         .order("created_at", { ascending: false })
         .limit(1);
       return data?.[0];
@@ -65,9 +66,9 @@ function MemberProfile() {
                       <h1 className="font-display text-3xl font-bold text-primary">
                         {displayName}
                       </h1>
-                      {isSubscribed ? (
-                        <span className="rounded-full bg-teal-100 px-3 py-1 text-xs font-bold uppercase text-teal-700">
-                          Active Member
+                      {subscription?.status === "active" || subscription?.status === "paused" || subscription?.status === "cancelled" ? (
+                        <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${subscription?.status === "active" ? "bg-teal-100 text-teal-700" : "bg-muted text-muted-foreground"}`}>
+                          {subscription?.status === "active" ? "Active Member" : `${subscription?.status} Membership`}
                         </span>
                       ) : (
                         <span className="rounded-full bg-muted px-3 py-1 text-xs font-bold uppercase text-muted-foreground">
@@ -175,7 +176,7 @@ function MemberProfile() {
                   </div>
                 ) : (
                   <div className="rounded-3xl border border-dashed p-6 text-center">
-                    <p className="text-sm text-muted-foreground">No active subscription found.</p>
+                    <p className="text-sm text-muted-foreground">No membership record found.</p>
                   </div>
                 )}
               </div>
