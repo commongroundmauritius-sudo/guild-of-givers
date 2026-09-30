@@ -1071,3 +1071,11 @@ Development/test financial rows already present in the database, including the p
 
 Audit status: the monthly funding-cycle data model, authoritative settlement update, automatic monthly initialization, and Mauritius-timezone display path have been implemented/verified. Admin and organization reporting consumers still require direct file-level review where repository-wide search indexing is incomplete.
 
+### Public initiative funding display
+
+`src/routes/initiatives/index.tsx` is the public initiative directory. It filters to active + approved + published initiatives, fetches the current `initiative_funding_cycles` row for each initiative, and passes that row into `src/components/InitiativeCard.tsx`. The card calculates progress exclusively from the current cycle's `target_amount_mur` and `received_amount_mur`, with `monthly_target_mur` only as a target fallback when a current-cycle row is temporarily absent. It does not use historical cumulative funding to display progress.
+
+Audit fix 2026-09-30: both the public initiative detail route and public initiative directory now resolve the funding month/year using `Indian/Mauritius`, preventing a visitor's browser timezone from selecting a different monthly record around a month boundary. Directory fix commit: `a471717bc1ebf9426ae49ac5d70eaa79e0e28818`; detail fix commit: `21ea1912ee2723d694f3b5cd40a31890e1175c75`.
+
+Repository-wide GitHub code search is currently incomplete for these source references, so direct file inspection is the audit authority when search returns no result.
+
