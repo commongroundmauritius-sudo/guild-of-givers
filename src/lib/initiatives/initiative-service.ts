@@ -4,53 +4,6 @@ import type { Tables } from "@/integrations/supabase/types";
 export type Initiative = Tables<"initiatives">;
 
 export const initiativeService = {
-  async getFeatured(limit = 4) {
-    const { data, error } = await supabase
-      .from("initiatives")
-      .select("*, organizations(organization_name)")
-      .eq("is_featured", true)
-      .eq("status", "active")
-      .eq("is_approved", true)
-      .eq("is_published", true)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (error) throw error;
-    return data;
-  },
-  async getUrgent(limit = 4) {
-    const { data, error } = await supabase
-      .from("initiatives")
-      .select("*, organizations(organization_name)")
-      .eq("is_urgent", true)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (error) throw error;
-    return data;
-  },
-  async getNewest(limit = 4) {
-    const { data, error } = await supabase
-      .from("initiatives")
-      .select("*, organizations(organization_name)")
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (error) throw error;
-    return data;
-  },
-  async getTrending(limit = 4) {
-    const { data, error } = await supabase
-      .from("initiatives")
-      .select("*, organizations(organization_name)")
-      .eq("status", "active")
-      .eq("is_approved", true)
-      .eq("is_published", true)
-      .order("conversion_count", { ascending: false, nullsFirst: false })
-      .order("view_count", { ascending: false, nullsFirst: false })
-      .limit(limit);
-    if (error) throw error;
-    return data;
-  },
   async getAll(options: {
     page?: number;
     limit?: number;
