@@ -729,6 +729,27 @@ The repository migration for this fix is `20260930000000_fix_lead_conversion_pro
 
 `crmService.getTasks()` and `updateTaskStatus()` authenticate the caller, while database RLS is expected to enforce organization scope. `updateTaskStatus()` itself does not verify that the task belongs to the caller's organization before updating it, so the database policy is the critical control. This path should have an explicit cross-organization negative test.
 
+### Communication / notification traceability
+
+The communication boundary is:
+
+```
+business event
+  -> communicationDispatcher
+      -> email: engagementService.enqueueEmail() -> email_queue
+      -> in_app: engagementService.createNotification() -> notifications
+```
+
+Current implementation is an abstraction layer, not a complete delivery system. `email_queue` is RLS-protected so only admin-role authenticated users can directly manage it, while `engagementService.enqueueEmail()` uses the normal Supabase client. Therefore ordinary member/payment workflows cannot safely use this client method to enqueue transactional email unless the call is moved behind a privileged server-side/RPC/Edge Function boundary.
+
+**Do not weaken email_queue RLS to make the client method work.** The correct future boundary is a server-side transactional-email enqueue operation that validates the event and writes the queue after the business transaction.
+
+`notifications` currently allows a user to manage their own rows. This permits a user to create or modify notifications addressed to themselves. That is not a cross-user data leak, but it means notification creation is not authoritative. System-generated notifications should continue to be produced by trusted triggers/server-side operations; client notification APIs should be limited to read/read-state operations.
+
+The reaction trigger already creates bundled notifications through a SECURITY DEFINER trigger, so notification creation does not require a client INSERT policy for that workflow.
+
+Email delivery channels SMS/WhatsApp are explicitly deferred abstractions and must not be treated as implemented providers.
+
 ### Attribution traceability
 
 Attribution is captured in browser `localStorage` under `cg_attribution` for 30 days. `createLead()` resolves `tracking_code` to a `campaign_links.id` and stores UTM/attribution data on the lead. This means attribution exists at lead capture time, but the authoritative supporter attribution must ultimately be tied to the authenticated member/payment lifecycle rather than relying solely on client storage.
