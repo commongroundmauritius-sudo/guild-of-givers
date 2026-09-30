@@ -197,60 +197,32 @@ const VALUE_PROPS = [
   },
 ];
 
-function FeaturedInitiatives({ settings }: { settings: any }) {
+function VolunteerOpportunities({ settings }: { settings: any }) {
   const { data: initiatives = [], isLoading } = useQuery({
-    queryKey: ["homepage-featured-manual", settings.manual_ids],
-    enabled: !!settings.manual_ids && settings.manual_ids.length > 0,
+    queryKey: ["homepage-volunteers"],
     queryFn: async () => {
       const { data } = await supabase
         .from("initiatives")
         .select("*, organizations(organization_name)")
-        .in("id", settings.manual_ids);
-
-      const results = data || [];
-      return results.sort(
-        (a, b) => settings.manual_ids.indexOf(a.id) - settings.manual_ids.indexOf(b.id),
-      );
+        .eq("volunteer_opportunity", true)
+        .eq("status", "active")
+        .eq("is_approved", true)
+        .eq("is_published", true)
+        .order("created_at", { ascending: false })
+        .limit(settings.limit || 4);
+      return data || [];
     },
   });
 
   return (
     <CuratedSection
-      title="Featured Initiatives"
-      subtitle="Vetted programs making a significant impact right now."
+      title="Volunteer Opportunities"
+      subtitle="Give your time and skills to make a direct difference on the ground."
       initiatives={initiatives as any}
       isLoading={isLoading}
-      icon={Sparkles}
-      kicker="Handpicked"
-    />
-  );
-}
-
-function UrgentNeeds({ settings }: { settings: any }) {
-  const { urgent } = useCuratedInitiatives();
-  return (
-    <CuratedSection
-      title="Urgent Funding Gaps"
-      subtitle="These programs need immediate support to maintain their vital operations."
-      initiatives={urgent.data?.slice(0, settings.limit || 4)}
-      isLoading={urgent.isLoading}
-      icon={AlertCircle}
-      kicker="Critical"
+      icon={UserPlus}
+      kicker="Volunteer"
       bgClassName="bg-cream-deep/30"
-    />
-  );
-}
-
-function TrendingPrograms({ settings }: { settings: any }) {
-  const { trending } = useCuratedInitiatives();
-  return (
-    <CuratedSection
-      title="Trending Programs"
-      subtitle="Initiatives seeing the most growth in our community."
-      initiatives={trending.data?.slice(0, settings.limit || 4)}
-      isLoading={trending.isLoading}
-      icon={TrendingUp}
-      kicker="Active"
     />
   );
 }
