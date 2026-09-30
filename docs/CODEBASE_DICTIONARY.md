@@ -1043,3 +1043,16 @@ The public homepage no longer renders those four sections. The public `/initiati
 Existing `homepage_versions.configuration_json` records may still contain the retired section IDs. `homepage-service.ts` now normalizes draft/published configuration on read and removes those retired IDs from the active CMS representation, preventing old drafts from reintroducing dead sections.
 
 The underlying initiative lifecycle fields should not be interpreted as financial or membership state. Approval/publication controls visibility; subscription allocation is governed by the database settlement path documented above.
+
+
+## Initiative attribution -> signup -> lead conversion traceability
+
+Attribution flow is now: public initiative detail -> `source_initiative_id` in localStorage (30-day expiry) -> signup details -> lead `source_initiative_id` -> signup metadata -> `handle_new_user()` -> profile `source_initiative_id` + `primary_initiative_id` and initial priority-1 member preference.
+
+The initiative detail route also logs a secured `page_view` event. Registration conversion is not created by trusting a client event: the profile trigger `handle_lead_conversion()` converts the matching started lead after the authenticated profile exists. This makes account creation the durable lead-conversion boundary.
+
+Audit finding fixed 2026-09-30: the hardened role-assignment version of `handle_new_user()` had unintentionally dropped initiative attribution and initial preference handling. The signup page also still imported a removed `convertLead` function. The trigger was restored with the role-validation hardening intact, the obsolete client call was removed, and the live database was verified. Current live counts were 0 profiles with source/primary attribution, 0 registration-conversion events, 1 member preference, and 22 initiative page-view events at the time of audit; no existing attribution records required backfill.
+
+Audit finding fixed 2026-09-30: the retired Trending homepage feature left `get_trending_initiatives(integer)` as an exposed SECURITY DEFINER RPC. Its EXECUTE privileges were revoked from `PUBLIC`, `anon`, and `authenticated`, and the change is recorded in the migration history.
+
+Important remaining boundary: the current mock checkout still needs a durable payment/transaction record before the membership lifecycle can be considered fully end-to-end authoritative. The attribution path is durable once the user account is created, but payment confirmation and subscription activation remain a separate audit item.
