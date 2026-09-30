@@ -4,12 +4,19 @@ import { getJoinedField } from "@/lib/utils";
 
 interface InitiativeCardProps {
   initiative: any;
+  fundingCycle?: {
+    target_amount_mur?: number | string | null;
+    received_amount_mur?: number | string | null;
+  } | null;
 }
 
-export function InitiativeCard({ initiative }: InitiativeCardProps) {
-  const goal = Math.max(1, Number(initiative.goal_amount_mur) || 0);
-  const current = Number(initiative.current_amount_mur) || 0;
-  const progress = Math.min(100, Math.round((current / goal) * 100));
+export function InitiativeCard({ initiative, fundingCycle }: InitiativeCardProps) {
+  const goal = Math.max(
+    0,
+    Number(fundingCycle?.target_amount_mur ?? initiative.monthly_target_mur) || 0,
+  );
+  const current = Math.max(0, Number(fundingCycle?.received_amount_mur) || 0);
+  const progress = goal > 0 ? Math.min(100, Math.round((current / goal) * 100)) : 0;
 
   const organizationName =
     initiative.organization_name || getJoinedField(initiative.organizations, "organization_name");
@@ -81,7 +88,7 @@ export function InitiativeCard({ initiative }: InitiativeCardProps) {
             <div className="flex flex-col">
               <span className="text-lg font-bold text-primary">Rs {current.toLocaleString()}</span>
               <span className="text-[10px] font-medium uppercase text-muted-foreground">
-                raised of Rs {goal.toLocaleString()}
+                this month of Rs {goal.toLocaleString()}
               </span>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/5 text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary/20">
