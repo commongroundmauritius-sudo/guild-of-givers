@@ -6,17 +6,11 @@ import {
   Eye,
   Target,
   UserPlus,
-  Sparkles,
-  AlertCircle,
-  TrendingUp,
-  Clock,
-  Heart,
   LucideIcon,
 } from "lucide-react";
 import { InitiativeCard } from "@/components/InitiativeCard";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Kicker } from "@/components/Kicker";
-import { useCuratedInitiatives } from "@/hooks/initiatives/use-curated-initiatives";
 import { useActivityTracker } from "@/hooks/activities/use-activity-tracker";
 import { useQuery } from "@tanstack/react-query";
 import { homepageService } from "@/lib/homepage-service";
@@ -94,12 +88,6 @@ function renderSection(section: any) {
       );
     case "stats":
       return null;
-    case "featured":
-      return <FeaturedInitiatives settings={section.settings} />;
-    case "urgent":
-      return <UrgentNeeds settings={section.settings} />;
-    case "trending":
-      return <TrendingPrograms settings={section.settings} />;
     case "volunteers":
       return <VolunteerOpportunities settings={section.settings} />;
     case "success":
@@ -208,34 +196,6 @@ function VolunteerOpportunities({ settings }: { settings: any }) {
         .eq("status", "active")
         .eq("is_approved", true)
         .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(settings.limit || 4);
-      return data || [];
-    },
-  });
-
-  return (
-    <CuratedSection
-      title="Volunteer Opportunities"
-      subtitle="Give your time and skills to make a direct difference on the ground."
-      initiatives={initiatives as any}
-      isLoading={isLoading}
-      icon={UserPlus}
-      kicker="Volunteer"
-      bgClassName="bg-cream-deep/30"
-    />
-  );
-}
-
-function VolunteerOpportunities({ settings }: { settings: any }) {
-  const { data: initiatives = [], isLoading } = useQuery({
-    queryKey: ["homepage-volunteers"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("initiatives")
-        .select("*, organizations(organization_name)")
-        .eq("volunteer_opportunity", true)
-        .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(settings.limit || 4);
       return data || [];
