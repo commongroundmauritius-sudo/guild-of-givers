@@ -974,3 +974,10 @@ For a change, answer these five questions before editing:
 5. Which test proves that this behaviour still works?
 
 **Rule:** if we cannot answer all five for a critical feature, the feature is not fully understood yet.
+
+
+## Allocation preview traceability
+
+The member allocation preview is a client-side estimate and is not a financial authority. It now mirrors the settlement rules for fee calculation, 20/80 split, priority capacity, and initiative eligibility. Previously it used a different allocation model: it treated `goal_amount_mur/current_amount_mur` as capacity in `src/lib/allocations/engine.ts`, while settlement uses `monthly_target_mur` and `initiative_funding_cycles`; the preview also hard-coded a 3.5% + Rs10 fee and could display unavailable initiatives. The preview now skips initiatives that are inactive, unapproved, unpublished, or the system Impact Pool. Database settlement remains authoritative.
+
+The member simulation is intentionally labeled **Estimated** in the UI. Changes to fee configuration or funding-cycle state can still make a preview differ from a later settlement, so the preview must never be used to create ledger entries.
