@@ -22,7 +22,6 @@ export const Route = createFileRoute("/initiatives/$slug")({
   loader: async ({ params }: { params: any }) => {
     const { slug } = params;
 
-    // 1. First attempt: resolve by slug (canonical)
     const { data: initiativeBySlug } = await supabase
       .from("initiatives")
       .select("id, slug")
@@ -31,7 +30,6 @@ export const Route = createFileRoute("/initiatives/$slug")({
 
     if (initiativeBySlug) return { initiativeId: initiativeBySlug.id };
 
-    // 2. Second attempt: fallback for legacy UUID routes
     if (isUUID(slug)) {
       const { data: initiativeById } = await supabase
         .from("initiatives")
@@ -77,7 +75,6 @@ function InitiativeDetailPage() {
     attributionService.captureFromUrl();
     if (initiativeId) {
       localStorage.setItem("source_initiative_id", initiativeId);
-      // Log page view via hardened action
       logInitiativeEvent({ data: { initiativeId, eventType: "page_view" } }).catch(console.error);
     }
   }, [initiativeId]);
@@ -111,7 +108,7 @@ function InitiativeDetailPage() {
             },
           });
         }
-      } catch (err) {
+      } catch {
         toast.error("Failed to copy link");
       }
     }
@@ -120,13 +117,14 @@ function InitiativeDetailPage() {
   if (isLoading) return <div className="p-20 text-center">Loading initiative...</div>;
   if (!initiative) return <div className="p-20 text-center">Initiative not found.</div>;
 
-  const progress =
-    initiative.goal_amount_mur > 0
-      ? (initiative.current_amount_mur / initiative.goal_amount_mur) * 100
-      : 0;
+  const goal = Number(initiative.goal_amount_mur) || 0;
+  const current = Number(initiative.current_amount_mur) || 0;
+  const progress = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
 
   const organization = initiative.organizations;
-  const gallery = (initiative.gallery_urls as string[]) || [];
+  const gallery = Array.isArray(initiative.gallery_urls)
+    ? (initiative.gallery_urls as string[])
+    : [];
 
   return (
     <SiteLayout>
@@ -145,7 +143,7 @@ function InitiativeDetailPage() {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="max-w-3xl">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md">
-                  <span className="h-1.5 w-1.5 rounded-full bg-forest animate-pulse" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-forest" />
                   Active Initiative
                 </div>
                 <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
@@ -161,40 +159,40 @@ function InitiativeDetailPage() {
             <div className="lg:col-span-2">
               <div className="py-12 lg:py-20">
                 <div className="prose prose-forest max-w-none">
-                  <div className="text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                  <div className="whitespace-pre-wrap text-lg leading-relaxed text-foreground/80">
                     {initiative.description}
                   </div>
 
                   {(initiative.short_term_goals ||
-                    initiative.long_term_vision ||
+                    initiative.long_term_goals ||
                     initiative.expected_outcomes) && (
                     <div className="mt-12 grid gap-6 sm:grid-cols-2">
                       {initiative.short_term_goals && (
-                        <div className="rounded-3xl bg-muted/30 p-6 border border-border/40">
-                          <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+                        <div className="rounded-3xl border border-border/40 bg-muted/30 p-6">
+                          <h5 className="mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                             Short-term Goals
                           </h5>
-                          <p className="text-sm leading-relaxed text-primary/80 whitespace-pre-wrap">
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-primary/80">
                             {initiative.short_term_goals}
                           </p>
                         </div>
                       )}
-                      {initiative.long_term_vision && (
-                        <div className="rounded-3xl bg-muted/30 p-6 border border-border/40">
-                          <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                            Long-term Vision
+                      {initiative.long_term_goals && (
+                        <div className="rounded-3xl border border-border/40 bg-muted/30 p-6">
+                          <h5 className="mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                            Long-term Goals
                           </h5>
-                          <p className="text-sm leading-relaxed text-primary/80 whitespace-pre-wrap">
-                            {initiative.long_term_vision}
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-primary/80">
+                            {initiative.long_term_goals}
                           </p>
                         </div>
                       )}
                       {initiative.expected_outcomes && (
-                        <div className="rounded-3xl bg-forest/5 p-6 border border-forest/10">
-                          <h5 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-forest mb-3">
+                        <div className="rounded-3xl border border-forest/10 bg-forest/5 p-6">
+                          <h5 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-forest">
                             <Lightbulb className="h-3 w-3" /> Expected Outcomes
                           </h5>
-                          <p className="text-sm leading-relaxed text-forest/80 whitespace-pre-wrap">
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-forest/80">
                             {initiative.expected_outcomes}
                           </p>
                         </div>
@@ -204,7 +202,6 @@ function InitiativeDetailPage() {
                 </div>
               </div>
 
-              {/* Gallery */}
               {gallery.length > 0 && (
                 <div className="mt-16">
                   <h3 className="font-display text-2xl font-semibold text-primary">
@@ -228,11 +225,10 @@ function InitiativeDetailPage() {
                 </div>
               )}
 
-              {/* Organization Profile Summary */}
               {organization && (
-                <div className="rounded-[2.5rem] border border-border/40 bg-muted/30 p-8 sm:p-12 mt-16">
-                  <div className="flex flex-col sm:flex-row gap-8 items-start">
-                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-3xl border-4 border-white shadow-xl bg-white">
+                <div className="mt-16 rounded-[2.5rem] border border-border/40 bg-muted/30 p-8 sm:p-12">
+                  <div className="flex flex-col items-start gap-8 sm:flex-row">
+                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-3xl border-4 border-white bg-white shadow-xl">
                       {organization.logo_url ? (
                         <img
                           src={organization.logo_url}
@@ -244,7 +240,7 @@ function InitiativeDetailPage() {
                           }
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-primary text-white text-3xl font-bold">
+                        <div className="flex h-full w-full items-center justify-center bg-primary text-3xl font-bold text-white">
                           {organization.organization_name?.charAt(0)}
                         </div>
                       )}
@@ -253,7 +249,7 @@ function InitiativeDetailPage() {
                       <h3 className="font-display text-2xl font-bold text-primary">
                         {organization.organization_name}
                       </h3>
-                      <p className="mt-4 text-muted-foreground leading-relaxed line-clamp-3">
+                      <p className="mt-4 line-clamp-3 leading-relaxed text-muted-foreground">
                         {organization.description ||
                           "Leading systemic change through vetted social impact programs."}
                       </p>
@@ -282,7 +278,6 @@ function InitiativeDetailPage() {
               )}
             </div>
 
-            {/* Sidebar Sticky Card */}
             <div className="lg:sticky lg:top-24 lg:h-fit">
               <div className="rounded-[2.5rem] border border-border/40 bg-card p-8 shadow-2xl shadow-primary/5">
                 <div className="mb-8 flex items-center justify-between">
@@ -293,6 +288,7 @@ function InitiativeDetailPage() {
                     onClick={handleShare}
                     className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/50 text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                     title="Share Initiative"
+                    aria-label="Share Initiative"
                   >
                     <Share2 className="h-5 w-5" />
                   </button>
@@ -302,10 +298,10 @@ function InitiativeDetailPage() {
                   <div className="flex items-end justify-between">
                     <div>
                       <span className="block text-3xl font-bold tracking-tight text-primary">
-                        Rs {Number(initiative.current_amount_mur || 0).toLocaleString()}
+                        Rs {current.toLocaleString()}
                       </span>
                       <span className="mt-1 block text-xs font-medium text-muted-foreground">
-                        raised of Rs {Number(initiative.goal_amount_mur || 0).toLocaleString()} goal
+                        raised of Rs {goal.toLocaleString()} goal
                       </span>
                     </div>
                     <div className="text-right">
@@ -332,7 +328,7 @@ function InitiativeDetailPage() {
                         {initiative.active_supporter_count || 0}
                       </span>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Active
+                        Active Supporters
                       </span>
                     </div>
                     <div className="rounded-2xl bg-muted/30 p-5 text-center">
@@ -341,7 +337,7 @@ function InitiativeDetailPage() {
                         {initiative.conversion_count || 0}
                       </span>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Members
+                        Members Acquired
                       </span>
                     </div>
                   </div>
@@ -359,8 +355,9 @@ function InitiativeDetailPage() {
                     Support this Initiative
                   </Link>
                   <p className="px-4 text-center text-[10px] leading-relaxed text-muted-foreground">
-                    100% of your contribution (minus transaction fees) goes directly to the
-                    initiative. We provide full transparency reports every quarter.
+                    Your subscription is allocated according to your selected priorities, after
+                    applicable transaction fees and CommonGround&apos;s platform share. See the
+                    membership terms for details.
                   </p>
                 </div>
 
@@ -369,13 +366,13 @@ function InitiativeDetailPage() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                       <ShieldCheck className="h-5 w-5 text-primary" />
                     </div>
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
                       CommonGround Vetted
                     </span>
                   </div>
                   <p className="mt-4 text-xs leading-relaxed text-primary/70">
-                    This Organization has passed our deep due-diligence process, including financial
-                    audit and site visits.
+                    This organization is presented through CommonGround&apos;s partner and
+                    initiative review process.
                   </p>
                 </div>
               </div>
