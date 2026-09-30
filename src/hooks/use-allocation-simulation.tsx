@@ -19,6 +19,10 @@ export function useAllocationSimulation(amount: number, userId?: string) {
             id,
             title,
             monthly_target_mur,
+            status,
+            is_approved,
+            is_published,
+            is_impact_pool,
             initiative_funding_cycles (
               received_amount_mur
             )
@@ -39,6 +43,10 @@ export function useAllocationSimulation(amount: number, userId?: string) {
           currentReceived: Number(
             p.initiatives?.initiative_funding_cycles?.[0]?.received_amount_mur || 0,
           ),
+          isActive: p.initiatives?.status === "active",
+          isApproved: p.initiatives?.is_approved === true,
+          isPublished: p.initiatives?.is_published === true,
+          isImpactPool: p.initiatives?.is_impact_pool === true,
         })),
       };
 
