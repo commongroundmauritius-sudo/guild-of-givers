@@ -9,6 +9,19 @@ export type HomepageVersion = {
   published_at: string | null;
 };
 
+const RETIRED_INITIATIVE_CURATIONS = new Set(["featured", "urgent", "newest", "trending"]);
+
+function normalizeHomepageConfig(configuration: any): HomepageConfig | null {
+  if (!configuration || !Array.isArray(configuration.sections)) return null;
+
+  return {
+    ...configuration,
+    sections: configuration.sections.filter(
+      (section: any) => !RETIRED_INITIATIVE_CURATIONS.has(section?.id),
+    ),
+  };
+}
+
 export type HomepageConfig = {
   sections: Array<{
     id: string;
