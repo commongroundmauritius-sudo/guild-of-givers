@@ -266,11 +266,6 @@ function HomepageCMS() {
                             onUpdate={(s) => handleUpdateSettings("hero", s)}
                           />
                         )}
-                        {activeSectionId === "featured" && (
-                          <FeaturedInitiativesPanel
-                            settings={
-                              config.sections.find((s: any) => s.id === "featured")?.settings
-                            }
                             onUpdate={(s) => handleUpdateSettings("featured", s)}
                           />
                         )}
@@ -288,17 +283,6 @@ function HomepageCMS() {
                             onUpdate={(s) => handleUpdateSettings("volunteers", s)}
                           />
                         )}
-                        {activeSectionId === "urgent" && (
-                          <UrgentNeedsPanel
-                            settings={config.sections.find((s: any) => s.id === "urgent")?.settings}
-                            onUpdate={(s) => handleUpdateSettings("urgent", s)}
-                          />
-                        )}
-                        {activeSectionId === "trending" && (
-                          <TrendingProgramsPanel
-                            settings={
-                              config.sections.find((s: any) => s.id === "trending")?.settings
-                            }
                             onUpdate={(s) => handleUpdateSettings("trending", s)}
                           />
                         )}
@@ -315,7 +299,7 @@ function HomepageCMS() {
                         "success",
                         "stats",
                         "volunteers",
-                                                "faq",
+                        "faq",
                       ].includes(activeSectionId) && (
                         <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
                           <Layout className="h-12 w-12 mb-4 opacity-20" />
