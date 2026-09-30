@@ -5,11 +5,21 @@ import { toast } from "sonner";
 export const simulatePaymentEvent = async (params: { data: any }) => {
   const { data } = params;
   try {
+    let transactionId = data.transactionId;
+    if (data.type === "payment.success" && data.userId && typeof data.amount === "number") {
+      const { data: paymentId, error } = await supabase.rpc("create_test_payment" as any, {
+        p_user_id: data.userId,
+        p_amount_mur: data.amount,
+      });
+      if (error) throw error;
+      transactionId = paymentId;
+    }
+
     await subscriptionEngine.handlePaymentEvent({
       type: data.type,
       userId: data.userId,
       subscriptionId: data.subscriptionId,
-      transactionId: data.transactionId || `sim_${Math.random().toString(36).substring(7)}`,
+      transactionId: transactionId || `sim_${Math.random().toString(36).substring(7)}`,
       amount: data.amount,
       payload: { simulated: true, ...data },
     });
