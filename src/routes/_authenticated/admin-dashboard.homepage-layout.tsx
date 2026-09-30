@@ -16,11 +16,7 @@ const HeroPanel = lazy(() =>
     default: m.HeroPanel,
   })),
 );
-const FeaturedInitiativesPanel = lazy(() =>
-  import("@/components/dashboard/modules/homepage/components/FeaturedInitiativesPanel").then(
-    (m) => ({ default: m.FeaturedInitiativesPanel }),
-  ),
-);
+
 const SuccessStoriesManager = lazy(() =>
   import("@/components/dashboard/modules/homepage/components/SuccessStoriesManager").then((m) => ({
     default: m.SuccessStoriesManager,
@@ -36,16 +32,8 @@ const VolunteerOpportunitiesPanel = lazy(() =>
     (m) => ({ default: m.VolunteerOpportunitiesPanel }),
   ),
 );
-const UrgentNeedsPanel = lazy(() =>
-  import("@/components/dashboard/modules/homepage/components/UrgentNeedsPanel").then((m) => ({
-    default: m.UrgentNeedsPanel,
-  })),
-);
-const TrendingProgramsPanel = lazy(() =>
-  import("@/components/dashboard/modules/homepage/components/TrendingProgramsPanel").then((m) => ({
-    default: m.TrendingProgramsPanel,
-  })),
-);
+
+
 const FAQPanel = lazy(() =>
   import("@/components/dashboard/modules/homepage/components/FAQPanel").then((m) => ({
     default: m.FAQPanel,
@@ -324,13 +312,10 @@ function HomepageCMS() {
                       </Suspense>
                       {![
                         "hero",
-                        "featured",
                         "success",
                         "stats",
                         "volunteers",
-                        "urgent",
-                        "trending",
-                        "faq",
+                                                "faq",
                       ].includes(activeSectionId) && (
                         <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
                           <Layout className="h-12 w-12 mb-4 opacity-20" />
