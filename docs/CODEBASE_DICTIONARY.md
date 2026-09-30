@@ -1130,3 +1130,9 @@ End-to-end test path is now: admin verification action → `create_test_payment(
 - `process_recurring_billing()` consumes those pending fields on the next successful cycle, then clears them. This makes amount changes deferred rather than immediate.
 - Current member settings UI only edits profile fields. It does not expose membership pause/resume/cancel/amount/billing-day controls and does not call `manage_member_subscription()`. Therefore the database lifecycle is ahead of the UI and is not currently reachable through the member settings page.
 - `PaymentService.cancel/resume/getStatus` delegates to MockPaymentProvider and is not the authoritative member-management path. The database RPC is the authoritative state machine for the current application.
+
+
+### Member subscription UI — 2026-09-30 continuation
+- `src/routes/_authenticated/member.settings.tsx` now loads the member's latest subscription and calls the authoritative `manage_member_subscription()` RPC for amount/billing-day updates, pause, resume, and cancellation.
+- Amount changes are presented as next-cycle changes, matching the database's pending-field design. The UI enforces the same visible minimum/range constraints (Rs167 and billing day 1–28), while the database remains authoritative.
+- The UI intentionally does not call MockPaymentProvider for membership state changes.
