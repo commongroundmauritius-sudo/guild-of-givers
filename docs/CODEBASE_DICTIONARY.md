@@ -1115,3 +1115,10 @@ End-to-end test path is now: admin verification action → `create_test_payment(
 - Fixed the generic successful-webhook settlement path to resolve the provider transaction ID through `payments.peach_payment_id` before calling the UUID-based `allocate_payment_funds()` RPC. Already-successful internal payments are treated as idempotent.
 - Cancel/resume methods in `PaymentService` still delegate to `MockPaymentProvider`, whose current cancel/resume methods are no-ops returning true. There is currently no member-facing cancellation/settings route found using these methods. Database/webhook status changes remain the authoritative path until provider-backed subscription management is implemented.
 - Receipt creation is currently authoritative in the database `process_recurring_billing()` path. Signup finalization creates the payment and allocation but does not itself create a receipt; this should be checked against the intended signup receipt requirement before Peach integration.
+
+
+### Webhook idempotency audit — 2026-09-30 continuation
+- `payment_events.provider_event_id` is backed by a unique database index. Webhook handling now checks an existing processed event before settlement and treats a concurrent duplicate as already claimed when the uniqueness constraint rejects the insert.
+- Failed-payment handling now resolves the provider transaction through `payments.peach_payment_id` before updating the internal payment UUID, matching the successful-payment path.
+- Receipt hardening remains pending database application because the previous migration write was blocked by the execution safety layer. No claim of a live `receipts(payment_id)` unique constraint is made yet.
+- The remaining major production gate in this area is provider-specific cryptographic webhook verification; the current validation still only checks that a production signature value exists.
