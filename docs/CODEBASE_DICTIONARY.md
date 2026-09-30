@@ -1079,3 +1079,11 @@ Audit fix 2026-09-30: both the public initiative detail route and public initiat
 
 Repository-wide GitHub code search is currently incomplete for these source references, so direct file inspection is the audit authority when search returns no result.
 
+### Admin financial dashboard and test-data boundary
+
+`src/routes/_authenticated/admin-dashboard.finances.tsx` is the administrative financial dashboard. Its financial metrics are supplied by the protected `get_admin_financial_metrics()` RPC; transaction history reads the `payments` table and the master ledger reads `financial_events`. Audit finding fixed 2026-09-30: the metrics RPC previously summed every successful payment, which would have exposed development/test transactions such as the previously observed Rs462,000-class test activity as apparent real revenue. A new `payments.is_test` flag now separates test records, and the metrics RPC excludes `is_test = true` from real revenue calculations.
+
+The current financial dashboard accepts both `admin` and `super_admin`, matching the current application role model. Commit: `8e5840bade620a876f74b1d7a091865b6bccf5e5`.
+
+Important limitation: the existing database contains historical development payments without a real Peach payment ID. These were marked as test data by the migration boundary. Future production payment ingestion must explicitly set `is_test = false` for verified provider payments; test/mock payment creation should explicitly set `is_test = true`. The financial ledger remains a separate accounting trail and should not be presented as verified external revenue merely because a row has status=`success`.
+
