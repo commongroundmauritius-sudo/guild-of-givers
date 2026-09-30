@@ -67,9 +67,13 @@ function InitiativeDetailPage() {
   const { data: currentCycle } = useQuery({
     queryKey: ["initiative-funding-cycle", initiativeId],
     queryFn: async () => {
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const year = now.getFullYear();
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Indian/Mauritius",
+        year: "numeric",
+        month: "2-digit",
+      }).formatToParts(new Date());
+      const month = Number(parts.find((part) => part.type === "month")?.value);
+      const year = Number(parts.find((part) => part.type === "year")?.value);
 
       const { data, error } = await supabase
         .from("initiative_funding_cycles")
