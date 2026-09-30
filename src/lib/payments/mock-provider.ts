@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import {
   PaymentProvider,
   SubscriptionRequest,
@@ -16,10 +17,30 @@ export class MockPaymentProvider implements PaymentProvider {
     metadata: Record<string, unknown>,
   ): Promise<{ checkoutUrl: string; transactionId: string }> {
     console.log(`[MockProvider] Initializing payment of ${amount} ${currency}`);
-    const transactionId = `mock_txn_${Math.random().toString(36).substr(2, 9)}`;
+    const email = typeof metadata.email === "string" ? metadata.email.trim().toLowerCase() : "";
+    if (!email) {
+      throw new Error("Mock payment requires an email address");
+    }
+
+    const { data: transactionId, error } = await supabase.rpc(
+      "create_test_payment_intent" as any,
+      {
+        p_email: email,
+        p_amount_mur: amount,
+        p_covers_fees: metadata.coversFees === true,
+        p_source_initiative_id:
+          typeof metadata.sourceInitiativeId === "string" ? metadata.sourceInitiativeId : null,
+        p_provider_subscription_id: null,
+      },
+    );
+
+    if (error || !transactionId) {
+      throw error ?? new Error("Unable to create test payment intent");
+    }
+
     return {
       checkoutUrl: `/mock-checkout?txn=${transactionId}&amount=${amount}`,
-      transactionId,
+      transactionId: String(transactionId),
     };
   }
 
