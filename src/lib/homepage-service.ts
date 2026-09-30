@@ -68,7 +68,7 @@ export const homepageService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data ? { ...data, configuration_json: normalizeHomepageConfig(data.configuration_json) } : data;
   },
 
   async getDraftVersion() {
@@ -81,7 +81,7 @@ export const homepageService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data ? { ...data, configuration_json: normalizeHomepageConfig(data.configuration_json) } : data;
   },
 
   async saveDraft(config: HomepageConfig, userId: string) {
