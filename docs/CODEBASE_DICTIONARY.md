@@ -733,6 +733,16 @@ The repository migration for this fix is `20260930000000_fix_lead_conversion_pro
 
 ### Recurring billing settlement traceability
 
+### Payment-success event idempotency
+
+Payment success has database triggers for activity logging and confirmation communication. Both are edge-triggered on transition into `success`, not merely on every update.
+
+`on_payment_success_engagement()` already guarded against repeat success. `log_payment_activity()` previously emitted `payment_completed` on every UPDATE where status remained `success`; this has been corrected so only `non-success -> success` emits the activity and subscriber-stage update.
+
+This matters because webhook retries or reconciliation updates may update an already-successful payment row without representing a new payment.
+
+
+
 Recurring billing must use the same fail-closed ordering as webhook settlement:
 
 ```
