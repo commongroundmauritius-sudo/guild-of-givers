@@ -1122,3 +1122,11 @@ End-to-end test path is now: admin verification action → `create_test_payment(
 - Failed-payment handling now resolves the provider transaction through `payments.peach_payment_id` before updating the internal payment UUID, matching the successful-payment path.
 - Receipt hardening remains pending database application because the previous migration write was blocked by the execution safety layer. No claim of a live `receipts(payment_id)` unique constraint is made yet.
 - The remaining major production gate in this area is provider-specific cryptographic webhook verification; the current validation still only checks that a production signature value exists.
+
+
+### Subscription lifecycle audit — 2026-09-30 continuation
+- The live database contains `manage_member_subscription(p_action, p_amount_mur, p_billing_day)`, a SECURITY DEFINER function executable by authenticated users only. It owns member pause/resume/cancel/update state transitions and validates the Rs167 minimum and billing-day range 1–28.
+- Pause sets status `paused` and clears `next_billing_date`; cancel sets `cancelled` and clears pending amount/day; resume restores `active` and schedules the next billing date; update stores amount/day in pending fields for the next billing cycle.
+- `process_recurring_billing()` consumes those pending fields on the next successful cycle, then clears them. This makes amount changes deferred rather than immediate.
+- Current member settings UI only edits profile fields. It does not expose membership pause/resume/cancel/amount/billing-day controls and does not call `manage_member_subscription()`. Therefore the database lifecycle is ahead of the UI and is not currently reachable through the member settings page.
+- `PaymentService.cancel/resume/getStatus` delegates to MockPaymentProvider and is not the authoritative member-management path. The database RPC is the authoritative state machine for the current application.
