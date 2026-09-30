@@ -1046,6 +1046,12 @@ Existing `homepage_versions.configuration_json` records may still contain the re
 The underlying initiative lifecycle fields should not be interpreted as financial or membership state. Approval/publication controls visibility; subscription allocation is governed by the database settlement path documented above.
 
 
+### Lead intake security boundary — 2026-09-30
+
+The public member signup path creates a pre-member lead through the server action `src/lib/auth-actions.ts:createLead`. The action validates email/name/phone/amount, rate-limits by email, resolves campaign attribution, and inserts only the fields needed for the initial `Visitor` lead state. The database is now the final security boundary: anonymous lead INSERT is limited to the intended columns and requires a valid-looking email, name length, optional phone length, Rs167–Rs1,000,000 amount range, `status='started'`, `lead_stage='Visitor'`, no conversion timestamp, and object-shaped UTM parameters. This prevents a public client from directly setting lifecycle/conversion fields or bypassing the membership minimum through the table API. Migration: `20260930200000_harden_public_lead_insert_boundary.sql`.
+
+The server action remains the application entry point; the database policy/grants are defense in depth and should be kept aligned if the lead schema or signup flow changes.
+
 ## Initiative attribution -> signup -> lead conversion traceability
 
 Attribution flow is now: public initiative detail -> `source_initiative_id` in localStorage (30-day expiry) -> signup details -> lead `source_initiative_id` -> signup metadata -> `handle_new_user()` -> profile `source_initiative_id` + `primary_initiative_id` and initial priority-1 member preference.
