@@ -729,6 +729,20 @@ The repository migration for this fix is `20260930000000_fix_lead_conversion_pro
 
 `crmService.getTasks()` and `updateTaskStatus()` authenticate the caller, while database RLS is expected to enforce organization scope. `updateTaskStatus()` itself does not verify that the task belongs to the caller's organization before updating it, so the database policy is the critical control. This path should have an explicit cross-organization negative test.
 
+### Subscription status / access traceability
+
+Member access is currently derived in `src/hooks/use-auth.tsx` from the database query:
+
+`subscriptions.status = 'active'`
+
+The live database currently contains `active` and `pending` subscription statuses; there is no observed durable `paused`, `cancelled`, or `past_due` subscription state in the current data.
+
+The payment provider abstraction exposes cancel/resume/status operations, but the current Mock provider does not persist those transitions. Therefore mock-provider cancellation/resumption must not be described as a completed durable member lifecycle.
+
+**Required future lifecycle:** cancellation/pause/resume must update the authoritative `subscriptions` row, and member-access queries must intentionally define which statuses grant access. The UI and provider response must not become independent sources of truth.
+
+This is documented as an architecture gap, not changed automatically, because introducing new subscription statuses requires aligning SQL constraints, RLS, billing retry behavior, member access, CRM stage transitions, receipts, and notifications.
+
 ### Payment settlement traceability
 
 ### Recurring billing settlement traceability
