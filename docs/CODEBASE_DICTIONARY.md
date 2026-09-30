@@ -981,3 +981,12 @@ For a change, answer these five questions before editing:
 The member allocation preview is a client-side estimate and is not a financial authority. It now mirrors the settlement rules for fee calculation, 20/80 split, priority capacity, and initiative eligibility. Previously it used a different allocation model: it treated `goal_amount_mur/current_amount_mur` as capacity in `src/lib/allocations/engine.ts`, while settlement uses `monthly_target_mur` and `initiative_funding_cycles`; the preview also hard-coded a 3.5% + Rs10 fee and could display unavailable initiatives. The preview now skips initiatives that are inactive, unapproved, unpublished, or the system Impact Pool. Database settlement remains authoritative.
 
 The member simulation is intentionally labeled **Estimated** in the UI. Changes to fee configuration or funding-cycle state can still make a preview differ from a later settlement, so the preview must never be used to create ledger entries.
+
+
+## Allocation engine source-of-truth decision
+
+`src/lib/allocations/engine.ts` was an obsolete second financial allocation implementation. It used the older `goal_amount_mur/current_amount_mur` model, calculated the 20/80 split independently, directly inserted into `allocations`, and did not match the authoritative `allocate_payment_funds()` settlement path. Repository search found no active callers for `allocationEngine`, `AllocationEngine`, `calculateAllocations`, or `processPayment`.
+
+Because CommonGround has not begun real revenue and this implementation was not part of the authoritative settlement path, it has been removed. The remaining allocation simulation in `src/lib/payments/allocation-simulator.ts` is explicitly a non-financial preview/test helper; the database `allocate_payment_funds()` function remains the single authoritative financial allocation engine.
+
+This prevents future developers from accidentally importing the legacy engine and creating a second ledger/allocation path.
