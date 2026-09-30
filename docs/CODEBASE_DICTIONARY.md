@@ -729,6 +729,18 @@ The repository migration for this fix is `20260930000000_fix_lead_conversion_pro
 
 `crmService.getTasks()` and `updateTaskStatus()` authenticate the caller, while database RLS is expected to enforce organization scope. `updateTaskStatus()` itself does not verify that the task belongs to the caller's organization before updating it, so the database policy is the critical control. This path should have an explicit cross-organization negative test.
 
+### Initiative deletion traceability
+
+Initiative deletion is intentionally governed by database RLS, not by a frontend-only admin check. The live `initiatives` table has an `ALL` policy for authenticated admins/super_admins and a separate tenant-scoped `ALL` policy for organization staff.
+
+The initiative has dependent records across allocations, campaign links, analytics/events, funding cycles, health scores, updates, versions, member preferences, and reports. Current foreign-key behavior is mixed:
+- financial/allocation and operational history tables use `CASCADE`
+- activity/community references use `SET NULL`
+
+This means deletion is a destructive operation with deliberate downstream effects. In particular, deleting an initiative can delete allocation records, campaign links, reports, funding-cycle history and analytics history.
+
+**Audit rule:** admin deletion should therefore be treated as a high-impact destructive action, with an explicit confirmation and ideally an archive/hide path for initiatives that have financial history. RLS currently permits the delete; the database does not distinguish an empty initiative from one with historical allocations.
+
 ### Reports / financial visibility traceability
 
 The intended visibility boundary is:
