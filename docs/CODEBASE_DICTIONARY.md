@@ -1025,3 +1025,21 @@ The public initiative index already required approval and publication. The share
 The detail route resolves a slug/legacy UUID first and then fetches the initiative. Its public visibility therefore ultimately depends on the database RLS/public visibility policy; the UI should not be treated as the security boundary. Attribution events use the secured `logInitiativeEvent()` action rather than direct client writes.
 
 Administrative initiative creation supports draft/publish actions, while approval/publication remain administrative controls. This keeps organization ownership separate from CommonGround's publication decision.
+
+
+## Homepage initiative-curation retirement
+
+The homepage initiative-curation categories **Featured, Urgent, Newest, and Trending** have been retired from the application presentation layer. They were discovery/presentation conveniences, not part of the initiative lifecycle, approval, attribution, membership, or financial allocation model.
+
+Removed from active code:
+- `src/components/dashboard/modules/homepage/components/FeaturedInitiativesPanel.tsx`
+- `src/components/dashboard/modules/homepage/components/UrgentNeedsPanel.tsx`
+- `src/components/dashboard/modules/homepage/components/TrendingProgramsPanel.tsx`
+- `src/hooks/initiatives/use-curated-initiatives.ts`
+- the corresponding curation methods in `src/lib/initiatives/initiative-service.ts`
+
+The public homepage no longer renders those four sections. The public `/initiatives` directory remains the canonical discovery surface and requires approved + published initiatives. Volunteer opportunities remain because they represent a distinct initiative attribute rather than a popularity/priority ranking.
+
+Existing `homepage_versions.configuration_json` records may still contain the retired section IDs. `homepage-service.ts` now normalizes draft/published configuration on read and removes those retired IDs from the active CMS representation, preventing old drafts from reintroducing dead sections.
+
+The underlying initiative lifecycle fields should not be interpreted as financial or membership state. Approval/publication controls visibility; subscription allocation is governed by the database settlement path documented above.
