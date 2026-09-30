@@ -694,6 +694,45 @@ Some organization RLS policies list `anon` in their role scope but still require
 ### Critical traceability rule
 For each domain, maintain a single authoritative transition for business state. UI state, provider-returned state and cached React Query state are representations, not the final source of truth. Database state and server-side authorization must win when they conflict.
 
+
+
+### CRM / lead lifecycle traceability
+
+The lead lifecycle has two distinct boundaries:
+
+```
+Visitor/signup details
+  -> createLead()
+  -> leads.status = started
+  -> authenticated profile creation
+  -> tr_handle_lead_conversion
+  -> leads.status = converted
+  -> subscription lifecycle
+  -> cancelled/past_due
+  -> tr_handle_lead_inactivation
+  -> leads.status = inactive
+```
+
+A previous implementation attempted to call `secure_convert_lead` from `convertLead()` before authentication. The application expected parameters `p_email`, `p_status`, and `p_initiative_id`, while the historical migration defined a different `p_lead_id` signature. The live database did not contain that function. This was a real broken traceability boundary.
+
+**Fix:** lead conversion is now tied to the durable profile lifecycle. `handle_lead_conversion()` runs after profile insert or source-initiative assignment and converts the matching started lead. The obsolete pre-auth `convertLead()` server function was removed from `src/lib/auth-actions.ts`.
+
+The repository migration for this fix is `20260930000000_fix_lead_conversion_profile_trigger.sql`. The live database was also updated and verified with the corresponding trigger definition.
+
+**Important:** lead conversion should not be treated as proof of payment by itself. Payment/subscription state remains authoritative for supporter access.
+
+### CRM supporter-stage warning
+
+`src/lib/crm/supporter-service.ts` exposes `transitionStage(profileId, stage)` as a direct profile update. It is a service abstraction but should not be used as an authorization boundary or as the authoritative payment lifecycle. In particular, a manually assigned lifecycle stage must not grant supporter access; active subscription/database authorization remains authoritative.
+
+### CRM task authorization
+
+`crmService.getTasks()` and `updateTaskStatus()` authenticate the caller, while database RLS is expected to enforce organization scope. `updateTaskStatus()` itself does not verify that the task belongs to the caller's organization before updating it, so the database policy is the critical control. This path should have an explicit cross-organization negative test.
+
+### Attribution traceability
+
+Attribution is captured in browser `localStorage` under `cg_attribution` for 30 days. `createLead()` resolves `tracking_code` to a `campaign_links.id` and stores UTM/attribution data on the lead. This means attribution exists at lead capture time, but the authoritative supporter attribution must ultimately be tied to the authenticated member/payment lifecycle rather than relying solely on client storage.
+
 ## Audit checklist generated from the dictionary
 
 ### A. Architecture
