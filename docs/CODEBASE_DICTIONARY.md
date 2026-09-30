@@ -1056,3 +1056,18 @@ Audit finding fixed 2026-09-30: the hardened role-assignment version of `handle_
 Audit finding fixed 2026-09-30: the retired Trending homepage feature left `get_trending_initiatives(integer)` as an exposed SECURITY DEFINER RPC. Its EXECUTE privileges were revoked from `PUBLIC`, `anon`, and `authenticated`, and the change is recorded in the migration history.
 
 Important remaining boundary: the current mock checkout still needs a durable payment/transaction record before the membership lifecycle can be considered fully end-to-end authoritative. The attribution path is durable once the user account is created, but payment confirmation and subscription activation remain a separate audit item.
+
+## Monthly initiative funding and financial-history traceability
+
+Initiative funding is a monthly-cycle model, not a lifetime-goal model. For a normal initiative, `initiatives.monthly_target_mur` is the recurring monthly target. The authoritative received amount for a specific month is `initiative_funding_cycles.received_amount_mur`, keyed by `initiative_id + billing_cycle_id`. The legacy `goal_amount_mur` and `current_amount_mur` fields are compatibility/display mirrors and must not be used as the historical financial ledger.
+
+Settlement path: `allocate_payment_funds()` resolves the current billing cycle, applies the active fee configuration and platform share, allocates through eligible member priorities, records each allocation in `financial_events`, updates the current `initiative_funding_cycles` row, and mirrors that row's received amount to `initiatives.current_amount_mur`. When the initiative reaches its monthly target, further eligible allocation moves to the next valid priority and ultimately the Impact Pool. A monthly shortfall does not roll into the next month.
+
+The database function `ensure_monthly_initiative_funding_cycles()` creates the next month's funding-cycle rows for active + approved + published initiatives and initializes them at zero received. A protected Supabase Cron job named `monthly-funding-cycle-initialization` runs on the first day of each month. Supabase Cron stores scheduled jobs and execution history in `cron.job` and `cron.job_run_details`; the current project also has the existing recurring billing job. This separation means recurring billing and monthly reporting-cycle creation are independent processes.
+
+The initiative detail page reads the current cycle by month/year and, as of commit `21ea1912ee2723d694f3b5cd40a31890e1175c75`, resolves the month/year using the `Indian/Mauritius` timezone instead of the visitor's browser timezone. Historical reporting must query `initiative_funding_cycles` by explicit month/billing cycle and must never reconstruct monthly history from `current_amount_mur`.
+
+Development/test financial rows already present in the database, including the previously observed Rs462,000 and other test transactions, are not evidence of real CommonGround revenue or real organization funding. Production reporting must distinguish test fixtures from actual payment records before presenting financial performance externally.
+
+Audit status: the monthly funding-cycle data model, authoritative settlement update, automatic monthly initialization, and Mauritius-timezone display path have been implemented/verified. Admin and organization reporting consumers still require direct file-level review where repository-wide search indexing is incomplete.
+
