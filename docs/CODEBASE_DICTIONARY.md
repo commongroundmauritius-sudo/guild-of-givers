@@ -729,6 +729,26 @@ The repository migration for this fix is `20260930000000_fix_lead_conversion_pro
 
 `crmService.getTasks()` and `updateTaskStatus()` authenticate the caller, while database RLS is expected to enforce organization scope. `updateTaskStatus()` itself does not verify that the task belongs to the caller's organization before updating it, so the database policy is the critical control. This path should have an explicit cross-organization negative test.
 
+### Reports / financial visibility traceability
+
+The intended visibility boundary is:
+
+```
+public visitor -> no member reports
+active member -> reports
+organization staff -> own organization's reports
+admin/super_admin -> all reports
+member -> own payments/receipts/financial events
+organization -> allocations to its initiatives
+admin/super_admin -> all financial events
+```
+
+The live RLS policies confirm that `reports` are not publicly readable and active-member access is enforced by database subscription state. Organization report access is tenant-scoped through `profiles.organization_id`. Financial events are separately scoped to the member, the organization's initiatives, or admin roles. Payments and receipts are member/admin scoped.
+
+The organization dashboard currently calculates engagement counts from initiative counters (`view_count`, `conversion_count`, `active_supporter_count`) rather than deriving them directly from the payment ledger. Those counters therefore represent product analytics, not accounting truth.
+
+**Important:** member-visible reports should remain view-only from the member side; report mutation is limited by RLS to organization staff/admins.
+
 ### Subscription status / access traceability
 
 Member access is currently derived in `src/hooks/use-auth.tsx` from the database query:
