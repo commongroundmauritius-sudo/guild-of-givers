@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Check, Lock } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/use-auth";
-import { createLead, convertLead } from "@/lib/auth-actions";
+import { createLead } from "@/lib/auth-actions";
 import { attributionService } from "@/lib/attribution-service";
 import { paymentService } from "@/lib/payments/service";
 import { toast } from "sonner";
@@ -144,13 +144,6 @@ function SignupPage() {
       }
 
       setPaymentTransactionId(payment.transactionId);
-      await convertLead({
-        data: {
-          email: email.trim().toLowerCase(),
-          status: "converted",
-          sourceInitiativeId,
-        },
-      });
       setStep(3);
     } catch (err) {
       console.error("Payment completion failed:", err);
