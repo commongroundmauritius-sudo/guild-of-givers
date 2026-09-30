@@ -10,6 +10,8 @@ export const initiativeService = {
       .select("*, organizations(organization_name)")
       .eq("is_featured", true)
       .eq("status", "active")
+      .eq("is_approved", true)
+      .eq("is_published", true)
       .order("created_at", { ascending: false })
       .limit(limit);
     if (error) throw error;
@@ -41,6 +43,8 @@ export const initiativeService = {
       .from("initiatives")
       .select("*, organizations(organization_name)")
       .eq("status", "active")
+      .eq("is_approved", true)
+      .eq("is_published", true)
       .order("conversion_count", { ascending: false, nullsFirst: false })
       .order("view_count", { ascending: false, nullsFirst: false })
       .limit(limit);
