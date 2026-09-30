@@ -1097,3 +1097,14 @@ The protected test-payment RPC requires the caller to have the current `admin` o
 
 End-to-end test path is now: admin verification action → `create_test_payment()` → test `payments` row → `SubscriptionEngine.handlePaymentEvent()` → `allocate_payment_funds()` → `financial_events` + monthly `initiative_funding_cycles` → payment marked successful. Test rows remain explicitly labelled and excluded from real financial metrics.
 
+
+
+## Payment / recurring billing traceability — 2026-09-30
+
+- **Mock signup payment intent:** `src/lib/payments/mock-provider.ts` now creates a durable `payment_intents` row through `create_test_payment_intent()` instead of generating only an in-memory transaction ID. The intent is explicitly marked test data.
+- **Signup finalization metadata:** `src/routes/signup.tsx` carries both `payment_transaction_id` and the mock provider subscription ID into Supabase Auth user metadata. `handle_new_user()` consumes these fields and calls `finalize_test_signup_payment()` for the atomic test-payment path.
+- **Recurring billing:** `process_recurring_billing()` is scheduled daily at 00:00 database time. It directly creates payments, allocates funds, creates receipts, and advances subscription billing dates. This is a separate database settlement path from the provider webhook path and therefore must remain explicitly controlled while MockPaymentProvider is active.
+- **Monthly funding initialization:** `ensure_monthly_initiative_funding_cycles()` runs at 00:05 on the first day of each month, creates the current calendar-month billing cycle when absent, creates initiative funding-cycle rows for active/approved/published initiatives, and mirrors current-cycle received amounts into `initiatives.current_amount_mur`.
+- **Important remaining billing isolation issue:** the live recurring-billing function currently inserts payments without setting `is_test=true`. The current database has no non-test payments, but test subscriptions that become due could otherwise enter the non-test payment path. This must be isolated before recurring billing is exercised with development/test subscriptions.
+- **Webhook settlement mismatch:** `src/lib/payments/subscription-engine.ts` passes the provider transaction ID directly to `allocate_payment_funds(p_payment_id uuid,...)` and the `payments` update. Provider transaction IDs are not necessarily payment UUIDs. The durable signup path correctly resolves the internal payment UUID before allocation; the generic webhook path still needs provider-ID → internal-payment resolution before it is safe for real provider events.
+- **Webhook authenticity:** `src/lib/payments/webhook-handler.ts` still contains placeholder signature validation. A provider-specific cryptographic verification implementation is required before Peach/real webhooks are enabled.
