@@ -756,7 +756,19 @@ Another important finding: the allocation function increments `supporter_count` 
 
 Deleting an initiative with allocation history is especially sensitive because `allocations`/financial references can be cascaded or removed while the financial event history follows different retention rules. Financially used initiatives should therefore be archived rather than destructively deleted.
 
-### Initiative deletion traceability
+#
+
+## Member priority availability traceability
+
+Member preferences are user-owned through RLS and are constrained to one row per `(user_id, initiative_id)` and one row per `(user_id, priority_level)`, with priority levels 1–4. The database currently contains no duplicate priority slots.
+
+A saved preference can outlive an initiative's public availability because `member_preferences.initiative_id` uses `ON DELETE CASCADE`; unpublishing/deactivating an initiative does not delete the preference. The allocation engine therefore treats preference validity separately from preference existence.
+
+**Hardening applied:** `allocate_payment_funds()` now only allocates to preferences whose initiative is `status = 'active'`, `is_approved = true`, and `is_published = true`, and explicitly excludes the system Impact Pool from numbered member priorities. Funds skipped because a saved priority is unavailable continue to the next valid priority and ultimately to the Impact Pool. This prevents a stale preference from receiving money after an initiative has been unpublished/deactivated.
+
+The current database had 1 member preference and 0 stale/unavailable preferences at audit time. The migration is `supabase/migrations/20260930160000_harden_member_priority_allocation_state.sql`.
+
+## Initiative deletion traceability
 
 Initiative deletion is intentionally governed by database RLS, not by a frontend-only admin check. The live `initiatives` table has an `ALL` policy for authenticated admins/super_admins and a separate tenant-scoped `ALL` policy for organization staff.
 
