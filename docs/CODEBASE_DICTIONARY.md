@@ -1001,3 +1001,16 @@ Authentication has three distinct authorities: Supabase Auth establishes identit
 The legacy `ngo` role was still present in the client-side role resolver even though the application role model uses `organization`. It has been removed from `useAuth()` role resolution so stale legacy role data cannot be promoted to an application role. Organization access remains based on the `organization` role.
 
 The authenticated route gate verifies only authentication, not membership. Member-specific financial/supporter state is checked separately from the session, which keeps authentication and subscription state from becoming the same concept.
+
+
+## Organization onboarding traceability
+
+Partner onboarding is: public `/partner` form → `submit_partner_application()` RPC → admin review → `convertApplicationToOrganization()` → organization row + converted application + one-time signup code → organization signup → `handle_new_user()` creates profile/role and links `organization_id` → organization dashboard reads the profile's organization scope.
+
+Current security boundary: partner status conversion is server-admin gated by `ensureAdmin()`. Organization/profile linkage is stored in `profiles.organization_id`; organization and initiative RLS then use that tenant relationship. `is_verified` is protected from non-admin changes by a database trigger.
+
+`admin` and `super_admin` are both administrative roles for this current lifecycle; `super_admin` is reserved for future privilege separation. The partner flow uses `organization`, not the retired `ngo` application role.
+
+**Hardening applied:** partner conversion was using `window.location.origin` inside `PartnerService`, which is invoked by a server function. The welcome-email action URL is now a relative `/signup?code=...` path, removing a server-side browser-global dependency.
+
+Important architectural note: the partner conversion currently creates the organization before the organization's user account exists, then links the account during signup using the one-time code. This is intentional and keeps partner onboarding separate from paid member signup.
