@@ -476,13 +476,11 @@ function SignupPage() {
                     .
                   </p>
                   {!isPartnerSignup && (
-                    <button
-                      type="button"
-                      onClick={() => setStep(4)}
-                      className="mt-6 block w-full text-center text-sm font-bold text-primary hover:underline"
-                    >
-                      I'll set it up later via email
-                    </button>
+                    <p className="mt-6 text-center text-xs text-muted-foreground">
+                      Your account is created after you complete this step. We currently require
+                      password setup during signup so we do not show an account as ready before it
+                      actually exists.
+                    </p>
                   )}
                 </form>
               </div>
