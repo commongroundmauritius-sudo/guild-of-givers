@@ -36,7 +36,32 @@ function InitiativesPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data ?? []) as any[];
+
+      const rows = (data ?? []) as any[];
+      if (rows.length === 0) return rows;
+
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      const initiativeIds = rows.map((initiative) => initiative.id);
+
+      const { data: cycles, error: cyclesError } = await supabase
+        .from("initiative_funding_cycles")
+        .select("initiative_id, target_amount_mur, received_amount_mur, month, year")
+        .in("initiative_id", initiativeIds)
+        .eq("month", month)
+        .eq("year", year);
+
+      if (cyclesError) throw cyclesError;
+
+      const cycleByInitiative = new Map(
+        (cycles ?? []).map((cycle) => [cycle.initiative_id, cycle]),
+      );
+
+      return rows.map((initiative) => ({
+        ...initiative,
+        fundingCycle: cycleByInitiative.get(initiative.id) ?? null,
+      }));
     },
   });
 
@@ -66,8 +91,9 @@ function InitiativesPage() {
     return [...filtered].sort((a, b) => {
       if (sortBy === "goal_progress") {
         const progress = (initiative: any) => {
-          const goal = Number(initiative.goal_amount_mur) || 0;
-          const current = Number(initiative.current_amount_mur) || 0;
+          const goal =
+            Number(initiative.fundingCycle?.target_amount_mur ?? initiative.monthly_target_mur) || 0;
+          const current = Number(initiative.fundingCycle?.received_amount_mur) || 0;
           return goal > 0 ? current / goal : 0;
         };
 
@@ -171,7 +197,11 @@ function InitiativesPage() {
           ) : visibleInitiatives.length > 0 ? (
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {visibleInitiatives.map((initiative) => (
-                <InitiativeCard key={initiative.id} initiative={initiative} />
+                <InitiativeCard
+                  key={initiative.id}
+                  initiative={initiative}
+                  fundingCycle={initiative.fundingCycle}
+                />
               ))}
             </div>
           ) : (
