@@ -1,0 +1,25 @@
+-- Administrative RLS policies should never target anon.
+-- Public-facing read/write policies remain explicitly available where required.
+
+ALTER POLICY "Admins can insert actions" ON public.admin_actions TO authenticated;
+ALTER POLICY "Admins can view all actions" ON public.admin_actions TO authenticated;
+ALTER POLICY "Admins can view all allocations" ON public.allocations TO authenticated;
+ALTER POLICY "Users can view own allocations" ON public.allocations TO authenticated;
+ALTER POLICY "Admins can manage billing cycles" ON public.billing_cycles TO authenticated;
+ALTER POLICY "Admins can view billing runs" ON public.billing_runs TO authenticated;
+ALTER POLICY "Authors and admins can delete posts" ON public.community_posts TO authenticated;
+ALTER POLICY "Authors can edit own posts within one hour" ON public.community_posts TO authenticated;
+ALTER POLICY "Authors can view own posts" ON public.community_posts TO authenticated;
+ALTER POLICY "Admins can manage funding cycles" ON public.initiative_funding_cycles TO authenticated;
+ALTER POLICY "Admins can manage all initiative versions" ON public.initiative_versions TO authenticated;
+ALTER POLICY "Admins can manage leads" ON public.leads TO authenticated;
+ALTER POLICY "Users and admins can view member preferences" ON public.member_preferences TO authenticated;
+ALTER POLICY "Admins and org staff can view audit logs" ON public.organization_audit_log TO authenticated;
+ALTER POLICY "Owners can manage organization documents" ON public.organization_documents TO authenticated;
+ALTER POLICY "Admins can manage organizations" ON public.organizations TO authenticated;
+ALTER POLICY "Admins can view all payments" ON public.payments TO authenticated;
+ALTER POLICY "Authors can edit own comments within one hour" ON public.post_comments TO authenticated;
+ALTER POLICY "Admins can view all profiles" ON public.profiles TO authenticated;
+ALTER POLICY "Admins can view all receipts" ON public.receipts TO authenticated;
+ALTER POLICY "Admins can view all subscriptions" ON public.subscriptions TO authenticated;
+ALTER POLICY "Admins can view all roles" ON public.user_roles TO authenticated;
