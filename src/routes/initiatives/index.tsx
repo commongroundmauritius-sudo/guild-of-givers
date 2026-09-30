@@ -40,9 +40,13 @@ function InitiativesPage() {
       const rows = (data ?? []) as any[];
       if (rows.length === 0) return rows;
 
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const year = now.getFullYear();
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Indian/Mauritius",
+        year: "numeric",
+        month: "2-digit",
+      }).formatToParts(new Date());
+      const month = Number(parts.find((part) => part.type === "month")?.value);
+      const year = Number(parts.find((part) => part.type === "year")?.value);
       const initiativeIds = rows.map((initiative) => initiative.id);
 
       const { data: cycles, error: cyclesError } = await supabase
