@@ -54,7 +54,7 @@ function AdminFinancesPage() {
 
   const { data: metrics } = useQuery({
     queryKey: ["admin-financial-metrics"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_financial_metrics" as any);
       if (error) throw error;
