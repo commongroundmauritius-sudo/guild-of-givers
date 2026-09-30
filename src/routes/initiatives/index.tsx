@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +6,7 @@ import { InitiativeCard } from "@/components/InitiativeCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, SlidersHorizontal, Loader2, Target } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -24,26 +24,71 @@ function InitiativesPage() {
   const [category, setCategory] = useState("All");
   const [sortBy, setSortBy] = useState("newest");
 
-  const { data: initiatives, isLoading } = useQuery({
-    queryKey: ["public-initiatives", searchTerm, category, sortBy],
+  const { data: initiatives, isLoading, error } = useQuery({
+    queryKey: ["public-initiatives"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
         .select("*")
+        .eq("status", "active")
         .eq("is_approved", true)
         .eq("is_published", true)
         .order("created_at", { ascending: false });
+
       if (error) throw error;
-      return data as any[];
+      return (data ?? []) as any[];
     },
   });
+
+  const visibleInitiatives = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    const filtered = (initiatives ?? []).filter((initiative) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        [
+          initiative.title,
+          initiative.summary,
+          initiative.description,
+          initiative.caption,
+          initiative.category,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalizedSearch));
+
+      const matchesCategory =
+        category === "All" ||
+        String(initiative.category ?? "").toLowerCase() === category.toLowerCase();
+
+      return matchesSearch && matchesCategory;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "goal_progress") {
+        const progress = (initiative: any) => {
+          const goal = Number(initiative.goal_amount_mur) || 0;
+          const current = Number(initiative.current_amount_mur) || 0;
+          return goal > 0 ? current / goal : 0;
+        };
+
+        return progress(b) - progress(a);
+      }
+
+      return (
+        new Date(b.created_at ?? 0).getTime() -
+        new Date(a.created_at ?? 0).getTime()
+      );
+    });
+  }, [initiatives, searchTerm, category, sortBy]);
+
+  const hasFilters = Boolean(searchTerm.trim()) || category !== "All" || sortBy !== "newest";
 
   return (
     <SiteLayout>
       <section className="bg-cream-deep/30 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="mb-4 flex items-center gap-2">
               <div className="rounded-full bg-primary/10 p-2 text-primary">
                 <Target className="h-5 w-5" />
               </div>
@@ -55,7 +100,7 @@ function InitiativesPage() {
               Find Your <br />
               <span className="text-forest">Impact Focus.</span>
             </h1>
-            <p className="mt-6 text-xl text-muted-foreground leading-relaxed max-w-2xl">
+            <p className="mt-6 max-w-2xl text-xl leading-relaxed text-muted-foreground">
               Explore vetted long-term programs. One membership allows you to distribute support
               across multiple initiatives.
             </p>
@@ -97,7 +142,11 @@ function InitiativesPage() {
                   <SelectItem value="goal_progress">Goal Progress</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" className="h-12 w-12 rounded-2xl p-0">
+              <Button
+                variant="outline"
+                className="h-12 w-12 rounded-2xl p-0"
+                aria-label="Filters"
+              >
                 <SlidersHorizontal className="h-4 w-4" />
               </Button>
             </div>
@@ -112,10 +161,17 @@ function InitiativesPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm font-medium text-muted-foreground">Loading initiatives...</p>
             </div>
-          ) : initiatives && initiatives.length > 0 ? (
+          ) : error ? (
+            <div className="py-20 text-center">
+              <h3 className="text-xl font-semibold text-primary">Unable to load initiatives</h3>
+              <p className="mt-2 text-muted-foreground">
+                Please refresh the page and try again.
+              </p>
+            </div>
+          ) : visibleInitiatives.length > 0 ? (
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {initiatives.map((i) => (
-                <InitiativeCard key={i.id} initiative={i} />
+              {visibleInitiatives.map((initiative) => (
+                <InitiativeCard key={initiative.id} initiative={initiative} />
               ))}
             </div>
           ) : (
@@ -132,6 +188,7 @@ function InitiativesPage() {
                   setCategory("All");
                   setSortBy("newest");
                 }}
+                disabled={!hasFilters}
               >
                 Clear all filters
               </Button>
