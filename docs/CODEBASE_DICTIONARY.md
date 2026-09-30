@@ -1106,6 +1106,14 @@ End-to-end test path is now: admin verification action → `create_test_payment(
 
 
 
+## Public analytics/event intake traceability — 2026-09-30
+
+- `src/hooks/use-homepage-analytics.ts` writes `homepage_analytics` only after analytics consent and currently emits `event_type='view'` with the published homepage version and section ID.
+- The live `homepage_analytics` INSERT policy was hardened from unrestricted `WITH CHECK (true)` to require the expected view event, bounded section/session values, a published homepage version when supplied, session-owned `user_id`, and object-shaped metadata.
+- `initiative_events` has a live database validator `validate_public_initiative_event_insert()` that defines the public event vocabulary as `initiative_view`, `share_click`, `member_acquired`, and `member_conversion`. The RLS policy was aligned with that validator rather than incorrectly reducing the vocabulary to only view events.
+- Public initiative-event inserts are now additionally constrained to published/approved initiatives, active campaign links, caller-owned authenticated user IDs, bounded session IDs, and object-shaped metadata.
+- Live migrations applied: `harden_public_analytics_event_boundaries` and `align_public_initiative_event_policy_with_validator`. Repository migrations: `20260930203000_harden_public_analytics_event_boundaries.sql` and `20260930203500_align_public_initiative_event_policy_with_validator.sql`.
+
 ## Payment / recurring billing traceability — 2026-09-30
 
 - **Mock signup payment intent:** `src/lib/payments/mock-provider.ts` now creates a durable `payment_intents` row through `create_test_payment_intent()` instead of generating only an in-memory transaction ID. The intent is explicitly marked test data.
