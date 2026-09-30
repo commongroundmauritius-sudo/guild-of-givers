@@ -1106,7 +1106,16 @@ End-to-end test path is now: admin verification action → `create_test_payment(
 
 
 
-#### Public partner application RPC hardening — 2026-09-30
+#### Member subscription SECURITY DEFINER hardening — 2026-09-30
+
+- `manage_member_subscription(text,numeric,integer)` remains intentionally `SECURITY DEFINER` because it must atomically mutate subscription/payment/allocation/receipt state that ordinary member RLS should not directly expose.
+- The live function now uses `SET search_path = ''` and explicitly schema-qualifies database objects, reducing search-path hijacking risk.
+- The subscription lookup uses `(SELECT auth.uid())` and `FOR UPDATE`, preserving caller ownership while keeping the lookup stable per statement and serializing concurrent lifecycle actions.
+- Anonymous execution remains revoked; only `authenticated` can execute the RPC.
+- Resume continues to bill immediately, allocate funds, create a receipt, activate the membership, schedule the next billing date, and write the audit record in one transaction.
+- Live migration: `harden_member_subscription_rpc_search_path`. Repository migration: `20260930211000_harden_member_subscription_rpc_search_path.sql`.
+
+### Public partner application RPC hardening — 2026-09-30
 
 - The public partner application flow now calls `submit_partner_application_safe()` from `src/lib/partner/service.ts`.
 - The safe RPC is SECURITY DEFINER with an empty search path, validates email/organization fields/message length, keeps the existing 24-hour duplicate protection, writes only the public submission columns, and returns a deliberately limited JSON object rather than the full `partner_applications` row.
