@@ -1087,3 +1087,13 @@ The current financial dashboard accepts both `admin` and `super_admin`, matching
 
 Important limitation: the existing database contains historical development payments without a real Peach payment ID. These were marked as test data by the migration boundary. Future production payment ingestion must explicitly set `is_test = false` for verified provider payments; test/mock payment creation should explicitly set `is_test = true`. The financial ledger remains a separate accounting trail and should not be presented as verified external revenue merely because a row has status=`success`.
 
+### Mock/test payment lifecycle
+
+The development payment simulator now creates a durable `payments` row through the protected `create_test_payment(p_user_id, p_amount_mur)` RPC before sending the success event to `SubscriptionEngine`. The row is explicitly marked `is_test=true`, so it cannot be counted as real revenue by the admin financial metrics.
+
+Previous simulator behavior generated a transaction ID without creating the corresponding payment row, which meant `allocate_payment_funds()` could not reliably settle the simulated transaction and the verification page could not truthfully test payment persistence. This was fixed in commit `9ba81bc3bd2a65c0cadb590b20c71282b5754a76`.
+
+The protected test-payment RPC requires the caller to have the current `admin` or `super_admin` role. This keeps test financial creation out of normal member flows.
+
+End-to-end test path is now: admin verification action → `create_test_payment()` → test `payments` row → `SubscriptionEngine.handlePaymentEvent()` → `allocate_payment_funds()` → `financial_events` + monthly `initiative_funding_cycles` → payment marked successful. Test rows remain explicitly labelled and excluded from real financial metrics.
+
