@@ -127,6 +127,18 @@ export class SubscriptionEngine {
 
     // 1. Update payment record
     if (transactionId) {
+      const { data: payment, error: paymentLookupError } = await supabase
+        .from("payments")
+        .select("id")
+        .eq("peach_payment_id", transactionId)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (paymentLookupError) throw paymentLookupError;
+      if (!payment) {
+        throw new Error(`No internal payment found for provider transaction ${transactionId}`);
+      }
+
       const { error: paymentFailureUpdateError } = await supabase
         .from("payments")
         .update({
@@ -136,7 +148,7 @@ export class SubscriptionEngine {
           reconciliation_status: "failed",
           webhook_event_id: payload?.id,
         } as any)
-        .eq("id", transactionId);
+        .eq("id", payment.id);
 
       if (paymentFailureUpdateError) throw paymentFailureUpdateError;
     }
