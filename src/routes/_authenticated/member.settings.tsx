@@ -1,14 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Settings as SettingsIcon, Save, User, Phone, MapPin, Calendar } from "lucide-react";
+import { Settings as SettingsIcon, Save, User, Phone, MapPin, Calendar, CreditCard, Pause, Play, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateProfile } from "@/lib/security/auth-actions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/member/settings")({
   component: MemberSettings,
@@ -21,6 +22,41 @@ function MemberSettings() {
   const [address, setAddress] = useState(profile?.address || "");
   const [age, setAge] = useState(profile?.age?.toString() || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
+  const [subscription, setSubscription] = useState<any>(null);
+  const [membershipAmount, setMembershipAmount] = useState("");
+  const [billingDay, setBillingDay] = useState("7");
+  const [membershipBusy, setMembershipBusy] = useState(false);
+
+  const loadMembership = async () => {
+    if (!user) return;
+    const { data } = await supabase.from("subscriptions")
+      .select("id, amount_mur, status, next_billing_date, pending_amount_mur, pending_billing_day")
+      .eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    setSubscription(data);
+    if (data) {
+      setMembershipAmount(String(data.pending_amount_mur ?? data.amount_mur));
+      setBillingDay(String(data.pending_billing_day ?? (data.next_billing_date ? new Date(data.next_billing_date).getDate() : 7)));
+    }
+  };
+  useEffect(() => { void loadMembership(); }, [user?.id]);
+
+  const manageMembership = async (action: "pause" | "resume" | "cancel" | "update") => {
+    setMembershipBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("manage_member_subscription" as any, {
+        p_action: action,
+        p_amount_mur: action === "update" ? Number(membershipAmount) : null,
+        p_billing_day: action === "update" ? Number(billingDay) : null,
+      });
+      if (error) throw error;
+      setSubscription(data);
+      toast.success(action === "update" ? "Membership changes saved for your next billing cycle." : ("Membership " + action + "d successfully."));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Unable to update membership");
+    } finally {
+      setMembershipBusy(false);
+    }
+  };
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -149,7 +185,26 @@ function MemberSettings() {
               </div>
             </div>
 
-            <div className="pt-4">
+            {subscription && (
+            <div className="space-y-6 border-t border-border/40 pt-8">
+              <div><div className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-teal-600" /><h2 className="text-xl font-bold text-primary">Membership</h2></div>
+                <p className="mt-1 text-sm text-muted-foreground">Changes to your amount or billing day take effect on your next billing cycle.</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div><Label htmlFor="membershipAmount">Monthly amount (Rs)</Label><Input id="membershipAmount" type="number" min="167" value={membershipAmount} onChange={e => setMembershipAmount(e.target.value)} /></div>
+                <div><Label htmlFor="billingDay">Billing day</Label><Input id="billingDay" type="number" min="1" max="28" value={billingDay} onChange={e => setBillingDay(e.target.value)} /></div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button disabled={membershipBusy || subscription.status !== "active"} onClick={() => manageMembership("update")}>Save membership changes</Button>
+                {subscription.status === "active" && <Button variant="outline" disabled={membershipBusy} onClick={() => manageMembership("pause")}><Pause className="mr-2 h-4 w-4" />Pause</Button>}
+                {subscription.status === "paused" && <Button variant="outline" disabled={membershipBusy} onClick={() => manageMembership("resume")}><Play className="mr-2 h-4 w-4" />Resume</Button>}
+                {subscription.status !== "cancelled" && <Button variant="destructive" disabled={membershipBusy} onClick={() => manageMembership("cancel")}><XCircle className="mr-2 h-4 w-4" />Cancel membership</Button>}
+              </div>
+              <p className="text-xs text-muted-foreground">Current status: {subscription.status}</p>
+            </div>
+          )}
+
+          <div className="pt-4">
               <Button
                 onClick={() => mutation.mutate()}
                 disabled={mutation.isPending}
