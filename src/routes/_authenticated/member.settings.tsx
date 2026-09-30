@@ -41,6 +41,10 @@ function MemberSettings() {
   useEffect(() => { void loadMembership(); }, [user?.id]);
 
   const manageMembership = async (action: "pause" | "resume" | "cancel" | "update") => {
+    if (action === "cancel" && !window.confirm("Cancel your CommonGround membership? This stops future billing. Your saved initiative priorities will remain stored.")) {
+      return;
+    }
+
     setMembershipBusy(true);
     try {
       const { data, error } = await supabase.rpc("manage_member_subscription" as any, {
@@ -49,7 +53,8 @@ function MemberSettings() {
         p_billing_day: action === "update" ? Number(billingDay) : null,
       });
       if (error) throw error;
-      setSubscription(data);
+      await loadMembership();
+      await refreshAuth();
       toast.success(action === "update" ? "Membership changes saved for your next billing cycle." : ("Membership " + action + "d successfully."));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Unable to update membership");
