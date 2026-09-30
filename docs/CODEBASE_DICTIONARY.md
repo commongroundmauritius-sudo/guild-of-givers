@@ -637,7 +637,7 @@ Two points require follow-up testing:
 
 `SubscriptionEngine` handles webhook-driven success/failure/cancel/resume transitions, but `MockPaymentProvider.cancelSubscription()`, `resumeSubscription()`, and `getSubscriptionStatus()` only return simulated values and do not persist state. The member UI currently reads the database subscription directly, so provider state and DB state can diverge if these methods are used.
 
-Current member dashboard exposes subscription status and initiative preference management, but no direct cancel/resume mutation was found in the inspected dashboard route. Cancellation/resume therefore remains an engine/API capability rather than a complete member-facing lifecycle.
+Member subscription controls are implemented in `src/routes/_authenticated/member.settings.tsx`. The settings route reads the latest database subscription and calls the authoritative `manage_member_subscription()` RPC for pause, resume, cancel, and next-cycle update actions. `src/routes/_authenticated/member.profile.tsx` is display-only for membership state; it shows Active Member, Paused Membership, or Cancelled Membership based on the database subscription status. The settings UI now confirms cancellation, reloads the subscription from the database after every mutation, and refreshes auth state.
 
 Current RLS observations: members can view only their own subscription; member preferences are self-scoped for mutation; financial events are restricted to the member, organization allocation scope, or admins. No client-side preference write can directly change subscription status.
 
@@ -839,7 +839,7 @@ eligible active subscription
   -> advance next_billing_date
 ```
 
-The previous SQL inserted a renewal payment as `success` before allocation and caught allocation failures without changing that success state. The live function and repository migration `20260930010000_fix_recurring_billing_settlement_order.sql` now create the payment as pending, allocate first, then mark success and create the receipt. Allocation failure marks the pending payment failed and records an audit event.
+The live `process_recurring_billing()` creates each renewal payment as `pending`, carries `subscriptions.is_test` into `payments.is_test`, calls the authoritative allocation RPC, and only then marks the payment successful and creates its receipt. Allocation failure marks the pending payment failed and records an audit event. This keeps development/test renewals classified separately from production-classified payments.
 
 This prevents false successful renewals and false receipts when allocation cannot complete.
 
@@ -916,7 +916,8 @@ Attribution is captured in browser `localStorage` under `cg_attribution` for 30 
 
 ## Traceability audit — verified findings
 
-### Critical: signup payment/subscription state has two sources of truth
+### Signup payment/subscription state
+
 
 **Observed chain**
 
