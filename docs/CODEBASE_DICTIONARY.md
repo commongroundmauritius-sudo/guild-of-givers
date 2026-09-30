@@ -990,3 +990,14 @@ The member simulation is intentionally labeled **Estimated** in the UI. Changes 
 Because CommonGround has not begun real revenue and this implementation was not part of the authoritative settlement path, it has been removed. The remaining allocation simulation in `src/lib/payments/allocation-simulator.ts` is explicitly a non-financial preview/test helper; the database `allocate_payment_funds()` function remains the single authoritative financial allocation engine.
 
 This prevents future developers from accidentally importing the legacy engine and creating a second ledger/allocation path.
+
+
+## Authentication and role traceability
+
+Authentication has three distinct authorities: Supabase Auth establishes identity/session; `user_roles` establishes application role; `subscriptions.status = 'active'` establishes supporter membership. `useAuth()` combines these for UI state, but the server-side `ensureAuthenticated()`, `ensureAdmin()`, and `ensureSuperAdmin()` checks are the security boundaries for server operations.
+
+`admin` and `super_admin` are intentionally treated as administrative roles for current routing/access. `super_admin` is retained as the future higher-privilege role for later admin-role expansion. The dashboard router now sends both roles to `/admin-dashboard`; the admin layout accepts both.
+
+The legacy `ngo` role was still present in the client-side role resolver even though the application role model uses `organization`. It has been removed from `useAuth()` role resolution so stale legacy role data cannot be promoted to an application role. Organization access remains based on the `organization` role.
+
+The authenticated route gate verifies only authentication, not membership. Member-specific financial/supporter state is checked separately from the session, which keeps authentication and subscription state from becoming the same concept.
