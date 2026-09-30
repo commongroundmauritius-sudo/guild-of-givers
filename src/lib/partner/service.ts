@@ -115,7 +115,7 @@ class PartnerService {
         signupCode: signupCode,
         message:
           "Your partner application has been successful! Use the code below to complete your organization setup.",
-        actionUrl: `${window.location.origin}/signup?code=${signupCode}`,
+        actionUrl: `/signup?code=${signupCode}`,
       },
     });
 
