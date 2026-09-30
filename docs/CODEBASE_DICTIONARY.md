@@ -731,6 +731,25 @@ The repository migration for this fix is `20260930000000_fix_lead_conversion_pro
 
 ### Payment settlement traceability
 
+### Recurring billing settlement traceability
+
+Recurring billing must use the same fail-closed ordering as webhook settlement:
+
+```
+eligible active subscription
+  -> payment = pending
+  -> allocate_payment_funds()
+  -> payment = success
+  -> receipt
+  -> advance next_billing_date
+```
+
+The previous SQL inserted a renewal payment as `success` before allocation and caught allocation failures without changing that success state. The live function and repository migration `20260930010000_fix_recurring_billing_settlement_order.sql` now create the payment as pending, allocate first, then mark success and create the receipt. Allocation failure marks the pending payment failed and records an audit event.
+
+This prevents false successful renewals and false receipts when allocation cannot complete.
+
+
+
 Successful payment settlement is a financial boundary and must be fail-closed:
 
 ```
