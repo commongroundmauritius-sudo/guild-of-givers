@@ -1106,7 +1106,15 @@ End-to-end test path is now: admin verification action → `create_test_payment(
 
 
 
-### Activity intake hardening — 2026-09-30
+#### Public partner application RPC hardening — 2026-09-30
+
+- The public partner application flow now calls `submit_partner_application_safe()` from `src/lib/partner/service.ts`.
+- The safe RPC is SECURITY DEFINER with an empty search path, validates email/organization fields/message length, keeps the existing 24-hour duplicate protection, writes only the public submission columns, and returns a deliberately limited JSON object rather than the full `partner_applications` row.
+- Public execute was removed from the legacy `submit_partner_application()` RPC. The new public function is the only anonymous execution path.
+- Administrative columns such as `admin_notes`, `signup_code`, `converted_organization_id`, `converted_by`, review fields, and deletion fields are therefore not returned to an anonymous caller.
+- Live migration: `add_safe_partner_application_rpc`. Repository migration: `20260930210000_add_safe_partner_application_rpc.sql`.
+
+## Activity intake hardening — 2026-09-30
 
 - `activities` has backend triggers for signup and successful payment activity plus public/browser attribution events. Its previous INSERT RLS policy was `WITH CHECK (true)`, which was broader than the database validator.
 - The live policy now accepts the validator's public event vocabulary: `homepage_view`, `initiative_view`, `share_click`, `lead_captured`, `campaign_click`, and the guarded `payment_completed` backend event.
