@@ -108,28 +108,6 @@ export const createLead = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-export const convertLead = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      email: emailSchema,
-      status: z.string().optional(),
-      sourceInitiativeId: uuidSchema.optional().nullable(),
-    }),
-  )
-  .handler(async ({ data }) => {
-    const { email, status = "converted", sourceInitiativeId } = data;
-
-    // Use the secure RPC instead of direct update to avoid permissive RLS
-    const { error } = await supabase.rpc("secure_convert_lead", {
-      p_email: email,
-      p_status: status,
-      p_initiative_id: sourceInitiativeId,
-    });
-
-    if (error) throw error;
-    return { success: true };
-  });
-
 export const startMembershipSubscription = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
