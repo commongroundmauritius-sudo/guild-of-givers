@@ -729,6 +729,33 @@ The repository migration for this fix is `20260930000000_fix_lead_conversion_pro
 
 `crmService.getTasks()` and `updateTaskStatus()` authenticate the caller, while database RLS is expected to enforce organization scope. `updateTaskStatus()` itself does not verify that the task belongs to the caller's organization before updating it, so the database policy is the critical control. This path should have an explicit cross-organization negative test.
 
+### Allocation / priority / Impact Pool traceability
+
+The authoritative allocation function is the live SECURITY DEFINER RPC `allocate_payment_funds(payment_id, user_id, total_amount)`.
+
+Its current order is:
+
+```
+gross payment
+  -> transaction fee
+  -> 20% CommonGround platform share of net
+  -> 80% organization pool
+      -> member priorities ordered by priority_level
+      -> each initiative's current monthly funding-cycle space
+      -> remaining amount
+      -> CommonGround Impact Pool
+```
+
+Allocation is idempotency-protected by checking whether the payment already has `financial_events` of type `platform_share` or `allocation`.
+
+The live Impact Pool is a single system-owned initiative and is unlimited. It is therefore the deterministic fallback when member-selected initiatives cannot absorb the remaining organization-pool amount.
+
+**Important audit finding:** allocation currently uses `member_preferences` and monthly funding-cycle targets as the capacity mechanism. The initiative-level `cap_amount_mur` field is not referenced by `allocate_payment_funds()`. Therefore the product's documented "initiative reaches cap -> overflow to next priority" rule is implemented through monthly funding-cycle targets, not the generic `cap_amount_mur` column. These must not be treated as interchangeable concepts.
+
+Another important finding: the allocation function increments `supporter_count` for every initiative receiving an allocation from a payment. If one member allocates to multiple priorities, this can count the same payment/member across multiple initiatives. That metric is a funding-cycle engagement counter, not necessarily a unique supporter count.
+
+Deleting an initiative with allocation history is especially sensitive because `allocations`/financial references can be cascaded or removed while the financial event history follows different retention rules. Financially used initiatives should therefore be archived rather than destructively deleted.
+
 ### Initiative deletion traceability
 
 Initiative deletion is intentionally governed by database RLS, not by a frontend-only admin check. The live `initiatives` table has an `ALL` policy for authenticated admins/super_admins and a separate tenant-scoped `ALL` policy for organization staff.
