@@ -62,9 +62,26 @@ export class SubscriptionEngine {
   ): Promise<void> {
     if (!transactionId || amount === undefined) return;
 
+    // Provider transaction IDs are not necessarily internal payments UUIDs.
+    // Resolve the durable payment row before invoking the UUID-based settlement RPC.
+    const { data: payment, error: paymentLookupError } = await supabase
+      .from("payments")
+      .select("id, user_id, subscription_id, amount_mur, status")
+      .eq("peach_payment_id", transactionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (paymentLookupError) throw paymentLookupError;
+    if (!payment) {
+      throw new Error(`No internal payment found for provider transaction ${transactionId}`);
+    }
+    if (payment.status === "success") return;
+
+    const paymentId = payment.id as string;
+
     // 1. Allocate funds via RPC (idempotent)
     const { error: allocError } = await supabase.rpc("allocate_payment_funds" as any, {
-      p_payment_id: transactionId,
+      p_payment_id: paymentId,
       p_user_id: userId,
       p_total_amount: amount,
     });
@@ -86,7 +103,7 @@ export class SubscriptionEngine {
         gateway_response: payload,
         webhook_event_id: payload?.id,
       } as any)
-      .eq("id", transactionId);
+      .eq("id", paymentId);
 
     if (paymentUpdateError) throw paymentUpdateError;
 
