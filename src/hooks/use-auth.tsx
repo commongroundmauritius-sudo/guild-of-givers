@@ -53,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (roleValues.has("super_admin")) return "super_admin";
     if (roleValues.has("admin")) return "admin";
     if (roleValues.has("organization")) return "organization";
-    if (roleValues.has("ngo")) return "ngo";
     if (roleValues.has("member")) return "member";
     return null;
   };
