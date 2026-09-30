@@ -1106,6 +1106,14 @@ End-to-end test path is now: admin verification action → `create_test_payment(
 
 
 
+### Activity intake hardening — 2026-09-30
+
+- `activities` has backend triggers for signup and successful payment activity plus public/browser attribution events. Its previous INSERT RLS policy was `WITH CHECK (true)`, which was broader than the database validator.
+- The live policy now accepts the validator's public event vocabulary: `homepage_view`, `initiative_view`, `share_click`, `lead_captured`, `campaign_click`, and the guarded `payment_completed` backend event.
+- `payment_completed` requires `source='backend'` and the internal `app.internal_activity_write=true` transaction flag, matching `log_payment_activity()`; ordinary anonymous clients cannot forge this event through the table API.
+- Public events can only attach the caller's own authenticated `user_id`; initiative references must be approved + published; metadata must be an object. Organization references are required to resolve to an existing organization.
+- Live migration: `harden_public_activity_insert_boundary`. Repository migration: `20260930204500_harden_public_activity_insert_boundary.sql`.
+
 ## Public analytics/event intake traceability — 2026-09-30
 
 - `src/hooks/use-homepage-analytics.ts` writes `homepage_analytics` only after analytics consent and currently emits `event_type='view'` with the published homepage version and section ID.
