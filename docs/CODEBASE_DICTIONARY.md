@@ -1133,6 +1133,11 @@ End-to-end test path is now: admin verification action → `create_test_payment(
 
 
 ### Member subscription UI — 2026-09-30 continuation
-- `src/routes/_authenticated/member.settings.tsx` now loads the member's latest subscription and calls the authoritative `manage_member_subscription()` RPC for amount/billing-day updates, pause, resume, and cancellation.
+- `src/routes/_authenticated/member.profile.tsx` now loads the member's latest subscription and calls the authoritative `manage_member_subscription()` RPC for amount/billing-day updates, pause, resume, and cancellation.
 - Amount changes are presented as next-cycle changes, matching the database's pending-field design. The UI enforces the same visible minimum/range constraints (Rs167 and billing day 1–28), while the database remains authoritative.
 - The UI intentionally does not call MockPaymentProvider for membership state changes.
+
+
+### Membership state presentation — 2026-09-30 continuation
+- `src/routes/_authenticated/member.profile.tsx` now treats `active`, `paused`, and `cancelled` as membership states rather than showing paused/cancelled members as `Guest User`.
+- The profile subscription query includes those states and displays the corresponding membership status. `useAuth().isSubscribed` remains specifically an active-membership flag and is not used as the sole membership-state indicator on the profile page.
