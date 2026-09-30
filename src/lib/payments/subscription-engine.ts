@@ -77,7 +77,7 @@ export class SubscriptionEngine {
     }
 
     // 2. Update payment record with reliability metadata
-    await supabase
+    const { error: paymentUpdateError } = await supabase
       .from("payments")
       .update({
         status: "success",
@@ -88,9 +88,11 @@ export class SubscriptionEngine {
       } as any)
       .eq("id", transactionId);
 
+    if (paymentUpdateError) throw paymentUpdateError;
+
     // 3. Update subscription status
-    if (subscriptionId) {
-      await this.updateSubscriptionStatus(subscriptionId, "active");
+    if (subscriptionId && !(await this.updateSubscriptionStatus(subscriptionId, "active"))) {
+      throw new Error("Failed to activate subscription after successful payment");
     }
 
     // 4. Record official supporter conversion event
@@ -108,7 +110,7 @@ export class SubscriptionEngine {
 
     // 1. Update payment record
     if (transactionId) {
-      await supabase
+      const { error: paymentFailureUpdateError } = await supabase
         .from("payments")
         .update({
           status: "failed",
@@ -118,6 +120,8 @@ export class SubscriptionEngine {
           webhook_event_id: payload?.id,
         } as any)
         .eq("id", transactionId);
+
+      if (paymentFailureUpdateError) throw paymentFailureUpdateError;
     }
 
     // 2. Update subscription status and retry count
