@@ -14,7 +14,7 @@ export interface PartnerApplicationInput {
 
 class PartnerService {
   async submitApplication(input: PartnerApplicationInput) {
-    const { data, error } = await supabase.rpc("submit_partner_application", {
+    const { data, error } = await supabase.rpc("submit_partner_application_safe", {
       p_org_name: input.organization_name,
       p_org_type: input.organization_type,
       p_reg_num: input.registration_number,
