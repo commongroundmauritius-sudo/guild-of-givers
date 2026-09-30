@@ -1014,3 +1014,14 @@ Current security boundary: partner status conversion is server-admin gated by `e
 **Hardening applied:** partner conversion was using `window.location.origin` inside `PartnerService`, which is invoked by a server function. The welcome-email action URL is now a relative `/signup?code=...` path, removing a server-side browser-global dependency.
 
 Important architectural note: the partner conversion currently creates the organization before the organization's user account exists, then links the account during signup using the one-time code. This is intentional and keeps partner onboarding separate from paid member signup.
+
+
+## Initiative lifecycle and public visibility traceability
+
+Initiatives have two different visibility layers that must remain distinct: `status` describes lifecycle state, while `is_approved` and `is_published` control public eligibility. Public discovery should require all three conditions: active + approved + published. Organization ownership is represented by `initiatives.organization_id` and protected by organization-scoped RLS; administrative creation/approval is handled through secured server actions.
+
+The public initiative index already required approval and publication. The shared `initiativeService` had a weaker `status = active` filter in its featured/urgent/new/trending methods, which could make an active-but-unapproved or unpublished initiative appear in consumers using that service. Those methods now require `is_approved = true` and `is_published = true` as well.
+
+The detail route resolves a slug/legacy UUID first and then fetches the initiative. Its public visibility therefore ultimately depends on the database RLS/public visibility policy; the UI should not be treated as the security boundary. Attribution events use the secured `logInitiativeEvent()` action rather than direct client writes.
+
+Administrative initiative creation supports draft/publish actions, while approval/publication remain administrative controls. This keeps organization ownership separate from CommonGround's publication decision.
