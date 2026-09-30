@@ -51,6 +51,25 @@ export async function handlePaymentWebhook(
 
   const eventId = payload.id || `event_${Date.now()}`;
 
+  // Provider event IDs are the idempotency key. Refuse to process an event
+  // that was already successfully handled.
+  if (payload.id) {
+    const { data: existingEvent, error: existingEventError } = await supabase
+      .from("payment_events")
+      .select("processing_status")
+      .eq("provider_event_id", eventId)
+      .maybeSingle();
+
+    if (existingEventError) {
+      console.error("Error checking payment event idempotency:", existingEventError);
+      return { success: false };
+    }
+
+    if (existingEvent?.processing_status === "processed") {
+      return { success: true };
+    }
+  }
+
   // 1. Log the raw event for audit/debugging
   const { error: logError } = await supabase.from("payment_events").insert({
     provider: paymentProvider.name,
@@ -61,8 +80,22 @@ export async function handlePaymentWebhook(
   });
 
   if (logError) {
-    console.error("Error logging payment event:", logError);
-    // Continue anyway, but this is a warning sign
+    // A duplicate can race the pre-check. If the database rejected the
+    // provider_event_id uniqueness constraint, treat it as already claimed.
+    if (payload.id && /duplicate|unique/i.test(logError.message ?? "")) {
+      const { data: existingEvent } = await supabase
+        .from("payment_events")
+        .select("processing_status")
+        .eq("provider_event_id", eventId)
+        .maybeSingle();
+
+      if (existingEvent?.processing_status === "processed") {
+        return { success: true };
+      }
+    } else {
+      console.error("Error logging payment event:", logError);
+      return { success: false };
+    }
   }
 
   try {
