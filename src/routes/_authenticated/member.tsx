@@ -1,5 +1,5 @@
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,9 +24,14 @@ import { getJoinedField } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/member")({ component: MemberDashboard });
 
 function MemberDashboard() {
-  const { user } = useAuth();
+  const { user, role, loading: authLoading, authDataError } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (authLoading || authDataError) return;
+    if (role !== "member") navigate({ to: "/dashboard", replace: true });
+  }, [authLoading, authDataError, role, navigate]);
 
   const subSyncKeys = useMemo(
     () => (user?.id ? [["member-subscription", user.id]] : []),
