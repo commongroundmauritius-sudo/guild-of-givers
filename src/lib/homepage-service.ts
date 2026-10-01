@@ -56,7 +56,7 @@ export const homepageService = {
     // Bound the request so an unhealthy API cannot keep the background query
     // alive indefinitely.
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 3500);
+    const timeoutId = globalThis.setTimeout(() => controller.abort(), 3500);
 
     try {
       const { data, error } = await supabase
@@ -71,7 +71,7 @@ export const homepageService = {
       if (error) throw error;
       return data;
     } finally {
-      window.clearTimeout(timeoutId);
+      globalThis.clearTimeout(timeoutId);
     }
   },
 
