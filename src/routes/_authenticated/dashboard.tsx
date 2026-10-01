@@ -7,11 +7,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function DashboardRouter() {
-  const { role, loading } = useAuth();
+  const { role, loading, authDataError } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (loading) return;
+    if (authDataError) return;
     if (!role) {
       navigate({ to: "/signup", replace: true });
       return;
@@ -23,9 +24,20 @@ function DashboardRouter() {
     else navigate({ to: "/member", replace: true });
   }, [role, loading, navigate]);
 
-  return (
-      <div className="mx-auto max-w-3xl px-4 py-32 text-center text-muted-foreground">
-        Routing you to your dashboard…
+  if (authDataError) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-32 text-center">
+        <h1 className="text-xl font-semibold text-primary">We could not verify your account role.</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Please refresh the page. If the problem continues, contact support.
+        </p>
       </div>
     );
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-32 text-center text-muted-foreground">
+      Routing you to your dashboard…
+    </div>
+  );
 }
