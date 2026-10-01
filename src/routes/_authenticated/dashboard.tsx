@@ -16,8 +16,9 @@ function DashboardRouter() {
     if (!role) return;
     if (role === "admin" || role === "super_admin") {
       navigate({ to: "/admin-dashboard", replace: true });
+    } else if (role === "organization") {
+      navigate({ to: "/organization", replace: true });
     }
-    else if (role === "organization") navigate({ to: "/organization", replace: true });
     else navigate({ to: "/member", replace: true });
   }, [role, loading, authDataError, navigate]);
 
