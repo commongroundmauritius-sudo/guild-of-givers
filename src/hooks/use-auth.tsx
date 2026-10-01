@@ -37,6 +37,7 @@ interface AuthContextValue {
   updatePassword: (password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
+  authDataError: Error | null;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -59,7 +60,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
-  const { data: authData, isLoading: authDataLoading } = useQuery({
+  const {
+    data: authData,
+    isLoading: authDataLoading,
+    error: authDataQueryError,
+  } = useQuery({
     queryKey: ["auth-data", user?.id],
     queryFn: async () => {
       if (!user) return null;
@@ -73,6 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq("status", "active")
           .maybeSingle(),
       ]);
+      if (roleRes.error) {
+        throw new Error("Unable to load your account role: " + roleRes.error.message);
+      }
+
       return {
         role: resolvePrimaryRole(roleRes.data as Array<{ role: AppRole }> | null),
         profile: profileRes.data as Profile | null,
@@ -121,6 +130,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshAuth, queryClient]);
 
   const loading = sessionLoading || (!!user && authDataLoading);
+  const authDataError =
+    authDataQueryError instanceof Error
+      ? authDataQueryError
+      : authDataQueryError
+        ? new Error(String(authDataQueryError))
+        : null;
 
   const value: AuthContextValue = {
     user,
@@ -130,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isSubscribed: authData?.isSubscribed ?? false,
     loading,
     sessionReady: !sessionLoading,
+    authDataError,
     signIn: async (email, password) => {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       return { error, data } as { error: Error | null };
