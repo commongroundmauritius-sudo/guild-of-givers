@@ -52,14 +52,27 @@ export const DEFAULT_HOMEPAGE_CONFIG: HomepageConfig = {
 
 export const homepageService = {
   async getPublishedVersion() {
-    const { data, error } = await supabase
-      .from("homepage_versions")
-      .select("id, configuration_json, published_at")
-      .eq("status", "published")
-      .maybeSingle();
+    // CMS content is intentionally non-critical to the public homepage.
+    // Bound the request so an unhealthy API cannot keep the background query
+    // alive indefinitely.
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 3500);
 
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from("homepage_versions")
+        .select("id, configuration_json, published_at")
+        .eq("status", "published")
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .limit(1)
+        .maybeSingle()
+        .abortSignal(controller.signal);
+
+      if (error) throw error;
+      return data;
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
   },
 
   async getDraftVersion() {
