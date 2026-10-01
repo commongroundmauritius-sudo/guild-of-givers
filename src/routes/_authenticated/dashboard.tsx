@@ -19,7 +19,7 @@ function DashboardRouter() {
     }
     else if (role === "organization") navigate({ to: "/organization", replace: true });
     else navigate({ to: "/member", replace: true });
-  }, [role, loading, navigate]);
+  }, [role, loading, authDataError, navigate]);
 
   if (authDataError) {
     return (
