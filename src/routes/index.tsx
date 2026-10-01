@@ -19,7 +19,7 @@ import { Kicker } from "@/components/Kicker";
 import { useCuratedInitiatives } from "@/hooks/initiatives/use-curated-initiatives";
 import { useActivityTracker } from "@/hooks/activities/use-activity-tracker";
 import { useQuery } from "@tanstack/react-query";
-import { homepageService } from "@/lib/homepage-service";
+import { DEFAULT_HOMEPAGE_CONFIG, homepageService, type HomepageConfig } from "@/lib/homepage-service";
 import { successStoryService } from "@/lib/success-story-service";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -51,10 +51,17 @@ function Index() {
   const { data: publishedVersion } = useQuery({
     queryKey: ["homepage", "published"],
     queryFn: () => homepageService.getPublishedVersion(),
+    // The CMS is an enhancement, not a prerequisite for the public homepage.
+    // Never retry this request on the critical first render path.
+    retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const config = publishedVersion?.configuration_json as any;
-  const sections = config?.sections || [];
+  const cmsConfig = publishedVersion?.configuration_json as HomepageConfig | undefined;
+  const sections =
+    Array.isArray(cmsConfig?.sections) && cmsConfig.sections.length > 0
+      ? cmsConfig.sections
+      : DEFAULT_HOMEPAGE_CONFIG.sections;
 
   return (
     <SiteLayout>
@@ -65,7 +72,6 @@ function Index() {
             {renderSection(section)}
           </div>
         ))}
-      {sections.length === 0 && <DefaultHomepage />}
       <FinalCTA />
     </SiteLayout>
   );
