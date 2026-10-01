@@ -30,7 +30,9 @@ function MemberDashboard() {
 
   useEffect(() => {
     if (authLoading || authDataError) return;
-    if (role !== "member") navigate({ to: "/dashboard", replace: true });
+    if (role !== "member" && role !== "ngo") {
+      navigate({ to: "/dashboard", replace: true });
+    }
   }, [authLoading, authDataError, role, navigate]);
 
   const subSyncKeys = useMemo(
