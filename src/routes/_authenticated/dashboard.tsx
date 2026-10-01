@@ -13,10 +13,7 @@ function DashboardRouter() {
   useEffect(() => {
     if (loading) return;
     if (authDataError) return;
-    if (!role) {
-      navigate({ to: "/signup", replace: true });
-      return;
-    }
+    if (!role) return;
     if (role === "admin" || role === "super_admin") {
       navigate({ to: "/admin-dashboard", replace: true });
     }
