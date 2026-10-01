@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       if (!user) return null;
       const [roleRes, profileRes, subRes] = await Promise.all([
-        supabase.from("user_roles").select("role").eq("user_id", user.id),
+        supabase.rpc("get_my_role"),
         supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
         supabase
           .from("subscriptions")
@@ -81,9 +81,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (roleRes.error) {
         throw new Error("Unable to load your account role: " + roleRes.error.message);
       }
+      if (!roleRes.data) {
+        throw new Error("No application role is assigned to this account.");
+      }
 
       return {
-        role: resolvePrimaryRole(roleRes.data as Array<{ role: AppRole }> | null),
+        role: roleRes.data as AppRole,
         profile: profileRes.data as Profile | null,
         isSubscribed: !!subRes.data,
       };
