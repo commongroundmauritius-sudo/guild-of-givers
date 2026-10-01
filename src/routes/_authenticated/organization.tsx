@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -37,8 +37,14 @@ export const Route = createFileRoute("/_authenticated/organization")({
 });
 
 function OrganizationDashboard() {
-  const { user } = useAuth();
+  const { user, role, loading: authLoading, authDataError } = useAuth();
   const queryClient = useQueryClient();
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (authLoading || authDataError) return;
+    if (role !== "organization") navigate({ to: "/dashboard", replace: true });
+  }, [authLoading, authDataError, role, navigate]);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [reportTitle, setReportTitle] = useState("");
   const [reportDesc, setReportDesc] = useState("");
