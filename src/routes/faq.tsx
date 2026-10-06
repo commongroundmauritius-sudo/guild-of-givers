@@ -1,45 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const FAQS = [
-  {
-    q: "How does CommonGround membership work?",
-    a: "Choose a monthly membership amount, select your preferred initiatives, and we handle billing, fund allocation, payment receipts and impact reporting.",
-  },
-  {
-    q: "How are initiatives vetted?",
-    a: "Every partner is reviewed for legal status, governance, financial transparency and demonstrated long-term impact.",
-  },
-  {
-    q: "Can I change or cancel my membership?",
-    a: "Yes — adjust your amount, switch allocations, pause or cancel from your dashboard anytime.",
-  },
-  {
-    q: "Is my membership payment tax-deductible?",
-    a: "No. CommonGround is a marketing and membership platform, not a charitable institution. Your payment is a membership payment rather than a charitable donation, so we do not issue charitable tax-deduction receipts.",
-  },
-  {
-    q: "How do I know my impact is real?",
-    a: "You receive unified audited reports and direct field updates from the organizations you support.",
-  },
+  { q: "How does CommonGround membership work?", a: "Choose a monthly membership amount, select your preferred initiatives, and we handle billing, fund allocation, payment receipts and impact reporting." },
+  { q: "How are initiatives reviewed?", a: "Partner organizations are reviewed against CommonGround's onboarding requirements, including legal and organizational information and the information needed to assess their initiatives." },
+  { q: "Can I change or cancel my membership?", a: "Yes — adjust your amount, switch allocations, pause or cancel from your dashboard anytime." },
+  { q: "Is my membership payment tax-deductible?", a: "No. CommonGround is a marketing and membership platform, not a charitable institution. Your payment is a membership payment rather than a charitable donation, so we do not issue charitable tax-deduction receipts." },
+  { q: "How do I know my impact is real?", a: "You can review the impact information and reports made available through the platform by the organizations you support." },
 ];
 
 export const Route = createFileRoute("/faq")({
-  head: () => ({
-    meta: [
-      { title: "FAQ — CommonGround" },
-      {
-        name: "description",
-        content: "Answers about CommonGround membership, vetting and impact.",
-      },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "FAQ — CommonGround" }, { name: "description", content: "Answers about CommonGround membership, partner review and impact." }] }),
   component: FAQPage,
 });
 
@@ -49,15 +21,11 @@ function FAQPage() {
       <section>
         <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
           <span className="kicker">FAQ</span>
-          <h1 className="mt-4 font-display text-5xl font-semibold text-primary sm:text-6xl">
-            Questions, answered.
-          </h1>
+          <h1 className="mt-4 font-display text-5xl font-semibold text-primary sm:text-6xl">Questions, answered.</h1>
           <Accordion type="single" collapsible className="mt-10">
             {FAQS.map((f, i) => (
               <AccordionItem key={f.q} value={`q-${i}`} className="border-b border-border/60">
-                <AccordionTrigger className="text-left font-display text-lg text-primary hover:no-underline">
-                  {f.q}
-                </AccordionTrigger>
+                <AccordionTrigger className="text-left font-display text-lg text-primary hover:no-underline">{f.q}</AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">{f.a}</AccordionContent>
               </AccordionItem>
             ))}
