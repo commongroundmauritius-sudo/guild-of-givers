@@ -7,7 +7,7 @@ export const initiativeService = {
   async getFeatured(limit = 4) {
     const { data, error } = await supabase
       .from("initiatives")
-      .select("*, organizations(organization_name)")
+      .select("id, slug, title, caption, summary, description, goal_amount_mur, current_amount_mur, banner_image_url, image_url, organizations(organization_name)")
       .eq("is_featured", true)
       .eq("status", "active")
       .order("created_at", { ascending: false })
@@ -18,8 +18,10 @@ export const initiativeService = {
   async getUrgent(limit = 4) {
     const { data, error } = await supabase
       .from("initiatives")
-      .select("*, organizations(organization_name)")
+      .select("id, slug, title, caption, summary, description, goal_amount_mur, current_amount_mur, banner_image_url, image_url, organizations(organization_name)")
       .eq("is_urgent", true)
+      .eq("is_approved", true)
+      .eq("is_published", true)
       .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -29,7 +31,7 @@ export const initiativeService = {
   async getNewest(limit = 4) {
     const { data, error } = await supabase
       .from("initiatives")
-      .select("*, organizations(organization_name)")
+      .select("id, slug, title, caption, summary, description, goal_amount_mur, current_amount_mur, banner_image_url, image_url, organizations(organization_name)")
       .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -39,8 +41,10 @@ export const initiativeService = {
   async getTrending(limit = 4) {
     const { data, error } = await supabase
       .from("initiatives")
-      .select("*, organizations(organization_name)")
+      .select("id, slug, title, caption, summary, description, goal_amount_mur, current_amount_mur, banner_image_url, image_url, organizations(organization_name)")
       .eq("status", "active")
+      .eq("is_approved", true)
+      .eq("is_published", true)
       .order("conversion_count", { ascending: false, nullsFirst: false })
       .order("view_count", { ascending: false, nullsFirst: false })
       .limit(limit);
