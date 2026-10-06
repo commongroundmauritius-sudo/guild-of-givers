@@ -110,9 +110,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <script dangerouslySetInnerHTML={{ __html: `(() => { const protectedPath = /^(\\/admin-dashboard|\\/member|\\/notifications|\\/community-hub|\\/dashboard|\\/organization)(\\/|$)/.test(location.pathname); if (!protectedPath) return; const hasSession = Object.keys(localStorage).some((key) => key.startsWith("sb-") && key.includes("-auth-token")); if (!hasSession) location.replace("/login?redirect=" + encodeURIComponent(location.pathname + location.search)); })();`,
-          }}
-        />
         {children}
         <Scripts />
       </body>
