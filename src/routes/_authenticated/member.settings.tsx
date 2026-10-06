@@ -44,7 +44,7 @@ function MemberSettings() {
       if (trimmedFullName.length > 120) throw new Error("Full name must be 120 characters or fewer");
       if (trimmedPhone.length > 20) throw new Error("Phone number must be 20 characters or fewer");
       if (trimmedAddress.length > 500) throw new Error("Address must be 500 characters or fewer");
-      if (ageValue && (!Number.isInteger(ageInt) || ageInt < 13 || ageInt > 120)) {
+      if (ageValue && (ageInt === null || !Number.isInteger(ageInt) || ageInt < 13 || ageInt > 120)) {
         throw new Error("Age must be a whole number between 13 and 120");
       }
       if (trimmedAvatarUrl && !/^https?:\/\//i.test(trimmedAvatarUrl)) {
