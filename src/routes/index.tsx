@@ -135,21 +135,30 @@ function ImpactStats({ settings }: { settings: any }) {
   const metrics = Array.isArray(settings?.metrics) ? settings.metrics.filter((m: any) => m.visible !== false) : [];
   if (metrics.length === 0) return null;
 
-  const { data: values = {}, isLoading } = useQuery({
-    queryKey: ["homepage-impact-stats", metrics.map((m: any) => m.id).join(",")],
+  const autoMetricIds = metrics.filter((m: any) => m.auto !== false).map((m: any) => m.id).sort();
+  const { data: values = {}, isLoading, isError } = useQuery({
+    queryKey: ["homepage-impact-stats", autoMetricIds],
+    enabled: autoMetricIds.length > 0,
     queryFn: async () => {
-      const [organizations, initiatives, profiles, memberships] = await Promise.all([
-        supabase.from("organizations").select("id", { count: "exact", head: true }).eq("is_verified", true).eq("status", "active"),
-        supabase.from("initiatives").select("id", { count: "exact", head: true }).eq("is_approved", true).eq("is_published", true).eq("status", "active"),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "active"),
-        supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "active"),
-      ]);
-      return {
-        orgs: organizations.count ?? 0,
-        initiatives: initiatives.count ?? 0,
-        profiles: profiles.count ?? 0,
-        memberships: memberships.count ?? 0,
-      };
+      const requests: Record<string, PromiseLike<{ count: number | null; error: any }>> = {};
+      if (autoMetricIds.includes("orgs")) {
+        requests.orgs = supabase.from("organizations").select("id", { count: "exact", head: true }).eq("is_verified", true).eq("status", "active");
+      }
+      if (autoMetricIds.includes("initiatives")) {
+        requests.initiatives = supabase.from("initiatives").select("id", { count: "exact", head: true }).eq("is_approved", true).eq("is_published", true).eq("status", "active");
+      }
+      if (autoMetricIds.includes("profiles")) {
+        requests.profiles = supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "active");
+      }
+      if (autoMetricIds.includes("memberships")) {
+        requests.memberships = supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "active");
+      }
+
+      const results = await Promise.all(Object.entries(requests).map(async ([id, request]) => [id, await request] as const));
+      const failed = results.find(([, result]) => result.error);
+      if (failed) throw failed[1].error;
+
+      return Object.fromEntries(results.map(([id, result]) => [id, result.count ?? 0]));
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -159,7 +168,7 @@ function ImpactStats({ settings }: { settings: any }) {
       {metrics.map((metric: any) => {
         const value = metric.auto === false ? metric.manualValue ?? 0 : values[metric.id as keyof typeof values] ?? 0;
         return <div key={metric.id} className="rounded-3xl border border-border/50 bg-card p-6 text-center">
-          <div className="font-display text-4xl font-bold text-primary">{isLoading && metric.auto !== false ? "—" : value.toLocaleString()}</div>
+          <div className="font-display text-4xl font-bold text-primary">{metric.auto !== false && (isLoading || isError) ? "—" : value.toLocaleString()}</div>
           <div className="mt-2 text-sm font-medium text-muted-foreground">{metric.label}</div>
         </div>;
       })}
