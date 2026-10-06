@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { createLead, convertLead } from "@/lib/auth-actions";
 import { attributionService } from "@/lib/attribution-service";
 import { paymentService } from "@/lib/payments/service";
+import { isMockPaymentsEnabled } from "@/lib/payments/mock-provider";
 import { toast } from "sonner";
 import { emailSchema, nameSchema } from "@/lib/security/validators";
 import { z } from "zod";
@@ -375,7 +376,7 @@ function SignupPage() {
                     Order Summary
                   </p>
                   <div className="mt-6 flex justify-between border-b border-primary/10 pb-4">
-                    <span className="text-muted-foreground">Contribution</span>
+                    <span className="text-muted-foreground">Membership</span>
                     <span className="font-bold text-primary">
                       Rs {finalAmount.toLocaleString()}
                     </span>
@@ -392,7 +393,7 @@ function SignupPage() {
                   disabled={submitting || !paymentService.isConfigured()}
                   className="mt-10 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
                 >
-                  {submitting ? "Checking payment setup…" : "Payment checkout unavailable"}
+                  {submitting ? "Starting checkout…" : isMockPaymentsEnabled() ? "Start test checkout" : "Payment checkout unavailable"}
                 </button>
                 <p className="mt-4 text-center text-xs text-muted-foreground">
                   Secure production payment processing is still being configured. Membership activation will be available once the payment provider is connected and verified.
