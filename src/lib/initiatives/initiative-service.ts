@@ -7,7 +7,7 @@ export const initiativeService = {
   async getFeatured(limit = 4) {
     const { data, error } = await supabase
       .from("initiatives")
-      .select("id, slug, title, caption, summary, description, goal_amount_mur, current_amount_mur, banner_image_url, image_url, organizations(organization_name)")
+      .select("id, slug, title, caption, summary, description, goal_amount_mur, current_amount_mur, banner_image_url, image_url, category, organizations(organization_name)")
       .eq("is_featured", true)
       .eq("status", "active")
       .order("created_at", { ascending: false })
