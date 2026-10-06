@@ -118,7 +118,7 @@ function MemberProfile() {
             <div className="relative px-8 pb-8">
               <div className="absolute -top-16 left-8">
                 <Avatar className="h-32 w-32 border-4 border-card shadow-lg">
-                  <AvatarImage src={profile?.avatar_url || ""} />
+                  <AvatarImage src={profile?.avatar_url || ""} alt={`${displayName} profile photo`} />
                   <AvatarFallback className="bg-teal-100 text-3xl font-bold text-teal-700">
                     {initials}
                   </AvatarFallback>
