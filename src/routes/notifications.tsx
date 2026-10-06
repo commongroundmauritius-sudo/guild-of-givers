@@ -20,7 +20,7 @@ function NotificationsPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: notifications, isLoading } = useQuery({
+  const { data: notifications, isLoading, isError, error } = useQuery({
     queryKey: ["notifications-full", user?.id],
     enabled: !!user,
     queryFn: async () => {
@@ -40,6 +40,7 @@ function NotificationsPage() {
       queryClient.invalidateQueries({ queryKey: ["notifications-full", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
     },
+    onError: () => toast.error("Failed to mark notification as read"),
   });
 
   const deleteMutation = useMutation({
@@ -51,6 +52,7 @@ function NotificationsPage() {
       toast.success("Notification deleted");
       queryClient.invalidateQueries({ queryKey: ["notifications-full", user?.id] });
     },
+    onError: () => toast.error("Failed to delete notification"),
   });
 
   const unreadCount = notifications?.filter((n) => !n.read).length || 0;
@@ -90,6 +92,12 @@ function NotificationsPage() {
               <div className="py-20 flex flex-col items-center justify-center gap-4">
                 <RefreshCw className="h-8 w-8 animate-spin text-primary/50" />
                 <p className="text-muted-foreground font-medium">Loading your activity...</p>
+              </div>
+            ) : isError ? (
+              <div className="py-24 flex flex-col items-center justify-center gap-3 text-center">
+                <BellOff className="h-10 w-10 text-destructive/70" />
+                <h3 className="text-xl font-semibold text-primary">Unable to load notifications</h3>
+                <p className="text-muted-foreground max-w-md">Please try again. {error instanceof Error ? error.message : "Something went wrong while loading your activity."}</p>
               </div>
             ) : notifications && notifications.length > 0 ? (
               notifications.map((n: any) => (
