@@ -8,7 +8,7 @@ export const Route = createFileRoute("/terms-and-conditions")({
       {
         name: "description",
         content:
-          "Terms of Service governing membership, platform usage, partner organizations, and social contribution allocations on CommonGround Mauritius.",
+          "Terms of Service governing membership, platform usage, partner organizations, and fund allocation on CommonGround Mauritius.",
       },
     ],
   }),
@@ -47,7 +47,7 @@ function TermsAndConditionsPage() {
               <h2 className="font-display text-xl font-bold text-primary">1. Agreement to Terms</h2>
               <p className="mt-3 leading-relaxed text-muted-foreground">
                 By accessing or using CommonGround Mauritius ("Platform"), creating an account, or
-                committing to a recurring membership contribution, you agree to be bound by these
+                committing to a recurring membership payment, you agree to be bound by these
                 Terms & Conditions. If you do not agree, you must discontinue using the Platform.
               </p>
             </div>
@@ -57,8 +57,7 @@ function TermsAndConditionsPage() {
                 2. Platform Usage & Membership
               </h2>
               <p className="mt-3 text-muted-foreground">
-                CommonGround serves as a social infrastructure platform connecting members with
-                verified Non-Governmental Organizations (Organizations) in Mauritius.
+                CommonGround is a marketing and membership platform connecting members with verified partner organizations and their supported initiatives in Mauritius.
               </p>
               <ul className="mt-4 list-disc pl-6 space-y-2 text-muted-foreground">
                 <li>
@@ -71,9 +70,7 @@ function TermsAndConditionsPage() {
                   legal capacity under Mauritian law to enter into binding social agreements.
                 </li>
                 <li>
-                  <strong>Recurring Contributions:</strong> Selecting a membership plan initiates a
-                  recurring support commitment. Contributions are not capital investments, equity
-                  shares, or financial instruments.
+                  <strong>Recurring Membership Payments:</strong> Selecting a membership plan initiates a recurring membership payment. Membership payments are not capital investments, equity shares, or financial instruments.
                 </li>
               </ul>
             </div>
@@ -112,8 +109,7 @@ function TermsAndConditionsPage() {
               </p>
               <ul className="mt-4 list-disc pl-6 space-y-2 text-muted-foreground">
                 <li>
-                  Optionally covering processing fees ensures 100% of your designated contribution
-                  goes directly to initiative funding.
+                  If you choose to cover the applicable payment-processing fee, the amount charged to your card includes that fee separately from your membership amount.
                 </li>
                 <li>
                   Details regarding billing errors, cancellations, and exceptional refunds are
