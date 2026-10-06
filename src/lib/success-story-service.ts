@@ -18,7 +18,7 @@ export const successStoryService = {
   async getPublished() {
     const { data, error } = await supabase
       .from("success_stories")
-      .select("*")
+      .select("id, title, summary, image_url, cta_link, display_order")
       .eq("is_published", true)
       .order("display_order", { ascending: true });
 
