@@ -72,7 +72,9 @@
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^6.0.2",
     "zod": "^3.24.2",
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.0",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
