@@ -84,12 +84,20 @@ function SignupPage() {
     setStep(3);
   };
 
-  const finalAmount = customAmount ? parseInt(customAmount) : amount;
+  const finalAmount = customAmount ? parseInt(customAmount, 10) : amount;
+
+  const validateMembershipAmount = () => {
+    if (!Number.isInteger(finalAmount) || finalAmount < 167) {
+      toast.error("Membership amount must be a whole number of at least Rs 167.");
+      return false;
+    }
+    return true;
+  };
 
   const submitDetails = async () => {
     if (submitting) return;
     const validation = z
-      .object({ email: emailSchema, fullName: nameSchema, amount: z.number().positive() })
+      .object({ email: emailSchema, fullName: nameSchema, amount: z.number().int().min(167) })
       .safeParse({ email, fullName, amount: finalAmount });
 
     if (!validation.success) {
@@ -122,6 +130,7 @@ function SignupPage() {
 
   const handlePaymentCompletion = async () => {
     if (submitting) return;
+    if (!validateMembershipAmount()) return;
     setSubmitting(true);
     try {
       const payment = await paymentService.startPayment(finalAmount, "MUR", {
@@ -151,9 +160,8 @@ function SignupPage() {
       toast.error("Password must be at least 6 characters");
       return;
     }
-    if (!isPartnerSignup && !paymentTransactionId) {
-      toast.error("Please complete payment before creating your member account.");
-      setStep(2);
+    if (!isPartnerSignup && (!paymentTransactionId || !validateMembershipAmount())) {
+      if (!paymentTransactionId) setStep(2);
       return;
     }
 
@@ -211,20 +219,22 @@ function SignupPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl bg-white rounded-[3rem] p-8 sm:p-16 shadow-2xl shadow-primary/5">
             <div className="mb-12">
-              <div className="flex gap-2 mb-8">
+              <div className="flex gap-2 mb-8" aria-label="Signup progress">
                 {STEPS.map((s, i) => (
                   <div
                     key={s}
+                    aria-label={`${s}: ${i <= step ? "complete" : "upcoming"}`}
                     className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-primary" : "bg-primary/10"}`}
                   />
                 ))}
               </div>
               {step > 0 && step < 4 && !isPartnerSignup && (
                 <button
+                  type="button"
                   onClick={() => setStep(step - 1)}
                   className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition"
                 >
-                  <ArrowLeft className="h-4 w-4" /> Back
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
                 </button>
               )}
             </div>
@@ -232,7 +242,7 @@ function SignupPage() {
             {isPartnerSignup && step === 3 && (
               <div className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center gap-4">
                 <div className="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shrink-0">
-                  <Lock className="h-5 w-5" />
+                  <Lock className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-indigo-900">Partner Access Verified</p>
@@ -245,12 +255,9 @@ function SignupPage() {
 
             {step === 0 && (
               <div>
-                <h2 className="font-display text-4xl font-bold text-primary">
-                  Monthly Membership
-                </h2>
+                <h2 className="font-display text-4xl font-bold text-primary">Monthly Membership</h2>
                 <p className="mt-4 text-muted-foreground">
-                  Choose a monthly membership amount that reflects the impact you want to make. You can adjust this
-                  anytime.
+                  Choose a monthly membership amount that reflects the impact you want to make. You can adjust this anytime.
                 </p>
                 <div className="mt-10">
                   <div className="grid gap-3 sm:grid-cols-3">
@@ -258,11 +265,13 @@ function SignupPage() {
                       const active = !customAmount && p === amount;
                       return (
                         <button
+                          type="button"
                           key={p}
                           onClick={() => {
                             setAmount(p);
                             setCustomAmount("");
                           }}
+                          aria-pressed={active}
                           className={`rounded-2xl border px-4 py-4 text-sm font-medium transition ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:border-primary/40"}`}
                         >
                           Rs {p.toLocaleString()}
@@ -273,19 +282,21 @@ function SignupPage() {
                   <label className="mt-6 block">
                     <span className="text-sm font-medium">Or enter custom amount (MUR)</span>
                     <div className="mt-2 flex overflow-hidden rounded-xl border border-input bg-background">
-                      <span className="px-4 py-2.5 text-sm text-muted-foreground">Rs</span>
+                      <span className="px-4 py-2.5 text-sm text-muted-foreground" aria-hidden="true">Rs</span>
                       <input
                         inputMode="numeric"
+                        type="text"
                         value={customAmount}
                         onChange={(e) => setCustomAmount(e.target.value.replace(/\D/g, ""))}
-                        placeholder=""
+                        placeholder="Minimum Rs 167"
+                        aria-describedby="custom-amount-help"
                         className="w-full bg-transparent px-2 py-2.5 text-sm outline-none"
                       />
-                      <span className="px-4 py-2.5 text-sm text-muted-foreground">/ month</span>
+                      <span className="px-4 py-2.5 text-sm text-muted-foreground" aria-hidden="true">/ month</span>
                     </div>
                   </label>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Flexible monthly membership. Cancel anytime.
+                  <p id="custom-amount-help" className="mt-3 text-xs text-muted-foreground">
+                    Flexible monthly membership. Minimum Rs 167. Cancel anytime.
                   </p>
                 </div>
                 <div className="mt-8 rounded-2xl bg-primary/5 p-4 border border-primary/10">
@@ -294,22 +305,23 @@ function SignupPage() {
                       type="checkbox"
                       checked={coversFees}
                       onChange={(e) => setCoversFees(e.target.checked)}
+                      aria-describedby="fee-help"
                       className="mt-1 h-4 w-4 rounded border-primary text-primary focus:ring-primary"
                     />
                     <div>
-                      <span className="text-sm font-semibold text-primary">
-                        I want to cover the processing fee
-                      </span>
-                      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                        This adds a small amount to your contribution so more of your selected
-                        membership amount reaches initiatives.
+                      <span className="text-sm font-semibold text-primary">I want to cover the processing fee</span>
+                      <p id="fee-help" className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                        This adds a small amount to your membership payment so more of your selected membership amount reaches initiatives.
                       </p>
                     </div>
                   </label>
                 </div>
                 <button
-                  disabled={finalAmount <= 0}
-                  onClick={() => setStep(1)}
+                  type="button"
+                  disabled={finalAmount < 167}
+                  onClick={() => {
+                    if (validateMembershipAmount()) setStep(1);
+                  }}
                   className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
                 >
                   Start my monthly impact
@@ -320,45 +332,18 @@ function SignupPage() {
             {step === 1 && (
               <div>
                 <h2 className="font-display text-4xl font-bold text-primary">Your details</h2>
-                <p className="mt-4 text-muted-foreground">
-                  Your membership is Rs {finalAmount.toLocaleString()} / month.
-                </p>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    submitDetails();
-                  }}
-                  className="mt-10 space-y-5"
-                >
+                <p className="mt-4 text-muted-foreground">Your membership is Rs {finalAmount.toLocaleString()} / month.</p>
+                <form onSubmit={(e) => { e.preventDefault(); submitDetails(); }} className="mt-10 space-y-5">
                   <Field label="Full name">
-                    <input
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className={inputCls}
-                    />
+                    <input required autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} />
                   </Field>
                   <Field label="Email">
-                    <input
-                      required
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className={inputCls}
-                    />
+                    <input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
                   </Field>
                   <Field label="Phone number (optional)">
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className={inputCls}
-                    />
+                    <input type="tel" autoComplete="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} />
                   </Field>
-                  <button
-                    disabled={submitting}
-                    className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
-                  >
+                  <button type="submit" disabled={submitting} className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">
                     {submitting ? "Saving details…" : "Continue to payment"}
                   </button>
                 </form>
@@ -368,27 +353,20 @@ function SignupPage() {
             {step === 2 && (
               <div>
                 <h2 className="font-display text-4xl font-bold text-primary">Secure Payment</h2>
-                <p className="mt-4 text-muted-foreground">
-                  Complete your checkout via our configured payment provider.
-                </p>
+                <p className="mt-4 text-muted-foreground">Complete your checkout via our configured payment provider.</p>
                 <div className="mt-10 rounded-3xl border border-primary/10 bg-primary/5 p-8">
-                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
-                    Order Summary
-                  </p>
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Order Summary</p>
                   <div className="mt-6 flex justify-between border-b border-primary/10 pb-4">
                     <span className="text-muted-foreground">Membership</span>
-                    <span className="font-bold text-primary">
-                      Rs {finalAmount.toLocaleString()}
-                    </span>
+                    <span className="font-bold text-primary">Rs {finalAmount.toLocaleString()}</span>
                   </div>
                   <div className="mt-4 flex justify-between">
                     <span className="font-bold text-primary">Total Recurring</span>
-                    <span className="font-bold text-primary text-xl">
-                      Rs {finalAmount.toLocaleString()}
-                    </span>
+                    <span className="font-bold text-primary text-xl">Rs {finalAmount.toLocaleString()}</span>
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={handlePaymentCompletion}
                   disabled={submitting || !paymentService.isConfigured()}
                   className="mt-10 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
@@ -399,57 +377,23 @@ function SignupPage() {
                   Secure production payment processing is still being configured. Membership activation will be available once the payment provider is connected and verified.
                 </p>
                 <p className="mt-2 text-center text-xs text-muted-foreground">
-                  By completing payment, you agree to our{" "}
-                  <Link
-                    to="/terms-and-conditions"
-                    target="_blank"
-                    className="underline text-primary hover:text-primary/80"
-                  >
-                    Terms & Conditions
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    to="/privacy-policy"
-                    target="_blank"
-                    className="underline text-primary hover:text-primary/80"
-                  >
-                    Privacy Policy
-                  </Link>
-                  .
+                  By completing payment, you agree to our <Link to="/terms-and-conditions" target="_blank" className="underline text-primary hover:text-primary/80">Terms & Conditions</Link> and <Link to="/privacy-policy" target="_blank" className="underline text-primary hover:text-primary/80">Privacy Policy</Link>.
                 </p>
               </div>
             )}
 
             {step === 3 && (
               <div>
-                <h2 className="font-display text-4xl font-bold text-primary">
-                  Create your account
-                </h2>
+                <h2 className="font-display text-4xl font-bold text-primary">{isPartnerSignup ? "Create your partner account" : "Create your account"}</h2>
                 <p className="mt-4 text-muted-foreground">
-                  Payment confirmed. Set a password to finish your membership.
+                  {isPartnerSignup ? "Set a password to finish your partner account setup." : "Payment confirmed. Set a password to finish your membership."}
                 </p>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    submitAccount();
-                  }}
-                  className="mt-10 space-y-5"
-                >
+                <form onSubmit={(e) => { e.preventDefault(); submitAccount(); }} className="mt-10 space-y-5">
                   <Field label="Password">
-                    <input
-                      required
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className={inputCls}
-                      minLength={6}
-                    />
+                    <input required type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} minLength={6} />
                   </Field>
-                  <button
-                    disabled={submitting}
-                    className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
-                  >
-                    {submitting ? "Creating account…" : "Create my account"}
+                  <button type="submit" disabled={submitting} className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60">
+                    {submitting ? "Creating account…" : isPartnerSignup ? "Create partner account" : "Create my account"}
                   </button>
                 </form>
               </div>
@@ -458,16 +402,13 @@ function SignupPage() {
             {step === 4 && (
               <div className="text-center py-12">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Check className="h-8 w-8" />
+                  <Check className="h-8 w-8" aria-hidden="true" />
                 </div>
                 <h2 className="mt-6 font-display text-4xl font-bold text-primary">You're in.</h2>
                 <p className="mt-4 text-muted-foreground">
-                  Your membership is active. Welcome to CommonGround.
+                  {isPartnerSignup ? "Your partner account is ready. Welcome to CommonGround." : "Your membership is active. Welcome to CommonGround."}
                 </p>
-                <Link
-                  to="/dashboard"
-                  className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white"
-                >
+                <Link to="/dashboard" className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white">
                   Go to my dashboard
                 </Link>
               </div>
