@@ -132,7 +132,7 @@ function Hero({ settings }: { settings: any }) {
           </h1>
           <p className="mt-8 text-xl leading-relaxed text-muted-foreground sm:text-2xl max-w-2xl">
             {settings.subheadline ||
-              "We turn predictable monthly contributions into reliable funding for Mauritius' most effective long-horizon social programs."}
+              "We turn predictable monthly membership funding into reliable funding for Mauritius' most effective long-horizon social programs."}
           </p>
           <div className="mt-12 flex flex-wrap gap-4">
             <Link
@@ -191,7 +191,7 @@ const VALUE_PROPS = [
   {
     icon: Eye,
     title: "Full Transparency",
-    desc: "Track exactly where your contribution goes with unified impact reports and real-time dashboard updates.",
+    desc: "Track exactly where how your membership supports impact with unified impact reports and real-time dashboard updates.",
   },
   {
     icon: Target,
@@ -461,7 +461,7 @@ function FAQ({ settings }: { settings: any }) {
   const defaultFaqs = [
     {
       q: "How does CommonGround membership work?",
-      a: "You pick a monthly contribution, choose one or more vetted initiatives, and we handle the rest—recurring billing, allocation, receipts, and impact updates.",
+      a: "You choose a monthly membership amount, choose one or more vetted initiatives, and we handle the rest—recurring billing, allocation, receipts, and impact updates.",
     },
     {
       q: "How are initiatives vetted?",
@@ -473,11 +473,11 @@ function FAQ({ settings }: { settings: any }) {
     },
     {
       q: "Is my contribution tax-deductible?",
-      a: "Where partner Organizations are registered for tax-deductible giving, you'll receive an automated receipt at year-end.",
+      a: "CommonGround is a marketing company, not a charitable institution. Membership payments are not presented as charitable donations or tax-deductible contributions by CommonGround.",
     },
     {
       q: "How do I know my impact is real?",
-      a: "Members receive unified, audited impact reports plus direct field updates from the organizations they support.",
+      a: "Members receive unified, audited impact reports alongside updates from the organizations they support.",
     },
   ];
 
