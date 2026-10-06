@@ -36,7 +36,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Turn one monthly membership into predictable funding for vetted, long-term social impact programs.",
+          "Turn one monthly membership into predictable funding for reviewed, long-term social impact programs.",
       },
       { property: "og:title", content: "CommonGround — One Membership. Long-term Impact." },
       { property: "og:type", content: "website" },
@@ -422,7 +422,7 @@ function ForOrgs() {
         <div className="overflow-hidden rounded-3xl border border-border/60 aspect-[16/10] bg-muted">
           <img
             src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=1280"
-            alt="Organization collaboration"
+            alt="People collaborating around a table"
             loading="lazy"
             className="h-full w-full object-cover"
           />
@@ -432,7 +432,7 @@ function ForOrgs() {
             Built for Organizations
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Spend less time chasing donors and more time on the work itself. CommonGround delivers
+            Spend less time chasing funding and more time on the work itself. CommonGround delivers
             structured, recurring funding designed for long-horizon programs—restoration,
             conservation, education—the kind of work that takes years, not quarters.
           </p>
