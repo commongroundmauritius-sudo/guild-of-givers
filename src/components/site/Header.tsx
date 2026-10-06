@@ -147,7 +147,8 @@ export function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    aria-label="Toggle menu"
+                    aria-label="Open admin navigation"
+                    aria-haspopup="menu"
                     className={cn(
                       "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary focus:outline-none",
                       isMoreActive ? "text-primary font-bold" : "text-foreground/80",
