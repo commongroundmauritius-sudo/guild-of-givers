@@ -109,16 +109,16 @@ function OrganizationsComponent() {
               Meet Our Partners
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
-              Every organization on CommonGround undergoes rigorous due-diligence and vetting.
-              Discover the dedicated non-profits, NGOs, and community leaders delivering verified,
-              transparent impact.
+              Organizations listed here have been reviewed and verified by CommonGround before being
+              presented as partners. Discover non-profits, NGOs, and community organizations
+              working toward positive, transparent impact.
             </p>
           </div>
 
           {/* Search & Filter Bar */}
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center justify-between bg-card p-4 rounded-2xl border border-border/60 shadow-xs">
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               <Input
                 type="text"
                 placeholder="Search partner organizations by name or keyword..."
