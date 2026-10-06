@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Settings as SettingsIcon, Save, User, Phone, MapPin, Calendar } from "lucide-react";
@@ -14,7 +14,14 @@ export const Route = createFileRoute("/_authenticated/member/settings")({
 });
 
 function MemberSettings() {
-  const { user, profile, refreshAuth } = useAuth();
+  const { user, profile, refreshAuth, role, loading: authLoading, authDataError } = useAuth();
+  const navigate = useNavigate();
+  const isAuthorizedMember = !authLoading && !authDataError && role === "member";
+  useEffect(() => {
+    if (authLoading || authDataError) return;
+    if (role !== "member") navigate({ to: "/dashboard", replace: true });
+  }, [authLoading, authDataError, role, navigate]);
+
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [address, setAddress] = useState(profile?.address || "");
@@ -48,6 +55,8 @@ function MemberSettings() {
       toast.error(err.message);
     },
   });
+
+  if (!isAuthorizedMember) return null;
 
   return (
       <section className="py-16">
