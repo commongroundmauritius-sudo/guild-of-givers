@@ -28,9 +28,11 @@ function MemberDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const isAuthorizedMember = !authLoading && !authDataError && role === "member";
+
   useEffect(() => {
     if (authLoading || authDataError) return;
-    if (role !== "member" && role !== "ngo") {
+    if (role !== "member") {
       navigate({ to: "/dashboard", replace: true });
     }
   }, [authLoading, authDataError, role, navigate]);
