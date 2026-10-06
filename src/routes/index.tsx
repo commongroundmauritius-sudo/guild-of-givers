@@ -1,6 +1,6 @@
 import { useMemberCheck } from "@/hooks/use-member-check";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Repeat, Eye, Target, UserPlus, Sparkles, Heart, LucideIcon } from "lucide-react";
+import { ArrowRight, Repeat, Eye, Target, UserPlus, Sparkles, LucideIcon } from "lucide-react";
 import { InitiativeCard } from "@/components/InitiativeCard";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Kicker } from "@/components/Kicker";
@@ -26,7 +26,11 @@ export const Route = createFileRoute("/")({
 function Index() {
   useActivityTracker({ eventType: "homepage_view" });
 
-  const { data: publishedVersion } = useQuery({
+  const {
+    data: publishedVersion,
+    isLoading: isHomepageLoading,
+    isError: isHomepageError,
+  } = useQuery({
     queryKey: ["homepage", "published"],
     queryFn: () => homepageService.getPublishedVersion(),
     retry: false,
@@ -34,13 +38,16 @@ function Index() {
   });
 
   const cmsConfig = publishedVersion?.configuration_json as HomepageConfig | undefined;
-  const sections =
-    Array.isArray(cmsConfig?.sections) && cmsConfig.sections.length > 0
-      ? cmsConfig.sections
-      : DEFAULT_HOMEPAGE_CONFIG.sections;
+  const hasValidCmsSections = Array.isArray(cmsConfig?.sections) && cmsConfig.sections.length > 0;
+  const sections = hasValidCmsSections
+    ? cmsConfig!.sections
+    : isHomepageError
+      ? DEFAULT_HOMEPAGE_CONFIG.sections
+      : [];
 
   return (
     <SiteLayout>
+      {isHomepageLoading && !hasValidCmsSections ? <HomepageLoadingFallback /> : null}
       {sections
         .filter((s: any) => s.visible && !["urgent", "trending"].includes(s.id))
         .map((section: any) => (
@@ -48,8 +55,23 @@ function Index() {
             {renderSection(section)}
           </div>
         ))}
-      <FinalCTA />
+      {!isHomepageLoading && <FinalCTA />}
     </SiteLayout>
+  );
+}
+
+function HomepageLoadingFallback() {
+  return (
+    <section className="relative overflow-hidden bg-cream-deep pb-20 pt-32 lg:pt-48" aria-busy="true">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl">
+          <div className="h-6 w-40 animate-pulse rounded-full bg-primary/10" />
+          <div className="mt-8 h-24 w-full max-w-3xl animate-pulse rounded-2xl bg-primary/10" />
+          <div className="mt-8 h-16 w-full max-w-2xl animate-pulse rounded-2xl bg-primary/10" />
+          <div className="mt-12 h-14 w-52 animate-pulse rounded-full bg-primary/10" />
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -210,8 +232,7 @@ function ForOrgs() {
 }
 
 function FAQ({ settings }: { settings: any }) {
-  const defaultFaqs=[{q:"How does CommonGround membership work?",a:"You choose a monthly membership amount, choose one or more vetted initiatives, and we handle the rest—recurring billing, allocation, receipts, and impact updates."},{q:"How are initiatives vetted?",a:"Partner organizations are reviewed against CommonGround's onboarding requirements before their initiatives are listed."},{q:"Can I change or cancel my membership?",a:"Yes. You can adjust your monthly amount, switch allocations, pause or cancel anytime from your dashboard."},{q:"Is my membership payment tax-deductible?",a:"CommonGround is a marketing and membership platform, not a charitable institution. Membership payments are not charitable donations and CommonGround does not issue charitable tax-deduction receipts."},{q:"How do I know my impact is real?",a:"Members can review the impact reports and updates made available by the organizations they support."}];
-  const items=settings?.items||defaultFaqs; const title=settings?.title||"Questions, answered."; const description=settings?.description||"Everything you need to know about how CommonGround works, our vetting process, and what your membership unlocks.";
+  const defaultFaqs=[{q:"How does CommonGround membership work?",a:"You choose a monthly membership amount, choose one or more vetted initiatives, and we handle the rest—recurring billing, allocation, receipts, and impact updates."},{q:"How are initiatives vetted?",a:"Partner organizations are reviewed against CommonGround's onboarding requirements before their initiatives are listed."},{q:"Can I change or cancel my membership?",a:"Yes. You can adjust your monthly amount, switch allocations, pause or cancel anytime from your dashboard."},{q:"Is my membership payment tax-deductible?",a:"CommonGround is a marketing and membership platform, not a charitable institution. Membership payments are not charitable donations and CommonGround does not issue charitable tax-deduction receipts."},{q:"How do I know my impact is real?",a:"Members can review the impact reports and updates made available by the organizations they support."}]; const items=settings?.items||defaultFaqs; const title=settings?.title||"Questions, answered."; const description=settings?.description||"Everything you need to know about how CommonGround works, our vetting process, and what your membership unlocks.";
   return <section id="faq" className="border-t border-border/60 bg-white"><div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_2fr] lg:px-8"><div><Kicker>FAQ</Kicker><h2 className="mt-4 font-display text-4xl font-semibold text-primary sm:text-5xl">{title}</h2><p className="mt-4 text-muted-foreground">{description}</p></div><Accordion type="single" collapsible className="w-full">{items.map((f:any,i:number)=><AccordionItem key={i} value={`q-${i}`} className="border-b border-border/60"><AccordionTrigger className="text-left font-display text-lg text-primary hover:no-underline">{f.q}</AccordionTrigger><AccordionContent className="text-muted-foreground">{f.a}</AccordionContent></AccordionItem>)}</Accordion></div></section>;
 }
 
