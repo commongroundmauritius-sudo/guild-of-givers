@@ -176,6 +176,7 @@ interface TeamMemberEditorProps {
 export function TeamMemberEditor({ organizationId, onMembersUpdated }: TeamMemberEditorProps) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [editingMember, setEditingMember] = useState<Partial<TeamMember> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -183,6 +184,7 @@ export function TeamMemberEditor({ organizationId, onMembersUpdated }: TeamMembe
     if (!organizationId) return;
     try {
       setLoading(true);
+      setLoadError(false);
       const { data, error } = await supabase
         .from("organization_team_members")
         .select("*")
@@ -196,6 +198,7 @@ export function TeamMemberEditor({ organizationId, onMembersUpdated }: TeamMembe
       if (onMembersUpdated) onMembersUpdated(loaded);
     } catch (err: unknown) {
       console.error("Error loading team members:", err);
+      setLoadError(true);
       toast.error("Failed to load team members");
     } finally {
       setLoading(false);
@@ -237,6 +240,23 @@ export function TeamMemberEditor({ organizationId, onMembersUpdated }: TeamMembe
     if (!cleanName || !cleanTitle || !cleanQuote) {
       toast.error("Name, Title/Position, and Quote are required fields.");
       return;
+    }
+
+    if (cleanName.length > 120 || cleanTitle.length > 120 || cleanQuote.length > 1000) {
+      toast.error("Please keep the name/title under 120 characters and the quote under 1,000 characters.");
+      return;
+    }
+
+    if (cleanPhotoUrl) {
+      try {
+        const parsed = new URL(cleanPhotoUrl);
+        if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+          throw new Error("invalid protocol");
+        }
+      } catch {
+        toast.error("Please enter a valid HTTP(S) photo URL.");
+        return;
+      }
     }
 
     try {
@@ -417,8 +437,16 @@ export function TeamMemberEditor({ organizationId, onMembersUpdated }: TeamMembe
 
       {/* Members List */}
       {loading ? (
-        <div className="flex items-center justify-center py-6">
-          <Loader className="w-6 h-6 animate-spin text-primary" />
+        <div className="flex items-center justify-center py-6" role="status" aria-live="polite">
+          <Loader className="w-6 h-6 animate-spin text-primary" aria-hidden="true" />
+          <span className="sr-only">Loading team members</span>
+        </div>
+      ) : loadError ? (
+        <div className="text-center py-8 rounded-2xl border border-destructive/30 bg-destructive/5">
+          <p className="text-sm font-medium text-destructive">Unable to load team members.</p>
+          <Button type="button" variant="outline" size="sm" onClick={loadMembers} className="mt-3 rounded-full">
+            Try again
+          </Button>
         </div>
       ) : members.length === 0 ? (
         <div className="text-center py-8 bg-muted/10 rounded-2xl border border-dashed border-border/60">
@@ -453,7 +481,8 @@ export function TeamMemberEditor({ organizationId, onMembersUpdated }: TeamMembe
                   onClick={() => handleStartEdit(m)}
                   className="h-8 w-8 text-muted-foreground hover:text-primary rounded-lg"
                 >
-                  <Edit2 className="w-4 h-4" />
+                  <Edit2 className="w-4 h-4" aria-hidden="true" />
+                  <span className="sr-only">Edit {m.name}</span>
                 </Button>
                 <Button
                   type="button"
@@ -462,7 +491,8 @@ export function TeamMemberEditor({ organizationId, onMembersUpdated }: TeamMembe
                   onClick={() => handleDeleteMember(m.id)}
                   className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
+                  <span className="sr-only">Delete {m.name}</span>
                 </Button>
               </div>
             </div>
