@@ -24,7 +24,7 @@ function InitiativesPage() {
   const [category, setCategory] = useState("All");
   const [sortBy, setSortBy] = useState("newest");
 
-  const { data: initiatives, isLoading } = useQuery({
+  const { data: initiatives, isLoading, isError, refetch } = useQuery({
     queryKey: ["public-initiatives", searchTerm, category, sortBy],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -32,9 +32,19 @@ function InitiativesPage() {
         .select("*")
         .eq("is_approved", true)
         .eq("is_published", true)
+        .eq("status", "active")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as any[];
+      const filtered = (data as any[]).filter((initiative) => {
+        const term = searchTerm.trim().toLowerCase();
+        const matchesSearch = !term || [initiative.title, initiative.description, initiative.category].filter(Boolean).some((value) => String(value).toLowerCase().includes(term));
+        const matchesCategory = category === "All" || initiative.category === category;
+        return matchesSearch && matchesCategory;
+      });
+      if (sortBy === "goal_progress") {
+        filtered.sort((a, b) => Number(b.current_collected_amount || 0) / Math.max(Number(b.monthly_target_amount || 1), 1) - Number(a.current_collected_amount || 0) / Math.max(Number(a.monthly_target_amount || 1), 1));
+      }
+      return filtered;
     },
   });
 
@@ -67,8 +77,9 @@ function InitiativesPage() {
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search aria-hidden="true" className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                aria-label="Search initiatives"
                 placeholder="Search initiatives..."
                 className="h-12 rounded-2xl pl-11 focus:ring-primary/20"
                 value={searchTerm}
@@ -97,7 +108,7 @@ function InitiativesPage() {
                   <SelectItem value="goal_progress">Goal Progress</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" className="h-12 w-12 rounded-2xl p-0">
+              <Button type="button" variant="outline" aria-label="Filters" className="h-12 w-12 rounded-2xl p-0">
                 <SlidersHorizontal className="h-4 w-4" />
               </Button>
             </div>
@@ -111,6 +122,12 @@ function InitiativesPage() {
             <div className="flex h-64 flex-col items-center justify-center gap-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm font-medium text-muted-foreground">Loading initiatives...</p>
+            </div>
+          ) : isError ? (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center">
+              <h3 className="font-semibold text-primary">Unable to load initiatives</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Please try again.</p>
+              <Button type="button" variant="outline" className="mt-4" onClick={() => refetch()}>Retry</Button>
             </div>
           ) : initiatives && initiatives.length > 0 ? (
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
