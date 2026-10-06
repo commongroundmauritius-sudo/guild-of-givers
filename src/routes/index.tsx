@@ -145,7 +145,7 @@ function ImpactStats({ settings }: { settings: any }) {
         supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "active"),
       ]);
       return {
-        organizations: organizations.count ?? 0,
+        orgs: organizations.count ?? 0,
         initiatives: initiatives.count ?? 0,
         profiles: profiles.count ?? 0,
         memberships: memberships.count ?? 0,
