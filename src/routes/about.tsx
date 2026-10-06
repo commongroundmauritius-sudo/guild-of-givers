@@ -33,7 +33,7 @@ function AboutPage() {
               </span>
               <h1 className="mt-8 font-display text-5xl font-bold tracking-tight text-primary sm:text-7xl">
                 Systemic Change, <br />
-                <span className="text-primary/40 italic">not just donations.</span>
+                <span className="text-primary/40 italic">built for lasting impact.</span>
               </h1>
               <p className="mt-8 text-xl leading-relaxed text-muted-foreground">
                 CommonGround was built to solve the "funding gap" for non-profits. We replace
