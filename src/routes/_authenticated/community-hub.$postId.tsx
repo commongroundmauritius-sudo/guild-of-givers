@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 import { PostActions } from "@/components/community/PostActions";
 
 export const Route = createFileRoute("/_authenticated/community-hub/$postId")({
@@ -18,9 +19,12 @@ export const Route = createFileRoute("/_authenticated/community-hub/$postId")({
 
 function PostDetailPage() {
   const { postId } = Route.useParams();
+  const { role, loading: authLoading, authDataError } = useAuth();
+  const isAuthorizedMember = !authLoading && !authDataError && role === "member";
 
   const { data: post, isLoading } = useQuery({
     queryKey: ["post", postId],
+    enabled: isAuthorizedMember && !!postId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("community_posts")
@@ -39,6 +43,18 @@ function PostDetailPage() {
       toast.success("Link copied to clipboard!");
     }
   };
+
+  if (authLoading) {
+    return <div className="mx-auto max-w-4xl px-4 py-32 text-center">Verifying membership access...</div>;
+  }
+
+  if (authDataError) {
+    return <div className="mx-auto max-w-4xl px-4 py-32 text-center">Unable to verify membership access.</div>;
+  }
+
+  if (!isAuthorizedMember) {
+    return null;
+  }
 
   if (isLoading) {
     return (
