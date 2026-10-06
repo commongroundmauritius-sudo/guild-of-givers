@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Settings as SettingsIcon, Save, Calendar, MapPin } from "lucide-react";
+import { Settings as SettingsIcon, Save, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,26 +23,33 @@ function AdminSettings() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!user) return;
+      if (!user) throw new Error("You must be signed in.");
 
+      const trimmedFullName = fullName.trim();
+      const trimmedBio = bio.trim();
+      const trimmedAvatarUrl = avatarUrl.trim();
       const trimmedAddress = address.trim();
-      const ageInt = age ? parseInt(age) : null;
+      const ageInt = age.trim() ? Number(age) : null;
 
-      if (ageInt !== null && (ageInt < 13 || ageInt > 120)) {
-        throw new Error("Age must be between 13 and 120");
+      if (ageInt !== null && (!Number.isInteger(ageInt) || ageInt < 13 || ageInt > 120)) {
+        throw new Error("Age must be a whole number between 13 and 120");
       }
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: fullName,
-          bio,
-          avatar_url: avatarUrl,
-          age: ageInt,
-          address: trimmedAddress || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id);
+      if (trimmedFullName.length > 120) throw new Error("Full name must be 120 characters or fewer");
+      if (trimmedBio.length > 2000) throw new Error("Bio must be 2,000 characters or fewer");
+      if (trimmedAddress.length > 500) throw new Error("Address must be 500 characters or fewer");
+      if (trimmedAvatarUrl && !/^https?:\/\//i.test(trimmedAvatarUrl)) {
+        throw new Error("Avatar URL must start with http:// or https://");
+      }
+
+      const { error } = await supabase.from("profiles").update({
+        full_name: trimmedFullName,
+        bio: trimmedBio,
+        avatar_url: trimmedAvatarUrl || null,
+        age: ageInt,
+        address: trimmedAddress || null,
+        updated_at: new Date().toISOString(),
+      }).eq("id", user.id);
 
       if (error) throw error;
     },
@@ -50,117 +57,60 @@ function AdminSettings() {
       toast.success("Profile updated successfully");
       refreshAuth();
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   return (
-    
-      <section className="py-16">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-500">
-              <SettingsIcon className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="font-display text-3xl font-bold text-primary">Settings</h1>
-              <p className="text-muted-foreground">Manage your admin profile and preferences.</p>
-            </div>
+    <section className="py-16">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-500">
+            <SettingsIcon className="h-6 w-6" />
           </div>
-
-          <div className="space-y-8 rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
-            <div className="space-y-6">
-              <div className="grid gap-2">
-                <Label htmlFor="fullName" className="text-sm font-semibold">
-                  Full Name
-                </Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Enter your full name"
-                  className="rounded-xl"
-                />
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="age" className="text-sm font-semibold">
-                    Age
-                  </Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="age"
-                      type="number"
-                      value={age}
-                      onChange={(e) => setAge(e.target.value)}
-                      placeholder="Age"
-                      className="pl-10 rounded-xl"
-                      min="13"
-                      max="120"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="avatarUrl" className="text-sm font-semibold">
-                    Avatar URL
-                  </Label>
-                  <Input
-                    id="avatarUrl"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://example.com/avatar.jpg"
-                    className="rounded-xl"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="address" className="text-sm font-semibold">
-                  Address
-                </Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <textarea
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Residential address"
-                    className="min-h-[80px] w-full rounded-xl border border-input bg-background pl-10 pr-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="bio" className="text-sm font-semibold">
-                  Bio / About
-                </Label>
-                <textarea
-                  id="bio"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Write a short bio..."
-                  className="min-h-[120px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
-              </div>
-            </div>
-
-            <div className="pt-4">
-              <Button
-                onClick={() => mutation.mutate()}
-                disabled={mutation.isPending}
-                className="w-full sm:w-auto rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold"
-              >
-                {mutation.isPending ? "Saving..." : "Save Changes"}
-                <Save className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
+          <div>
+            <h1 className="font-display text-3xl font-bold text-primary">Settings</h1>
+            <p className="text-muted-foreground">Manage your admin profile and preferences.</p>
           </div>
         </div>
-      </section>
-    
+        <div className="space-y-8 rounded-3xl border border-border/40 bg-card p-8 shadow-sm">
+          <div className="space-y-6">
+            <div className="grid gap-2">
+              <Label htmlFor="fullName" className="text-sm font-semibold">Full Name</Label>
+              <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Enter your full name" className="rounded-xl" maxLength={120} />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="age" className="text-sm font-semibold">Age</Label>
+                <div className="relative">
+                  <Calendar aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="Age" className="pl-10 rounded-xl" min="13" max="120" />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="avatarUrl" className="text-sm font-semibold">Avatar URL</Label>
+                <Input id="avatarUrl" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://example.com/avatar.jpg" className="rounded-xl" maxLength={500} inputMode="url" autoComplete="url" />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="address" className="text-sm font-semibold">Address</Label>
+              <div className="relative">
+                <MapPin aria-hidden="true" className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <textarea id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Residential address" maxLength={500} className="min-h-[80px] w-full rounded-xl border border-input bg-background pl-10 pr-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="bio" className="text-sm font-semibold">Bio / About</Label>
+              <textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Write a short bio..." maxLength={2000} className="min-h-[120px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            </div>
+          </div>
+          <div className="pt-4">
+            <Button onClick={() => mutation.mutate()} disabled={mutation.isPending} className="w-full sm:w-auto rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold">
+              {mutation.isPending ? "Saving..." : "Save Changes"}
+              <Save aria-hidden="true" className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
