@@ -60,8 +60,7 @@ function PrivacyPolicyPage() {
               </h2>
               <p className="mt-3 text-muted-foreground">
                 We adhere strictly to data minimization principles and only collect personal data
-                genuinely required for platform operation, legal compliance, and social contribution
-                allocations:
+                genuinely required for platform operation, legal compliance, and membership operations and fund allocation:
               </p>
               <ul className="mt-4 list-disc pl-6 space-y-2 text-muted-foreground">
                 <li>
@@ -91,14 +90,14 @@ function PrivacyPolicyPage() {
               </h2>
               <ul className="mt-4 list-disc pl-6 space-y-2 text-muted-foreground">
                 <li>
-                  To manage your membership account and process recurring monthly contributions.
+                  To manage your membership account and process recurring monthly membership payments.
                 </li>
                 <li>
                   To allocate funds to verified recipient Organizations in Mauritius according to
                   your preferences.
                 </li>
                 <li>
-                  To issue tax receipts and contribution confirmations via transactional email.
+                  To issue payment receipts and membership confirmations via transactional email. CommonGround does not issue charitable tax-deduction receipts.
                 </li>
                 <li>
                   To fulfill legal obligations under the Financial Intelligence and Anti-Money
@@ -126,9 +125,7 @@ function PrivacyPolicyPage() {
                   data centers) for encrypted data storage.
                 </li>
                 <li>
-                  <strong>Verified Organizations:</strong> Recipient organizations receive aggregate
-                  contribution totals. Individual member names are only shared if explicit consent
-                  is given for community updates.
+                  <strong>Verified Organizations:</strong> Recipient organizations receive aggregate amounts allocated to their supported initiatives. Individual member names are not shared with partner organizations unless the member has explicitly consented.
                 </li>
               </ul>
             </div>
