@@ -17,7 +17,7 @@ function AdminMembersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
-  const { data: members, isLoading } = useQuery({
+  const { data: members, isLoading, isError, error } = useQuery({
     queryKey: ["admin-members"],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -80,7 +80,7 @@ function AdminMembersPage() {
           </div>
 
           <div className="overflow-hidden rounded-[2rem] border border-border/40 bg-card shadow-sm">
-            {isLoading ? (
+            {isError ? (\n              <div className="flex flex-col items-center justify-center p-20 text-center">\n                <div className="rounded-full bg-destructive/10 p-4">\n                  <Info className="h-8 w-8 text-destructive" />\n                </div>\n                <h2 className="mt-6 font-display text-2xl font-semibold text-primary">\n                  Unable to load members\n                </h2>\n                <p className="mt-2 text-muted-foreground">\n                  {error instanceof Error ? error.message : "Please try again."}\n                </p>\n              </div>\n            ) : isLoading ? (
               <div className="p-8 space-y-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Skeleton key={i} className="h-16 w-full rounded-2xl" />
@@ -118,7 +118,7 @@ function AdminMembersPage() {
                         <td className="px-8 py-5">
                           <div className="flex items-center gap-4">
                             <Avatar className="h-10 w-10 border border-border/60">
-                              <AvatarImage src={member.avatar_url || ""} />
+                              <AvatarImage src={member.avatar_url || ""} alt={`${member.full_name || "Member"} profile photo`} />
                               <AvatarFallback className="bg-teal-100 text-teal-700 text-xs font-bold uppercase">
                                 {(member.full_name || member.email || "??").substring(0, 2)}
                               </AvatarFallback>
