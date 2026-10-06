@@ -345,7 +345,7 @@ function OrganizationProfilePage() {
                   </span>
                   {organization.is_verified && (
                     <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full text-xs font-bold uppercase tracking-wider">
-                      <ShieldCheck className="w-4 h-4" /> Vetted Partner
+                      <ShieldCheck className="w-4 h-4" /> Verified Partner
                     </span>
                   )}
                   {isAdmin && (
@@ -632,7 +632,7 @@ function OrganizationProfilePage() {
                 )}
               </div>
 
-              {/* Vetted Partner Trust Badge */}
+              {/* Verified Partner Trust Badge */}
               <div className="rounded-[2.5rem] border border-primary/10 bg-primary/5 p-8 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -640,14 +640,14 @@ function OrganizationProfilePage() {
                   </div>
                   <div>
                     <span className="text-xs font-bold text-primary uppercase tracking-widest block">
-                      CommonGround Vetted
+                      CommonGround Verified
                     </span>
                     <span className="text-xs text-muted-foreground">Due Diligence Approved</span>
                   </div>
                 </div>
                 <p className="text-xs leading-relaxed text-primary/80">
                   {organization.organization_name} has passed our verification process, including
-                  financial audit and governance review.
+                  our partner verification and governance review.
                 </p>
               </div>
             </div>
