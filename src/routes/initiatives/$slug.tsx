@@ -356,11 +356,10 @@ function InitiativeDetailPage() {
                     }}
                     className="flex w-full items-center justify-center rounded-full bg-primary py-4 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-xl active:scale-[0.98]"
                   >
-                    Support this Initiative
+                    Become a Member & Support This Initiative
                   </Link>
                   <p className="px-4 text-center text-[10px] leading-relaxed text-muted-foreground">
-                    100% of your contribution (minus transaction fees) goes directly to the
-                    initiative. We provide full transparency reports every quarter.
+                    Your monthly membership helps fund this initiative according to your selected priorities. Payment processing fees are handled separately, and members receive transparent impact reporting.
                   </p>
                 </div>
 
