@@ -121,10 +121,12 @@ export const homepageService = {
   },
 
   async publishVersion(versionId: string) {
-    await supabase
+    const { error: archiveError } = await supabase
       .from("homepage_versions")
       .update({ status: "archived" })
       .eq("status", "published");
+
+    if (archiveError) throw archiveError;
 
     const { data, error } = await supabase
       .from("homepage_versions")
