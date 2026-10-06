@@ -50,8 +50,10 @@ interface FundingCycleWithInitiative extends Tables<"initiative_funding_cycles">
 function AdminFinancesPage() {
   const { user, role } = useAuth();
   const [selectedInitiativeId, setSelectedInitiativeId] = useState<string | null>(null);
+  const [paymentSearch, setPaymentSearch] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState<"all" | "success" | "pending" | "failed">("all");
 
-  const { data: metrics } = useQuery({
+  const { data: metrics, isError: metricsError } = useQuery({
     queryKey: ["admin-financial-metrics"],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -61,7 +63,7 @@ function AdminFinancesPage() {
     },
   });
 
-  const { data: payments } = useQuery({
+  const { data: payments, isError: paymentsError } = useQuery({
     queryKey: ["admin-recent-payments"],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -75,7 +77,7 @@ function AdminFinancesPage() {
     },
   });
 
-  const { data: activeSubs } = useQuery({
+  const { data: activeSubs, isError: activeSubsError } = useQuery({
     queryKey: ["admin-active-subscriptions"],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -87,6 +89,26 @@ function AdminFinancesPage() {
       return count;
     },
   });
+
+  const visiblePayments = (payments ?? []).filter((payment: any) => {
+    const term = paymentSearch.trim().toLowerCase();
+    const matchesSearch = !term || [payment.profiles?.full_name, payment.profiles?.email, payment.peach_payment_id, payment.id]
+      .filter(Boolean).some((value) => String(value).toLowerCase().includes(term));
+    return matchesSearch && (paymentStatus === "all" || payment.status === paymentStatus);
+  });
+
+  const exportPayments = () => {
+    const rows = visiblePayments.map((payment: any) => [
+      payment.profiles?.full_name ?? "", payment.profiles?.email ?? "", payment.amount_mur ?? "",
+      payment.status ?? "", payment.created_at ?? "", payment.peach_payment_id ?? payment.id ?? "",
+    ]);
+    const csv = [["Member", "Email", "Amount (MUR)", "Status", "Date", "Reference"], ...rows]
+      .map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a"); link.href = url; link.download = "commonground-payments.csv"; link.click(); URL.revokeObjectURL(url);
+  };
 
   return (
     
@@ -105,7 +127,7 @@ function AdminFinancesPage() {
               </h1>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" className="rounded-xl gap-2">
+              <Button variant="outline" className="rounded-xl gap-2" onClick={exportPayments} disabled={!visiblePayments.length}>
                 <Download className="h-4 w-4" /> Export CSV
               </Button>
             </div>
@@ -124,9 +146,7 @@ function AdminFinancesPage() {
                 <div className="text-2xl font-bold">
                   Rs {metrics?.monthly_revenue?.toLocaleString() || "0"}
                 </div>
-                <div className="flex items-center mt-1 text-xs text-emerald-600 font-medium">
-                  <ArrowUpRight className="h-3 w-3 mr-1" /> +12.5% vs last month
-                </div>
+                <p className="text-xs text-muted-foreground mt-1">Current calendar month</p>
               </CardContent>
             </Card>
 
@@ -182,15 +202,20 @@ function AdminFinancesPage() {
                 <div className="flex gap-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search payments..." className="pl-9 rounded-xl w-64" />
+                    <Input placeholder="Search payments..." aria-label="Search payments" value={paymentSearch} onChange={(event) => setPaymentSearch(event.target.value)} className="pl-9 rounded-xl w-64" />
                   </div>
-                  <Button variant="outline" size="icon" className="rounded-xl">
-                    <Filter className="h-4 w-4" />
-                  </Button>
+                  <select aria-label="Filter payments by status" value={paymentStatus} onChange={(event) => setPaymentStatus(event.target.value as typeof paymentStatus)} className="h-10 rounded-xl border border-input bg-background px-3 text-sm">
+                    <option value="all">All statuses</option><option value="success">Success</option><option value="pending">Pending</option><option value="failed">Failed</option>
+                  </select>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
+              {(metricsError || paymentsError || activeSubsError) ? (
+                <div className="m-6 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
+                  Unable to load one or more financial data sources. Please refresh and try again.
+                </div>
+              ) : (
               <Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow>
@@ -202,7 +227,7 @@ function AdminFinancesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payments?.map((payment: any) => (
+                  {visiblePayments.map((payment: any) => (
                     <TableRow key={payment.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell className="pl-8">
                         <div className="flex flex-col">
@@ -240,7 +265,7 @@ function AdminFinancesPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {(!payments || payments.length === 0) && (
+                  {visiblePayments.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
                         No transactions found in this period.
@@ -249,6 +274,7 @@ function AdminFinancesPage() {
                   )}
                 </TableBody>
               </Table>
+              )}
             </CardContent>
           </Card>
         </div>
