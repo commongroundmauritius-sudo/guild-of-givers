@@ -32,7 +32,7 @@ function AdminDashboard() {
     }
   }, [loading, role, navigate]);
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsQueryError } = useQuery({
     queryKey: ["admin-stats"],
     enabled: !loading && !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -56,6 +56,8 @@ function AdminDashboard() {
           .eq("status", "pending_review"),
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("status", "started"),
       ]);
+      const firstError = [init, initPending, organizations, members, reports, leads].find((result) => result.error)?.error;
+      if (firstError) throw firstError;
       return {
         initiatives: init.count || 0,
         awaitingReviewOrgs: organizations.count || 0,
@@ -67,54 +69,58 @@ function AdminDashboard() {
     },
   });
 
-  const { data: adminActions, isLoading: actionsLoading } = useQuery({
+  const { data: adminActions, isLoading: actionsLoading, isError: actionsError } = useQuery({
     queryKey: ["admin-actions"],
     enabled: !loading && !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("admin_actions")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(10);
+      if (error) throw error;
       return data || [];
     },
   });
 
-  const { data: pendingOrgs, isLoading: orgsLoading } = useQuery({
+  const { data: pendingOrgs, isLoading: orgsLoading, isError: orgsError } = useQuery({
     queryKey: ["pending-orgs"],
     enabled: !loading && !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("organizations")
         .select("*")
         .eq("status", "pending_review")
         .limit(5);
+      if (error) throw error;
       return data || [];
     },
   });
 
-  const { data: pendingReports, isLoading: reportsLoading } = useQuery({
+  const { data: pendingReports, isLoading: reportsLoading, isError: reportsError } = useQuery({
     queryKey: ["pending-reports"],
     enabled: !loading && !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("reports")
         .select("*, profile:profiles(full_name)")
         .eq("status", "pending_review")
         .limit(5);
+      if (error) throw error;
       return data || [];
     },
   });
 
-  const { data: pendingInitiatives, isLoading: initiativesLoading } = useQuery({
+  const { data: pendingInitiatives, isLoading: initiativesLoading, isError: initiativesError } = useQuery({
     queryKey: ["pending-initiatives"],
     enabled: !loading && !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("initiatives")
         .select("*, organization:organizations(organization_name)")
         .eq("is_approved", false)
         .limit(5);
+      if (error) throw error;
       return data || [];
     },
   });
@@ -175,6 +181,19 @@ function AdminDashboard() {
 
   return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {(statsError || actionsError || orgsError || reportsError || initiativesError) && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+            <p className="font-semibold">Some admin dashboard data could not be loaded.</p>
+            <p className="mt-1">{statsQueryError instanceof Error ? statsQueryError.message : "Please refresh and try again."}</p>
+            <button
+              type="button"
+              onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-stats"] })}
+              className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold"
+            >
+              Retry statistics
+            </button>
+          </div>
+        )}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b pb-6">
           <div>
             <h1 className="flex items-center gap-3 text-3xl font-extrabold text-gray-900">
@@ -188,6 +207,8 @@ function AdminDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <button
+              type="button"
+              aria-label="Sign out"
               onClick={() => signOut()}
               className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-red-600"
             >
