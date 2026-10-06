@@ -1,5 +1,5 @@
 import { getJoinedField } from "@/lib/utils";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,15 +16,22 @@ import {
   Save,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated/member/profile")({
   component: MemberProfile,
 });
 
 function MemberProfile() {
-  const { user, profile, isSubscribed } = useAuth();
+  const { user, profile, isSubscribed, role, loading: authLoading, authDataError } = useAuth();
+  const navigate = useNavigate();
+  const isAuthorizedMember = !authLoading && !authDataError && role === "member";
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (authLoading || authDataError) return;
+    if (role !== "member") navigate({ to: "/dashboard", replace: true });
+  }, [authLoading, authDataError, role, navigate]);
   const [amount, setAmount] = useState(167);
   const [billingDay, setBillingDay] = useState(7);
   const [saving, setSaving] = useState(false);
@@ -53,7 +60,7 @@ function MemberProfile() {
       }
       return current;
     },
-    enabled: !!user?.id,
+    enabled: isAuthorizedMember && !!user?.id,
   });
 
   const { data: preferences } = useQuery({
@@ -67,7 +74,7 @@ function MemberProfile() {
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
+    enabled: isAuthorizedMember && !!user?.id,
   });
 
   const manage = async (action: "pause" | "resume" | "cancel" | "update") => {
@@ -100,6 +107,8 @@ function MemberProfile() {
   const currentAmount = subscription ? Number(subscription.amount_mur) : amount;
   const hasPendingChanges =
     !!subscription?.pending_amount_mur || !!subscription?.pending_billing_day;
+
+  if (!isAuthorizedMember) return null;
 
   return (
       <section className="bg-muted/30 py-16">
