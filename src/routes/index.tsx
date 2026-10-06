@@ -521,7 +521,7 @@ function FinalCTA() {
           Start Supporting Today
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-muted-foreground">
-          Join thousands of members who are making a structured difference. Your contribution,
+          Join thousands of members who are making a structured difference. Your membership,
           amplified by our community, creates lasting change.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
