@@ -4,13 +4,17 @@ import {
   SubscriptionResult,
   SubscriptionStatus,
 } from "./types";
-import { paymentProvider } from "./mock-provider";
+import { isMockPaymentsEnabled, paymentProvider } from "./mock-provider";
 
 class PaymentService {
   private provider: PaymentProvider;
 
   constructor(provider: PaymentProvider) {
     this.provider = provider;
+  }
+
+  isConfigured(): boolean {
+    return isMockPaymentsEnabled();
   }
 
   async startPayment(
