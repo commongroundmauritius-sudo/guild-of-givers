@@ -214,6 +214,7 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
+                    aria-label={`Open account menu for ${displayName}`}
                     className="relative flex h-10 items-center gap-2 rounded-full px-1 py-1 hover:bg-muted"
                   >
                     <Avatar className="h-8 w-8 border border-border/60">
@@ -282,7 +283,9 @@ export function Header() {
         </div>
 
         <button
-          aria-label="Toggle menu"
+          aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={open}
+          aria-controls="mobile-navigation"
           className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground"
           onClick={() => setOpen((o) => !o)}
         >
@@ -291,7 +294,7 @@ export function Header() {
       </div>
 
       {open && (
-        <div className="lg:hidden border-t border-border/60 bg-background shadow-lg">
+        <div id="mobile-navigation" className="lg:hidden border-t border-border/60 bg-background shadow-lg">
           <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-6">
             {navItems.map((item) => {
               if (item.to === "/partner") {
