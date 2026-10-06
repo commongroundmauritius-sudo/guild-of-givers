@@ -284,7 +284,7 @@ function SignupPage() {
                     </div>
                   </label>
                   <p className="mt-3 text-xs text-muted-foreground">
-                    Flexible monthly contribution. Cancel anytime.
+                    Flexible monthly membership. Cancel anytime.
                   </p>
                 </div>
                 <div className="mt-8 rounded-2xl bg-primary/5 p-4 border border-primary/10">
@@ -301,7 +301,7 @@ function SignupPage() {
                       </span>
                       <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                         This adds a small amount to your contribution so more of your selected
-                        amount reaches initiatives.
+                        membership amount reaches initiatives.
                       </p>
                     </div>
                   </label>
@@ -392,7 +392,7 @@ function SignupPage() {
                   disabled={submitting || !paymentService.isConfigured()}
                   className="mt-10 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
                 >
-                  {submitting ? "Processing..." : "Payment checkout unavailable"}
+                  {submitting ? "Checking payment setup…" : "Payment checkout unavailable"}
                 </button>
                 <p className="mt-4 text-center text-xs text-muted-foreground">
                   Secure production payment processing is still being configured. Membership activation will be available once the payment provider is connected and verified.
