@@ -10,8 +10,10 @@ import { DEFAULT_HOMEPAGE_CONFIG, homepageService, type HomepageConfig } from "@
 import { successStoryService } from "@/lib/success-story-service";
 import { supabase } from "@/integrations/supabase/client";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { getPublishedHomepageVersion } from "@/lib/homepage.functions";
 
 export const Route = createFileRoute("/")({
+  loader: async () => ({ publishedVersion: await getPublishedHomepageVersion().catch(() => null) }),
   head: () => ({
     meta: [
       { title: "CommonGround — One Membership. Long-term Impact." },
@@ -24,6 +26,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const { publishedVersion: initialPublishedVersion } = Route.useLoaderData();
   useActivityTracker({ eventType: "homepage_view" });
 
   const {
@@ -32,6 +35,7 @@ function Index() {
     isError: isHomepageError,
   } = useQuery({
     queryKey: ["homepage", "published"],
+    initialData: initialPublishedVersion ?? undefined,
     queryFn: () => homepageService.getPublishedVersion(),
     retry: false,
     staleTime: 5 * 60 * 1000,
