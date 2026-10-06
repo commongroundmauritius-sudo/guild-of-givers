@@ -21,7 +21,7 @@ function AdminPostsPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"all" | "pending" | "published" | "rejected">("all");
 
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: posts = [], isLoading, isError, error } = useQuery({
     queryKey: ["admin-posts", filter],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -82,12 +82,14 @@ function AdminPostsPage() {
             </div>
           </div>
 
-          <div className="flex gap-2 mb-8">
+          <div className="flex gap-2 mb-8" role="group" aria-label="Filter community posts">
             {["all", "pending", "published", "rejected"].map((f) => (
               <Button
                 key={f}
                 variant={filter === f ? "default" : "outline"}
+                type="button"
                 onClick={() => setFilter(f as any)}
+                aria-pressed={filter === f}
                 className="capitalize rounded-xl"
               >
                 {f}
@@ -100,13 +102,30 @@ function AdminPostsPage() {
               Array(3)
                 .fill(0)
                 .map((_, i) => <Card key={i} className="h-40 animate-pulse bg-muted rounded-3xl" />)
+            ) : isError ? (
+              <Card role="alert" className="rounded-3xl border-destructive/30">
+                <CardContent className="p-8 text-center">
+                  <p className="font-medium">Unable to load community posts.</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {error instanceof Error ? error.message : "Please try again."}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-4 rounded-xl"
+                    onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-posts"] })}
+                  >
+                    Retry
+                  </Button>
+                </CardContent>
+              </Card>
             ) : posts.length > 0 ? (
               posts.map((post: any) => (
                 <Card key={post.id} className="rounded-3xl border-border/40 overflow-hidden">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
                       <Avatar>
-                        <AvatarImage src={post.profiles?.avatar_url} />
+                        <AvatarImage src={post.profiles?.avatar_url} alt={post.profiles?.full_name ? `${post.profiles.full_name} profile photo` : "Member profile photo"} />
                         <AvatarFallback>
                           {post.profiles?.full_name?.substring(0, 2).toUpperCase()}
                         </AvatarFallback>
