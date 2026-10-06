@@ -233,7 +233,7 @@ function FeaturedInitiatives({ settings }: { settings: any }) {
 }
 
 function UrgentNeeds({ settings }: { settings: any }) {
-  const { urgent } = useCuratedInitiatives();
+  const { urgent } = useCuratedInitiatives({ includeFeatured: false, includeNewest: false });
   return (
     <CuratedSection
       title="Urgent Funding Gaps"
@@ -248,7 +248,7 @@ function UrgentNeeds({ settings }: { settings: any }) {
 }
 
 function TrendingPrograms({ settings }: { settings: any }) {
-  const { trending } = useCuratedInitiatives();
+  const { trending } = useCuratedInitiatives({ includeFeatured: false, includeNewest: false });
   return (
     <CuratedSection
       title="Trending Programs"
