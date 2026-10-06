@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { initiativeService } from "@/lib/initiatives/initiative-service";
 
-export function useCuratedInitiatives() {
+export function useCuratedInitiatives(options: { includeFeatured?: boolean; includeNewest?: boolean } = {}) {
+  const { includeFeatured = true, includeNewest = true } = options;
   const featured = useQuery({
+    enabled: includeFeatured,
     queryKey: ["initiatives", "featured"],
     queryFn: () => initiativeService.getFeatured(),
   });
@@ -15,6 +17,7 @@ export function useCuratedInitiatives() {
     queryFn: () => initiativeService.getTrending(),
   });
   const newest = useQuery({
+    enabled: includeNewest,
     queryKey: ["initiatives", "newest"],
     queryFn: () => initiativeService.getNewest(),
   });
@@ -23,6 +26,6 @@ export function useCuratedInitiatives() {
     urgent,
     trending,
     newest,
-    isLoading: featured.isLoading || urgent.isLoading || trending.isLoading || newest.isLoading,
+    isLoading: urgent.isLoading || trending.isLoading || (includeFeatured && featured.isLoading) || (includeNewest && newest.isLoading),
   };
 }
