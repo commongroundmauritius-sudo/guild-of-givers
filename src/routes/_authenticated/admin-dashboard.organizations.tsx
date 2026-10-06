@@ -28,7 +28,7 @@ function AdminOrganizationsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: organizations = [], isLoading } = useQuery({
+  const { data: organizations = [], isLoading, isError, error } = useQuery({
     queryKey: ["admin-organizations"],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -91,8 +91,9 @@ function AdminOrganizationsPage() {
               </p>
             </div>
             <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
+                aria-label="Search organizations"
                 placeholder="Search organizations..."
                 className="pl-10 rounded-xl"
                 value={searchTerm}
@@ -101,7 +102,23 @@ function AdminOrganizationsPage() {
             </div>
           </div>
 
-          {isLoading ? (
+          {isError ? (
+            <div className="text-center py-20 border-2 border-dashed rounded-[3rem]">
+              <Info className="h-10 w-10 text-destructive mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-primary">Unable to load organizations</h2>
+              <p className="text-muted-foreground mt-2">
+                {error instanceof Error ? error.message : "The organization registry could not be loaded."}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-6"
+                onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-organizations"] })}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : isLoading ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {Array(6)
                 .fill(0)
@@ -194,6 +211,7 @@ function AdminOrganizationsPage() {
                             variant="ghost"
                             size="icon"
                             title={org.is_verified ? "Remove Vetted Badge" : "Mark as Vetted"}
+                            aria-label={org.is_verified ? "Remove Vetted Badge" : "Mark as Vetted"}
                             className={`rounded-full h-8 w-8 ${org.is_verified ? "text-indigo-600 bg-indigo-50" : "text-muted-foreground hover:bg-muted"}`}
                             onClick={(e) => {
                               e.preventDefault();
@@ -211,6 +229,7 @@ function AdminOrganizationsPage() {
                               variant="ghost"
                               size="icon"
                               title="Activate Organization"
+                              aria-label="Activate Organization"
                               className="rounded-full text-green-600 hover:bg-green-50 h-8 w-8"
                               onClick={(e) => {
                                 e.preventDefault();
@@ -226,6 +245,7 @@ function AdminOrganizationsPage() {
                               variant="ghost"
                               size="icon"
                               title="Suspend Organization"
+                              aria-label="Suspend Organization"
                               className="rounded-full text-red-600 hover:bg-red-50 h-8 w-8"
                               onClick={(e) => {
                                 e.preventDefault();
