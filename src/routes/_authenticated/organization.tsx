@@ -52,7 +52,7 @@ function OrganizationDashboard() {
   const [reportUrl, setReportUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: profile } = useQuery({
+  const { data: profile, isError: profileError } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -66,7 +66,7 @@ function OrganizationDashboard() {
     enabled: isAuthorizedOrganization && !!user?.id,
   });
 
-  const { data: initiatives, isLoading: initiativesLoading } = useQuery({
+  const { data: initiatives, isLoading: initiativesLoading, isError: initiativesError } = useQuery({
     queryKey: ["org-initiatives", profile?.organization_id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -79,7 +79,7 @@ function OrganizationDashboard() {
     enabled: isAuthorizedOrganization && !!profile?.organization_id,
   });
 
-  const { data: reports, isLoading: reportsLoading } = useQuery({
+  const { data: reports, isLoading: reportsLoading, isError: reportsError } = useQuery({
     queryKey: ["org-reports", profile?.organization_id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -165,7 +165,9 @@ function OrganizationDashboard() {
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px] rounded-[2rem]">
                 <div className="p-4">
-                  <h2 className="text-2xl font-bold text-primary mb-6">Submit Impact Report</h2>
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold text-primary">Submit Impact Report</DialogTitle>
+                  </DialogHeader>
                   <form onSubmit={handleUpload} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="title">Report Title</Label>
@@ -213,7 +215,13 @@ function OrganizationDashboard() {
               </DialogContent>
             </Dialog>
 
-            {profile?.organization_id && (
+            {profileError ? (
+          <div className="mb-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+            We could not load your organization profile. Please refresh and try again.
+          </div>
+        ) : null}
+
+        {profile?.organization_id && (
               <Link
                 to="/entities/$id"
                 params={{ id: profile.organization_id }}
@@ -255,7 +263,10 @@ function OrganizationDashboard() {
             <div className="grid gap-6 md:grid-cols-2">
               {initiativesLoading
                 ? [1, 2].map((idx) => <Skeleton key={idx} className="h-48 rounded-[2rem]" />)
-                : initiatives?.map((initiative) => (
+                : initiativesError
+                  ? <div className="col-span-full rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">Unable to load your initiatives. Please refresh and try again.</div>
+                  : initiatives?.length
+                    ? initiatives.map((initiative) => (
                     <div
                       key={initiative.id}
                       className="rounded-[2rem] border border-border/40 bg-card p-8 shadow-sm"
@@ -294,7 +305,8 @@ function OrganizationDashboard() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                    ))
+                    : <div className="col-span-full rounded-2xl border border-dashed border-border/60 bg-muted/20 p-8 text-center text-sm text-muted-foreground">No initiatives yet.</div>}
             </div>
           </div>
 
@@ -306,6 +318,10 @@ function OrganizationDashboard() {
             <div className="space-y-4">
               {reportsLoading ? (
                 <Skeleton className="h-24 w-full rounded-2xl" />
+              ) : reportsError ? (
+                <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
+                  Unable to load your reports. Please refresh and try again.
+                </div>
               ) : reports?.length ? (
                 reports.map((report) => (
                   <div
