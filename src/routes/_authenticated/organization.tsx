@@ -213,7 +213,7 @@ function OrganizationDashboard() {
                   </form>
                 </div>
               </DialogContent>
-            </Dialog>
+            </Dialog> : null}
 
             {profileError ? (
           <div className="mb-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
