@@ -10,7 +10,7 @@ import {
 const FAQS = [
   {
     q: "How does CommonGround membership work?",
-    a: "Pick a monthly contribution, choose vetted initiatives, and we handle billing, allocation, receipts and impact reports.",
+    a: "Choose a monthly membership amount, select your preferred initiatives, and we handle billing, fund allocation, payment receipts and impact reporting.",
   },
   {
     q: "How are initiatives vetted?",
@@ -21,8 +21,8 @@ const FAQS = [
     a: "Yes — adjust your amount, switch allocations, pause or cancel from your dashboard anytime.",
   },
   {
-    q: "Is my contribution tax-deductible?",
-    a: "Where partner Organizations are eligible, you'll receive automated tax-deductible receipts.",
+    q: "Is my membership payment tax-deductible?",
+    a: "No. CommonGround is a marketing and membership platform, not a charitable institution. Your payment is a membership payment rather than a charitable donation, so we do not issue charitable tax-deduction receipts.",
   },
   {
     q: "How do I know my impact is real?",
