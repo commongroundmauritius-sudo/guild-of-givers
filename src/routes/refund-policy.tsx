@@ -8,7 +8,7 @@ export const Route = createFileRoute("/refund-policy")({
       {
         name: "description",
         content:
-          "Refund and cancellation terms for recurring memberships and contributions on CommonGround Mauritius.",
+          "Refund and cancellation terms for recurring memberships and payments on CommonGround Mauritius.",
       },
     ],
   }),
@@ -45,13 +45,10 @@ function RefundPolicyPage() {
           <div className="mt-10 space-y-10 text-foreground leading-relaxed text-sm sm:text-base">
             <div className="rounded-2xl border border-border/60 bg-card p-6 sm:p-8">
               <h2 className="font-display text-xl font-bold text-primary">
-                1. Nature of Social Contributions
+                1. Nature of Membership Payments
               </h2>
               <p className="mt-3 leading-relaxed text-muted-foreground">
-                CommonGround operates as a social infrastructure platform facilitating recurring
-                monthly contributions to verified Non-Governmental Organizations (Organizations) in
-                Mauritius. Contributions are immediately allocated to active social initiatives,
-                environmental programs, and community projects.
+                CommonGround operates as a marketing and membership platform. Members make recurring membership payments to CommonGround, and CommonGround allocates funds to supported initiatives and causes according to the member's selected priorities and the platform's allocation rules.
               </p>
             </div>
 
@@ -86,12 +83,11 @@ function RefundPolicyPage() {
                 3. General Refund Policy
               </h2>
               <p className="mt-3 text-muted-foreground">
-                Because recurring contributions are immediately pooled and disbursed to recipient
-                Organizations to fund active field operations:
+                Because membership payments may be allocated to supported initiatives after processing:
               </p>
               <ul className="mt-4 list-disc pl-6 space-y-2 text-muted-foreground">
                 <li>
-                  <strong>Completed Allocations:</strong> Contributions that have already been
+                  <strong>Completed Allocations:</strong> Payments that have already been
                   processed and allocated toward verified programs are generally non-refundable.
                 </li>
                 <li>
