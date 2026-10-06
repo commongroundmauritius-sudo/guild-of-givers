@@ -165,7 +165,7 @@ function AdminInitiativesPage() {
                                     "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1200"
                                   }
                                   className="h-full w-full object-cover"
-                                  alt=""
+                                  alt={`${item.title} initiative image`}
                                 />
                               </div>
                               <div>
