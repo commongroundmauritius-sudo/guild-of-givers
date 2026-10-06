@@ -104,8 +104,7 @@ function TermsAndConditionsPage() {
                 4. Payments, Billing & Fee Coverage
               </h2>
               <p className="mt-3 text-muted-foreground">
-                All financial transactions on CommonGround are processed securely in Mauritian
-                Rupees (MUR) via PCI-DSS certified gateway provider <strong>Peach Payments</strong>.
+                Payment processing is provided through payment services used by CommonGround when enabled. Any applicable payment-provider terms, processing details, and checkout disclosures will be presented as part of the payment flow.
               </p>
               <ul className="mt-4 list-disc pl-6 space-y-2 text-muted-foreground">
                 <li>
