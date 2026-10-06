@@ -15,13 +15,18 @@ export const successStoryService = {
     return data;
   },
 
-  async getPublished() {
-    const { data, error } = await supabase
+  async getPublished(limit?: number) {
+    let query = supabase
       .from("success_stories")
       .select("id, title, summary, image_url, cta_link, display_order")
       .eq("is_published", true)
       .order("display_order", { ascending: true });
 
+    if (typeof limit === "number" && Number.isFinite(limit) && limit > 0) {
+      query = query.limit(Math.min(Math.floor(limit), 12));
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     return data;
   },
@@ -57,7 +62,6 @@ export const successStoryService = {
       display_order: index,
     }));
 
-    // Perform multiple updates
     for (const update of updates) {
       await supabase
         .from("success_stories")
