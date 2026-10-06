@@ -24,7 +24,7 @@ export const DEFAULT_HOMEPAGE_CONFIG: HomepageConfig = {
       visible: true,
       settings: {
         headline: "Impact that Matters",
-        subheadline: "Support verified community initiatives and see your contribution in action.",
+        subheadline: "Support verified community initiatives through a monthly membership and see the impact in action.",
         primaryCTA: { text: "Explore Initiatives", href: "/initiatives" },
         secondaryCTA: { text: "Our Story", href: "/about" },
       },
@@ -36,15 +36,13 @@ export const DEFAULT_HOMEPAGE_CONFIG: HomepageConfig = {
         metrics: [
           { id: "orgs", label: "Verified Organizations", visible: true },
           { id: "initiatives", label: "Active Initiatives", visible: true },
-          { id: "donations", label: "Total Contributions", visible: true },
+          { id: "memberships", label: "Active Memberships", visible: true },
           { id: "profiles", label: "Impact Makers", visible: true },
         ],
       },
     },
     { id: "featured", visible: true, settings: {} },
     { id: "volunteers", visible: true, settings: {} },
-    { id: "urgent", visible: true, settings: {} },
-    { id: "trending", visible: true, settings: {} },
     { id: "success", visible: true, settings: {} },
     { id: "faq", visible: true, settings: {} },
   ],
@@ -52,9 +50,6 @@ export const DEFAULT_HOMEPAGE_CONFIG: HomepageConfig = {
 
 export const homepageService = {
   async getPublishedVersion() {
-    // CMS content is intentionally non-critical to the public homepage.
-    // Bound the request so an unhealthy API cannot keep the background query
-    // alive indefinitely.
     const controller = new AbortController();
     const timeoutId = globalThis.setTimeout(() => controller.abort(), 3500);
 
@@ -104,20 +99,20 @@ export const homepageService = {
 
       if (error) throw error;
       return data;
-    } else {
-      const { data, error } = await supabase
-        .from("homepage_versions")
-        .insert({
-          status: "draft",
-          configuration_json: config as any,
-          created_by: userId,
-        })
-        .select("id")
-        .single();
-
-      if (error) throw error;
-      return data;
     }
+
+    const { data, error } = await supabase
+      .from("homepage_versions")
+      .insert({
+        status: "draft",
+        configuration_json: config as any,
+        created_by: userId,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+    return data;
   },
 
   async publishVersion(versionId: string) {
