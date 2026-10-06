@@ -74,8 +74,8 @@ const MORE_ADMIN_NAV = [
 const MEMBER_NAV = [
   { label: "Dashboard", to: "/member", icon: LayoutDashboard },
   { label: "Community Hub", to: "/community-hub", icon: MessageCircle },
-  { label: "Contributions", to: "/member", icon: Heart },
-  { label: "Supported", to: "/member", icon: FileText },
+  { label: "Membership", to: "/member", icon: Heart },
+  { label: "Impact", to: "/member", icon: FileText },
 ] as const;
 
 const Organization_NAV = [
@@ -106,6 +106,7 @@ export function Header() {
   const initials = displayName.substring(0, 2).toUpperCase();
 
   const isMoreActive = MORE_ADMIN_NAV.some((item) => location.pathname.startsWith(item.to));
+  const dashboardPath = isAdmin ? "/admin-dashboard" : role === "organization" ? "/organization" : "/member";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur">
@@ -247,26 +248,20 @@ export function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link
-                      to={
-                        isAdmin
-                          ? "/admin-dashboard"
-                          : role === "organization"
-                            ? "/organization"
-                            : "/member"
-                      }
+                      to={dashboardPath}
                     >
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to={isAdmin ? "/admin-dashboard/profile" : "/member/profile"}>
+                    <Link to={role === "organization" ? "/organization" : isAdmin ? "/admin-dashboard/profile" : "/member/profile"}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to={isAdmin ? "/admin-dashboard/settings" : "/member/settings"}>
+                    <Link to={role === "organization" ? "/organization" : isAdmin ? "/admin-dashboard/settings" : "/member/settings"}>
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Settings</span>
                     </Link>
