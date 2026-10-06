@@ -191,7 +191,7 @@ const VALUE_PROPS = [
   {
     icon: Eye,
     title: "Full Transparency",
-    desc: "Track exactly where how your membership supports impact with unified impact reports and real-time dashboard updates.",
+    desc: "Track exactly how your membership supports impact with unified impact reports and real-time dashboard updates.",
   },
   {
     icon: Target,
@@ -208,7 +208,10 @@ function FeaturedInitiatives({ settings }: { settings: any }) {
       const { data } = await supabase
         .from("initiatives")
         .select("*, organizations(organization_name)")
-        .in("id", settings.manual_ids);
+        .in("id", settings.manual_ids)
+        .eq("is_approved", true)
+        .eq("is_published", true)
+        .eq("status", "active");
 
       const results = data || [];
       return results.sort(
@@ -266,6 +269,8 @@ function VolunteerOpportunities({ settings }: { settings: any }) {
         .from("initiatives")
         .select("*, organizations(organization_name)")
         .eq("volunteer_opportunity", true)
+        .eq("is_approved", true)
+        .eq("is_published", true)
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(settings.limit || 4);
@@ -315,7 +320,7 @@ function SuccessStories({ settings }: { settings: any }) {
                 >
                   <div className="aspect-[16/10] overflow-hidden">
                     <img
-                      src={story.image_url || ""}
+                      src={story.image_url}
                       alt={story.title || "Success story image"}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
