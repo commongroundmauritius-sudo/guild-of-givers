@@ -190,7 +190,9 @@ function OrganizationProfilePage() {
             "id, title, slug, description, image_url, goal_amount_mur, current_amount_mur, active_supporter_count, status",
           )
           .eq("organization_id", id)
-          .eq("status", "active");
+          .eq("status", "active")
+          .eq("is_approved", true)
+          .eq("is_published", true);
 
         if (initError) {
           console.error("Error loading child initiatives:", initError);
