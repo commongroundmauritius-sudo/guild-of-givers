@@ -125,14 +125,14 @@ function Hero({ settings }: { settings: any }) {
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
             <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
-            Vetted. Stable. Long-term.
+            Reviewed. Transparent. Long-term.
           </div>
           <h1 className="mt-8 font-display text-5xl font-extrabold tracking-tight text-primary sm:text-7xl lg:text-8xl leading-[0.9]">
             {settings.headline || "One Membership. Endless Impact."}
           </h1>
           <p className="mt-8 text-xl leading-relaxed text-muted-foreground sm:text-2xl max-w-2xl">
             {settings.subheadline ||
-              "We turn predictable monthly membership funding into reliable funding for Mauritius' most effective long-horizon social programs."}
+              "We turn predictable monthly membership funding into reliable support for long-horizon social programs in Mauritius."}
           </p>
           <div className="mt-12 flex flex-wrap gap-4">
             <Link
@@ -181,7 +181,7 @@ const VALUE_PROPS = [
   {
     icon: UserPlus,
     title: "Vetted Partners",
-    desc: "We perform deep due-diligence on every organization to ensure your support reaches the most effective teams.",
+    desc: "We review partner organizations and their initiatives before they are listed on CommonGround.",
   },
   {
     icon: Repeat,
@@ -191,7 +191,7 @@ const VALUE_PROPS = [
   {
     icon: Eye,
     title: "Full Transparency",
-    desc: "Track exactly how your membership supports impact with unified impact reports and real-time dashboard updates.",
+    desc: "See how your membership is allocated through the reports and updates available in your member dashboard.",
   },
   {
     icon: Target,
@@ -470,19 +470,19 @@ function FAQ({ settings }: { settings: any }) {
     },
     {
       q: "How are initiatives vetted?",
-      a: "Every partner is reviewed for legal status, governance, financial transparency and demonstrated long-term impact before being listed.",
+      a: "Partner organizations are reviewed against CommonGround's onboarding requirements before their initiatives are listed.",
     },
     {
       q: "Can I change or cancel my membership?",
       a: "Yes. You can adjust your monthly amount, switch allocations, pause or cancel anytime from your dashboard.",
     },
     {
-      q: "Is my contribution tax-deductible?",
-      a: "CommonGround is a marketing company, not a charitable institution. Membership payments are not presented as charitable donations or tax-deductible contributions by CommonGround.",
+      q: "Is my membership payment tax-deductible?",
+      a: "CommonGround is a marketing and membership platform, not a charitable institution. Membership payments are not charitable donations and CommonGround does not issue charitable tax-deduction receipts.",
     },
     {
       q: "How do I know my impact is real?",
-      a: "Members receive unified, audited impact reports alongside updates from the organizations they support.",
+      a: "Members can review the impact reports and updates made available by the organizations they support.",
     },
   ];
 
@@ -526,7 +526,7 @@ function FinalCTA() {
           Start Supporting Today
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-muted-foreground">
-          Join thousands of members who are making a structured difference. Your membership,
+          Join other members who are making a structured difference. Your membership,
           amplified by our community, creates lasting change.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
