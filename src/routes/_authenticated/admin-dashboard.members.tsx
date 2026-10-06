@@ -80,7 +80,19 @@ function AdminMembersPage() {
           </div>
 
           <div className="overflow-hidden rounded-[2rem] border border-border/40 bg-card shadow-sm">
-            {isError ? (\n              <div className="flex flex-col items-center justify-center p-20 text-center">\n                <div className="rounded-full bg-destructive/10 p-4">\n                  <Info className="h-8 w-8 text-destructive" />\n                </div>\n                <h2 className="mt-6 font-display text-2xl font-semibold text-primary">\n                  Unable to load members\n                </h2>\n                <p className="mt-2 text-muted-foreground">\n                  {error instanceof Error ? error.message : "Please try again."}\n                </p>\n              </div>\n            ) : isLoading ? (
+            {isError ? (
+              <div className="flex flex-col items-center justify-center p-20 text-center">
+                <div className="rounded-full bg-destructive/10 p-4">
+                  <Info className="h-8 w-8 text-destructive" />
+                </div>
+                <h2 className="mt-6 font-display text-2xl font-semibold text-primary">
+                  Unable to load members
+                </h2>
+                <p className="mt-2 text-muted-foreground">
+                  {error instanceof Error ? error.message : "Please try again."}
+                </p>
+              </div>
+            ) : isLoading ? (
               <div className="p-8 space-y-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Skeleton key={i} className="h-16 w-full rounded-2xl" />

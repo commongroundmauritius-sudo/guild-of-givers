@@ -95,7 +95,13 @@ function AdminAnnouncementsPage() {
             )}
 
             <div className="grid gap-6">
-              {isError ? (\n                <Card className="border-destructive/30">\n                  <CardContent className="p-6 text-sm text-destructive">\n                    Unable to load announcements. {error instanceof Error ? error.message : "Please try again."}\n                  </CardContent>\n                </Card>\n              ) : isLoading ? (
+              {isError ? (
+                <Card className="border-destructive/30">
+                  <CardContent className="p-6 text-sm text-destructive">
+                    Unable to load announcements. {error instanceof Error ? error.message : "Please try again."}
+                  </CardContent>
+                </Card>
+              ) : isLoading ? (
                 Array(3)
                   .fill(0)
                   .map((_, i) => <Card key={i} className="h-32 w-full animate-pulse bg-muted" />)
