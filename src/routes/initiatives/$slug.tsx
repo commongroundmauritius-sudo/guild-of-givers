@@ -272,7 +272,7 @@ function InitiativeDetailPage() {
                           <a
                             href={organization.website_url}
                             target="_blank"
-                            rel="noopener"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary"
                           >
                             Visit Website <ExternalLink className="h-3 w-3" />
@@ -294,10 +294,12 @@ function InitiativeDetailPage() {
                   </div>
                   <button
                     onClick={handleShare}
+                    type="button"
+                    aria-label="Share initiative"
                     className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/50 text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                     title="Share Initiative"
                   >
-                    <Share2 className="h-5 w-5" />
+                    <Share2 className="h-5 w-5" aria-hidden="true" />
                   </button>
                 </div>
 
@@ -376,8 +378,7 @@ function InitiativeDetailPage() {
                     </span>
                   </div>
                   <p className="mt-4 text-xs leading-relaxed text-primary/70">
-                    This Organization has passed our deep due-diligence process, including financial
-                    audit and site visits.
+                    This organization has completed CommonGround's partner verification process and is currently listed as a verified partner.
                   </p>
                 </div>
               </div>
