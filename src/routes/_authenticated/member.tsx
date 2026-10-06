@@ -38,14 +38,14 @@ function MemberDashboard() {
   }, [authLoading, authDataError, role, navigate]);
 
   const subSyncKeys = useMemo(
-    () => (user?.id ? [["member-subscription", user.id]] : []),
+    () => (isAuthorizedMember && user?.id ? [["member-subscription", user.id]] : []),
     [user?.id],
   );
   const prefSyncKeys = useMemo(
-    () => (user?.id ? [["member-preferences", user.id]] : []),
+    () => (isAuthorizedMember && user?.id ? [["member-preferences", user.id]] : []),
     [user?.id],
   );
-  const ledgerSyncKeys = useMemo(() => (user?.id ? [["member-ledger", user.id]] : []), [user?.id]);
+  const ledgerSyncKeys = useMemo(() => (isAuthorizedMember && user?.id ? [["member-ledger", user.id]] : []), [user?.id]);
 
   useRealtimeSync("subscriptions", subSyncKeys);
   useRealtimeSync("member_preferences", prefSyncKeys);
@@ -53,7 +53,7 @@ function MemberDashboard() {
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
-    enabled: !!user,
+    enabled: isAuthorizedMember && !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
@@ -67,7 +67,7 @@ function MemberDashboard() {
 
   const { data: subscription } = useQuery({
     queryKey: ["member-subscription", user?.id],
-    enabled: !!user,
+    enabled: isAuthorizedMember && !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("subscriptions")
@@ -83,7 +83,7 @@ function MemberDashboard() {
 
   const { data: preferences } = useQuery({
     queryKey: ["member-preferences", user?.id],
-    enabled: !!user,
+    enabled: isAuthorizedMember && !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("member_preferences")
@@ -96,6 +96,7 @@ function MemberDashboard() {
 
   const { data: allInitiatives } = useQuery({
     queryKey: ["public-initiatives"],
+    enabled: isAuthorizedMember,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("public_visible_initiatives" as any)
