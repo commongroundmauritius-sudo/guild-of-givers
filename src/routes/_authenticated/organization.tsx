@@ -52,7 +52,7 @@ function OrganizationDashboard() {
   const [reportUrl, setReportUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: profile, isError: profileError } = useQuery({
+  const { data: profile, isError: profileError, refetch: refetchProfile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -66,7 +66,7 @@ function OrganizationDashboard() {
     enabled: isAuthorizedOrganization && !!user?.id,
   });
 
-  const { data: initiatives, isLoading: initiativesLoading, isError: initiativesError } = useQuery({
+  const { data: initiatives, isLoading: initiativesLoading, isError: initiativesError, refetch: refetchInitiatives } = useQuery({
     queryKey: ["org-initiatives", profile?.organization_id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -79,7 +79,7 @@ function OrganizationDashboard() {
     enabled: isAuthorizedOrganization && !!profile?.organization_id,
   });
 
-  const { data: reports, isLoading: reportsLoading, isError: reportsError } = useQuery({
+  const { data: reports, isLoading: reportsLoading, isError: reportsError, refetch: refetchReports } = useQuery({
     queryKey: ["org-reports", profile?.organization_id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -157,7 +157,7 @@ function OrganizationDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+            {profile?.organization_id ? <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
               <DialogTrigger asChild>
                 <Button className="rounded-full bg-forest hover:bg-forest/90">
                   <Upload className="mr-2 h-4 w-4" /> Upload Report
@@ -217,7 +217,7 @@ function OrganizationDashboard() {
 
             {profileError ? (
           <div className="mb-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-            We could not load your organization profile. Please refresh and try again.
+            We could not load your organization profile.
           </div>
         ) : null}
 
@@ -264,7 +264,7 @@ function OrganizationDashboard() {
               {initiativesLoading
                 ? [1, 2].map((idx) => <Skeleton key={idx} className="h-48 rounded-[2rem]" />)
                 : initiativesError
-                  ? <div className="col-span-full rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">Unable to load your initiatives. Please refresh and try again.</div>
+                  ? <div className="col-span-full rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive"><p>Unable to load your initiatives.</p><Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => refetchInitiatives()}>Try again</Button></div>
                   : initiatives?.length
                     ? initiatives.map((initiative) => (
                     <div
@@ -320,7 +320,7 @@ function OrganizationDashboard() {
                 <Skeleton className="h-24 w-full rounded-2xl" />
               ) : reportsError ? (
                 <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
-                  Unable to load your reports. Please refresh and try again.
+                  Unable to load your reports.
                 </div>
               ) : reports?.length ? (
                 reports.map((report) => (
