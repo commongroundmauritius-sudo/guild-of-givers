@@ -37,7 +37,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { deleteInitiative } from "@/lib/security/auth-actions";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/initiatives/")({
   component: AdminInitiativesPage,
@@ -61,7 +60,7 @@ function AdminInitiativesPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: initiatives = [], isLoading } = useQuery({
+  const { data: initiatives = [], isLoading, isError, error } = useQuery({
     queryKey: ["admin-initiatives"],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -119,16 +118,17 @@ function AdminInitiativesPage() {
 
           <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
             <div className="relative flex-1 w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
+                aria-label="Search initiatives by title or organization"
                 placeholder="Search by title or organization..."
                 className="pl-9 rounded-xl h-11"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button variant="outline" className="rounded-xl h-11 px-6 gap-2 w-full md:w-auto">
-              <Filter className="h-4 w-4" /> Filter Catalog
+            <Button type="button" variant="outline" disabled className="rounded-xl h-11 px-6 gap-2 w-full md:w-auto">
+              <Filter className="h-4 w-4" aria-hidden="true" /> Filter Catalog
             </Button>
           </div>
 
@@ -145,7 +145,19 @@ function AdminInitiativesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoading ? (
+                  {isError ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-20">
+                        <p className="text-sm font-semibold text-destructive">Unable to load initiatives.</p>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {error instanceof Error ? error.message : "The initiative catalog could not be loaded."}
+                        </p>
+                        <Button type="button" variant="outline" className="mt-4" onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-initiatives"] })}>
+                          Retry
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ) : isLoading ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-20">
                         <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/50" />
@@ -208,6 +220,7 @@ function AdminInitiativesPage() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
+                                    aria-label="Open initiative actions"
                                     className="rounded-xl h-9 w-9"
                                   >
                                     <MoreVertical className="h-4 w-4" />
