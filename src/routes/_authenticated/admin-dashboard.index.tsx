@@ -27,7 +27,7 @@ function AdminDashboard() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!loading && role !== "admin") {
+    if (!loading && role !== "admin" && role !== "super_admin") {
       navigate({ to: "/dashboard" });
     }
   }, [loading, role, navigate]);
