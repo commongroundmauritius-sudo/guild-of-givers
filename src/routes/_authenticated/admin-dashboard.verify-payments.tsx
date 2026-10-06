@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { simulatePaymentEvent, simulateBillingCycle } from "@/lib/payments/simulation-actions";
 import { useAuth } from "@/hooks/use-auth";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -12,12 +13,14 @@ export const Route = createFileRoute("/_authenticated/admin-dashboard/verify-pay
 });
 
 function VerifyPaymentsPage() {
-  const { user } = useAuth();
+  const { user, role, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const isAuthorizedAdmin = !authLoading && (role === "admin" || role === "super_admin");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<{ name: string; status: string; detail: string }[]>([]);
 
   const runTest = async () => {
-    if (!user) return;
+    if (!user || !isAuthorizedAdmin) return;
     setLoading(true);
     setResults([]);
 
@@ -73,6 +76,12 @@ function VerifyPaymentsPage() {
       setLoading(false);
     }
   };
+
+  if (authLoading) return <div className="p-20 text-center">Checking access...</div>;
+  if (!isAuthorizedAdmin) {
+    void navigate({ to: "/dashboard" });
+    return null;
+  }
 
   return (
     
