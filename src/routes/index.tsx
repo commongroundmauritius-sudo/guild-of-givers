@@ -84,7 +84,7 @@ function renderSection(section: any) {
     case "hero":
       return <><Hero settings={section.settings} /><ValueProps /></>;
     case "stats":
-      return null;
+      return <ImpactStats settings={section.settings} />;
     case "featured":
       return <FeaturedInitiatives settings={section.settings} />;
     case "volunteers":
@@ -129,6 +129,42 @@ function Hero({ settings }: { settings: any }) {
       </div>
     </section>
   );
+}
+
+function ImpactStats({ settings }: { settings: any }) {
+  const metrics = Array.isArray(settings?.metrics) ? settings.metrics.filter((m: any) => m.visible !== false) : [];
+  if (metrics.length === 0) return null;
+
+  const { data: values = {}, isLoading } = useQuery({
+    queryKey: ["homepage-impact-stats", metrics.map((m: any) => m.id).join(",")],
+    queryFn: async () => {
+      const [organizations, initiatives, profiles, memberships] = await Promise.all([
+        supabase.from("organizations").select("id", { count: "exact", head: true }).eq("is_verified", true).eq("status", "active"),
+        supabase.from("initiatives").select("id", { count: "exact", head: true }).eq("is_approved", true).eq("is_published", true).eq("status", "active"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "active"),
+        supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "active"),
+      ]);
+      return {
+        organizations: organizations.count ?? 0,
+        initiatives: initiatives.count ?? 0,
+        profiles: profiles.count ?? 0,
+        memberships: memberships.count ?? 0,
+      };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return <section className="border-y border-border/40 bg-white py-16">
+    <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+      {metrics.map((metric: any) => {
+        const value = metric.auto === false ? metric.manualValue ?? 0 : values[metric.id as keyof typeof values] ?? 0;
+        return <div key={metric.id} className="rounded-3xl border border-border/50 bg-card p-6 text-center">
+          <div className="font-display text-4xl font-bold text-primary">{isLoading && metric.auto !== false ? "—" : value.toLocaleString()}</div>
+          <div className="mt-2 text-sm font-medium text-muted-foreground">{metric.label}</div>
+        </div>;
+      })}
+    </div>
+  </section>;
 }
 
 function ValueProps() {
