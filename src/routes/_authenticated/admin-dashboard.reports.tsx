@@ -77,7 +77,14 @@ function AdminReportsPage() {
             </div>
           </div>
 
-          {isError ? (\n            <Card className="border-destructive/30">\n              <CardContent className="p-8 text-center">\n                <p className="font-medium text-destructive">Unable to load impact reports.</p>\n                <p className="mt-2 text-sm text-muted-foreground">{error instanceof Error ? error.message : "Please try again."}</p>\n              </CardContent>\n            </Card>\n          ) : isLoading ? (
+          {isError ? (
+            <Card className="border-destructive/30">
+              <CardContent className="p-8 text-center">
+                <p className="font-medium text-destructive">Unable to load impact reports.</p>
+                <p className="mt-2 text-sm text-muted-foreground">{error instanceof Error ? error.message : "Please try again."}</p>
+              </CardContent>
+            </Card>
+          ) : isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-32 animate-pulse bg-muted rounded-3xl" />
