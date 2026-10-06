@@ -26,9 +26,7 @@ export function LegalPage() {
             Legal Framework & Policies
           </h1>
           <p className="mt-4 text-sm text-muted-foreground max-w-2xl">
-            CommonGround operates as a registered social infrastructure platform facilitating
-            contributions to vetted Non-Governmental Organizations in Mauritius under full statutory
-            compliance.
+            CommonGround operates as a marketing and membership platform that helps vetted organizations in Mauritius gain visibility and recurring support. Membership payments are processed by CommonGround and funds are allocated to supported initiatives according to our published model.
           </p>
 
           {/* Quick Nav Cards */}
@@ -66,8 +64,7 @@ export function LegalPage() {
                 Terms & Conditions
               </h2>
               <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                Platform usage rules, membership contribution guidelines, partner organization
-                obligations, and liability limitations.
+                Platform usage rules, membership terms, partner organization obligations, and liability limitations.
               </p>
             </Link>
 
@@ -85,8 +82,7 @@ export function LegalPage() {
                 Refund & Cancellation Policy
               </h2>
               <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                Clear rules regarding social contribution allocations, dashboard membership
-                cancellation, and exceptional 14-day billing error reviews.
+                Clear rules regarding membership billing, allocation of funds, cancellation, and exceptional 14-day billing error reviews.
               </p>
             </Link>
 
@@ -104,7 +100,7 @@ export function LegalPage() {
                 Cookies & Browser Storage
               </h2>
               <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                How CommonGround uses essential browser storage and payment-provider technologies, with no optional analytics cookies or consent banner.
+                How CommonGround uses essential browser storage and payment-provider technologies. Optional analytics and advertising cookies are not used.
               </p>
             </Link>
           </div>
