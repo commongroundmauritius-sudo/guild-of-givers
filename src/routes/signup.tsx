@@ -17,7 +17,7 @@ export const Route = createFileRoute("/signup")({
       { title: "Become a Member — CommonGround" },
       {
         name: "description",
-        content: "Pick a monthly contribution and start making long-term impact.",
+        content: "Choose a monthly membership amount and start making long-term impact.",
       },
     ],
   }),
@@ -245,10 +245,10 @@ function SignupPage() {
             {step === 0 && (
               <div>
                 <h2 className="font-display text-4xl font-bold text-primary">
-                  Monthly Contribution
+                  Monthly Membership
                 </h2>
                 <p className="mt-4 text-muted-foreground">
-                  Pick an amount that reflects the impact you want to make. You can adjust this
+                  Choose a monthly membership amount that reflects the impact you want to make. You can adjust this
                   anytime.
                 </p>
                 <div className="mt-10">
@@ -320,7 +320,7 @@ function SignupPage() {
               <div>
                 <h2 className="font-display text-4xl font-bold text-primary">Your details</h2>
                 <p className="mt-4 text-muted-foreground">
-                  Contributing Rs {finalAmount.toLocaleString()} / month.
+                  Your membership is Rs {finalAmount.toLocaleString()} / month.
                 </p>
                 <form
                   onSubmit={(e) => {
@@ -389,15 +389,13 @@ function SignupPage() {
                 </div>
                 <button
                   onClick={handlePaymentCompletion}
-                  disabled={submitting}
+                  disabled={submitting || !paymentService.isConfigured()}
                   className="mt-10 inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
                 >
-                  {submitting ? "Processing..." : "Complete Checkout (Mock)"}
+                  {submitting ? "Processing..." : "Payment checkout unavailable"}
                 </button>
                 <p className="mt-4 text-center text-xs text-muted-foreground">
-                  The current checkout uses the mock provider for end-to-end testing. The provider
-                  interface is isolated so a future Peach integration can replace it without
-                  changing the membership/allocation workflow.
+                  Secure production payment processing is still being configured. Membership activation will be available once the payment provider is connected and verified.
                 </p>
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   By completing payment, you agree to our{" "}
