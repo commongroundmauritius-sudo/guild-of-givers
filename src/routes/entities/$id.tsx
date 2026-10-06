@@ -310,7 +310,7 @@ function OrganizationProfilePage() {
             The entity profile you are looking for does not exist or has been removed.
           </p>
           <Link
-            to="/admin-dashboard/organizations"
+            to="/organizations"
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full hover:bg-primary/90 font-bold"
           >
             Back to Registry
@@ -375,6 +375,8 @@ function OrganizationProfilePage() {
 
             {canEdit && (
               <button
+                type="button"
+                aria-label={isAdmin ? "Edit organization profile as administrator" : "Edit organization profile"}
                 onClick={() => setIsEditing(true)}
                 className="px-6 py-3 bg-white text-primary rounded-full hover:bg-white/90 font-bold flex items-center gap-2 transition-all shadow-lg shrink-0"
               >
@@ -606,7 +608,7 @@ function OrganizationProfilePage() {
                           rel="noopener noreferrer"
                           className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted/80 transition-all"
                         >
-                          <Facebook className="w-5 h-5" />
+                          <Facebook className="w-5 h-5" aria-hidden="true" />
                         </a>
                       )}
                       {socialLinks.instagram && (
@@ -616,7 +618,7 @@ function OrganizationProfilePage() {
                           rel="noopener noreferrer"
                           className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted/80 transition-all"
                         >
-                          <Instagram className="w-5 h-5" />
+                          <Instagram className="w-5 h-5" aria-hidden="true" />
                         </a>
                       )}
                       {socialLinks.linkedin && (
@@ -626,7 +628,7 @@ function OrganizationProfilePage() {
                           rel="noopener noreferrer"
                           className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted/80 transition-all"
                         >
-                          <Linkedin className="w-5 h-5" />
+                          <Linkedin className="w-5 h-5" aria-hidden="true" />
                         </a>
                       )}
                     </div>
@@ -644,12 +646,11 @@ function OrganizationProfilePage() {
                     <span className="text-xs font-bold text-primary uppercase tracking-widest block">
                       CommonGround Verified
                     </span>
-                    <span className="text-xs text-muted-foreground">Due Diligence Approved</span>
+                    <span className="text-xs text-muted-foreground">Partner Verification</span>
                   </div>
                 </div>
                 <p className="text-xs leading-relaxed text-primary/80">
-                  {organization.organization_name} has passed our verification process, including
-                  our partner verification and governance review.
+                  {organization.organization_name} has passed our partner verification process and is currently listed as a verified partner.
                 </p>
               </div>
             </div>
@@ -665,6 +666,8 @@ function OrganizationProfilePage() {
                   {isAdmin ? "Admin Organization Editor" : "Edit Organization Profile"}
                 </h2>
                 <button
+                  type="button"
+                  aria-label="Close organization profile editor"
                   onClick={() => setIsEditing(false)}
                   className="p-2 hover:bg-muted rounded-full text-muted-foreground"
                 >
