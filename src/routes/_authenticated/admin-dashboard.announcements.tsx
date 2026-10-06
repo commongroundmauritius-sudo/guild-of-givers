@@ -22,7 +22,7 @@ function AdminAnnouncementsPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const { data: announcements = [], isLoading } = useQuery({
+  const { data: announcements = [], isLoading, isError, error } = useQuery({
     queryKey: ["admin-announcements"],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -95,7 +95,7 @@ function AdminAnnouncementsPage() {
             )}
 
             <div className="grid gap-6">
-              {isLoading ? (
+              {isError ? (\n                <Card className="border-destructive/30">\n                  <CardContent className="p-6 text-sm text-destructive">\n                    Unable to load announcements. {error instanceof Error ? error.message : "Please try again."}\n                  </CardContent>\n                </Card>\n              ) : isLoading ? (
                 Array(3)
                   .fill(0)
                   .map((_, i) => <Card key={i} className="h-32 w-full animate-pulse bg-muted" />)
@@ -144,7 +144,7 @@ function AdminAnnouncementsPage() {
                               }
                             />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setEditingId(a.id)}>
+                          <Button variant="ghost" size="icon" aria-label="Edit announcement" onClick={() => setEditingId(a.id)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
