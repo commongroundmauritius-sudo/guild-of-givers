@@ -101,7 +101,9 @@ function MemberDashboard() {
       const { data, error } = await supabase
         .from("public_visible_initiatives" as any)
         .select("*")
+        .eq("is_approved", true)
         .eq("is_published", true)
+        .eq("status", "active")
         .limit(10);
       if (error) throw error;
       return data as any[];
