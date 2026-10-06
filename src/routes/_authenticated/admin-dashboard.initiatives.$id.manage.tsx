@@ -45,7 +45,7 @@ function AdminInitiativeManagePage() {
     is_published: false,
   });
 
-  const { data: initiative, isLoading } = useQuery({
+  const { data: initiative, isLoading, isError, error } = useQuery({
     queryKey: ["admin-initiative", id],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -104,6 +104,33 @@ function AdminInitiativeManagePage() {
         <div className="flex h-screen items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
+      </SiteLayout>
+    );
+  }
+
+  if (isError || !initiative) {
+    return (
+      <SiteLayout>
+        <section className="bg-muted/30 min-h-screen py-16">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+            <div className="rounded-3xl border border-border/40 bg-card p-10 text-center shadow-sm">
+              <h1 className="font-display text-2xl font-semibold text-primary">
+                Unable to load initiative
+              </h1>
+              <p className="mt-3 text-muted-foreground">
+                {error instanceof Error ? error.message : "The initiative could not be found or loaded."}
+              </p>
+              <div className="mt-6 flex justify-center gap-3">
+                <Button type="button" variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-initiative", id] })}>
+                  Retry
+                </Button>
+                <Button type="button" onClick={() => navigate({ to: "/admin-dashboard/initiatives" })}>
+                  Back to Initiatives
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
       </SiteLayout>
     );
   }
@@ -284,6 +311,7 @@ function AdminInitiativeManagePage() {
                     </div>
                   </div>
                   <Switch
+                    aria-label="Public visibility"
                     checked={formData.is_published}
                     onCheckedChange={(v) => handleCheckboxChange("is_published", v)}
                   />
