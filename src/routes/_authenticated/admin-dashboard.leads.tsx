@@ -25,7 +25,7 @@ function AdminLeadsPage() {
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["admin-leads", statusFilter],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       let query = supabase
         .from("leads")
