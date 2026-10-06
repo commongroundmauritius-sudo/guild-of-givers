@@ -47,7 +47,7 @@ function AdminAnalyticsPage() {
 
   const { data: initiatives, isLoading: initiativesLoading } = useQuery({
     queryKey: ["admin-initiatives-stats"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
