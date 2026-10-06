@@ -38,7 +38,7 @@ function AdminPartnerApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedApp, setSelectedApp] = useState<any>(null);
 
-  const { data: applications, isLoading } = useQuery({
+  const { data: applications, isLoading, isError, error } = useQuery({
     queryKey: ["admin-partner-applications", statusFilter],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
