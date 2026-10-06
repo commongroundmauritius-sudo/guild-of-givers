@@ -59,7 +59,7 @@ function InitiativeCreatePage() {
     }
   }, [role, authLoading, navigate]);
 
-  const { data: organizations } = useQuery({
+  const { data: organizations, isError: organizationsError, error: organizationsQueryError } = useQuery({
     queryKey: ["all-organizations"],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -159,6 +159,17 @@ function InitiativeCreatePage() {
             </div>
           </div>
 
+          {organizationsError && (
+            <div className="mb-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
+              <p className="font-semibold text-destructive">Unable to load partner organizations.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {organizationsQueryError instanceof Error ? organizationsQueryError.message : "Please retry before creating the initiative."}
+              </p>
+              <Button type="button" variant="outline" className="mt-3" onClick={() => queryClient.invalidateQueries({ queryKey: ["all-organizations"] })}>
+                Retry
+              </Button>
+            </div>
+          )}
           <div className="mx-auto max-w-5xl">
             <div className="grid gap-8 lg:grid-cols-3">
               <div className="lg:col-span-2 space-y-8">
@@ -172,6 +183,7 @@ function InitiativeCreatePage() {
                         Initiative Title
                       </label>
                       <input
+                        aria-label="Initiative title"
                         name="title"
                         value={formData.title}
                         onChange={handleInputChange}
@@ -184,6 +196,7 @@ function InitiativeCreatePage() {
                         Custom Slug (Optional)
                       </label>
                       <input
+                        aria-label="Custom slug"
                         name="slug"
                         value={formData.slug}
                         onChange={handleInputChange}
@@ -197,6 +210,7 @@ function InitiativeCreatePage() {
                           Organization
                         </label>
                         <select
+                          aria-label="Partner organization"
                           name="organization_id"
                           value={formData.organization_id}
                           onChange={handleInputChange}
@@ -215,6 +229,7 @@ function InitiativeCreatePage() {
                           Category
                         </label>
                         <select
+                          aria-label="Initiative category"
                           name="category"
                           value={formData.category}
                           onChange={handleInputChange}
@@ -241,6 +256,7 @@ function InitiativeCreatePage() {
                         Tagline / Caption
                       </label>
                       <input
+                        aria-label="Tagline or caption"
                         name="caption"
                         value={formData.caption}
                         onChange={handleInputChange}
@@ -253,6 +269,7 @@ function InitiativeCreatePage() {
                         Summary
                       </label>
                       <textarea
+                        aria-label="Initiative summary"
                         name="summary"
                         value={formData.summary}
                         onChange={handleInputChange}
@@ -266,6 +283,7 @@ function InitiativeCreatePage() {
                         Full Story
                       </label>
                       <textarea
+                        aria-label="Full initiative story"
                         name="content"
                         value={formData.content}
                         onChange={handleInputChange}
@@ -289,6 +307,7 @@ function InitiativeCreatePage() {
                         Main Image URL
                       </label>
                       <input
+                        aria-label="Main image URL"
                         name="image_url"
                         value={formData.image_url}
                         onChange={handleInputChange}
@@ -304,6 +323,7 @@ function InitiativeCreatePage() {
                         {formData.gallery_urls.map((url, idx) => (
                           <div key={idx} className="flex gap-2">
                             <input
+                              aria-label="Gallery image URL"
                               value={url}
                               onChange={(e) => handleGalleryUrlChange(idx, e.target.value)}
                               placeholder="https://..."
@@ -311,6 +331,7 @@ function InitiativeCreatePage() {
                             />
                             <button
                               type="button"
+                              aria-label="Remove gallery image"
                               onClick={() => handleRemoveGalleryUrl(idx)}
                               className="text-red-500 hover:text-red-600"
                             >
@@ -339,6 +360,7 @@ function InitiativeCreatePage() {
                       Campaign Goal (MUR)
                     </label>
                     <input
+                      aria-label="Campaign goal amount in MUR"
                       name="goal_amount_mur"
                       type="number"
                       value={formData.goal_amount_mur}
@@ -358,6 +380,7 @@ function InitiativeCreatePage() {
                         Short-term Goals
                       </label>
                       <textarea
+                        aria-label="Short-term goals"
                         name="short_term_goals"
                         value={formData.short_term_goals}
                         onChange={handleInputChange}
@@ -370,6 +393,7 @@ function InitiativeCreatePage() {
                         Long-term Vision
                       </label>
                       <textarea
+                        aria-label="Long-term vision"
                         name="long_term_goals"
                         value={formData.long_term_goals}
                         onChange={handleInputChange}
