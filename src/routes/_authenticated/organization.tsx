@@ -41,6 +41,7 @@ function OrganizationDashboard() {
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
+  const isAuthorizedOrganization = !authLoading && !authDataError && role === "organization";
   useEffect(() => {
     if (authLoading || authDataError) return;
     if (role !== "organization") navigate({ to: "/dashboard", replace: true });
@@ -62,7 +63,7 @@ function OrganizationDashboard() {
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
+    enabled: isAuthorizedOrganization && !!user?.id,
   });
 
   const { data: initiatives, isLoading: initiativesLoading } = useQuery({
@@ -75,7 +76,7 @@ function OrganizationDashboard() {
       if (error) throw error;
       return data;
     },
-    enabled: !!profile?.organization_id,
+    enabled: isAuthorizedOrganization && !!profile?.organization_id,
   });
 
   const { data: reports, isLoading: reportsLoading } = useQuery({
@@ -89,7 +90,7 @@ function OrganizationDashboard() {
       if (error) throw error;
       return data;
     },
-    enabled: !!profile?.organization_id,
+    enabled: isAuthorizedOrganization && !!profile?.organization_id,
   });
 
   const uploadMutation = useMutation({
