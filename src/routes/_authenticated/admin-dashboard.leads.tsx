@@ -23,7 +23,7 @@ function AdminLeadsPage() {
   const { user, role } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: leads, isLoading } = useQuery({
+  const { data: leads, isLoading, isError } = useQuery({
     queryKey: ["admin-leads", statusFilter],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -72,6 +72,8 @@ function AdminLeadsPage() {
               <div className="flex items-center gap-3">
                 <Filter className="h-4 w-4 text-muted-foreground" />
                 <select
+                  id="lead-status-filter"
+                  aria-label="Filter leads by status"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
@@ -91,6 +93,10 @@ function AdminLeadsPage() {
                   {[1, 2, 3, 4, 5].map((idx) => (
                     <Skeleton key={idx} className="h-16 w-full rounded-xl" />
                   ))}
+                </div>
+              ) : isError ? (
+                <div className="p-12 text-center text-destructive">
+                  Unable to load leads. Please refresh and try again.
                 </div>
               ) : leads && leads.length > 0 ? (
                 <div className="overflow-x-auto">
