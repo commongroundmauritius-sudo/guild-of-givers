@@ -11,8 +11,7 @@ export function Footer() {
         <div className="md:col-span-2">
           <Logo />
           <p className="mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Building the financial and governance infrastructure for long-term social impact. One
-            membership, a lifetime of change for verified Organizations in Mauritius.
+            A marketing platform that helps verified organizations reach more people and turn recurring memberships into positive change across Mauritius.
           </p>
         </div>
 
@@ -109,7 +108,7 @@ export function Footer() {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
           <div className="flex flex-col gap-1">
             <span>© {new Date().getFullYear()} CommonGround Mauritius. All rights reserved.</span>
-            <span>Registered social infrastructure platform.</span>
+            <span>Marketing platform for positive social impact.</span>
           </div>
           <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <Link
