@@ -45,7 +45,7 @@ function AdminAnalyticsPage() {
   const { user, role } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: initiatives, isLoading: initiativesLoading } = useQuery({
+  const { data: initiatives, isLoading: initiativesLoading, isError: initiativesError } = useQuery({
     queryKey: ["admin-initiatives-stats"],
     enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
@@ -178,6 +178,11 @@ function AdminAnalyticsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
+                  {initiativesError ? (
+                    <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
+                      Unable to load initiative analytics. Please refresh and try again.
+                    </div>
+                  ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -230,6 +235,7 @@ function AdminAnalyticsPage() {
                       )}
                     </TableBody>
                   </Table>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
