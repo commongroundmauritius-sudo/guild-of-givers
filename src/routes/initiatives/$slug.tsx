@@ -60,6 +60,9 @@ function InitiativeDetailPage() {
         .from("initiatives")
         .select("*, organizations(*)")
         .eq("id", initiativeId)
+        .eq("is_approved", true)
+        .eq("is_published", true)
+        .eq("status", "active")
         .single();
 
       if (error) throw error;
