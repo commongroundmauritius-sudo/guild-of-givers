@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   BarChart3,
@@ -8,7 +8,6 @@ import {
   DollarSign,
   ShieldCheck,
   Search,
-  RefreshCw,
   Eye,
   TrendingUp,
   ShieldAlert,
@@ -34,14 +33,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/analytics")({
   component: AdminAnalyticsPage,
 });
 
 function AdminAnalyticsPage() {
-  const queryClient = useQueryClient();
   const { user, role } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -57,22 +54,6 @@ function AdminAnalyticsPage() {
         .order("conversion_count", { ascending: false });
       if (error) throw error;
       return data;
-    },
-  });
-
-  const reconcileMutation = useMutation({
-    mutationFn: async (initiativeId: string) => {
-      const { error } = await supabase.rpc("reconcile_initiative_analytics", {
-        p_initiative_id: initiativeId,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Analytics reconciled successfully");
-      queryClient.invalidateQueries({ queryKey: ["admin-initiatives-stats"] });
-    },
-    onError: (err: Error) => {
-      toast.error("Reconciliation failed: " + err.message);
     },
   });
 
@@ -191,7 +172,6 @@ function AdminAnalyticsPage() {
                         <TableHead className="text-right">Views</TableHead>
                         <TableHead className="text-right">Conversions</TableHead>
                         <TableHead className="text-right">Active</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -208,25 +188,11 @@ function AdminAnalyticsPage() {
                           <TableCell className="text-right font-semibold text-emerald-600">
                             {initiative.active_supporter_count || 0}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="rounded-xl h-8"
-                              onClick={() => reconcileMutation.mutate(initiative.id)}
-                              disabled={reconcileMutation.isPending}
-                            >
-                              <RefreshCw
-                                className={`h-3.5 w-3.5 mr-1 ${reconcileMutation.isPending ? "animate-spin" : ""}`}
-                              />
-                              Reconcile
-                            </Button>
-                          </TableCell>
                         </TableRow>
                       ))}
                       {(!filteredInitiatives || filteredInitiatives.length === 0) && (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                             {initiativesLoading
                               ? "Loading data..."
                               : "No initiatives found matching your search."}
