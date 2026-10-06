@@ -16,17 +16,23 @@ import {
 import { useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useAnnouncements() {
+export function useAnnouncements(enabled = true) {
   return useQuery({
     queryKey: ["announcements"],
     queryFn: fetchAnnouncements,
+    enabled,
   });
 }
 
-export function usePosts(page = 0, sort: "newest" | "active" | "reactions" = "newest") {
+export function usePosts(
+  page = 0,
+  sort: "newest" | "active" | "reactions" = "newest",
+  enabled = true,
+) {
   return useQuery({
     queryKey: ["posts", page, sort],
     queryFn: () => fetchPosts(page, 20, sort),
+    enabled,
   });
 }
 
@@ -46,13 +52,14 @@ export function useReactions(postId: string) {
   });
 }
 
-export function useCommunityRealtime(queryKey: any[], table: string, filter?: string) {
+export function useCommunityRealtime(queryKey: any[], table: string, filter?: string, enabled = true) {
   const queryClient = useQueryClient();
 
   // Memoize queryKey to prevent unnecessary re-subscriptions
   const memoizedQueryKey = useMemo(() => queryKey, [queryKey]);
 
   useEffect(() => {
+    if (!enabled) return;
     const channel = supabase
       .channel(`community-${table}-${Math.random().toString(36).substring(7)}`)
       .on("postgres_changes", { event: "*", schema: "public", table, filter }, () => {
@@ -63,7 +70,7 @@ export function useCommunityRealtime(queryKey: any[], table: string, filter?: st
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, memoizedQueryKey, table, filter]);
+  }, [queryClient, memoizedQueryKey, table, filter, enabled]);
 }
 
 export function usePostMutation() {
