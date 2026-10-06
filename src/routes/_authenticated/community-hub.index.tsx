@@ -7,6 +7,7 @@ import { useAnnouncements, usePosts, useCommunityRealtime } from "@/hooks/use-co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -15,16 +16,19 @@ export const Route = createFileRoute("/_authenticated/community-hub/")({
 });
 
 function CommunityHubPage() {
+  const { role, loading: authLoading, authDataError } = useAuth();
+  const isAuthorizedMember = !authLoading && !authDataError && role === "member";
   const [sort, setSort] = useState<"newest" | "active" | "reactions">("newest");
-  const { data: announcements = [], isLoading: announcementsLoading } = useAnnouncements();
-  const { data: posts = [], isLoading: postsLoading } = usePosts(0, sort);
+  const { data: announcements = [], isLoading: announcementsLoading } = useAnnouncements(isAuthorizedMember);
+  const { data: posts = [], isLoading: postsLoading } = usePosts(0, sort, isAuthorizedMember);
 
   useCommunityRealtime(
     ["posts", 0, sort],
     "community_posts",
     "is_deleted=eq.false,status=eq.published",
+    isAuthorizedMember,
   );
-  useCommunityRealtime(["announcements"], "announcements", "is_deleted=eq.false");
+  useCommunityRealtime(["announcements"], "announcements", "is_deleted=eq.false", isAuthorizedMember);
 
   const pinnedAnnouncements = announcements.filter((a) => a.pinned);
   const recentAnnouncements = announcements.filter((a) => !a.pinned).slice(0, 5);
