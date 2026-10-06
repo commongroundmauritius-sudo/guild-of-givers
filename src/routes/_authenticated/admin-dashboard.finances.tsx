@@ -53,7 +53,7 @@ function AdminFinancesPage() {
 
   const { data: metrics } = useQuery({
     queryKey: ["admin-financial-metrics"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_financial_metrics" as any);
       if (error) throw error;
@@ -63,7 +63,7 @@ function AdminFinancesPage() {
 
   const { data: payments } = useQuery({
     queryKey: ["admin-recent-payments"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
@@ -77,7 +77,7 @@ function AdminFinancesPage() {
 
   const { data: activeSubs } = useQuery({
     queryKey: ["admin-active-subscriptions"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { count, error } = await supabase
         .from("subscriptions")
@@ -262,7 +262,7 @@ function MasterLedgerTable() {
 
   const { data: events, isLoading } = useQuery({
     queryKey: ["admin-master-ledger"],
-    enabled: !!user && role === "admin",
+    enabled: !!user && (role === "admin" || role === "super_admin"),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_events")
