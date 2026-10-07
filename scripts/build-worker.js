@@ -117,6 +117,29 @@ globalThis.clearImmediate = (id) => clearTimeout(id);
       logLevel: "info",
     });
 
+    // The SSR Worker is intentionally the main entry point, so explicitly
+    // expose the client build through Cloudflare's Assets binding as well.
+    // This guarantees that Worker-first/local preview execution cannot swallow
+    // Vite-generated /assets/* requests and leave the browser with server HTML
+    // but no React event handlers.
+    const bundledWorker = fs.readFileSync(workerOutput, "utf-8");
+    const defaultExportIndex = bundledWorker.lastIndexOf("export default");
+    if (defaultExportIndex === -1) {
+      throw new Error("Build worker failed: bundled Worker default export not found.");
+    }
+    const workerHandler = bundledWorker.slice(0, defaultExportIndex).replace(/\\s*$/, "");
+    const workerExport = bundledWorker.slice(defaultExportIndex + "export default".length).trimStart();
+    const wrappedWorker = workerHandler + "\n\nconst __commonGroundWorker =" + workerExport + "\n\n" +
+      "export default {\\n" +
+      "  async fetch(request, env, ctx) {\\n" +
+      "    if (env.ASSETS) {\\n" +
+      "      const assetResponse = await env.ASSETS.fetch(request);\\n" +
+      "      if (assetResponse.status !== 404) return assetResponse;\\n" +
+      "    }\\n" +
+      "    return __commonGroundWorker.fetch(request, env, ctx);\\n" +
+      "  },\\n" +
+      "};\\n";
+    fs.writeFileSync(workerOutput, wrappedWorker);
     if (fs.existsSync(wranglerConfigRoot)) {
       const config = JSON.parse(fs.readFileSync(wranglerConfigRoot, "utf-8"));
       if (!config.compatibility_flags) config.compatibility_flags = [];
@@ -127,6 +150,7 @@ globalThis.clearImmediate = (id) => clearTimeout(id);
       config.assets = {
         ...(config.assets || {}),
         directory: ".",
+        binding: "ASSETS",
       };
       fs.writeFileSync(wranglerConfigDist, JSON.stringify(config, null, 2));
       fs.writeFileSync(assetsIgnoreDist, "_worker.js\nwrangler.json\n.assetsignore\n");
