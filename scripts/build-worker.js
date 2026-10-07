@@ -117,19 +117,36 @@ globalThis.clearImmediate = (id) => clearTimeout(id);
       logLevel: "info",
     });
 
-    // The SSR Worker is intentionally the main entry point, so explicitly
-    // expose the client build through Cloudflare's Assets binding as well.
-    // This guarantees that Worker-first/local preview execution cannot swallow
-    // Vite-generated /assets/* requests and leave the browser with server HTML
-    // but no React event handlers.
+    // The bundled Nitro output may expose its handler as either a direct
+    // `export default ...` or an export-list entry such as
+    // `export { worker as default }`. Normalize both forms before wrapping
+    // the handler with the Cloudflare Assets binding.
     const bundledWorker = fs.readFileSync(workerOutput, "utf-8");
-    const defaultExportIndex = bundledWorker.lastIndexOf("export default");
-    if (defaultExportIndex === -1) {
+    const directDefaultIndex = bundledWorker.lastIndexOf("export default");
+    const exportListMatch = bundledWorker.match(/export\\s*\\{([\\s\\S]*?)\\}\\s*;\\s*$/);
+
+    let workerHandler;
+    let workerExpression;
+    if (directDefaultIndex !== -1) {
+      workerHandler = bundledWorker.slice(0, directDefaultIndex).replace(/\\s*$/, "");
+      workerExpression = bundledWorker.slice(directDefaultIndex + "export default".length).trimStart();
+    } else if (exportListMatch) {
+      const exportSpecifiers = exportListMatch[1];
+      const defaultSpecifier = exportSpecifiers
+        .split(",")
+        .map((specifier) => specifier.trim())
+        .find((specifier) => /\\bas\\s+default$/.test(specifier) || specifier === "default");
+      if (!defaultSpecifier) {
+        throw new Error("Build worker failed: bundled Worker default export not found.");
+      }
+      const match = defaultSpecifier.match(/^(.*?)\\s+as\\s+default$/);
+      workerExpression = match ? match[1].trim() : "default";
+      workerHandler = bundledWorker.slice(0, exportListMatch.index).replace(/\\s*$/, "");
+    } else {
       throw new Error("Build worker failed: bundled Worker default export not found.");
     }
-    const workerHandler = bundledWorker.slice(0, defaultExportIndex).replace(/\\s*$/, "");
-    const workerExport = bundledWorker.slice(defaultExportIndex + "export default".length).trimStart();
-    const wrappedWorker = workerHandler + "\n\nconst __commonGroundWorker =" + workerExport + "\n\n" +
+
+    const wrappedWorker = workerHandler + "\\n\\nconst __commonGroundWorker = " + workerExpression + ";\\n\\n" +
       "export default {\\n" +
       "  async fetch(request, env, ctx) {\\n" +
       "    if (env.ASSETS) {\\n" +
