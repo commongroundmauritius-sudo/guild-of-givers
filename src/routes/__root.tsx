@@ -68,6 +68,48 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
+function CookieConsentPreHydrationGuard() {
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+          (function () {
+            try {
+              const key = "cg_cookie_consent_v1";
+              const raw = localStorage.getItem(key);
+              if (!raw) return;
+
+              const matches = [
+                '[role="region"][aria-label="Cookie Consent Banner"]',
+                '[role="dialog"][aria-label="Cookie Preferences"]',
+                '.cookie-banner',
+                '.cookie-consent-banner',
+              ];
+
+              const hide = () => {
+                document.documentElement.setAttribute("data-cookie-consent", "saved");
+                document.querySelectorAll(matches.join(",")).forEach((node) => {
+                  node.setAttribute("hidden", "hidden");
+                  node.setAttribute("aria-hidden", "true");
+                  node.style.display = "none";
+                });
+              };
+
+              if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", hide, { once: true });
+              } else {
+                hide();
+              }
+            } catch (error) {
+              // Ignore storage access issues and continue rendering the page.
+            }
+          })();
+        `,
+      }}
+    />
+  );
+}
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -102,6 +144,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <CookieConsentPreHydrationGuard />
         <HeadContent />
       </head>
       <body>
