@@ -57,8 +57,21 @@ async function build() {
     path.join(rootDir, ".output/server/index.mjs"),
   ];
   const serverEntry = serverEntryCandidates.find((candidate) => fs.existsSync(candidate));
-  const workerOutput = path.join(rootDir, "dist/client/_worker.js");
-  const wranglerConfig = path.join(rootDir, "dist/client/wrangler.json");
+  const clientDir = path.join(rootDir, "dist/client");
+  const workerOutput = path.join(clientDir, "_worker.js");
+  const wranglerConfigRoot = path.join(rootDir, "wrangler.json");
+  const wranglerConfig = path.join(clientDir, "wrangler.json");
+  const publicDir = path.join(rootDir, ".output/public");
+
+  // Current Nitro builds emit the browser assets to .output/public.
+  // The CI/Cloudflare Pages contract expects those assets and _worker.js in dist/client.
+  if (fs.existsSync(publicDir)) {
+    fs.mkdirSync(clientDir, { recursive: true });
+    fs.cpSync(publicDir, clientDir, { recursive: true });
+  } else {
+    console.error("Build worker failed: .output/public does not exist.");
+    process.exit(1);
+  }
 
   if (!serverEntry) {
     console.error(
@@ -122,9 +135,9 @@ globalThis.process = process;
       metafile: true,
     });
 
-    console.log("Updating wrangler.json...");
-    if (fs.existsSync(wranglerConfig)) {
-      const config = JSON.parse(fs.readFileSync(wranglerConfig, "utf-8"));
+    console.log("Generating dist/client/wrangler.json...");
+    if (fs.existsSync(wranglerConfigRoot)) {
+      const config = JSON.parse(fs.readFileSync(wranglerConfigRoot, "utf-8"));
       config.main = "_worker.js";
       if (!config.compatibility_flags) {
         config.compatibility_flags = [];
@@ -133,7 +146,7 @@ globalThis.process = process;
         config.compatibility_flags.push("nodejs_compat");
       }
       fs.writeFileSync(wranglerConfig, JSON.stringify(config, null, 2));
-      console.log("wrangler.json updated.");
+      console.log("wrangler.json generated.");
     }
 
     console.log("Build worker completed successfully.");
