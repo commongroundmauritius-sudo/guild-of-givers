@@ -10,10 +10,16 @@ import { DEFAULT_HOMEPAGE_CONFIG, homepageService, type HomepageConfig } from "@
 import { successStoryService } from "@/lib/success-story-service";
 import { supabase } from "@/integrations/supabase/client";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { getHomepageFeaturedInitiatives, getPublishedHomepageVersion, type HomepageFeaturedInitiative } from "@/lib/homepage.functions";
+import { getPublicHomepagePayload, type HomepageFeaturedInitiative } from "@/lib/homepage.functions";
 
 export const Route = createFileRoute("/")({
-  loader: async () => {\n    const publishedVersion = await getPublishedHomepageVersion().catch(() => null);\n    const featuredIds = ((publishedVersion?.configuration_json as HomepageConfig | undefined)?.sections ?? [])\n      .find((section: any) => section.id === "featured" && section.visible)?.settings?.manual_ids;\n    const featuredInitiatives = Array.isArray(featuredIds)\n      ? await getHomepageFeaturedInitiatives({ data: featuredIds }).catch(() => [])\n      : [];\n    return { publishedVersion, featuredInitiatives };\n  },
+  loader: async () => {
+    const payload = await getPublicHomepagePayload().catch(() => ({
+      publishedVersion: null,
+      featuredInitiatives: [] as HomepageFeaturedInitiative[],
+    }));
+    return payload;
+  },
   head: () => ({
     meta: [
       { title: "CommonGround — One Membership. Long-term Impact." },
