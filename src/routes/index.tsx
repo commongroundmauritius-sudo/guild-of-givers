@@ -140,25 +140,10 @@ function ImpactStats({ settings }: { settings: any }) {
     queryKey: ["homepage-impact-stats", autoMetricIds],
     enabled: autoMetricIds.length > 0,
     queryFn: async () => {
-      const requests: Record<string, PromiseLike<{ count: number | null; error: any }>> = {};
-      if (autoMetricIds.includes("orgs")) {
-        requests.orgs = supabase.from("organizations").select("id", { count: "exact", head: true }).eq("is_verified", true).eq("status", "active");
-      }
-      if (autoMetricIds.includes("initiatives")) {
-        requests.initiatives = supabase.from("initiatives").select("id", { count: "exact", head: true }).eq("is_approved", true).eq("is_published", true).eq("status", "active");
-      }
-      if (autoMetricIds.includes("profiles")) {
-        requests.profiles = supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "active");
-      }
-      if (autoMetricIds.includes("memberships")) {
-        requests.memberships = supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "active");
-      }
-
-      const results = await Promise.all(Object.entries(requests).map(async ([id, request]) => [id, await request] as const));
-      const failed = results.find(([, result]) => result.error);
-      if (failed) throw failed[1].error;
-
-      return Object.fromEntries(results.map(([id, result]) => [id, result.count ?? 0]));
+      const { data, error } = await supabase.rpc("get_homepage_impact_stats");
+      if (error) throw error;
+      const result = (data ?? {}) as Record<string, number>;
+      return Object.fromEntries(autoMetricIds.map((id) => [id, Number(result[id] ?? 0)]));
     },
     staleTime: 5 * 60 * 1000,
   });
