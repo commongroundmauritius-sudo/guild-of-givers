@@ -1,4 +1,5 @@
 import type { ErrorComponentProps } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -10,7 +11,8 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -111,28 +113,59 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
-  const { user, sessionReady } = useAuth();
   const { pathname, search } = useLocation();
   const isProtectedPath =
     /^(\/admin-dashboard|\/member|\/notifications|\/community-hub|\/dashboard|\/organization)(\/|$)/.test(
       pathname,
     );
+  const [authChecked, setAuthChecked] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+
+  useEffect(() => {
+    if (!isProtectedPath) {
+      setAuthChecked(true);
+      setHasSession(true);
+      return;
+    }
+
+    let active = true;
+
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (!active) return;
+
+        if (error || !data.session) {
+          window.location.replace(
+            "/login?redirect=" + encodeURIComponent(pathname + search),
+          );
+          return;
+        }
+
+        setHasSession(true);
+        setAuthChecked(true);
+      } catch {
+        if (!active) return;
+        window.location.replace(
+          "/login?redirect=" + encodeURIComponent(pathname + search),
+        );
+      }
+    };
+
+    void checkSession();
+
+    return () => {
+      active = false;
+    };
+  }, [isProtectedPath, pathname, search]);
 
   if (!isProtectedPath) return <>{children}</>;
-
-  if (!sessionReady) {
+  if (!authChecked || !hasSession) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <p className="text-sm text-muted-foreground">Checking your account…</p>
       </div>
     );
-  }
-
-  if (!user) {
-    if (typeof window !== "undefined") {
-      window.location.replace("/login?redirect=" + encodeURIComponent(pathname + search));
-    }
-    return null;
   }
 
   return <>{children}</>;
