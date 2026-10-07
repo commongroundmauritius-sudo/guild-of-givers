@@ -39,12 +39,81 @@ function applySupabaseBearer(token: string) {
   }
 }
 
+async function validateSupabaseToken(token: string) {
+  if (!token) return null;
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
+
+  if (error || !user) {
+    return null;
+  }
+
+  applySupabaseBearer(token);
+  return user;
+}
+
+async function hydrateSupabaseSessionFromCookie(authCookieContent: string) {
+  if (!authCookieContent) return null;
+
+  try {
+    let decoded = authCookieContent;
+
+    if (authCookieContent.includes("%")) {
+      try {
+        decoded = decodeURIComponent(authCookieContent);
+      } catch (e) {
+        console.warn("getSessionUser: decodeURIComponent failed", e);
+      }
+    }
+
+    if (decoded.startsWith('"') && decoded.endsWith('"')) {
+      decoded = decoded.slice(1, -1);
+    }
+
+    const parsed = JSON.parse(decoded);
+    const accessToken = parsed.access_token;
+    const refreshToken = parsed.refresh_token;
+
+    if (!accessToken) {
+      return null;
+    }
+
+    const directUser = await validateSupabaseToken(accessToken);
+    if (directUser) {
+      return directUser;
+    }
+
+    if (!refreshToken) {
+      return null;
+    }
+
+    const {
+      data: { user: sessionUser },
+      error: sessionError,
+    } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (sessionUser && !sessionError) {
+      applySupabaseBearer(accessToken);
+      return sessionUser;
+    }
+  } catch (e) {
+    console.debug("getSessionUser: Auth cookie parsing failed", e);
+  }
+
+  return null;
+}
+
 /**
  * Robustly retrieves the current user, handling both client and server (TanStack Start) environments.
  */
 export async function getSessionUser() {
   try {
-    // 1. Try standard getUser (works in client, and if session was already set)
     const {
       data: { user },
       error,
@@ -52,45 +121,27 @@ export async function getSessionUser() {
 
     if (user && !error) return user;
 
-    // 2. If we're on the server or getUser failed, try to resolve from request context
     const { cookie: cookieHeader, authorization } = await getServerRequestContext();
 
-    // 2a. Prefer Authorization: Bearer <token> attached by attachSupabaseAuth middleware
     if (authorization) {
       const match = authorization.match(/^Bearer\s+(.+)$/i);
       const token = match?.[1];
-      if (token) {
-        const {
-          data: { user: bearerUser },
-          error: bearerError,
-        } = await supabase.auth.getUser(token);
-        if (bearerUser && !bearerError) {
-          // CRITICAL: attach the bearer token to the PostgREST client so
-          // subsequent RLS-scoped queries (e.g. user_roles lookups in
-          // isAdmin) run as this authenticated user instead of `anon`.
-          applySupabaseBearer(token);
-          return bearerUser;
-        }
+      const bearerUser = token ? await validateSupabaseToken(token) : null;
+      if (bearerUser) {
+        return bearerUser;
       }
     }
 
     if (cookieHeader) {
       const cookies = parseCookie(cookieHeader);
 
-      // Extract project ref dynamically from supabase client URL to avoid hardcoding errors
       const supabaseUrl = (supabase as any).supabaseUrl;
       const projectRef = supabaseUrl
         ? new URL(supabaseUrl).hostname.split(".")[0]
         : "vzsifigcowusabfmnudk";
 
-      // Possible cookie names:
-      // - sb-<ref>-auth-token
-      // - sb-<ref>-auth-token.0, sb-<ref>-auth-token.1 (chunked)
-      // - supabase-auth-token
-
       let authCookieContent = cookies[`sb-${projectRef}-auth-token`];
 
-      // Handle chunked cookies (Common in Supabase/SSR)
       if (!authCookieContent) {
         let i = 0;
         let chunkedValue = "";
@@ -103,50 +154,11 @@ export async function getSessionUser() {
         }
       }
 
-      // Fallback to legacy/generic name if needed
       if (!authCookieContent) {
         authCookieContent = cookies["supabase-auth-token"];
       }
 
-      if (authCookieContent) {
-        try {
-          // Supabase cookies are often URL-encoded JSON or quoted JSON strings
-          let decoded = authCookieContent;
-
-          // Safety check for URL encoding
-          if (authCookieContent.includes("%")) {
-            try {
-              decoded = decodeURIComponent(authCookieContent);
-            } catch (e) {
-              console.warn("getSessionUser: decodeURIComponent failed", e);
-            }
-          }
-
-          // If the cookie is double-quoted (e.g. "{"access_token":...}")
-          if (decoded.startsWith('"') && decoded.endsWith('"')) {
-            decoded = decoded.slice(1, -1);
-          }
-
-          const parsed = JSON.parse(decoded);
-          const accessToken = parsed.access_token;
-          const refreshToken = parsed.refresh_token;
-
-          if (accessToken) {
-            applySupabaseBearer(accessToken);
-            // CRITICAL: We must set the session on the supabase client instance used in the server call
-            const {
-              data: { user: sessionUser },
-              error: sessionError,
-            } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken || "",
-            });
-            if (sessionUser && !sessionError) return sessionUser;
-          }
-        } catch (e) {
-          console.debug("getSessionUser: Auth cookie parsing failed", e);
-        }
-      }
+      return hydrateSupabaseSessionFromCookie(authCookieContent);
     }
   } catch (error) {
     console.warn("getSessionUser context warning:", error);
