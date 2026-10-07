@@ -147,7 +147,10 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
     });
 
     if (!hasStoredSession) {
-      redirectToLogin();
+      if (active) {
+        setHasSession(false);
+        setAuthChecked(true);
+      }
       return () => {
         active = false;
       };
@@ -184,13 +187,18 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
   }, [isProtectedPath, pathname, search]);
 
   if (!isProtectedPath) return <>{children}</>;
-  if (!authChecked && !hasSession && isProtectedPath) {
+  if (!authChecked && isProtectedPath) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <p className="text-sm text-muted-foreground">Checking your account…</p>
       </div>
     );
   }
+
+  if (isProtectedPath && !hasSession) {
+    return <Navigate to="/login" search={{ redirect: pathname }} replace />;
+  }
+
   return <>{children}</>;
 }
 
