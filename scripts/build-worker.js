@@ -9,15 +9,17 @@ const rootDir = path.resolve(__dirname, "..");
 const h3Plugin = {
   name: "h3-resolver",
   setup(build) {
+    // Force h3-v2 and h3 to resolve to the cloudflare entry point
     build.onResolve({ filter: /^h3(-v2)?$/ }, (args) => {
-      const cloudflareEntry = path.resolve(
-        rootDir,
-        "node_modules/h3-v2/dist/_entries/cloudflare.mjs",
-      );
-      if (fs.existsSync(cloudflareEntry)) return { path: cloudflareEntry };
+      const cloudflareEntry = path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs");
+      if (fs.existsSync(cloudflareEntry)) {
+        return { path: cloudflareEntry };
+      }
       return { path: path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/generic.mjs") };
     });
+
     build.onResolve({ filter: /^\./ }, (args) => {
+      // Resolve relative imports within dist/server
       if (args.importer.includes("dist/server")) {
         const resolved = path.resolve(path.dirname(args.importer), args.path);
         if (fs.existsSync(resolved) || fs.existsSync(resolved + ".js")) {
@@ -26,6 +28,8 @@ const h3Plugin = {
       }
       return null;
     });
+
+    // Handle bare node built-ins that don't have the node: prefix
     const nodeBuiltIns = [
       "assert",
       "async_hooks",
@@ -36,29 +40,22 @@ const h3Plugin = {
       "path",
       "process",
       "stream",
-      "timers",
-      "timers/promises",
       "util",
       "v8",
     ];
-    build.onResolve({ filter: new RegExp(`^(${nodeBuiltIns.join("|")})$`) }, (args) => ({
-      path: "node:" + args.path,
-      external: true,
-    }));
+    build.onResolve({ filter: new RegExp(`^(${nodeBuiltIns.join("|")})$`) }, (args) => {
+      return { path: "node:" + args.path, external: true };
+    });
   },
 };
 
 async function build() {
-  const serverEntryCandidates = [
-    path.join(rootDir, "dist/server/index.mjs"),
-    path.join(rootDir, "dist/server/server.js"),
-    path.join(rootDir, ".output/server/index.mjs"),
-  ];
-  const serverEntry = serverEntryCandidates.find((candidate) => fs.existsSync(candidate));
+  const serverEntry = path.join(rootDir, "dist/server/server.js");
   const workerOutput = path.join(rootDir, "dist/client/_worker.js");
-  const wranglerConfigRoot = path.join(rootDir, "wrangler.json");
-  const wranglerConfigDist = path.join(rootDir, "dist/client/wrangler.json");
-  const assetsIgnoreDist = path.join(rootDir, "dist/client/.assetsignore");
+  const wranglerConfig = path.join(rootDir, "dist/client/wrangler.json");
+
+  console.log("Bundling worker from:", serverEntry);
+
   const nodeBuiltIns = [
     "assert",
     "async_hooks",
@@ -71,24 +68,14 @@ async function build() {
     "stream",
     "stream/web",
     "string_decoder",
-    "timers",
-    "timers/promises",
     "util",
     "v8",
   ];
+
   const external = [...nodeBuiltIns, ...nodeBuiltIns.map((id) => `node:${id}`)];
 
   try {
-    if (!serverEntry) {
-      console.error(
-        `Build worker failed: server entry not found. Checked:\n${serverEntryCandidates
-          .map((candidate) => `  - ${candidate}`)
-          .join("\n")}`,
-      );
-      process.exit(1);
-    }
-
-    await esbuild.build({
+    const result = await esbuild.build({
       entryPoints: [serverEntry],
       plugins: [h3Plugin],
       bundle: true,
@@ -104,74 +91,35 @@ async function build() {
       external,
       conditions: ["worker", "browser", "import"],
       mainFields: ["module", "main"],
-      define: { "process.env.NODE_ENV": '"production"' },
+      define: {
+        "process.env.NODE_ENV": '"production"',
+      },
       banner: {
         js: `
 import { Buffer } from 'node:buffer';
+import process from 'node:process';
 globalThis.Buffer = Buffer;
 globalThis.process = process;
-globalThis.setImmediate = (cb, ...args) => setTimeout(cb, 0, ...args);
-globalThis.clearImmediate = (id) => clearTimeout(id);
 `,
       },
       logLevel: "info",
+      metafile: true,
     });
 
-    // The bundled Nitro output may expose its handler as either a direct
-    // `export default ...` or an export-list entry such as
-    // `export { worker as default }`. Normalize both forms before wrapping
-    // the handler with the Cloudflare Assets binding.
-    const bundledWorker = fs.readFileSync(workerOutput, "utf-8");
-    const directDefaultIndex = bundledWorker.lastIndexOf("export default");
-    const exportListMatch = bundledWorker.match(/export\s*\\{([\s\\S]*?)\\}\s*;\s*$/);
-
-    let workerHandler;
-    let workerExpression;
-    if (directDefaultIndex !== -1) {
-      workerHandler = bundledWorker.slice(0, directDefaultIndex).replace(/\s*$/, "");
-      workerExpression = bundledWorker.slice(directDefaultIndex + "export default".length).trimStart();
-    } else if (exportListMatch) {
-      const exportSpecifiers = exportListMatch[1];
-      const defaultSpecifier = exportSpecifiers
-        .split(",")
-        .map((specifier) => specifier.trim())
-        .find((specifier) => /\\bas\s+default$/.test(specifier) || specifier === "default");
-      if (!defaultSpecifier) {
-        throw new Error("Build worker failed: bundled Worker default export not found.");
-      }
-      const match = defaultSpecifier.match(/^(.*?)\s+as\s+default$/);
-      workerExpression = match ? match[1].trim() : "default";
-      workerHandler = bundledWorker.slice(0, exportListMatch.index).replace(/\s*$/, "");
-    } else {
-      throw new Error("Build worker failed: bundled Worker default export not found.");
-    }
-
-    const wrappedWorker = workerHandler + "\\n\\nconst __commonGroundWorker = " + workerExpression + ";\\n\\n" +
-      "export default {\\n" +
-      "  async fetch(request, env, ctx) {\\n" +
-      "    if (env.ASSETS) {\\n" +
-      "      const assetResponse = await env.ASSETS.fetch(request);\\n" +
-      "      if (assetResponse.status !== 404) return assetResponse;\\n" +
-      "    }\\n" +
-      "    return __commonGroundWorker.fetch(request, env, ctx);\\n" +
-      "  },\\n" +
-      "};\\n";
-    fs.writeFileSync(workerOutput, wrappedWorker);
-    if (fs.existsSync(wranglerConfigRoot)) {
-      const config = JSON.parse(fs.readFileSync(wranglerConfigRoot, "utf-8"));
-      if (!config.compatibility_flags) config.compatibility_flags = [];
-      if (!config.compatibility_flags.includes("nodejs_compat"))
-        config.compatibility_flags.push("nodejs_compat");
+    console.log("Updating wrangler.json...");
+    if (fs.existsSync(wranglerConfig)) {
+      const config = JSON.parse(fs.readFileSync(wranglerConfig, "utf-8"));
       config.main = "_worker.js";
-      delete config.pages_build_output_dir;
-      config.assets = {
-        ...(config.assets || {}),
-        directory: ".",
-        binding: "ASSETS",
-      };
-      fs.writeFileSync(wranglerConfigDist, JSON.stringify(config, null, 2));
-      fs.writeFileSync(assetsIgnoreDist, "_worker.js\nwrangler.json\n.assetsignore\n");
+      if (!config.compatibility_flags) {
+        config.compatibility_flags = [];
+      }
+      if (!config.compatibility_flags.includes("nodejs_compat")) {
+        config.compatibility_flags.push("nodejs_compat");
+      }
+      fs.writeFileSync(wranglerConfig, JSON.stringify(config, null, 2));
+      console.log("wrangler.json updated.");
     }
+
     console.log("Build worker completed successfully.");
   } catch (error) {
     console.error("Build worker failed:", error);
@@ -181,15 +129,19 @@ globalThis.clearImmediate = (id) => clearTimeout(id);
 
 async function verify() {
   const workerOutput = path.join(rootDir, "dist/client/_worker.js");
+
   console.log("Starting final validation...");
+
   if (!fs.existsSync(workerOutput)) {
     console.error("Verification failed: _worker.js does not exist.");
     process.exit(1);
   }
+
   const content = fs.readFileSync(workerOutput, "utf-8");
   const executableContent = content
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/(^|[^:])\/\/.*$/gm, "");
+
   const remainingImports = executableContent.match(/^\s*import\s+[^;]+;?/gm) || [];
   const problematic = remainingImports.filter((i) => {
     const match = i.match(/['"]([^'"]+)['"]/);
@@ -197,18 +149,36 @@ async function verify() {
     const mod = match[1];
     return !mod.startsWith("node:") && mod !== "ws";
   });
+
   if (problematic.length > 0) {
     console.error("Verification failed: Found problematic external imports in _worker.js:");
     problematic.forEach((i) => console.error("  ", i));
     process.exit(1);
+  } else {
+    console.log("Verification: No problematic external imports found in _worker.js.");
   }
-  const hasDefaultExport = /export\s+default\s+|export\s*\{[^}]*\bas\s+default\b/.test(
-    executableContent,
-  );
+
+  const hasDefaultExport = /export\s+default\s+|export\s*\{[^}]*\bas\s+default\b/.test(executableContent);
   if (!hasDefaultExport) {
     console.error("Verification failed: default export is missing in _worker.js");
     process.exit(1);
   }
+
+  // 2. Check for ANY bare framework imports
+  const forbiddenPatterns = [/['"]h3(-v2)?['"]/, /['"]rou3['"]/, /['"]srvx['"]/, /['"]seroval['"]/, /['"]@tanstack/];
+  if (remainingImports.some((i) => forbiddenPatterns.some(p => p.test(i)))) {
+    console.error("Verification FAILED: Found forbidden framework import in _worker.js");
+    remainingImports.filter(i => forbiddenPatterns.some(p => p.test(i))).forEach(i => console.error("  ", i));
+    process.exit(1);
+  }
+
+  // 3. Check for any assets/ imports
+  const assetImport = executableContent.match(/^\s*import\s+.*?from\s+['"](\.\/)?assets\/.*?['"]/m);
+  if (assetImport) {
+     console.error("Verification FAILED: Found asset import in _worker.js:", assetImport[0]);
+     process.exit(1);
+  }
+
   console.log("Verification: SUCCESS. _worker.js is self-contained for the runtime.");
 }
 
