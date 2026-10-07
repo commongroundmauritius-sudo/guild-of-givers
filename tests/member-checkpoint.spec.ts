@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Member Checkpoint Tests", () => {
   test("unauthenticated user can access signup page", async ({ page }) => {
     await page.goto("/signup");
-    await expect(page.locator("h2")).toContainText(/Monthly Contribution/i);
+    await expect(page.locator("h2")).toContainText(/Monthly Membership/i);
   });
 
   test("unauthenticated user clicking 'Become a member' in footer goes to signup", async ({
