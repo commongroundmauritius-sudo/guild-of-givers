@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
-  Navigate,
   createRootRouteWithContext,
   useLocation,
   HeadContent,
@@ -130,13 +129,10 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return (
-      <Navigate
-        to="/login"
-        search={{ redirect: `${pathname}${search}` }}
-        replace
-      />
-    );
+    if (typeof window !== "undefined") {
+      window.location.replace("/login?redirect=" + encodeURIComponent(pathname + search));
+    }
+    return null;
   }
 
   return <>{children}</>;
