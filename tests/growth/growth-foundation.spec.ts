@@ -13,6 +13,6 @@ test.describe("Growth & Attribution Foundation", () => {
 
   test("signup page loads successfully", async ({ page }) => {
     await page.goto("/signup");
-    await expect(page.getByRole("heading", { name: "Monthly Contribution" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Monthly Membership" })).toBeVisible();
   });
 });
