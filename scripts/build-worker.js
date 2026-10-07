@@ -123,25 +123,25 @@ globalThis.clearImmediate = (id) => clearTimeout(id);
     // the handler with the Cloudflare Assets binding.
     const bundledWorker = fs.readFileSync(workerOutput, "utf-8");
     const directDefaultIndex = bundledWorker.lastIndexOf("export default");
-    const exportListMatch = bundledWorker.match(/export\\s*\\{([\\s\\S]*?)\\}\\s*;\\s*$/);
+    const exportListMatch = bundledWorker.match(/export\s*\\{([\s\\S]*?)\\}\s*;\s*$/);
 
     let workerHandler;
     let workerExpression;
     if (directDefaultIndex !== -1) {
-      workerHandler = bundledWorker.slice(0, directDefaultIndex).replace(/\\s*$/, "");
+      workerHandler = bundledWorker.slice(0, directDefaultIndex).replace(/\s*$/, "");
       workerExpression = bundledWorker.slice(directDefaultIndex + "export default".length).trimStart();
     } else if (exportListMatch) {
       const exportSpecifiers = exportListMatch[1];
       const defaultSpecifier = exportSpecifiers
         .split(",")
         .map((specifier) => specifier.trim())
-        .find((specifier) => /\\bas\\s+default$/.test(specifier) || specifier === "default");
+        .find((specifier) => /\\bas\s+default$/.test(specifier) || specifier === "default");
       if (!defaultSpecifier) {
         throw new Error("Build worker failed: bundled Worker default export not found.");
       }
-      const match = defaultSpecifier.match(/^(.*?)\\s+as\\s+default$/);
+      const match = defaultSpecifier.match(/^(.*?)\s+as\s+default$/);
       workerExpression = match ? match[1].trim() : "default";
-      workerHandler = bundledWorker.slice(0, exportListMatch.index).replace(/\\s*$/, "");
+      workerHandler = bundledWorker.slice(0, exportListMatch.index).replace(/\s*$/, "");
     } else {
       throw new Error("Build worker failed: bundled Worker default export not found.");
     }
