@@ -36,4 +36,4 @@ jobs:
           test -f dist/client/_worker.js || (echo 'ERROR: _worker.js missing' && false)
           grep -q '"main": "_worker.js"' dist/client/wrangler.json || (echo 'ERROR: wrangler.json mismatch' && false)
           grep -q '"nodejs_compat"' dist/client/wrangler.json || (echo 'ERROR: wrangler.json missing nodejs_compat' && false)
-          grep -q 'export default' dist/client/_worker.js || (echo 'ERROR: worker default export missing' && false)
+          grep -Eq 'export[[:space:]]+default|as[[:space:]]+default' dist/client/_worker.js || (echo 'ERROR: worker default export missing' && false)
