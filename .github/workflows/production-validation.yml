@@ -68,7 +68,7 @@ jobs:
           VITE_ENABLE_MOCK_PAYMENTS: "true"
         run: |
           cd dist/client
-          ./../../node_modules/.bin/wrangler dev --config wrangler.json --local --ip 127.0.0.1 --port 8080 --log-level debug --show-interactive-dev-session=false > /tmp/preview.log 2>&1 &
+          ./../../node_modules/.bin/wrangler dev --config wrangler.json --local --ip 127.0.0.1 --port 8080 --log-level debug --show-interactive-dev-session=false --persist-to /tmp/wrangler-state > /tmp/preview.log 2>&1 &
           PREVIEW_PID=$!
           echo "$PREVIEW_PID" > /tmp/preview.pid
           sleep 3
@@ -97,7 +97,7 @@ jobs:
               exit 1
             fi
 
-            if [ "$i" -eq 10 ] || [ "$i" -eq 30 ] || [ "$i" -eq 60 ]; then
+            if [ "$i" -eq 1 ] || [ "$i" -eq 5 ] || [ "$i" -eq 10 ] || [ "$i" -eq 30 ] || [ "$i" -eq 60 ]; then
               echo "Preview still not reachable after $((i * 2)) seconds."
               echo "===== Wrangler log ====="
               cat /tmp/preview.log || true
