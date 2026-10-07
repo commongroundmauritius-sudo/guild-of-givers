@@ -21,9 +21,10 @@ test.describe("Website Compliance, Legal Policies & Cookie Storage", () => {
 
     await page.goto("/terms-and-conditions");
     await expect(page.locator("h1")).toContainText("Terms & Conditions");
-    // Peach Payments is not integrated yet. When the Peach Payments integration is enabled,
-    // add a provider-specific assertion here to verify the live payment/legal disclosure.
-    await expect(page.getByText("Payments, Billing & Fee Coverage")).toBeVisible();
+    await expect(
+      page.getByText(/Payment processing is provided through payment services used by CommonGround when enabled/i),
+    ).toBeVisible();
+    // TODO: add a Peach Payments-specific assertion once the provider is actually integrated.
 
     await page.goto("/cookies-policy");
     await expect(page.locator("h1")).toContainText("Cookies & Browser Storage");
