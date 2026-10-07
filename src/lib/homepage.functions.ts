@@ -11,7 +11,6 @@ export type HomepageFeaturedInitiative = {
   description: string | null;
   goal_amount_mur: number | null;
   current_amount_mur: number | null;
-  banner_image_url: string | null;
   image_url: string | null;
   organizations: { organization_name: string | null } | null;
 };
