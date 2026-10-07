@@ -59,6 +59,7 @@ async function build() {
   const serverEntry = serverEntryCandidates.find((candidate) => fs.existsSync(candidate));
   const clientDir = path.join(rootDir, "dist/client");
   const workerOutput = path.join(clientDir, "_worker.js");
+  const workerCoreOutput = path.join(clientDir, "._worker-core.js");
   const wranglerConfigRoot = path.join(rootDir, "wrangler.json");
   const wranglerConfig = path.join(clientDir, "wrangler.json");
   const publicDir = path.join(rootDir, ".output/public");
@@ -108,7 +109,7 @@ async function build() {
       entryPoints: [serverEntry],
       plugins: [h3Plugin],
       bundle: true,
-      outfile: workerOutput,
+      outfile: workerCoreOutput,
       format: "esm",
       platform: "browser",
       target: "es2022",
@@ -126,6 +127,24 @@ async function build() {
       logLevel: "info",
       metafile: true,
     });
+
+    const bundledWorker = fs.readFileSync(workerCoreOutput, "utf-8");
+    let pagesWorker = bundledWorker.replace(
+      /export\\s+default\\s+/,
+      "const __commonGroundWorker = ",
+    );
+    pagesWorker = pagesWorker.replace(
+      /export\\s*\\{\\s*([^}]+?)\\s+as\\s+default\\s*\\};?\\s*$/,
+      "const __commonGroundWorker = $1;",
+    );
+    if (pagesWorker === bundledWorker) {
+      console.error("Build worker failed: bundled Worker default export could not be adapted.");
+      process.exit(1);
+    }
+
+    pagesWorker += "\n\nexport default {\n  async fetch(request, env, ctx) {\n    const response = await __commonGroundWorker.fetch(request, env, ctx);\n    if (response.status !== 404 || !env?.ASSETS) return response;\n    return env.ASSETS.fetch(request);\n  },\n};\n";
+    fs.writeFileSync(workerOutput, pagesWorker);
+    fs.rmSync(workerCoreOutput, { force: true });
 
     console.log("Generating dist/client/wrangler.json...");
     if (fs.existsSync(wranglerConfigRoot)) {
