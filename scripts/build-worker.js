@@ -123,14 +123,6 @@ async function build() {
       define: {
         "process.env.NODE_ENV": '"production"',
       },
-      banner: {
-        js: `
-import { Buffer } from 'node:buffer';
-import process from 'node:process';
-globalThis.Buffer = Buffer;
-globalThis.process = process;
-`,
-      },
       logLevel: "info",
       metafile: true,
     });
