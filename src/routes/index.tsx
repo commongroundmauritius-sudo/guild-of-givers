@@ -10,10 +10,10 @@ import { DEFAULT_HOMEPAGE_CONFIG, homepageService, type HomepageConfig } from "@
 import { successStoryService } from "@/lib/success-story-service";
 import { supabase } from "@/integrations/supabase/client";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { getPublishedHomepageVersion } from "@/lib/homepage.functions";
+import { getHomepageFeaturedInitiatives, getPublishedHomepageVersion, type HomepageFeaturedInitiative } from "@/lib/homepage.functions";
 
 export const Route = createFileRoute("/")({
-  loader: async () => ({ publishedVersion: await getPublishedHomepageVersion().catch(() => null) }),
+  loader: async () => {\n    const publishedVersion = await getPublishedHomepageVersion().catch(() => null);\n    const featuredIds = ((publishedVersion?.configuration_json as HomepageConfig | undefined)?.sections ?? [])\n      .find((section: any) => section.id === "featured" && section.visible)?.settings?.manual_ids;\n    const featuredInitiatives = Array.isArray(featuredIds)\n      ? await getHomepageFeaturedInitiatives({ data: featuredIds }).catch(() => [])\n      : [];\n    return { publishedVersion, featuredInitiatives };\n  },
   head: () => ({
     meta: [
       { title: "CommonGround — One Membership. Long-term Impact." },
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { publishedVersion: initialPublishedVersion } = Route.useLoaderData();
+  const { publishedVersion: initialPublishedVersion, featuredInitiatives: initialFeaturedInitiatives } = Route.useLoaderData();
   useActivityTracker({ eventType: "homepage_view" });
 
   const {
@@ -79,7 +79,7 @@ function HomepageLoadingFallback() {
   );
 }
 
-function renderSection(section: any) {
+function renderSection(section: any, featuredInitiatives: HomepageFeaturedInitiative[]) {
   switch (section.id) {
     case "hero":
       return <><Hero settings={section.settings} /><ValueProps /></>;
@@ -186,21 +186,36 @@ const VALUE_PROPS = [
   { icon: Target, title: "Root Cause Focus", desc: "We prioritize long-horizon programs in restoration, education, and resilience that solve problems at the source." },
 ];
 
-function FeaturedInitiatives({ settings }: { settings: any }) {
-  const { data: initiatives = [], isLoading } = useQuery({
+function FeaturedInitiatives({ settings, initialInitiatives }: { settings: any; initialInitiatives: HomepageFeaturedInitiative[] }) {
+  const hasSelection = Array.isArray(settings?.manual_ids) && settings.manual_ids.length > 0;
+  const { data: initiatives = [], isLoading, isError } = useQuery({
     queryKey: ["homepage-featured-manual", settings.manual_ids],
-    enabled: Array.isArray(settings.manual_ids) && settings.manual_ids.length > 0,
+    enabled: hasSelection && initialInitiatives.length === 0,
+    initialData: initialInitiatives.length > 0 ? initialInitiatives : undefined,
+    retry: false,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("initiatives")
         .select("id, slug, title, caption, summary, description, goal_amount_mur, current_amount_mur, banner_image_url, image_url, organizations(organization_name)")
         .in("id", settings.manual_ids)
         .eq("is_approved", true)
         .eq("is_published", true)
         .eq("status", "active");
+      if (error) throw error;
       return (data || []).sort((a, b) => settings.manual_ids.indexOf(a.id) - settings.manual_ids.indexOf(b.id));
     },
   });
+
+  if (isError) {
+    return (
+      <section className="bg-white py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <p className="text-sm text-muted-foreground">Featured initiatives are temporarily unavailable. Please try again shortly.</p>
+        </div>
+      </section>
+    );
+  }
+
   return <CuratedSection title="Featured Initiatives" subtitle="Vetted programs making a significant impact right now." initiatives={initiatives as any} isLoading={isLoading} icon={Sparkles} kicker="Handpicked" />;
 }
 
