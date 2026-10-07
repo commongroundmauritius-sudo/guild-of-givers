@@ -131,14 +131,6 @@ async function build() {
     if (fs.existsSync(wranglerConfigRoot)) {
       const config = JSON.parse(fs.readFileSync(wranglerConfigRoot, "utf-8"));
       config.main = "_worker.js";
-      // Serve the static Vite/Nitro assets from the same dist/client directory.
-      // Without this Workers Assets configuration, the SSR HTML loads but /assets/*
-      // requests return 404 and the client never hydrates.
-      config.assets = {
-        ...(config.assets || {}),
-        directory: ".",
-        binding: "ASSETS",
-      };
       if (!config.compatibility_flags) {
         config.compatibility_flags = [];
       }
