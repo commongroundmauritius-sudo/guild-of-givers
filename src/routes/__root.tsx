@@ -3,18 +3,17 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
+  Navigate,
   createRootRouteWithContext,
   useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 
 import appCss from "../styles.css?url";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -113,81 +112,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
+  const { user, sessionReady } = useAuth();
   const { pathname, search } = useLocation();
   const isProtectedPath =
     /^(\/admin-dashboard|\/member|\/notifications|\/community-hub|\/dashboard|\/organization)(\/|$)/.test(
       pathname,
     );
-  const [authChecked, setAuthChecked] = useState(false);
-  const [hasSession, setHasSession] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    if (!isProtectedPath) {
-      setAuthChecked(true);
-      setHasSession(true);
-      return () => {
-        active = false;
-      };
-    }
-
-    const redirectToLogin = () => {
-      const redirectPath = pathname;
-      window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
-    };
-
-    const hasStoredSession = Object.keys(localStorage).some((key) => {
-      if (!key.startsWith("sb-") || !key.includes("-auth-token")) return false;
-      try {
-        const value = JSON.parse(localStorage.getItem(key) || "null");
-        return Boolean(value?.access_token) || Boolean(value?.refresh_token);
-      } catch {
-        return true;
-      }
-    });
-
-    if (!hasStoredSession) {
-      if (active) {
-        setHasSession(false);
-        setAuthChecked(true);
-      }
-      return () => {
-        active = false;
-      };
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      if (!active) return;
-      redirectToLogin();
-    }, 5000);
-
-    const checkSession = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (!active) return;
-        window.clearTimeout(timeoutId);
-        if (error || !data.session) {
-          redirectToLogin();
-          return;
-        }
-        setHasSession(true);
-        setAuthChecked(true);
-      } catch {
-        if (!active) return;
-        window.clearTimeout(timeoutId);
-        redirectToLogin();
-      }
-    };
-
-    checkSession();
-    return () => {
-      active = false;
-      window.clearTimeout(timeoutId);
-    };
-  }, [isProtectedPath, pathname, search]);
 
   if (!isProtectedPath) return <>{children}</>;
-  if (!authChecked && isProtectedPath) {
+
+  if (!sessionReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <p className="text-sm text-muted-foreground">Checking your account…</p>
@@ -195,8 +129,14 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (isProtectedPath && !hasSession) {
-    return <Navigate to="/login" search={{ redirect: pathname }} replace />;
+  if (!user) {
+    return (
+      <Navigate
+        to="/login"
+        search={{ redirect: `${pathname}${search}` }}
+        replace
+      />
+    );
   }
 
   return <>{children}</>;
