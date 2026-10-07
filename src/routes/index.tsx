@@ -62,7 +62,7 @@ function Index() {
         .filter((s: any) => s.visible && !["urgent", "trending"].includes(s.id))
         .map((section: any) => (
           <div key={section.id} data-section={section.id}>
-            {renderSection(section)}
+            {renderSection(section, initialFeaturedInitiatives)}
           </div>
         ))}
       {!isHomepageLoading && <FinalCTA />}
@@ -92,7 +92,7 @@ function renderSection(section: any, featuredInitiatives: HomepageFeaturedInitia
     case "stats":
       return <ImpactStats settings={section.settings} />;
     case "featured":
-      return <FeaturedInitiatives settings={section.settings} />;
+      return <FeaturedInitiatives settings={section.settings} initialInitiatives={featuredInitiatives} />;
     case "volunteers":
       return <VolunteerOpportunities settings={section.settings} />;
     case "success":
@@ -139,7 +139,6 @@ function Hero({ settings }: { settings: any }) {
 
 function ImpactStats({ settings }: { settings: any }) {
   const metrics = Array.isArray(settings?.metrics) ? settings.metrics.filter((m: any) => m.visible !== false) : [];
-  if (metrics.length === 0) return null;
 
   const autoMetricIds = metrics.filter((m: any) => m.auto !== false).map((m: any) => m.id).sort();
   const { data: values = {}, isLoading, isError } = useQuery({
@@ -153,6 +152,8 @@ function ImpactStats({ settings }: { settings: any }) {
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  if (metrics.length === 0) return null;
 
   return <section className="border-y border-border/40 bg-white py-16">
     <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
@@ -192,7 +193,7 @@ const VALUE_PROPS = [
   { icon: Target, title: "Root Cause Focus", desc: "We prioritize long-horizon programs in restoration, education, and resilience that solve problems at the source." },
 ];
 
-function FeaturedInitiatives({ settings, initialInitiatives }: { settings: any; initialInitiatives: HomepageFeaturedInitiative[] }) {
+function FeaturedInitiatives({ settings, initialInitiatives = [] }: { settings: any; initialInitiatives?: HomepageFeaturedInitiative[] }) {
   const hasSelection = Array.isArray(settings?.manual_ids) && settings.manual_ids.length > 0;
   const { data: initiatives = [], isLoading, isError } = useQuery({
     queryKey: ["homepage-featured-manual", settings.manual_ids],
@@ -202,7 +203,7 @@ function FeaturedInitiatives({ settings, initialInitiatives }: { settings: any; 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("initiatives")
-        .select("id, slug, title, caption, summary, description, goal_amount_mur, current_amount_mur, banner_image_url, image_url, organizations(organization_name)")
+        .select("id, slug, title, caption, summary, description, goal_amount_mur, current_amount_mur, image_url, organizations(organization_name)")
         .in("id", settings.manual_ids)
         .eq("is_approved", true)
         .eq("is_published", true)
