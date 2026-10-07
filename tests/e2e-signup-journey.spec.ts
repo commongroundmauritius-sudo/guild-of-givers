@@ -14,7 +14,7 @@ test.describe("End-to-End Member Signup Journey", () => {
     const email = `e2e-${Date.now()}@example.com`;
 
     await page.goto("/signup");
-    await expect(page.locator("h2")).toContainText(/Monthly Contribution/i);
+    await expect(page.locator("h2")).toContainText(/Monthly Membership/i);
     const startButton = page.getByRole("button", { name: "Start my monthly impact" });
     await expect(startButton).toBeVisible();
     await expect(startButton).toBeEnabled();

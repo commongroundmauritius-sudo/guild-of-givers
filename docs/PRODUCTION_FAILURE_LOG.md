@@ -220,3 +220,25 @@ Validation required after the correction:
 3. Production worker output remains valid.
 4. Preview binds and is reachable.
 5. Complete production E2E suite passes.
+
+
+### 2026-10-07 — Signup transition failure re-confirmed as missing client assets
+
+Production validation run `37600598461`, job `112723734690`, reached the signup E2E after the worker preview, admin, auth, and compliance gates all passed.
+
+The signup diagnostic again showed server-rendered `Monthly Membership` HTML, but the browser could not load the client assets:
+- `/assets/logo-B2qccutl.png` → 404
+- `/assets/styles-SYFMdg-D.css` → 404
+- `/assets/index-BJBRaIVL.js` → 404
+- `/favicon.svg` → 404
+
+Because the React entry bundle was missing, the visible `Start my monthly impact` button had no working client event handler and the page remained on step 0. This is the same infrastructure failure pattern previously documented: server HTML is present while the browser cannot hydrate.
+
+Classification: **production worker static-asset routing**. The signup component itself correctly calls `setStep(1)` from the Start button; changing the Playwright selector or adding another hydration/timing delay would mask the infrastructure defect.
+
+Corrective change on `fix/compliance-peach-payment-test`:
+- generated Wrangler config now declares Workers Static Assets with `directory: "."` and binding `ASSETS`;
+- generated `_worker.js` now checks `env.ASSETS.fetch(request)` before delegating to the SSR worker, so client assets are served before application routing;
+- no signup business logic or test selector workaround was added.
+
+Validation required: rebuild the worker, verify representative `/assets/*` responses are HTTP 200, then rerun the complete production validation. The signup gate remains RED until Amount → Details → Payment → Account → Done passes.

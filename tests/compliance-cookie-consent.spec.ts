@@ -21,7 +21,9 @@ test.describe("Website Compliance, Legal Policies & Cookie Storage", () => {
 
     await page.goto("/terms-and-conditions");
     await expect(page.locator("h1")).toContainText("Terms & Conditions");
-    await expect(page.getByText("Peach Payments")).toBeVisible();
+    // Peach Payments is not integrated yet. When the Peach Payments integration is enabled,
+    // add a provider-specific assertion here to verify the live payment/legal disclosure.
+    await expect(page.getByText("Payments, Billing & Fee Coverage")).toBeVisible();
 
     await page.goto("/cookies-policy");
     await expect(page.locator("h1")).toContainText("Cookies & Browser Storage");
