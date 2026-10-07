@@ -132,7 +132,7 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
     }
 
     const redirectToLogin = () => {
-      const redirectPath = `${pathname}${search}`;
+      const redirectPath = pathname;
       window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
     };
 
@@ -184,7 +184,7 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
   }, [isProtectedPath, pathname, search]);
 
   if (!isProtectedPath) return <>{children}</>;
-  if (!authChecked || !hasSession) {
+  if (!authChecked && !hasSession && isProtectedPath) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <p className="text-sm text-muted-foreground">Checking your account…</p>
