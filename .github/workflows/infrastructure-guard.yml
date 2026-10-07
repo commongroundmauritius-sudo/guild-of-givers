@@ -24,14 +24,16 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps --no-audit --no-fund
 
-      - name: Verify Vite Configuration
+      - name: Verify TanStack Start configuration
         run: |
-          grep -q 'noExternal: true' vite.config.ts || (echo 'ERROR: vite.config.ts missing noExternal' && false)
-          grep -q 'inlineDynamicImports: true' vite.config.ts || (echo 'ERROR: vite.config.ts missing inlineDynamicImports' && false)
+          grep -q 'entry: "server"' vite.config.ts || (echo 'ERROR: vite.config.ts missing TanStack Start server entry' && false)
 
       - name: Build and Validate Worker
         run: npm run build
 
       - name: Detect Infrastructure Drift
         run: |
+          test -f dist/client/_worker.js || (echo 'ERROR: _worker.js missing' && false)
           grep -q '"main": "_worker.js"' dist/client/wrangler.json || (echo 'ERROR: wrangler.json mismatch' && false)
+          grep -q '"nodejs_compat"' dist/client/wrangler.json || (echo 'ERROR: wrangler.json missing nodejs_compat' && false)
+          grep -q 'export default' dist/client/_worker.js || (echo 'ERROR: worker default export missing' && false)
