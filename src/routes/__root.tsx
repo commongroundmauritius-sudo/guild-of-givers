@@ -114,7 +114,7 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
   const { user, sessionReady } = useAuth();
   const { pathname, search } = useLocation();
   const isProtectedPath =
-    /^(\\/admin-dashboard|\\/member|\\/notifications|\\/community-hub|\\/dashboard|\\/organization)(\\/|$)/.test(
+    /^(\/admin-dashboard|\/member|\/notifications|\/community-hub|\/dashboard|\/organization)(\/|$)/.test(
       pathname,
     );
 
