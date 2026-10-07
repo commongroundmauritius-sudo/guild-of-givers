@@ -110,20 +110,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function hasStoredSupabaseSession() {
-  if (typeof window === "undefined") return false;
-
-  return Object.keys(window.localStorage).some((key) => {
-    if (!key.startsWith("sb-") || !key.includes("-auth-token")) return false;
-    try {
-      const value = JSON.parse(window.localStorage.getItem(key) || "null");
-      return Boolean(value?.access_token) || Boolean(value?.refresh_token);
-    } catch {
-      return true;
-    }
-  });
-}
-
 function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
   const { user, sessionReady } = useAuth();
   const { pathname, search } = useLocation();
@@ -133,13 +119,6 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
     );
 
   if (!isProtectedPath) return <>{children}</>;
-
-  // A protected page opened with no browser session can be rejected immediately.
-  // This avoids making unauthenticated navigation depend on Supabase network timing.
-  if (typeof window !== "undefined" && !hasStoredSupabaseSession()) {
-    window.location.replace("/login?redirect=" + encodeURIComponent(pathname + search));
-    return null;
-  }
 
   if (!sessionReady) {
     return (
