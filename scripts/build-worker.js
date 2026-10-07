@@ -40,6 +40,7 @@ const h3Plugin = {
       "path",
       "process",
       "stream",
+      "timers",
       "util",
       "v8",
     ];
@@ -82,6 +83,7 @@ async function build() {
     "stream",
     "stream/web",
     "string_decoder",
+    "timers",
     "util",
     "v8",
   ];
