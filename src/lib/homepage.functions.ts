@@ -33,7 +33,7 @@ export type HomepageFeaturedInitiative = {
 };
 
 export const getHomepageFeaturedInitiatives = createServerFn({ method: "GET" })
-  .validator((ids: string[]) => ids.filter((id) => typeof id === "string").slice(0, 12))
+  .inputValidator((ids: string[]) => ids.filter((id) => typeof id === "string").slice(0, 12))
   .handler(async ({ data: ids }): Promise<HomepageFeaturedInitiative[]> => {
     if (!ids.length) return [];
 
