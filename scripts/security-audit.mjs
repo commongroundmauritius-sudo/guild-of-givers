@@ -48,14 +48,14 @@ for (const section of functionSections) {
   if (!match || !/SECURITY\s+DEFINER/i.test(section)) continue;
   const name = match[1].toLowerCase();
   securityDefiners.add(name);
-  if (/SET\s+search_path\s*(?:TO|=)\s*(?:public\b|''|\"\")/i.test(section)) secureSearchPathFunctions.add(name);
+  if (/SET\s+search_path\s*(?:TO|=)\s*(?:(?:'public'|"public"|public)\b|''|"")/i.test(section)) secureSearchPathFunctions.add(name);
 }
 
 // Some migrations apply function security settings separately with ALTER FUNCTION.
 for (const statement of migrationText.split(";")) {
   if (!/ALTER\s+FUNCTION\b/i.test(statement)) continue;
   const match = statement.match(
-    /ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\b[\s\S]*?SET\s+search_path\s*(?:TO|=)\s*public\b/i,
+    /ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\b[\s\S]*?SET\s+search_path\s*(?:TO|=)\s*(?:(?:'public'|"public"|public)\b|''|"")/i,
   );
   if (match) secureSearchPathFunctions.add(match[1].toLowerCase());
 }
@@ -79,19 +79,29 @@ const intentionalAnonWriteTables = new Set([
   "public.organization_contact_applications",
   "public.homepage_analytics",
 ]);
-const anonWriteGrants = [
-  ...migrationText.matchAll(
-    /GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER)[^;]*\s+TO\s+anon/gi,
-  ),
-]
-  .map((m) => m[0])
-  .filter(
-    (grant) =>
-      ![...intentionalAnonWriteTables].some((table) =>
-        new RegExp(`\\b${table.replace(".", "\\.")}\\b`, "i").test(grant),
-      ),
-  )
-  .filter((grant, index, arr) => arr.indexOf(grant) === index);
+const anonWriteGrants = [];
+const anonWriteState = new Map();
+
+// Evaluate GRANT/REVOKE statements in migration order so historical grants that
+// were explicitly revoked later are not reported as current anonymous writes.
+for (const statement of migrationText.split(";")) {
+  if (!/\b(?:GRANT|REVOKE)\b/i.test(statement)) continue;
+  const tableMatch = statement.match(
+    /\bON\s+(?:TABLE\s+)?(?:public\.)?([a-zA-Z_][\w]*)\b/i,
+  );
+  if (!tableMatch) continue;
+  const table = `public.${tableMatch[1].toLowerCase()}`;
+  const isWrite = /\b(?:ALL(?:\s+PRIVILEGES)?|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER)\b/i.test(statement);
+  if (!isWrite || !/\b(?:TO|FROM)\s+[^;]*\banon\b/i.test(statement)) continue;
+
+  if (/^\s*GRANT\b/i.test(statement)) anonWriteState.set(table, statement.trim());
+  if (/^\s*REVOKE\b/i.test(statement)) anonWriteState.delete(table);
+}
+
+for (const [table, grant] of anonWriteState) {
+  if ([...intentionalAnonWriteTables].includes(table)) continue;
+  anonWriteGrants.push(grant);
+}
 
 const sourceFiles = (await walk(srcDir)).filter((f) => /\.(ts|tsx|js|jsx)$/.test(f));
 const sourceText = (await Promise.all(sourceFiles.map((f) => readFile(f, "utf8")))).join("\n");
