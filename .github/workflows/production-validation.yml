@@ -102,6 +102,9 @@ jobs:
           cat /tmp/signup-preview.log || true
           exit 1
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: E2E — signup journey (isolated local Supabase)
         env:
           CI: true
@@ -126,9 +129,6 @@ jobs:
           test -f dist/client/_worker.js
           test -f dist/client/wrangler.json
           grep -q '"main": "_worker.js"' dist/client/wrangler.json
-
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
 
       - name: Start production worker preview
         env:
