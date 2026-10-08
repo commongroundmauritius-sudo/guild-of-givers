@@ -40,6 +40,7 @@ const h3Plugin = {
       "path",
       "process",
       "stream",
+      "timers",
       "util",
       "v8",
     ];
@@ -50,9 +51,37 @@ const h3Plugin = {
 };
 
 async function build() {
-  const serverEntry = path.join(rootDir, "dist/server/server.js");
-  const workerOutput = path.join(rootDir, "dist/client/_worker.js");
-  const wranglerConfig = path.join(rootDir, "dist/client/wrangler.json");
+  const serverEntryCandidates = [
+    path.join(rootDir, "dist/server/index.mjs"),
+    path.join(rootDir, "dist/server/server.js"),
+    path.join(rootDir, ".output/server/index.mjs"),
+  ];
+  const serverEntry = serverEntryCandidates.find((candidate) => fs.existsSync(candidate));
+  const clientDir = path.join(rootDir, "dist/client");
+  const workerOutput = path.join(clientDir, "_worker.js");
+  const workerCoreOutput = path.join(clientDir, "._worker-core.js");
+  const wranglerConfigRoot = path.join(rootDir, "wrangler.json");
+  const wranglerConfig = path.join(clientDir, "wrangler.json");
+  const publicDir = path.join(rootDir, ".output/public");
+
+  // Current Nitro builds emit the browser assets to .output/public.
+  // The CI/Cloudflare Pages contract expects those assets and _worker.js in dist/client.
+  if (fs.existsSync(publicDir)) {
+    fs.mkdirSync(clientDir, { recursive: true });
+    fs.cpSync(publicDir, clientDir, { recursive: true });
+  } else {
+    console.error("Build worker failed: .output/public does not exist.");
+    process.exit(1);
+  }
+
+  if (!serverEntry) {
+    console.error(
+      `Build worker failed: server entry not found. Checked:\n${serverEntryCandidates
+        .map((candidate) => `  - ${candidate}`)
+        .join("\n")}`,
+    );
+    process.exit(1);
+  }
 
   console.log("Bundling worker from:", serverEntry);
 
@@ -68,6 +97,7 @@ async function build() {
     "stream",
     "stream/web",
     "string_decoder",
+    "timers",
     "util",
     "v8",
   ];
@@ -79,7 +109,7 @@ async function build() {
       entryPoints: [serverEntry],
       plugins: [h3Plugin],
       bundle: true,
-      outfile: workerOutput,
+      outfile: workerCoreOutput,
       format: "esm",
       platform: "browser",
       target: "es2022",
@@ -94,21 +124,31 @@ async function build() {
       define: {
         "process.env.NODE_ENV": '"production"',
       },
-      banner: {
-        js: `
-import { Buffer } from 'node:buffer';
-import process from 'node:process';
-globalThis.Buffer = Buffer;
-globalThis.process = process;
-`,
-      },
       logLevel: "info",
       metafile: true,
     });
 
-    console.log("Updating wrangler.json...");
-    if (fs.existsSync(wranglerConfig)) {
-      const config = JSON.parse(fs.readFileSync(wranglerConfig, "utf-8"));
+    const bundledWorker = fs.readFileSync(workerCoreOutput, "utf-8");
+    let pagesWorker = bundledWorker.replace(
+      /export\s+default\s+/,
+      "const __commonGroundWorker = ",
+    );
+    pagesWorker = pagesWorker.replace(
+      /export\s*\{\s*([^}]+?)\s+as\s+default\s*\};?\s*$/,
+      "const __commonGroundWorker = $1;",
+    );
+    if (pagesWorker === bundledWorker) {
+      console.error("Build worker failed: bundled Worker default export could not be adapted.");
+      process.exit(1);
+    }
+
+    pagesWorker += "\n\nexport default {\n  async fetch(request, env, ctx) {\n    const response = await __commonGroundWorker.fetch(request, env, ctx);\n    if (response.status !== 404 || !env?.ASSETS) return response;\n    return env.ASSETS.fetch(request);\n  },\n};\n";
+    fs.writeFileSync(workerOutput, pagesWorker);
+    fs.rmSync(workerCoreOutput, { force: true });
+
+    console.log("Generating dist/client/wrangler.json...");
+    if (fs.existsSync(wranglerConfigRoot)) {
+      const config = JSON.parse(fs.readFileSync(wranglerConfigRoot, "utf-8"));
       config.main = "_worker.js";
       if (!config.compatibility_flags) {
         config.compatibility_flags = [];
@@ -117,7 +157,7 @@ globalThis.process = process;
         config.compatibility_flags.push("nodejs_compat");
       }
       fs.writeFileSync(wranglerConfig, JSON.stringify(config, null, 2));
-      console.log("wrangler.json updated.");
+      console.log("wrangler.json generated.");
     }
 
     console.log("Build worker completed successfully.");
