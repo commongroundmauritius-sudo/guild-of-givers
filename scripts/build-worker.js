@@ -9,8 +9,8 @@ const rootDir = path.resolve(__dirname, "..");
 const h3Plugin = {
   name: "h3-resolver",
   setup(build) {
-    // Force h3-v2 and h3 to resolve to the cloudflare entry point.
-    build.onResolve({ filter: /^h3(-v2)?$/ }, (args) => {
+    // Force h3-v2 and h3 to resolve to the Cloudflare entry point.
+    build.onResolve({ filter: /^h3(-v2)?$/ }, () => {
       const cloudflareEntry = path.resolve(rootDir, "node_modules/h3-v2/dist/_entries/cloudflare.mjs");
       if (fs.existsSync(cloudflareEntry)) {
         return { path: cloudflareEntry };
@@ -224,7 +224,13 @@ async function verify() {
     process.exit(1);
   }
 
-  const forbiddenPatterns = [/['"]h3(-v2)?['"]/, /['"]rou3['"]/, /['"]srvx['"]/, /['"]seroval['"]/, /['"]@tanstack/];
+  const forbiddenPatterns = [
+    /['"]h3(-v2)?['"]/,
+    /['"]rou3['"]/,
+    /['"]srvx['"]/,
+    /['"]seroval['"]/,
+    /['"]@tanstack/,
+  ];
   if (remainingImports.some((i) => forbiddenPatterns.some((p) => p.test(i)))) {
     console.error("Verification FAILED: Found forbidden framework import in _worker.js");
     remainingImports
