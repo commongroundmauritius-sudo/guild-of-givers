@@ -174,7 +174,7 @@ function SignupPage() {
       covers_fees: isPartnerSignup ? false : coversFees,
       source_initiative_id: sourceInitiativeId,
       role,
-      mock_transaction_id: isPartnerSignup ? null : paymentTransactionId,
+      payment_transaction_id: isPartnerSignup ? null : paymentTransactionId,
     };
 
     if (isPartnerSignup && partnerData?.converted_organization_id) {
