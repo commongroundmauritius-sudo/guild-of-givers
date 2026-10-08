@@ -1,30 +1,34 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Growth & Engagement Analytics", () => {
-  test("Admin dashboard contains updated modular dashboard tabs", async ({ page }) => {
-    // This is a smoke test to ensure the tabs are present
-    // We assume the user is logged in as admin in a real scenario,
-    // but here we just check for component rendering if possible.
+  test("admin analytics requires authentication", async ({ page }) => {
     await page.goto("/admin-dashboard/analytics");
-
-    // Check for the presence of the tabs
-    const acquisitionTab = page.locator('button:has-text("Acquisition")');
-    const engagementTab = page.locator('button:has-text("Engagement")');
-    const financialTab = page.locator('button:has-text("Financial")');
-
-    // Since this is a protected route, we might get redirected to login.
-    // In a real environment we'd use a storage state.
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  test("Initiative detail page captures attribution", async ({ page }) => {
-    // Mock the attribution capture
-    await page.goto("/initiatives/test-slug?ref=TESTCODE&utm_source=testsource");
+  test("initiative detail captures attribution parameters", async ({ page }) => {
+    await page.goto("/initiatives");
 
-    const attribution = await page.evaluate(() => localStorage.getItem("cg_attribution"));
-    if (attribution) {
-      const data = JSON.parse(attribution);
-      expect(data.tracking_code).toBe("TESTCODE");
-      expect(data.utm_source).toBe("testsource");
-    }
+    const initiativeLink = page.locator('a[href^="/initiatives/"]').first();
+    await expect(initiativeLink).toBeVisible();
+
+    const href = await initiativeLink.getAttribute("href");
+    expect(href).toBeTruthy();
+
+    await page.goto(`${href}?ref=TESTCODE&utm_source=testsource`);
+
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(() => {
+            const raw = localStorage.getItem("cg_attribution");
+            return raw ? JSON.parse(raw) : null;
+          }),
+        { timeout: 5_000 },
+      )
+      .toMatchObject({
+        tracking_code: "TESTCODE",
+        utm_source: "testsource",
+      });
   });
 });
