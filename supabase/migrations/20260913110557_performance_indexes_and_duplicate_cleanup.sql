@@ -1,0 +1,22 @@
+DROP INDEX IF EXISTS public.idx_org_owner;
+
+CREATE INDEX IF NOT EXISTS idx_financial_events_account_id ON public.financial_events(account_id);
+CREATE INDEX IF NOT EXISTS idx_financial_events_billing_cycle_id ON public.financial_events(billing_cycle_id);
+CREATE INDEX IF NOT EXISTS idx_financial_events_payment_id ON public.financial_events(payment_id);
+CREATE INDEX IF NOT EXISTS idx_financial_events_user_id ON public.financial_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_primary_initiative_id ON public.profiles(primary_initiative_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_source_initiative_id ON public.profiles(source_initiative_id);
+CREATE INDEX IF NOT EXISTS idx_leads_campaign_link_id ON public.leads(campaign_link_id);
+CREATE INDEX IF NOT EXISTS idx_leads_source_initiative_id ON public.leads(source_initiative_id);
+CREATE INDEX IF NOT EXISTS idx_initiative_events_campaign_link_id ON public.initiative_events(campaign_link_id);
+CREATE INDEX IF NOT EXISTS idx_initiative_funding_cycles_billing_cycle_id ON public.initiative_funding_cycles(billing_cycle_id);
+CREATE INDEX IF NOT EXISTS idx_automation_executions_rule_id ON public.automation_executions(rule_id);
+CREATE INDEX IF NOT EXISTS idx_automation_executions_user_id ON public.automation_executions(user_id);
+CREATE INDEX IF NOT EXISTS idx_automation_logs_execution_id ON public.automation_logs(execution_id);
+CREATE INDEX IF NOT EXISTS idx_automation_rules_organization_id ON public.automation_rules(organization_id);
+CREATE INDEX IF NOT EXISTS idx_homepage_analytics_user_id ON public.homepage_analytics(user_id);
+CREATE INDEX IF NOT EXISTS idx_homepage_analytics_version_id ON public.homepage_analytics(version_id);
+CREATE INDEX IF NOT EXISTS idx_organization_audit_log_organization_id ON public.organization_audit_log(organization_id);
+CREATE INDEX IF NOT EXISTS idx_organization_audit_log_changed_by ON public.organization_audit_log(changed_by);
+CREATE INDEX IF NOT EXISTS idx_payouts_organization_id ON public.payouts(organization_id);
+CREATE INDEX IF NOT EXISTS idx_segments_organization_id ON public.segments(organization_id);

@@ -1,0 +1,10 @@
+GRANT SELECT ON TABLE public.financial_events TO authenticated;
+GRANT SELECT ON TABLE public.allocations TO authenticated;
+GRANT SELECT ON TABLE public.receipts TO authenticated;
+GRANT SELECT ON TABLE public.payment_events TO authenticated;
+GRANT SELECT ON TABLE public.user_roles TO authenticated;
+GRANT SELECT ON TABLE public.automation_executions TO authenticated;
+GRANT SELECT ON TABLE public.automation_logs TO authenticated;
+GRANT SELECT ON TABLE public.supporter_engagement_scores TO authenticated;
+GRANT SELECT ON TABLE public.supporter_interests TO authenticated;
+GRANT SELECT ON TABLE public.supporter_retention_stats TO authenticated;

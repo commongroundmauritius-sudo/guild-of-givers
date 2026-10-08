@@ -1,0 +1,17 @@
+REVOKE TRUNCATE ON ALL TABLES IN SCHEMA public FROM anon, authenticated;
+REVOKE ALL ON TABLE public.payment_events FROM anon, authenticated;
+REVOKE ALL ON TABLE public.allocations FROM anon, authenticated;
+REVOKE ALL ON TABLE public.receipts FROM anon, authenticated;
+REVOKE ALL ON TABLE public.financial_events FROM anon, authenticated;
+REVOKE ALL ON TABLE public.user_roles FROM anon, authenticated;
+REVOKE DELETE ON TABLE public.profiles FROM anon, authenticated;
+REVOKE INSERT, DELETE ON TABLE public.organizations FROM anon, authenticated;
+REVOKE DELETE, UPDATE ON TABLE public.partner_applications FROM anon, authenticated;
+REVOKE ALL ON TABLE public.audit_logs FROM anon, authenticated;
+REVOKE ALL ON TABLE public.organization_audit_log FROM anon, authenticated;
+REVOKE ALL ON TABLE public.automation_executions FROM anon, authenticated;
+REVOKE ALL ON TABLE public.automation_logs FROM anon, authenticated;
+REVOKE ALL ON TABLE public.supporter_engagement_scores FROM anon, authenticated;
+REVOKE ALL ON TABLE public.supporter_interests FROM anon, authenticated;
+REVOKE ALL ON TABLE public.supporter_retention_stats FROM anon, authenticated;
+REVOKE ALL ON TABLE public.community_activity_limits FROM anon, authenticated;
