@@ -164,37 +164,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
 
-      if (
-        !error &&
-        isMockPaymentsEnabled() &&
-        metadata?.role === "member" &&
-        Number(metadata?.subscription_amount) >= 167
-      ) {
-        if (!data?.session) {
-          return {
-            error: new Error(
-              "Your account was created, but the mock membership could not be finalized because no active session was returned.",
-            ),
-            data,
-          };
-        }
-
-        const transactionId =
-          typeof metadata.mock_transaction_id === "string" &&
-          metadata.mock_transaction_id.startsWith("mock_txn_")
-            ? metadata.mock_transaction_id
-            : `mock_txn_${Math.random().toString(36).slice(2, 11)}`;
-        const { error: finalizeError } = await supabase.rpc("dev_complete_mock_membership", {
-          p_amount_mur: Number(metadata.subscription_amount),
-          p_billing_date: 7,
-          p_covers_fees: Boolean(metadata.covers_fees),
-          p_transaction_id: transactionId,
-          p_priority_initiatives: metadata.source_initiative_id
-            ? [metadata.source_initiative_id]
-            : [],
-        } as any);
-        if (finalizeError) return { error: new Error(finalizeError.message), data };
-      }
       return { error, data };
     },
     resetPassword: async (email) => {
