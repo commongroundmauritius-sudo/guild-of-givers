@@ -67,7 +67,8 @@ jobs:
         env:
           VITE_ENABLE_MOCK_PAYMENTS: "true"
         run: |
-          ./node_modules/.bin/wrangler pages dev dist/client --ip 127.0.0.1 --port 8080 --log-level debug --show-interactive-dev-session=false --persist-to /tmp/wrangler-state > /tmp/preview.log 2>&1 &
+          cd dist/client
+          ./../../node_modules/.bin/wrangler dev --config wrangler.json --local --ip 127.0.0.1 --port 8080 --log-level debug --show-interactive-dev-session=false --persist-to /tmp/wrangler-state > /tmp/preview.log 2>&1 &
           PREVIEW_PID=$!
           echo "$PREVIEW_PID" > /tmp/preview.pid
           sleep 3
