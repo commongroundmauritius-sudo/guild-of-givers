@@ -148,6 +148,18 @@ jobs:
           PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
         run: npx playwright test tests/financial-trace.spec.ts
 
+      - name: E2E — growth analytics
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/growth/analytics.spec.ts
+
+      - name: E2E — growth notifications
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
+        run: npx playwright test tests/growth/notifications.spec.ts
+
       - name: E2E — member checkpoint
         env:
           CI: true
