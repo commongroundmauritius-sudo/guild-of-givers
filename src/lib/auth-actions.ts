@@ -66,29 +66,21 @@ export const createLead = createServerFn({ method: "POST" })
         .single();
       campaignLinkId = linkData?.id;
     }
-    const { error } = await supabase.from("leads").insert({
-      email: trimmedEmail,
-      full_name: fullName.trim(),
-      phone: phone?.trim() || null,
-      amount_mur: amount,
-      covers_fees: coversFees,
-      status,
-      lead_stage: "Visitor",
-      source_initiative_id: sourceInitiativeId as any,
-      campaign_link_id: campaignLinkId,
-      utm_parameters: attribution || {},
-      last_activity_at: new Date().toISOString(),
+    const { error } = await supabase.rpc("create_lead_safe", {
+      p_email: trimmedEmail,
+      p_full_name: fullName.trim(),
+      p_phone: phone?.trim() || null,
+      p_amount_mur: amount,
+      p_covers_fees: coversFees,
+      p_source_initiative_id: sourceInitiativeId,
+      p_campaign_link_id: campaignLinkId,
+      p_utm_parameters: attribution || {},
     });
+
     if (error) {
-      if (error.code === "23505") {
-        await supabase
-          .from("leads")
-          .update({ last_activity_at: new Date().toISOString(), lead_stage: "Visitor" })
-          .eq("email", trimmedEmail);
-        return { success: true, message: "Lead activity updated" };
-      }
-      throw new Error("Failed to capture details. Please try again.");
+      throw new Error(error.message || "Failed to capture details. Please try again.");
     }
+
     await activityService.logEvent({
       eventType: "lead_captured",
       initiativeId: sourceInitiativeId || undefined,
