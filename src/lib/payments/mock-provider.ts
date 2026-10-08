@@ -6,6 +6,7 @@ import {
   SubscriptionStatus,
   PaymentEventType,
 } from "./types";
+import { supabase } from "@/integrations/supabase/client";
 
 export function isMockPaymentsEnabled(): boolean {
   return import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCK_PAYMENTS === "true";
@@ -27,7 +28,16 @@ export class MockPaymentProvider implements PaymentProvider {
   ): Promise<{ checkoutUrl: string; transactionId: string }> {
     assertMockPaymentsEnabled();
     console.log(`[MockProvider] Initializing payment of ${amount} ${currency}`, metadata);
-    const transactionId = `mock_txn_${Math.random().toString(36).substr(2, 9)}`;
+    const { data: transactionId, error } = await supabase.rpc("create_test_payment_intent", {
+      p_email: String(metadata.email ?? "").trim().toLowerCase(),
+      p_amount_mur: amount,
+      p_covers_fees: Boolean(metadata.coversFees),
+      p_source_initiative_id: (metadata.sourceInitiativeId as string | null) ?? null,
+      p_provider_subscription_id: null,
+    });
+    if (error || !transactionId) {
+      throw new Error(error?.message || "Unable to create test payment intent.");
+    }
     return {
       checkoutUrl: `/mock-checkout?txn=${transactionId}&amount=${amount}`,
       transactionId,
