@@ -130,11 +130,11 @@ async function build() {
 
     const bundledWorker = fs.readFileSync(workerCoreOutput, "utf-8");
     let pagesWorker = bundledWorker.replace(
-      /export\\s+default\\s+/,
+      /export\s+default\s+/,
       "const __commonGroundWorker = ",
     );
     pagesWorker = pagesWorker.replace(
-      /export\\s*\\{\\s*([^}]+?)\\s+as\\s+default\\s*\\};?\\s*$/,
+      /export\s*\{\s*([^}]+?)\s+as\s+default\s*\};?\s*$/,
       "const __commonGroundWorker = $1;",
     );
     if (pagesWorker === bundledWorker) {
