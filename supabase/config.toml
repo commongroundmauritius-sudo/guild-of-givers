@@ -14,3 +14,8 @@ enabled = true
 
 [storage]
 enabled = true
+
+# CI/local signup tests must exercise the real Auth flow without sending email.
+# Production hosted Auth remains configured independently.
+[auth.email]
+enable_confirmations = false
