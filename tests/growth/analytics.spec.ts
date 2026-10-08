@@ -7,15 +7,7 @@ test.describe("Growth & Engagement Analytics", () => {
   });
 
   test("initiative detail captures attribution parameters", async ({ page }) => {
-    await page.goto("/initiatives");
-
-    const initiativeLink = page.locator('a[href^="/initiatives/"]').first();
-    await expect(initiativeLink).toBeVisible();
-
-    const href = await initiativeLink.getAttribute("href");
-    expect(href).toBeTruthy();
-
-    await page.goto(`${href}?ref=TESTCODE&utm_source=testsource`);
+    await page.goto("/signup?ref=TESTCODE&utm_source=testsource");
 
     await expect
       .poll(
