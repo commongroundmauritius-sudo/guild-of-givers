@@ -63,6 +63,11 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
+      - name: Prepare Wrangler Pages preview state
+        run: |
+          rm -rf .wrangler/deploy
+          test ! -e .wrangler/deploy/config.json
+
       - name: Start production worker preview
         env:
           VITE_ENABLE_MOCK_PAYMENTS: "true"
