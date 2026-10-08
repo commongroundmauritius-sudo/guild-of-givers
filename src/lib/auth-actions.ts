@@ -117,12 +117,6 @@ export const convertLead = createServerFn({ method: "POST" })
       })
       .eq("id", lead.id);
     if (error) throw error;
-    await activityService.logEvent({
-      initiativeId: sourceInitiativeId || undefined,
-      eventType: "payment_completed",
-      metadata: { user_id: user.id, lead_id: lead.id, email: email.trim().toLowerCase() },
-      source: "backend",
-    });
     return { success: true };
   });
 
