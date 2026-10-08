@@ -1,0 +1,9 @@
+REVOKE EXECUTE ON FUNCTION public.protect_organization_security_fields() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.validate_public_activity_insert() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.validate_public_initiative_event_insert() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.get_trending_initiatives(integer) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.submit_partner_application(text,text,text,text,text) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.can_edit_organization(uuid) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.get_auth_org_id() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.get_initiative_org_id(uuid) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.has_role(public.app_role) FROM PUBLIC;
