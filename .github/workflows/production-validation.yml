@@ -18,7 +18,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -43,16 +43,83 @@ jobs:
           VITE_ENABLE_MOCK_PAYMENTS: "false"
         run: npm run build
 
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start isolated local Supabase for signup E2E
+        run: |
+          supabase start
+          supabase db reset
+          supabase status --env --override-name API_URL=VITE_SUPABASE_URL,ANON_KEY=VITE_SUPABASE_ANON_KEY --output-format text >> "$GITHUB_ENV"
+          echo "Local Supabase is ready for the signup journey."
+          grep -E '^VITE_SUPABASE_(URL|ANON_KEY)=' "$GITHUB_ENV" | sed -E 's/=.*/=<redacted>/'
+
       - name: Verify production worker output
         run: |
           test -f dist/client/_worker.js
           test -f dist/client/wrangler.json
           grep -q '"main": "_worker.js"' dist/client/wrangler.json
 
-      - name: Test build (mock payments enabled)
+      - name: Signup E2E build (mock payments enabled, local Supabase)
         env:
           VITE_ENABLE_MOCK_PAYMENTS: "true"
         run: npm run build
+
+      - name: Verify signup E2E worker output
+        run: |
+          test -f dist/client/_worker.js
+          test -f dist/client/wrangler.json
+          grep -q '"main": "_worker.js"' dist/client/wrangler.json
+
+      - name: Start signup E2E worker preview
+        env:
+          VITE_ENABLE_MOCK_PAYMENTS: "true"
+        run: |
+          cd dist/client
+          ./../../node_modules/.bin/wrangler dev --config wrangler.json --local --ip 127.0.0.1 --port 8081 --log-level debug --show-interactive-dev-session=false --persist-to /tmp/wrangler-signup-state > /tmp/signup-preview.log 2>&1 &
+          PREVIEW_PID=$!
+          echo "$PREVIEW_PID" > /tmp/signup-preview.pid
+          sleep 3
+          if ! kill -0 "$PREVIEW_PID" 2>/dev/null; then
+            cat /tmp/signup-preview.log
+            exit 1
+          fi
+
+      - name: Wait for signup E2E worker
+        run: |
+          for i in {1..60}; do
+            if curl -fsS --connect-timeout 2 --max-time 5 http://127.0.0.1:8081/ >/dev/null; then
+              exit 0
+            fi
+            if [ -f /tmp/signup-preview.pid ] && ! kill -0 "$(cat /tmp/signup-preview.pid)" 2>/dev/null; then
+              cat /tmp/signup-preview.log
+              exit 1
+            fi
+            sleep 2
+          done
+          cat /tmp/signup-preview.log || true
+          exit 1
+
+      - name: E2E — signup journey (isolated local Supabase)
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8081
+        run: npx playwright test tests/e2e-signup-journey.spec.ts
+
+      - name: Stop isolated signup worker
+        if: always()
+        run: |
+          if [ -f /tmp/signup-preview.pid ]; then
+            kill "$(cat /tmp/signup-preview.pid)" 2>/dev/null || true
+          fi
+
+      - name: Test build (mock payments enabled, production Supabase)
+        env:
+          VITE_ENABLE_MOCK_PAYMENTS: "true"
+        run: |
+          env -u VITE_SUPABASE_URL -u VITE_SUPABASE_ANON_KEY npm run build
 
       - name: Verify test worker output
         run: |
@@ -136,12 +203,6 @@ jobs:
           PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
         run: npx playwright test tests/compliance-cookie-consent.spec.ts
 
-      - name: E2E — signup journey
-        env:
-          CI: true
-          PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
-        run: npx playwright test tests/e2e-signup-journey.spec.ts
-
       - name: E2E — financial trace
         env:
           CI: true
@@ -189,6 +250,10 @@ jobs:
           CI: true
           PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
         run: npx playwright test tests/system.spec.ts
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop || true
 
       - name: Upload Playwright report on failure
         if: failure()
