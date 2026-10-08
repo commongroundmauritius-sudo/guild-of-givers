@@ -1,16 +1,13 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Notification System", () => {
-  test("Notification bell exists in header", async ({ page }) => {
+  test("notification bell is hidden for unauthenticated visitors", async ({ page }) => {
     await page.goto("/");
-    // The bell should be visible if logged in, but let's check for its component presence
-    // Actually, in the header it's only shown if user exists.
+    await expect(page.getByRole("button", { name: "Notifications" })).toHaveCount(0);
   });
 
-  test("Notification page route is accessible", async ({ page }) => {
+  test("notification page renders for unauthenticated visitors", async ({ page }) => {
     await page.goto("/notifications");
-    // Check if it redirects or shows "Notifications"
-    const heading = page.locator('h1:has-text("Notifications")');
-    // It might be guarded by auth, so we expect a redirect to login if not authenticated
+    await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible();
   });
 });
