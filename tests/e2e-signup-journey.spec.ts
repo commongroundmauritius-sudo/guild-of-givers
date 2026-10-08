@@ -47,7 +47,7 @@ test.describe("End-to-End Member Signup Journey", () => {
 
     await expect(page.locator("h2")).toContainText(/Secure Payment/i);
     await expect(page.getByText(/Order Summary/i)).toBeVisible();
-    await page.getByRole("button", { name: /Complete Checkout \(Mock\)/i }).click();
+    await page.getByRole("button", { name: "Start test checkout" }).click();
 
     await expect(page.locator("h2")).toContainText(/Create your account/i);
     await expect(page.getByText(/Payment confirmed/i)).toBeVisible();
