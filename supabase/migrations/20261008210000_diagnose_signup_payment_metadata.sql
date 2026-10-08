@@ -34,16 +34,12 @@ begin
   for update;
 
   if not found then
-    raise exception 'Valid pending test payment intent not found'
-      using detail = format(
-        'transaction=%s email=%s pending_test_intents_for_email=%s',
-        p_transaction_id,
-        lower(btrim(p_email)),
-        (select count(*) from public.payment_intents
-         where status = 'pending'
-           and is_test = true
-           and lower(email) = lower(btrim(p_email)))
-      );
+    raise exception 'Signup payment match failed: txn=% email=% txn_count=% email_count=% pending_test=%',
+      p_transaction_id, lower(btrim(p_email)),
+      (select count(*) from public.payment_intents where provider_transaction_id = p_transaction_id),
+      (select count(*) from public.payment_intents where lower(email) = lower(btrim(p_email))),
+      (select count(*) from public.payment_intents where status = 'pending' and is_test = true)
+      ;
   end if;
 
   if v_requested_provider_sub is not null
