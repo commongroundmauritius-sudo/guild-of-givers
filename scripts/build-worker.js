@@ -239,7 +239,7 @@ async function verify() {
     process.exit(1);
   }
 
-  const assetImport = executableContent.match(/^\s*import\s+.*?from\s+['"](\./)?assets\/.*?['"]/m);
+  const assetImport = executableContent.match(/^\s*import\s+.*?from\s+['"](?:\.\/)?assets\/.*?['"]/m);
   if (assetImport) {
     console.error("Verification FAILED: Found asset import in _worker.js:", assetImport[0]);
     process.exit(1);
