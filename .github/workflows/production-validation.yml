@@ -67,18 +67,17 @@ jobs:
         env:
           VITE_ENABLE_MOCK_PAYMENTS: "true"
         run: |
-          cd dist/client
-          ./../../node_modules/.bin/wrangler dev --config wrangler.json --local --ip 127.0.0.1 --port 8080 --log-level debug --show-interactive-dev-session=false --persist-to /tmp/wrangler-state > /tmp/preview.log 2>&1 &
+          ./node_modules/.bin/wrangler pages dev dist/client --config wrangler.json --ip 127.0.0.1 --port 8080 --log-level debug --show-interactive-dev-session=false --persist-to /tmp/wrangler-state > /tmp/preview.log 2>&1 &
           PREVIEW_PID=$!
           echo "$PREVIEW_PID" > /tmp/preview.pid
           sleep 3
           if ! kill -0 "$PREVIEW_PID" 2>/dev/null; then
-            echo "ERROR: Wrangler preview process exited before binding to port 8080."
+            echo "ERROR: Wrangler Pages preview process exited before binding to port 8080."
             echo "===== Wrangler log ====="
             cat /tmp/preview.log
             exit 1
           fi
-          echo "Wrangler preview process started with PID $PREVIEW_PID."
+          echo "Wrangler Pages preview process started with PID $PREVIEW_PID."
           echo "===== Initial Wrangler log ====="
           cat /tmp/preview.log || true
 
@@ -91,7 +90,7 @@ jobs:
             fi
 
             if [ -f /tmp/preview.pid ] && ! kill -0 "$(cat /tmp/preview.pid)" 2>/dev/null; then
-              echo "ERROR: Wrangler preview process exited while waiting for port 8080."
+              echo "ERROR: Wrangler Pages preview process exited while waiting for port 8080."
               echo "===== Wrangler log ====="
               cat /tmp/preview.log
               exit 1
