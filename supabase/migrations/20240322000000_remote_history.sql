@@ -1,0 +1,1 @@
+-- Remote migration history entry. No SQL statements are recorded for this version in supabase_migrations.schema_migrations.
