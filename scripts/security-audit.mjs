@@ -48,14 +48,14 @@ for (const section of functionSections) {
   if (!match || !/SECURITY\s+DEFINER/i.test(section)) continue;
   const name = match[1].toLowerCase();
   securityDefiners.add(name);
-  if (/SET\s+search_path\s*(?:TO|=)\s*(?:(?:'public'|"public"|public)\b|''|"")/i.test(section)) secureSearchPathFunctions.add(name);
+  if (/SET\s+search_path\s*(?:TO|=)\s*(?:'public'|"public"|public|''|"")/i.test(section)) secureSearchPathFunctions.add(name);
 }
 
 // Some migrations apply function security settings separately with ALTER FUNCTION.
 for (const statement of migrationText.split(";")) {
   if (!/ALTER\s+FUNCTION\b/i.test(statement)) continue;
   const match = statement.match(
-    /ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\b[\s\S]*?SET\s+search_path\s*(?:TO|=)\s*(?:(?:'public'|"public"|public)\b|''|"")/i,
+    /ALTER\s+FUNCTION\s+(?:public\.)?([a-zA-Z_][\w]*)\b[\s\S]*?SET\s+search_path\s*(?:TO|=)\s*(?:'public'|"public"|public|''|"")/i,
   );
   if (match) secureSearchPathFunctions.add(match[1].toLowerCase());
 }
