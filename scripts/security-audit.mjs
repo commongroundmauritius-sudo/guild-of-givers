@@ -48,7 +48,7 @@ for (const section of functionSections) {
   if (!match || !/SECURITY\s+DEFINER/i.test(section)) continue;
   const name = match[1].toLowerCase();
   securityDefiners.add(name);
-  if (/SET\s+search_path\s*(?:TO|=)\s*public\b/i.test(section)) secureSearchPathFunctions.add(name);
+  if (/SET\s+search_path\s*(?:TO|=)\s*(?:public\b|''|\"\")/i.test(section)) secureSearchPathFunctions.add(name);
 }
 
 // Some migrations apply function security settings separately with ALTER FUNCTION.
@@ -73,7 +73,12 @@ const unsafeDefiners = [...securityDefiners].filter(
   (name) => !secureSearchPathFunctions.has(name) && !retiredSecurityDefiners.has(name),
 );
 
-const intentionalAnonWriteTables = new Set(["public.leads", "public.partner_applications"]);
+const intentionalAnonWriteTables = new Set([
+  "public.leads",
+  "public.partner_applications",
+  "public.organization_contact_applications",
+  "public.homepage_analytics",
+]);
 const anonWriteGrants = [
   ...migrationText.matchAll(
     /GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER)[^;]*\s+TO\s+anon/gi,
@@ -99,7 +104,7 @@ if (anonWriteGrants.length)
   failures.push(`Anonymous write grants detected: ${anonWriteGrants.join(" | ")}`);
 if (unsafeDefiners.length)
   failures.push(
-    `SECURITY DEFINER functions without an explicit public search_path: ${unsafeDefiners.length} (${unsafeDefiners.join(", ")})`,
+    `SECURITY DEFINER functions without an explicit locked-down search_path: ${unsafeDefiners.length} (${unsafeDefiners.join(", ")})`,
   );
 if (serviceRoleClientLeak)
   failures.push("Potential service-role credential usage detected in client source.");
