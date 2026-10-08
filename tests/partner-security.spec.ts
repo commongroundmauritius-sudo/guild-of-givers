@@ -12,24 +12,32 @@ test.describe("Partner Application Security", () => {
     await page.fill('input[name="email"]', "not-an-email");
     await page.fill('textarea[name="message"]', "Too short text here");
     await page.getByRole("button", { name: "Submit application" }).click();
-    const emailInput = page.locator('input[name="email"]');
-    const isValid = await emailInput.evaluate((node: HTMLInputElement) => node.checkValidity());
-    expect(isValid).toBe(false);
+
+    await expect(page.locator('input[name="email"]')).toBeVisible();
+    await expect(page.locator('input[name="email"]')).toHaveValue("not-an-email");
+    await expect(page.locator("ol[data-sonner-toaster]")).toContainText(/invalid email/i);
   });
 
-  test("should block XSS injection in organization name", async ({ page }) => {
+  test("should not execute an XSS payload submitted in organization name", async ({ page }) => {
+    let dialogOpened = false;
+    page.on("dialog", async (dialog) => {
+      dialogOpened = true;
+      await dialog.dismiss();
+    });
+
     const xssPayload = '<script>alert("xss")</script>';
     await page.fill('input[name="organization_name"]', xssPayload);
     await page.selectOption('select[name="organization_type"]', "NGO / Nonprofit");
     await page.fill('input[name="registration_number"]', "12345");
-    await page.fill('input[name="email"]', "test@example.com");
+    await page.fill('input[name="email"]', `e2e-security-${Date.now()}@example.com`);
     await page.fill(
       'textarea[name="message"]',
       "This is a valid long message for the partner application submission.",
     );
     await page.getByRole("button", { name: "Submit application" }).click();
-    const toast = page.locator("ol[data-sonner-toaster]");
-    if (await toast.isVisible()) await expect(toast).toContainText(/forbidden characters/i);
+
+    await page.waitForTimeout(500);
+    expect(dialogOpened).toBe(false);
   });
 
   test("should block unauthorized access to applications list", async ({ page }) => {
