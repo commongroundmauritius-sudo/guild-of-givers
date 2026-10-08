@@ -150,14 +150,32 @@ async function build() {
     if (fs.existsSync(wranglerConfigRoot)) {
       const config = JSON.parse(fs.readFileSync(wranglerConfigRoot, "utf-8"));
       config.main = "_worker.js";
+
+      // The generated config is used with `wrangler dev` from dist/client.
+      // This is a Workers deployment, not a Pages deployment, so remove the
+      // Pages-only output setting and explicitly configure Workers Static Assets.
+      delete config.pages_build_output_dir;
+      config.assets = {
+        directory: ".",
+        binding: "ASSETS",
+      };
+
       if (!config.compatibility_flags) {
         config.compatibility_flags = [];
       }
       if (!config.compatibility_flags.includes("nodejs_compat")) {
         config.compatibility_flags.push("nodejs_compat");
       }
+
       fs.writeFileSync(wranglerConfig, JSON.stringify(config, null, 2));
-      console.log("wrangler.json generated.");
+
+      // Keep Worker/config files out of the public asset collection.
+      fs.writeFileSync(
+        path.join(clientDir, ".assetsignore"),
+        "_worker.js\nwrangler.json\n_assetsignore\n",
+      );
+
+      console.log("wrangler.json generated with Workers Static Assets.");
     }
 
     console.log("Build worker completed successfully.");
