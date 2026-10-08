@@ -54,6 +54,16 @@ test.describe("End-to-End Member Signup Journey", () => {
     await page.getByLabel("Password").fill("TestPassword123!");
     await page.getByRole("button", { name: "Create my account" }).click();
 
-    await expect(page.locator("h2")).toContainText(/You're in/i);
+    try {
+      await expect(page.locator("h2")).toContainText(/You're in/i, { timeout: 5000 });
+    } catch (error) {
+      const diagnostic = await page.evaluate(() => ({
+        url: location.href,
+        headings: Array.from(document.querySelectorAll("h1,h2,h3")).map((el) => el.textContent?.trim()).filter(Boolean),
+        toasts: Array.from(document.querySelectorAll("[role=alert], [data-sonner-toast]")).map((el) => el.textContent?.trim()).filter(Boolean),
+        bodyText: document.body.innerText.slice(-3000),
+      }));
+      throw new Error("Signup account creation did not complete. Diagnostic=" + JSON.stringify({ ...diagnostic, runtimeErrors, failedResponses }), { cause: error });
+    }
   });
 });
