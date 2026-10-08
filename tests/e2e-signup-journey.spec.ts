@@ -4,12 +4,16 @@ test.describe("End-to-End Member Signup Journey", () => {
   test("completes member signup through mock payment and account creation", async ({ page }) => {
     const runtimeErrors: string[] = [];
     const failedResponses: string[] = [];
-    page.on("response", (response) => {
-      if (response.status() >= 400) failedResponses.push(`${response.status()} ${response.url()}`);
+    const responseBodies: string[] = [];
+    page.on("response", async (response) => {
+      if (response.status() >= 400) {
+        failedResponses.push(`${response.status()} ${response.url()}`);
+        if (response.url().includes("/auth/v1/signup")) {
+          try { responseBodies.push(await response.text()); } catch { responseBodies.push("<unable to read auth signup response body>"); }
+        }
+      }
     });
-    page.on("console", (msg) => {
-      if (msg.type() === "error") runtimeErrors.push(msg.text());
-    });
+    page.on("console", (msg) => { if (msg.type() === "error") runtimeErrors.push(msg.text()); });
     page.on("pageerror", (error) => runtimeErrors.push(`PAGEERROR: ${error.message}`));
     const email = `e2e-${Date.now()}@example.com`;
 
@@ -21,25 +25,17 @@ test.describe("End-to-End Member Signup Journey", () => {
     await startButton.click();
 
     const detailsHeading = page.getByRole("heading", { name: "Your details" });
-    try {
-      await expect(detailsHeading).toBeVisible({ timeout: 5000 });
-    } catch (error) {
+    try { await expect(detailsHeading).toBeVisible({ timeout: 5000 }); }
+    catch (error) {
       const diagnostic = await page.evaluate(() => ({
         url: location.href,
-        headings: Array.from(document.querySelectorAll("h1,h2,h3"))
-          .map((el) => el.textContent?.trim())
-          .filter(Boolean),
-        buttons: Array.from(document.querySelectorAll("button")).map((el) => ({
-          text: el.textContent?.trim(),
-          disabled: (el as HTMLButtonElement).disabled,
-        })),
+        headings: Array.from(document.querySelectorAll("h1,h2,h3")).map((el) => el.textContent?.trim()).filter(Boolean),
+        buttons: Array.from(document.querySelectorAll("button")).map((el) => ({ text: el.textContent?.trim(), disabled: (el as HTMLButtonElement).disabled })),
         bodyText: document.body.innerText.slice(0, 3000),
       }));
-      throw new Error(
-        `Signup did not transition to Details within 5s. Diagnostic=${JSON.stringify({ ...diagnostic, runtimeErrors, failedResponses })}`,
-        { cause: error },
-      );
+      throw new Error(`Signup did not transition to Details within 5s. Diagnostic=${JSON.stringify({ ...diagnostic, runtimeErrors, failedResponses, responseBodies })}`, { cause: error });
     }
+
     await expect(page).toHaveURL(/\/signup(?:\?.*)?$/);
     await page.getByLabel("Full name").fill("E2E Test Member");
     await page.getByLabel("Email").fill(email);
@@ -54,16 +50,15 @@ test.describe("End-to-End Member Signup Journey", () => {
     await page.getByLabel("Password").fill("TestPassword123!");
     await page.getByRole("button", { name: "Create my account" }).click();
 
-    try {
-      await expect(page.locator("h2")).toContainText(/You're in/i, { timeout: 5000 });
-    } catch (error) {
+    try { await expect(page.locator("h2")).toContainText(/You're in/i, { timeout: 5000 }); }
+    catch (error) {
       const diagnostic = await page.evaluate(() => ({
         url: location.href,
         headings: Array.from(document.querySelectorAll("h1,h2,h3")).map((el) => el.textContent?.trim()).filter(Boolean),
         toasts: Array.from(document.querySelectorAll("[role=alert], [data-sonner-toast]")).map((el) => el.textContent?.trim()).filter(Boolean),
         bodyText: document.body.innerText.slice(-3000),
       }));
-      throw new Error("Signup account creation did not complete. Diagnostic=" + JSON.stringify({ ...diagnostic, runtimeErrors, failedResponses }), { cause: error });
+      throw new Error("Signup account creation did not complete. Diagnostic=" + JSON.stringify({ ...diagnostic, email, runtimeErrors, failedResponses, responseBodies }), { cause: error });
     }
   });
 });
