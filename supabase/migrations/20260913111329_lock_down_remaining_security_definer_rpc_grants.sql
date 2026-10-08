@@ -1,0 +1,13 @@
+REVOKE EXECUTE ON FUNCTION public.assign_organization_owner(uuid, uuid) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_admin_financial_metrics() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_ledger_summary_metrics() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.reconcile_initiative_analytics(uuid) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_initiative_org_id(uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.get_auth_org_id() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.validate_public_activity_insert() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.validate_public_initiative_event_insert() FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_auth_org_id() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_trending_initiatives(integer) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.submit_partner_application(text,text,text,text,text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.has_role(public.app_role) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.can_edit_organization(uuid) TO authenticated;
