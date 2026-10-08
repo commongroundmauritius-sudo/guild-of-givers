@@ -1,0 +1,10 @@
+DROP POLICY IF EXISTS "Users can manage own profile" ON public.profiles;
+CREATE POLICY "Users can manage own profile" ON public.profiles FOR ALL TO authenticated USING ((select auth.uid()) = id) WITH CHECK ((select auth.uid()) = id);
+DROP POLICY IF EXISTS "Users can view own payments" ON public.payments;
+CREATE POLICY "Users can view own payments" ON public.payments FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+DROP POLICY IF EXISTS "Users can view own receipts" ON public.receipts;
+CREATE POLICY "Users can view own receipts" ON public.receipts FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+DROP POLICY IF EXISTS "Users can view own subscriptions" ON public.subscriptions;
+CREATE POLICY "Users can view own subscriptions" ON public.subscriptions FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+DROP POLICY IF EXISTS "Users can view own roles" ON public.user_roles;
+CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
