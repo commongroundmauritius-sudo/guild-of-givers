@@ -48,7 +48,7 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organization_documents') THEN
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view organization documents') THEN
-DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'organization_documents') THEN CREATE POLICY "Anyone can view organization documents" ON public.organization_documents FOR SELECT USING (true); END IF; END $$;
+CREATE POLICY "Anyone can view organization documents" ON public.organization_documents FOR SELECT USING (true);
         END IF;
     END IF;
 
