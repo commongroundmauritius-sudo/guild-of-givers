@@ -45,13 +45,9 @@ BEGIN
     category,
     goal_amount_mur,
     current_amount_mur,
-    monthly_target_mur,
     image_url,
     status,
-    is_approved,
-    is_published,
-    is_featured,
-    volunteer_opportunity
+    is_approved
   ) VALUES (
     v_init_id,
     v_org_id,
@@ -63,18 +59,13 @@ BEGIN
     'Food Security & Homelessness',
     600000.00,
     462000.00,
-    50000.00,
     'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
     'active',
-    true,
-    true,
-    true,
     true
   )
   ON CONFLICT (id) DO UPDATE SET
     title = EXCLUDED.title,
     summary = EXCLUDED.summary,
-    content = EXCLUDED.content,
-    is_featured = EXCLUDED.is_featured;
+    content = EXCLUDED.content;
 
 END $$;
