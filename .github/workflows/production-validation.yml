@@ -43,28 +43,16 @@ jobs:
           VITE_ENABLE_MOCK_PAYMENTS: "false"
         run: npm run build
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Start isolated local Supabase for signup E2E
-        run: |
-          supabase start
-          supabase db reset
-          supabase status --env --override-name API_URL=VITE_SUPABASE_URL,ANON_KEY=VITE_SUPABASE_ANON_KEY --output-format text >> "$GITHUB_ENV"
-          echo "Local Supabase is ready for the signup journey."
-          grep -E '^VITE_SUPABASE_(URL|ANON_KEY)=' "$GITHUB_ENV" | sed -E 's/=.*/=<redacted>/'
-
       - name: Verify production worker output
         run: |
           test -f dist/client/_worker.js
           test -f dist/client/wrangler.json
           grep -q '"main": "_worker.js"' dist/client/wrangler.json
 
-      - name: Signup E2E build (mock payments enabled, local Supabase)
+      - name: Signup E2E build (isolated mock auth and payments; no local Supabase)
         env:
           VITE_ENABLE_MOCK_PAYMENTS: "true"
+          VITE_E2E_MOCK_AUTH: "true"
         run: npm run build
 
       - name: Verify signup E2E worker output
@@ -105,7 +93,7 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      - name: E2E — signup journey (isolated local Supabase)
+      - name: E2E — signup journey (isolated mock auth; no local Supabase)
         env:
           CI: true
           PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8081
@@ -250,10 +238,6 @@ jobs:
           CI: true
           PLAYWRIGHT_TEST_BASE_URL: http://127.0.0.1:8080
         run: npx playwright test tests/system.spec.ts
-
-      - name: Stop local Supabase
-        if: always()
-        run: supabase stop || true
 
       - name: Upload Playwright report on failure
         if: failure()
