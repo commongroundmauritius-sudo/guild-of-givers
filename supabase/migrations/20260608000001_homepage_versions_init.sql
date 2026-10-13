@@ -36,6 +36,13 @@ ALTER TABLE public.homepage_versions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.success_stories ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+-- This migration follows the homepage CMS foundation, which may already have
+-- created these policies. Drop them first so a clean migration replay succeeds.
+DROP POLICY IF EXISTS "Admins manage homepage versions" ON public.homepage_versions;
+DROP POLICY IF EXISTS "Public read for published homepage version" ON public.homepage_versions;
+DROP POLICY IF EXISTS "Public read for success_stories" ON public.success_stories;
+DROP POLICY IF EXISTS "Admins manage success_stories" ON public.success_stories;
+
 CREATE POLICY "Admins manage homepage versions"
 ON public.homepage_versions FOR ALL
 TO authenticated
