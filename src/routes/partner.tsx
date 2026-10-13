@@ -97,6 +97,7 @@ function PartnerPage() {
           <form
             className="mt-10 space-y-5 rounded-3xl border border-border/60 bg-card p-8"
             onSubmit={handleSubmit}
+            noValidate
           >
             <Field label="Organization name" required>
               <input required name="organization_name" className={inputCls} />
