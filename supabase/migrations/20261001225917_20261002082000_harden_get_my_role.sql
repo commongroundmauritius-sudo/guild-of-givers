@@ -12,7 +12,6 @@ as $function$
     when 'super_admin' then 1
     when 'admin' then 2
     when 'organization' then 3
-    when 'ngo' then 4
     when 'member' then 5
     else 99
   end
