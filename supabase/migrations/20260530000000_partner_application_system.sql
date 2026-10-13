@@ -55,24 +55,12 @@ CREATE INDEX IF NOT EXISTS idx_partner_apps_created_at ON public.partner_applica
 CREATE INDEX IF NOT EXISTS idx_partner_app_activity_app_id ON public.partner_application_activity(application_id);
 
 -- 5. RLS Policies
+-- Enable RLS, but do not recreate policies here. The subsequent
+-- 20260529175856_harden_partner_applications_rls.sql migration defines the
+-- canonical restrictive policies. Reintroducing the legacy "Anyone can submit"
+-- policy here would create a permissive OR-policy and weaken those restrictions.
 ALTER TABLE public.partner_applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.partner_application_activity ENABLE ROW LEVEL SECURITY;
-
--- Public can insert (Apply)
-CREATE POLICY "Anyone can submit partner applications"
-ON public.partner_applications FOR INSERT
-WITH CHECK (true);
-
--- Admins & Super Admins can manage all
-CREATE POLICY "Admins can manage partner applications"
-ON public.partner_applications FOR ALL
-TO authenticated
-USING (public.has_role('admin') OR public.has_role('super_admin'));
-
-CREATE POLICY "Admins can manage partner application activity"
-ON public.partner_application_activity FOR ALL
-TO authenticated
-USING (public.has_role('admin') OR public.has_role('super_admin'));
 
 -- 6. Updated At Trigger
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
@@ -83,6 +71,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS tr_partner_applications_updated_at ON public.partner_applications;
 CREATE TRIGGER tr_partner_applications_updated_at
     BEFORE UPDATE ON public.partner_applications
     FOR EACH ROW
@@ -137,6 +126,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
+DROP TRIGGER IF EXISTS tr_partner_application_notifications ON public.partner_applications;
 CREATE TRIGGER tr_partner_application_notifications
     AFTER INSERT OR UPDATE ON public.partner_applications
     FOR EACH ROW
