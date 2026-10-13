@@ -78,7 +78,11 @@ function brandedErrorResponse(status = 500): Response {
     );
   }
 
-  return renderStatusPage(500, "This page didn't load", "Something went wrong on our end. You can try refreshing or head back home.");
+  return renderStatusPage(
+    500,
+    "This page didn't load",
+    "Something went wrong on our end. You can try refreshing or head back home.",
+  );
 }
 
 function httpErrorStatus(error: unknown): number | null {
@@ -93,6 +97,29 @@ function httpErrorStatus(error: unknown): number | null {
   }
 
   return null;
+}
+
+function normalizeStatusCode(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  if (value >= 100 && value <= 599) return value;
+  return null;
+}
+
+function extractPayloadStatus(body: string): number | null {
+  let payload: unknown;
+  try {
+    payload = JSON.parse(body);
+  } catch {
+    return null;
+  }
+
+  if (!payload || Array.isArray(payload) || typeof payload !== "object") {
+    return null;
+  }
+
+  const maybe = payload as Record<string, unknown>;
+  const status = normalizeStatusCode(maybe.status ?? maybe.statusCode);
+  return status;
 }
 
 function isCatastrophicSsrErrorBody(body: string, responseStatus: number): boolean {
@@ -132,8 +159,9 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
     return response;
   }
 
+  const recoveredStatus = extractPayloadStatus(body) ?? response.status;
   console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
-  return brandedErrorResponse();
+  return brandedErrorResponse(recoveredStatus);
 }
 
 export default {
