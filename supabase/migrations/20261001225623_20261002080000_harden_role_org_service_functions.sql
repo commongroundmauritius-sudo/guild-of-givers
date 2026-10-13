@@ -12,6 +12,10 @@ begin
 end;
 $function$;
 
+-- The earlier RPC returns JSONB; this hardened version returns a TABLE.
+-- PostgreSQL cannot change a function's return type with CREATE OR REPLACE.
+DROP FUNCTION IF EXISTS public.assign_organization_owner(uuid, uuid);
+
 create or replace function public.assign_organization_owner(target_org_id uuid, target_user_id uuid)
 returns table(success boolean, message text, organization_id uuid, owner_user_id uuid)
 language plpgsql
@@ -49,6 +53,9 @@ begin
   return query select true, 'Organization owner assigned successfully.', target_org_id, target_user_id;
 end;
 $function$;
+
+REVOKE ALL ON FUNCTION public.assign_organization_owner(uuid, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.assign_organization_owner(uuid, uuid) TO authenticated;
 
 create or replace function public.get_auth_org_id()
 returns uuid
