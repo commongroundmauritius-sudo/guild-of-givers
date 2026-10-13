@@ -19,3 +19,10 @@
 ## Sequencing
 
 TASK-002 and TASK-003 can run in parallel after confirming access and using isolated test resources. TASK-004 depends on route and schema inventories. TASK-005 depends on API/provider code inventory. TASK-010 is final validation.
+
+
+## Current signup/payment findings
+
+- The source shows the UI creates a test payment intent before calling Supabase Auth signup. The database trigger finalizes the intent using the transaction ID and normalized email.
+- Check the actual Auth signup response and Postgres logs for a payment-intent match failure or activity-trigger exception before changing code.
+- The current webhook signature check is only a placeholder and must not be considered production-ready. Real Peach launch remains blocked until cryptographic verification and idempotency are tested.
