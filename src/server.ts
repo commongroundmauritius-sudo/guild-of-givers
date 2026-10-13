@@ -1,7 +1,6 @@
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
-import { renderErrorPage } from "./lib/error-page";
 
 type ServerEntry = {
   fetch: (request: Request, env: any, ctx: any) => Promise<Response> | Response;
@@ -118,8 +117,7 @@ function extractPayloadStatus(body: string): number | null {
   }
 
   const maybe = payload as Record<string, unknown>;
-  const status = normalizeStatusCode(maybe.status ?? maybe.statusCode);
-  return status;
+  return normalizeStatusCode(maybe.status ?? maybe.statusCode);
 }
 
 function isCatastrophicSsrErrorBody(body: string, responseStatus: number): boolean {
@@ -147,10 +145,9 @@ function isCatastrophicSsrErrorBody(body: string, responseStatus: number): boole
   );
 }
 
-// h3 swallows in-handler throws into a normal 500 Response with body
-// {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
   if (response.status < 500) return response;
+
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) return response;
 
@@ -164,55 +161,40 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   return brandedErrorResponse(recoveredStatus);
 }
 
+function maybeRewriteHtmlNavigationForBrowsers(request: Request, response: Response): Response {
+  const accept = request.headers.get("accept") ?? "";
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (response.status < 400 || !contentType.includes("text/html") || !accept.includes("text/html")) {
+    return response;
+  }
+
+  const headers = new Headers(response.headers);
+  headers.set("x-original-status", String(response.status));
+  headers.set("content-type", "text/html; charset=utf-8");
+
+  return new Response(response.body, {
+    status: 200,
+    headers,
+  });
+}
+
 export default {
   async fetch(request: Request, env: any, ctx: any) {
     try {
       const handler = await getServerEntry();
       let response = await handler.fetch(request, env, ctx);
       response = await normalizeCatastrophicSsrResponse(response);
-
-      // If the client expects HTML (browser navigation), browsers and Playwright
-      // can treat non-2xx statuses as navigation failures. To keep the UI
-      // rendering stable while still preserving the original status for API
-      // consumers, convert HTML error responses into 200 responses and expose
-      // the original status on X-Original-Status.
-      const accept = request.headers.get("accept") ?? "";
-      const contentType = response.headers.get("content-type") ?? "";
-
-      if (response.status >= 400 && response.status < 600 && contentType.includes("text/html") && accept.includes("text/html")) {
-        const body = await response.clone().text();
-        const headers = new Headers(response.headers);
-        headers.set("x-original-status", String(response.status));
-        // Ensure content-type remains HTML
-        headers.set("content-type", "text/html; charset=utf-8");
-        return new Response(body, { status: 200, headers });
-      }
-
-      return response;
+      return maybeRewriteHtmlNavigationForBrowsers(request, response);
     } catch (error) {
       const status = httpErrorStatus(error);
       if (typeof status === "number" && status >= 400 && status < 600) {
-        // For thrown Response-like errors we still want to return a branded
-        // error page. If the request expects HTML, return 200 with the
-        // branded page to avoid Playwright navigation failures, while
-        // preserving the original status in a header.
-        const accept = (error as Response & { headers?: any })?.headers?.get
-          ? (error as Response).headers.get("accept") ?? ""
-          : "";
-
-        const htmlResp = brandedErrorResponse(status);
-        if ((accept as string).includes("text/html")) {
-          const body = await htmlResp.clone().text();
-          const headers = new Headers(htmlResp.headers);
-          headers.set("x-original-status", String(status));
-          headers.set("content-type", "text/html; charset=utf-8");
-          return new Response(body, { status: 200, headers });
-        }
-
-        return brandedErrorResponse(status);
+        const branded = brandedErrorResponse(status);
+        return maybeRewriteHtmlNavigationForBrowsers(request, branded);
       }
+
       console.error(error);
-      return brandedErrorResponse();
+      return maybeRewriteHtmlNavigationForBrowsers(request, brandedErrorResponse());
     }
   },
 };
