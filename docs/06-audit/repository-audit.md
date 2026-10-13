@@ -196,3 +196,27 @@ Stage 1 is an initial audit, not a complete reverse-engineering sign-off. Before
 - verify diagram accuracy against discovered call paths.
 
 **Next stage:** generate the PRD and stable requirement inventory, preserving verified, inferred and proposed behavior as separate categories.
+
+
+## 10. Expanded source-tree inventory (2026-10-13)
+
+A recursive Git tree of `main` returned **48 route modules**, **274 SQL migration files**, and **13 files under `tests/`**. The complete route/test lists and recent migration tail are recorded in [repository inventory](repository-inventory.md). These are repository file counts, not production route counts, schema-table counts or test coverage. Route file paths must be mapped to browser URLs using TanStack's generated route tree and module metadata.
+
+## 11. Directly verified signup/payment implementation findings
+
+The current source files inspected after the initial draft provide stronger evidence than the historical audit notes:
+
+1. `src/routes/signup.tsx` sends a membership amount, fee-cover flag, phone, role, and `payment_transaction_id` in Supabase Auth user metadata after the mock checkout step.
+2. `src/lib/payments/mock-provider.ts` creates a test payment intent by calling the Supabase RPC `create_test_payment_intent`. The mock provider is the selected provider exported from this module.
+3. `src/lib/payments/webhook-handler.ts` contains a production note that signature verification still needs implementation. Its non-development check only tests for a configured `VITE_PAYMENT_WEBHOOK_SECRET` and whether a signature string is present; it does not perform cryptographic verification. It also logs an event insertion failure and continues processing. **This implementation must not be treated as production-safe Peach webhook verification.**
+4. `supabase/migrations/20261008200025_diagnose_signup_payment_metadata.sql` raises a detailed error when a pending test payment intent cannot be matched by transaction ID, pending status, test flag and normalized email.
+5. `supabase/migrations/20261008202215_remove_duplicate_signup_trigger_and_store_phone.sql` makes `handle_new_user()` insert/update the profile and role, then calls `finalize_test_signup_payment` when subscription/payment metadata is present. It requires a non-empty payment transaction ID and a subscription amount in the allowed range.
+6. `supabase/migrations/20261008200000_fix_user_signup_activity_trigger.sql` explicitly describes itself as fixing signup failures caused by the hardened public-activity validator. This shows a recent signup-trigger regression was addressed in migration history, but does not prove whether the current CI failure is fixed.
+
+### Signup root-cause status
+
+The exact failing CI attempt has not been executed or its current job logs retrieved in this pass. Therefore **the current failure's root cause remains unconfirmed**. The best next diagnostic is to inspect the failed job's full error diagnostic and Supabase/Postgres logs for the precise Auth signup response. In particular, determine whether the Auth response includes a database-trigger error from `handle_new_user()`, a failed payment-intent match, or an activity trigger. Do not weaken validation or grant public execution on the finalization function to make the test pass.
+
+### Immediate security gate
+
+Keep real Peach processing disabled until the payment implementation has actual provider-specific cryptographic signature verification, amount/currency/merchant-reference checks, idempotent event handling, and trusted server-side secret management. A client-exposed `VITE_*` variable is not an appropriate place for a secret.
