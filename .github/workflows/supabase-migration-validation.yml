@@ -31,7 +31,20 @@ jobs:
         run: supabase --version
 
       - name: Start disposable local Supabase services
-        run: supabase start -x studio,inbucket,edge-runtime,logflare,vector,analytics
+        shell: bash
+        run: |
+          # Use valid Supabase CLI container names and retry transient public image-registry throttling.
+          for attempt in 1 2 3; do
+            if supabase start -x studio,mailpit,edge-runtime,logflare,vector; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "Supabase startup failed on attempt $attempt; waiting before retry."
+              sleep 20
+            fi
+          done
+          echo "Supabase startup failed after 3 attempts."
+          exit 1
 
       - name: Replay all migrations from an empty local database
         run: supabase db reset --local
