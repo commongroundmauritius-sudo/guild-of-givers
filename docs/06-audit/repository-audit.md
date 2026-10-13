@@ -262,3 +262,19 @@ A separate draft fix is proposed in [PR #122](https://github.com/commongroundmau
 - Production worker build and self-contained-worker checks passed in run 38379270729 before the migration reset step.
 - The migration reset failed before Playwright signup ran, so that run gives no new evidence about current Auth trigger correctness.
 - Docker image pulls initially reported rate limits, but the log proceeded to start the database and apply migrations; the terminal blocker was the SQL syntax error above, not the transient image pull messages.
+
+
+## 14. Role-routing review and signup-role risk
+
+A targeted inspection of the current route modules confirms:
+
+- `src/routes/_authenticated.tsx` redirects unauthenticated users to `/login`.
+- `src/routes/_authenticated/admin-dashboard.tsx` renders the administrative outlet only for `admin` or `super_admin`; other signed-in roles are sent to `/dashboard`.
+- `src/routes/_authenticated/dashboard.tsx` routes administrators to `/admin-dashboard`, organization users to `/organization`, and other resolved roles to `/member`.
+- The member and organization dashboards have client-side role gates and query enablement checks. These checks must be backed by RLS/server authorization, not treated as the security boundary.
+
+### Potential organization signup role mismatch — verify before fixing
+
+The latest inspected `handle_new_user()` definition in `supabase/migrations/20261008202215_remove_duplicate_signup_trigger_and_store_phone.sql` inserts a `member` row into `user_roles` unconditionally. Meanwhile, `src/routes/signup.tsx` constructs `role: "organization"` for partner-code signup metadata. The inspected trigger excerpt does not use that metadata role when assigning `user_roles`.
+
+This is a **source-level discrepancy and a high-priority verification item**, not yet a confirmed end-user defect: another trigger or subsequent trusted process may assign or transform the organization role. Before changing it, inspect the full trigger set and partner conversion flow, then add tests proving (a) member signup receives only intended member privileges and (b) converted organization signup receives the organization role without self-assignable privilege escalation. Never trust a client-supplied role blindly inside a security-definer trigger.
