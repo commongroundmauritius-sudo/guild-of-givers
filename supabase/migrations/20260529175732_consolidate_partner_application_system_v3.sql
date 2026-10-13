@@ -30,28 +30,62 @@ BEGIN
 END $$;
 
 -- 2. Migrate data from organization_contact_applications to partner_applications
-DO $$
+DO $
+DECLARE
+    v_has_registration_number boolean;
 BEGIN
-    IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organization_contact_applications') THEN
-        INSERT INTO public.partner_applications (
-            id, created_at, organization_name, contact_name, email, phone, website, 
-            message, organization_type, status, admin_notes, reviewed_by, reviewed_at, 
-            converted_organization_id, converted_at, converted_by, deleted_at, registration_number
-        )
-        SELECT 
-            id, created_at, organization_name, contact_name, email, phone, website, 
-            message, organization_type, status::text::partner_application_status, admin_notes, reviewed_by, reviewed_at, 
-            converted_organization_id, converted_at, converted_by, deleted_at, registration_number
-        FROM public.organization_contact_applications
-        ON CONFLICT (id) DO UPDATE SET
-            contact_name = EXCLUDED.contact_name,
-            phone = EXCLUDED.phone,
-            website = EXCLUDED.website,
-            admin_notes = EXCLUDED.admin_notes,
-            reviewed_by = EXCLUDED.reviewed_by,
-            reviewed_at = EXCLUDED.reviewed_at;
+    IF to_regclass('public.organization_contact_applications') IS NOT NULL THEN
+        SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'organization_contact_applications'
+              AND column_name = 'registration_number'
+        ) INTO v_has_registration_number;
+
+        IF v_has_registration_number THEN
+            EXECUTE $migration$
+                INSERT INTO public.partner_applications (
+                    id, created_at, organization_name, contact_name, email, phone, website,
+                    message, organization_type, status, admin_notes, reviewed_by, reviewed_at,
+                    converted_organization_id, converted_at, converted_by, deleted_at, registration_number
+                )
+                SELECT
+                    id, created_at, organization_name, contact_name, email, phone, website,
+                    message, organization_type, status::text::partner_application_status, admin_notes, reviewed_by, reviewed_at,
+                    converted_organization_id, converted_at, converted_by, deleted_at, registration_number
+                FROM public.organization_contact_applications
+                ON CONFLICT (id) DO UPDATE SET
+                    contact_name = EXCLUDED.contact_name,
+                    phone = EXCLUDED.phone,
+                    website = EXCLUDED.website,
+                    admin_notes = EXCLUDED.admin_notes,
+                    reviewed_by = EXCLUDED.reviewed_by,
+                    reviewed_at = EXCLUDED.reviewed_at
+            $migration$;
+        ELSE
+            EXECUTE $migration$
+                INSERT INTO public.partner_applications (
+                    id, created_at, organization_name, contact_name, email, phone, website,
+                    message, organization_type, status, admin_notes, reviewed_by, reviewed_at,
+                    converted_organization_id, converted_at, converted_by, deleted_at, registration_number
+                )
+                SELECT
+                    id, created_at, organization_name, contact_name, email, phone, website,
+                    message, organization_type, status::text::partner_application_status, admin_notes, reviewed_by, reviewed_at,
+                    converted_organization_id, converted_at, converted_by, deleted_at, NULL::text
+                FROM public.organization_contact_applications
+                ON CONFLICT (id) DO UPDATE SET
+                    contact_name = EXCLUDED.contact_name,
+                    phone = EXCLUDED.phone,
+                    website = EXCLUDED.website,
+                    admin_notes = EXCLUDED.admin_notes,
+                    reviewed_by = EXCLUDED.reviewed_by,
+                    reviewed_at = EXCLUDED.reviewed_at
+            $migration$;
+        END IF;
     END IF;
-END $$;
+END $;
 
 -- 3. Migrate data from organization_application_status_history to partner_application_activity
 DO $$
