@@ -8,15 +8,16 @@ This directory is being developed as a source-grounded reference for the existin
 ## Reading order
 
 1. [Initial repository audit](06-audit/repository-audit.md) — current verified stack, preliminary product scope, known risks and missing evidence.
-2. [PRD](01-product/PRD.md) — requirements inventory; inferred behavior is labelled.
-3. [User stories](01-product/user-stories.md) — stories and acceptance criteria.
-4. [Technical requirements](02-technical/TRD.md) and [architecture](02-technical/architecture.md).
-5. [API specification](02-technical/api-specification.md) — actual contracts only; unknown contracts stay marked unknown.
-6. [Application flows](03-design/app-flows.md), [information architecture](03-design/information-architecture.md), [screen specifications](03-design/screen-specifications.md), and [design system](03-design/design-system.md).
-7. [Database schema](04-data/database-schema.md), [data dictionary](04-data/data-dictionary.md), and [ER diagram](04-data/er-diagram.md).
-8. [Implementation plan](05-implementation/implementation-plan.md), [task breakdown](05-implementation/task-breakdown.md), and [traceability](05-implementation/requirements-traceability.md).
-9. [Technical debt](06-audit/technical-debt.md) and [open decisions](06-audit/open-decisions.md).
-10. [Diagrams](diagrams/) — source-controlled Mermaid diagrams.
+2. [Repository inventory](06-audit/repository-inventory.md) — 48 route modules, migration and test-file inventory.
+3. [PRD](01-product/PRD.md) — requirements inventory; inferred behavior is labelled.
+4. [User stories](01-product/user-stories.md) — stories and acceptance criteria.
+5. [Technical requirements](02-technical/TRD.md) and [architecture](02-technical/architecture.md).
+6. [API specification](02-technical/api-specification.md) — actual contracts only; unknown contracts stay marked unknown.
+7. [Application flows](03-design/app-flows.md), [information architecture](03-design/information-architecture.md), [screen specifications](03-design/screen-specifications.md), and [design system](03-design/design-system.md).
+8. [Database schema](04-data/database-schema.md), [data dictionary](04-data/data-dictionary.md), and [ER diagram](04-data/er-diagram.md).
+9. [Implementation plan](05-implementation/implementation-plan.md), [task breakdown](05-implementation/task-breakdown.md), and [traceability](05-implementation/requirements-traceability.md).
+10. [Technical debt](06-audit/technical-debt.md) and [open decisions](06-audit/open-decisions.md).
+11. [Diagrams](diagrams/) — source-controlled Mermaid diagrams.
 
 ## Verification status
 
