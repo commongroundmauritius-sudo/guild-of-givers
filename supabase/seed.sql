@@ -27,25 +27,25 @@ WHERE NOT EXISTS (
   SELECT 1 FROM public.fee_configurations WHERE is_active = true
 );
 
-INSERT INTO public.financial_accounts (account_type, is_system, cached_balance_mur)
-SELECT 'platform', true, 0
+INSERT INTO public.financial_accounts (account_name, account_type, cached_balance_mur)
+SELECT 'Platform', 'platform', 0
 WHERE NOT EXISTS (
   SELECT 1 FROM public.financial_accounts
-  WHERE account_type = 'platform' AND is_system = true
+  WHERE account_type = 'platform'
 );
 
-INSERT INTO public.financial_accounts (account_type, is_system, cached_balance_mur)
-SELECT 'organization_pool', true, 0
+INSERT INTO public.financial_accounts (account_name, account_type, cached_balance_mur)
+SELECT 'Organization Pool', 'organization_pool', 0
 WHERE NOT EXISTS (
   SELECT 1 FROM public.financial_accounts
-  WHERE account_type = 'organization_pool' AND is_system = true
+  WHERE account_type = 'organization_pool'
 );
 
-INSERT INTO public.financial_accounts (account_type, is_system, cached_balance_mur)
-SELECT 'fee', true, 0
+INSERT INTO public.financial_accounts (account_name, account_type, cached_balance_mur)
+SELECT 'Fee', 'fee', 0
 WHERE NOT EXISTS (
   SELECT 1 FROM public.financial_accounts
-  WHERE account_type = 'fee' AND is_system = true
+  WHERE account_type = 'fee'
 );
 
 DO $$
@@ -90,8 +90,8 @@ BEGIN
     RETURNING id INTO v_impact_pool_id;
   END IF;
 
-  INSERT INTO public.financial_accounts (account_type, is_system, reference_id, cached_balance_mur)
-  SELECT 'impact_pool', true, v_impact_pool_id, 0
+  INSERT INTO public.financial_accounts (account_name, account_type, reference_id, cached_balance_mur)
+  SELECT 'Impact Pool', 'impact_pool', v_impact_pool_id, 0
   WHERE NOT EXISTS (
     SELECT 1
     FROM public.financial_accounts
