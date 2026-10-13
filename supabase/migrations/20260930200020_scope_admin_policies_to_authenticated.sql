@@ -1,22 +1,45 @@
-ALTER POLICY "Admins can insert actions" ON public.admin_actions TO authenticated;
-ALTER POLICY "Admins can view all actions" ON public.admin_actions TO authenticated;
-ALTER POLICY "Admins can view all allocations" ON public.allocations TO authenticated;
-ALTER POLICY "Users can view own allocations" ON public.allocations TO authenticated;
-ALTER POLICY "Admins can manage billing cycles" ON public.billing_cycles TO authenticated;
-ALTER POLICY "Admins can view billing runs" ON public.billing_runs TO authenticated;
-ALTER POLICY "Authors and admins can delete posts" ON public.community_posts TO authenticated;
-ALTER POLICY "Authors can edit own posts within one hour" ON public.community_posts TO authenticated;
-ALTER POLICY "Authors can view own posts" ON public.community_posts TO authenticated;
-ALTER POLICY "Admins can manage funding cycles" ON public.initiative_funding_cycles TO authenticated;
-ALTER POLICY "Admins can manage all initiative versions" ON public.initiative_versions TO authenticated;
-ALTER POLICY "Admins can manage leads" ON public.leads TO authenticated;
-ALTER POLICY "Users and admins can view member preferences" ON public.member_preferences TO authenticated;
-ALTER POLICY "Admins and org staff can view audit logs" ON public.organization_audit_log TO authenticated;
-ALTER POLICY "Owners can manage organization documents" ON public.organization_documents TO authenticated;
-ALTER POLICY "Admins can manage organizations" ON public.organizations TO authenticated;
-ALTER POLICY "Admins can view all payments" ON public.payments TO authenticated;
-ALTER POLICY "Authors can edit own comments within one hour" ON public.post_comments TO authenticated;
-ALTER POLICY "Admins can view all profiles" ON public.profiles TO authenticated;
-ALTER POLICY "Admins can view all receipts" ON public.receipts TO authenticated;
-ALTER POLICY "Admins can view all subscriptions" ON public.subscriptions TO authenticated;
-ALTER POLICY "Admins can view all roles" ON public.user_roles TO authenticated;
+DO $scope_policies$
+DECLARE
+  item record;
+BEGIN
+  FOR item IN
+    SELECT * FROM (VALUES
+      ('Admins can insert actions', 'admin_actions'),
+      ('Admins can view all actions', 'admin_actions'),
+      ('Admins can view all allocations', 'allocations'),
+      ('Users can view own allocations', 'allocations'),
+      ('Admins can manage billing cycles', 'billing_cycles'),
+      ('Admins can view billing runs', 'billing_runs'),
+      ('Authors and admins can delete posts', 'community_posts'),
+      ('Authors can edit own posts within one hour', 'community_posts'),
+      ('Authors can view own posts', 'community_posts'),
+      ('Admins can manage funding cycles', 'initiative_funding_cycles'),
+      ('Admins can manage all initiative versions', 'initiative_versions'),
+      ('Admins can manage leads', 'leads'),
+      ('Users and admins can view member preferences', 'member_preferences'),
+      ('Admins and org staff can view audit logs', 'organization_audit_log'),
+      ('Owners can manage organization documents', 'organization_documents'),
+      ('Admins can manage organizations', 'organizations'),
+      ('Admins can view all payments', 'payments'),
+      ('Authors can edit own comments within one hour', 'post_comments'),
+      ('Admins can view all profiles', 'profiles'),
+      ('Admins can view all receipts', 'receipts'),
+      ('Admins can view all subscriptions', 'subscriptions'),
+      ('Admins can view all roles', 'user_roles')
+    ) AS policy_targets(policy_name, table_name)
+  LOOP
+    IF EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public'
+        AND tablename = item.table_name
+        AND policyname = item.policy_name
+    ) THEN
+      EXECUTE format(
+        'ALTER POLICY %I ON public.%I TO authenticated',
+        item.policy_name,
+        item.table_name
+      );
+    END IF;
+  END LOOP;
+END
+$scope_policies$;

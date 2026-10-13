@@ -1,3 +1,8 @@
+-- An earlier organization-security migration defines this signature with a TABLE return type.
+-- Drop it explicitly before this legacy JSONB definition; a later hardening migration
+-- installs the final TABLE-returning version again.
+DROP FUNCTION IF EXISTS public.assign_organization_owner(UUID, UUID);
+
 CREATE OR REPLACE FUNCTION public.assign_organization_owner(
   target_org_id UUID,
   target_user_id UUID

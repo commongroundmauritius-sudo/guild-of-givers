@@ -188,14 +188,74 @@ GRANT EXECUTE ON FUNCTION public.reconcile_initiative_analytics(uuid) TO service
 GRANT EXECUTE ON FUNCTION public.snapshot_initiative_health() TO service_role;
 
 -- Trigger/internal functions need no public API execution grant, but their search_path is pinned.
-ALTER FUNCTION public.increment_initiative_amount(uuid,numeric) SET search_path = public;
-ALTER FUNCTION public.get_admin_financial_metrics() SET search_path = public;
-ALTER FUNCTION public.check_financial_event_immutability() SET search_path = public;
-ALTER FUNCTION public.track_lead_status_change() SET search_path = public;
-ALTER FUNCTION public.update_last_engagement() SET search_path = public;
-ALTER FUNCTION public.get_trending_initiatives(integer) SET search_path = public;
-ALTER FUNCTION public.handle_updated_at() SET search_path = public;
-ALTER FUNCTION public.trg_protect_org_verification() SET search_path = public;
-ALTER FUNCTION public.log_organization_changes() SET search_path = public;
-ALTER FUNCTION public.protect_profile_security_fields() SET search_path = public;
+DO $guard$
+BEGIN
+  IF to_regprocedure('public.increment_initiative_amount(uuid,numeric)') IS NOT NULL THEN
+    ALTER FUNCTION public.increment_initiative_amount(uuid,numeric) SET search_path = public;
+  END IF;
+END
+$guard$;
+DO $guard$
+BEGIN
+  IF to_regprocedure('public.get_admin_financial_metrics()') IS NOT NULL THEN
+    ALTER FUNCTION public.get_admin_financial_metrics() SET search_path = public;
+  END IF;
+END
+$guard$;
+DO $guard$
+BEGIN
+  IF to_regprocedure('public.check_financial_event_immutability()') IS NOT NULL THEN
+    ALTER FUNCTION public.check_financial_event_immutability() SET search_path = public;
+  END IF;
+END
+$guard$;
+DO $guard$
+BEGIN
+  IF to_regprocedure('public.track_lead_status_change()') IS NOT NULL THEN
+    ALTER FUNCTION public.track_lead_status_change() SET search_path = public;
+  END IF;
+END
+$guard$;
+DO $guard$
+BEGIN
+  IF to_regprocedure('public.update_last_engagement()') IS NOT NULL THEN
+    ALTER FUNCTION public.update_last_engagement() SET search_path = public;
+  END IF;
+END
+$guard$;
+DO $guard$
+BEGIN
+  IF to_regprocedure('public.get_trending_initiatives(integer)') IS NOT NULL THEN
+    ALTER FUNCTION public.get_trending_initiatives(integer) SET search_path = public;
+  END IF;
+END
+$guard$;
+DO $guard$
+BEGIN
+  IF to_regprocedure('public.handle_updated_at()') IS NOT NULL THEN
+    ALTER FUNCTION public.handle_updated_at() SET search_path = public;
+  END IF;
+END
+$guard$;
+DO $guard$
+BEGIN
+  IF to_regprocedure('public.trg_protect_org_verification()') IS NOT NULL THEN
+    ALTER FUNCTION public.trg_protect_org_verification() SET search_path = public;
+  END IF;
+END
+$guard$;
+DO $guard$
+BEGIN
+  IF to_regprocedure('public.log_organization_changes()') IS NOT NULL THEN
+    ALTER FUNCTION public.log_organization_changes() SET search_path = public;
+  END IF;
+END
+$guard$;
+DO $guard$
+BEGIN
+  IF to_regprocedure('public.protect_profile_security_fields()') IS NOT NULL THEN
+    ALTER FUNCTION public.protect_profile_security_fields() SET search_path = public;
+  END IF;
+END
+$guard$;
 
