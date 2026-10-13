@@ -220,3 +220,29 @@ The exact failing CI attempt has not been executed or its current job logs retri
 ### Immediate security gate
 
 Keep real Peach processing disabled until the payment implementation has actual provider-specific cryptographic signature verification, amount/currency/merchant-reference checks, idempotent event handling, and trusted server-side secret management. A client-exposed `VITE_*` variable is not an appropriate place for a secret.
+
+
+## 12. CI log evidence recovered for signup failure (run 37784478752)
+
+The actual GitHub Actions job log for [run 37784478752 / job 113335589925](https://github.com/commongroundmauritius-sudo/guild-of-givers/actions/runs/37784478752/job/113335589925) was retrieved and inspected. This materially narrows the diagnosis for **that specific run**:
+
+- The failure occurred at the *first* step transition, before entering details, payment, or Auth signup.
+- Playwright remained on `/signup` with only the “Monthly Membership” heading after clicking “Start my monthly impact”.
+- The browser recorded 404 responses for built assets including `/assets/index-BJBRaIVL.js`, `/assets/styles-SYFMdg-D.css`, `/assets/logo-B2qccutl.png`, and `/favicon.svg`.
+- Since the JavaScript bundle itself returned 404, the client-side React click handler could not reliably run. For this run, the immediate failure is therefore **the preview/static-asset serving or build-output path**, not a signup database trigger or payment-intent validation error. The database path was never reached in that attempt.
+- The same job shows that the production build, worker-output checks and test build completed before the Playwright failure.
+
+### What changed in later workflow source
+
+The current `.github/workflows/production-validation.yml` in `main` has since introduced a dedicated signup preview on port 8081, isolated local Supabase startup/reset, and a signup-only E2E step before the general 8080 preview. This is a plausible mitigation for test isolation and asset-root mismatch, but source inspection alone does not prove that it fixed the latest run.
+
+### Important distinction
+
+A later report described the test reaching “Create your account” and failing after the account button. That is a different observed failure stage and must be diagnosed from its own job log/SHA. Do not attribute that later symptom to the 404 root cause from run 37784478752 without retrieving the corresponding run log. The current status of the newest signup run remains **not verified in this pass**.
+
+### Correct next action
+
+1. Fetch the most recent run for the current `main` SHA and identify the exact signup E2E job.
+2. If it fails at step 1, inspect preview logs, the generated `dist/client/wrangler.json`, and whether every asset referenced by the HTML exists under the configured static asset directory.
+3. If it reaches account creation, inspect the captured `/auth/v1/signup` response body and local Supabase Postgres logs for the trigger exception.
+4. Only change code after the failing stage and error are tied to the same commit and run.
