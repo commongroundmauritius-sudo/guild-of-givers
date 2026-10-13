@@ -1,0 +1,46 @@
+name: Supabase Migration Validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/config.toml"
+      - ".github/workflows/supabase-migration-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  migration-replay:
+    name: Replay all migrations on disposable local Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Show Supabase CLI version
+        run: supabase --version
+
+      - name: Start disposable local Supabase services
+        run: supabase start -x studio,inbucket,edge-runtime,logflare,vector,analytics
+
+      - name: Replay all migrations from an empty local database
+        run: supabase db reset --local
+
+      - name: Confirm migration replay completed
+        run: echo "All repository migrations were applied successfully to the disposable local database."
+
+      - name: Capture local Supabase status on failure
+        if: failure()
+        run: |
+          supabase status || true
+          docker ps -a || true
