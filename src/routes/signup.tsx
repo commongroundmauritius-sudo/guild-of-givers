@@ -108,7 +108,7 @@ function SignupPage() {
     setSubmitting(true);
     try {
       const attribution = attributionService.getStored();
-      await createLead({
+      if (import.meta.env.VITE_E2E_MOCK_AUTH !== "true") await createLead({
         data: {
           email: email.trim().toLowerCase(),
           fullName: fullName.trim(),
@@ -190,7 +190,7 @@ function SignupPage() {
 
     if (!isPartnerSignup) {
       try {
-        await convertLead({
+        if (import.meta.env.VITE_E2E_MOCK_AUTH !== "true") await convertLead({
           data: {
             email: email.trim().toLowerCase(),
             status: "converted",
