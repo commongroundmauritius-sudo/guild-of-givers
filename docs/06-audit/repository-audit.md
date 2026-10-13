@@ -246,3 +246,19 @@ A later report described the test reaching “Create your account” and failing
 2. If it fails at step 1, inspect preview logs, the generated `dist/client/wrangler.json`, and whether every asset referenced by the HTML exists under the configured static asset directory.
 3. If it reaches account creation, inspect the captured `/auth/v1/signup` response body and local Supabase Postgres logs for the trigger exception.
 4. Only change code after the failing stage and error are tied to the same commit and run.
+
+
+## 13. Latest CI run diagnosis: migration syntax error blocks signup test (2026-10-13)
+
+The latest `main` Production Validation run inspected during this pass is [38379270729](https://github.com/commongroundmauritius-sudo/guild-of-givers/actions/runs/38379270729), commit `d82fcff4792673c3d1871e6084e4d4f3b6e0c206`. Its job fails at **Start isolated local Supabase for signup E2E**, during `supabase db reset`, before the signup browser test runs.
+
+The log names `supabase/migrations/20260529175732_consolidate_partner_application_system_v3.sql` and reports:
+`ERROR: syntax error at or near "$" (SQLSTATE 42601)`, at the second DO block's `DO $` delimiter. The block closes with `END $;`. PostgreSQL dollar-quoted DO blocks require matching `$$` delimiters here. This is a reproducible source-level syntax defect evidenced by the CI log, and it blocks local migration replay; it is distinct from the earlier asset-404 browser failure in run 37784478752.
+
+A separate draft fix is proposed in [PR #122](https://github.com/commongroundmauritius-sudo/guild-of-givers/pull/122), correcting only the opening and closing dollar-quote delimiters of that block. It does not change the data migration logic. **Do not consider the fix verified until CI successfully completes `supabase db reset` and proceeds through the signup E2E.** No production database was touched.
+
+### CI sequence observed
+
+- Production worker build and self-contained-worker checks passed in run 38379270729 before the migration reset step.
+- The migration reset failed before Playwright signup ran, so that run gives no new evidence about current Auth trigger correctness.
+- Docker image pulls initially reported rate limits, but the log proceeded to start the database and apply migrations; the terminal blocker was the SQL syntax error above, not the transient image pull messages.
