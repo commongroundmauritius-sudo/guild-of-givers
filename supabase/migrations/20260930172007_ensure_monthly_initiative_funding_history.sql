@@ -19,4 +19,4 @@ REVOKE ALL ON FUNCTION public.ensure_monthly_initiative_funding_cycles() FROM PU
 REVOKE ALL ON FUNCTION public.ensure_monthly_initiative_funding_cycles() FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.ensure_monthly_initiative_funding_cycles() TO postgres;
 SELECT public.ensure_monthly_initiative_funding_cycles();
-DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname='monthly-funding-cycle-initialization') THEN PERFORM cron.schedule('monthly-funding-cycle-initialization','5 0 1 * *','SELECT public.ensure_monthly_initiative_funding_cycles()'); END IF; END $$;
+DO $ BEGIN IF to_regclass('cron.job') IS NOT NULL AND to_regprocedure('cron.schedule(text,text,text)') IS NOT NULL THEN IF NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname='monthly-funding-cycle-initialization') THEN PERFORM cron.schedule('monthly-funding-cycle-initialization','5 0 1 * *','SELECT public.ensure_monthly_initiative_funding_cycles()'); END IF; END IF; END $;
