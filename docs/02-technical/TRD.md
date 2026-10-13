@@ -56,3 +56,13 @@ Unknown until inspected: request tracing, structured server logs, alerting, data
 3. Standardize structured error handling for signup and payment flows.
 4. Add operational runbooks for migration drift, webhook replay, billing reconciliation and rollback.
 5. Establish an automated documentation validation checklist.
+
+## Additional verified payment boundary finding
+
+Inspection of `src/lib/payments/webhook-handler.ts` shows the signature validation function is explicitly marked as a production TODO. In non-development mode it checks whether a `VITE_PAYMENT_WEBHOOK_SECRET` value exists and whether the caller supplied any signature string, but it does not compute or compare a cryptographic signature. The handler also continues processing after failure to insert the audit event. This is insufficient for live payment processing.
+
+The provider module currently exports `MockPaymentProvider` as `paymentProvider`; mock payment initialization creates a test intent through Supabase RPC. Real Peach integration must remain a launch blocker until the actual server-side provider adapter, secret handling, signature verification, amount/currency/reference validation, duplicate-event idempotency and reconciliation are implemented and tested. Do not put webhook secrets in client-exposed `VITE_*` variables.
+
+## Additional verified signup failure investigation notes
+
+The signup UI creates a test payment intent before Auth signup and passes its transaction ID plus amount in Auth metadata. A database trigger then finalizes the simulated payment. The recent migration `20261008200025_diagnose_signup_payment_metadata.sql` adds a specific exception when the pending test intent cannot be matched by transaction ID and normalized email. This is a concrete diagnostic branch to check in the failing CI Auth response/Postgres logs, not proof that it is the current cause. The recent activity-trigger fix migration also states that a hardened activity validator had caused signup failures. Inspect current CI output before choosing between these or another cause.
