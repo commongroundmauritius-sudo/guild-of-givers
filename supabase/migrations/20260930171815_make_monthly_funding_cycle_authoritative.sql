@@ -32,7 +32,7 @@ BEGIN
  UPDATE public.financial_accounts SET cached_balance_mur=v_prev_bal+v_cg_share WHERE id=v_cg_account_id;
  v_remaining_pool:=v_org_pool_amount;
  FOR v_pref IN (
-  SELECT mp.initiative_id,i.monthly_target_mur,fa.id AS account_id FROM public.member_preferences mp
+  SELECT mp.initiative_id,i.goal_amount_mur,fa.id AS account_id FROM public.member_preferences mp
   JOIN public.initiatives i ON i.id=mp.initiative_id JOIN public.financial_accounts fa ON fa.reference_id=i.id
   WHERE mp.user_id=p_user_id AND mp.priority_level BETWEEN 1 AND 4 AND i.status='active' AND i.is_approved=true AND i.is_published=true AND COALESCE(i.is_impact_pool,false)=false
   ORDER BY mp.priority_level ASC
@@ -40,12 +40,12 @@ BEGIN
   EXIT WHEN v_remaining_pool<=0;
   SELECT id,target_amount_mur,received_amount_mur INTO v_funding_cycle_id,v_cycle_target,v_cycle_received FROM public.initiative_funding_cycles WHERE initiative_id=v_pref.initiative_id AND billing_cycle_id=v_billing_cycle_id FOR UPDATE;
   IF v_funding_cycle_id IS NULL THEN
-   v_cycle_target:=COALESCE(v_pref.monthly_target_mur,0);
+   v_cycle_target:=COALESCE(v_pref.goal_amount_mur,0);
    INSERT INTO public.initiative_funding_cycles(initiative_id,billing_cycle_id,month,year,target_amount_mur,received_amount_mur,remaining_amount_mur) VALUES(v_pref.initiative_id,v_billing_cycle_id,v_current_month,v_current_year,v_cycle_target,0,v_cycle_target) RETURNING id INTO v_funding_cycle_id;
    v_cycle_received:=0;
   END IF;
   v_cycle_space:=GREATEST(0,v_cycle_target-v_cycle_received);
-  IF v_cycle_space>0 OR v_pref.monthly_target_mur=0 THEN
+  IF v_cycle_space>0 OR v_pref.goal_amount_mur=0 THEN
    v_to_allocate:=LEAST(v_remaining_pool,CASE WHEN v_cycle_target>0 THEN v_cycle_space ELSE v_remaining_pool END);
    IF v_to_allocate>0 THEN
     SELECT cached_balance_mur INTO v_prev_bal FROM public.financial_accounts WHERE id=v_pref.account_id FOR UPDATE;
