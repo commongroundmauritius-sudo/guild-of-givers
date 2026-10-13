@@ -21,10 +21,10 @@ ON CONFLICT DO NOTHING;
 
 -- Seed the minimum financial configuration required by the signup/payment E2E.
 -- These are local-only fixtures; no production data is copied into CI.
-INSERT INTO public.fee_configurations (fee_type, percentage_value, fixed_amount_mur, active)
+INSERT INTO public.fee_configurations (fee_type, percentage_value, fixed_amount_mur, is_active)
 SELECT 'percentage', 0, 0, true
 WHERE NOT EXISTS (
-  SELECT 1 FROM public.fee_configurations WHERE active = true
+  SELECT 1 FROM public.fee_configurations WHERE is_active = true
 );
 
 INSERT INTO public.financial_accounts (account_type, is_system, cached_balance_mur)
@@ -71,7 +71,6 @@ BEGIN
       is_system_owned,
       is_approved,
       is_published,
-      monthly_target_mur,
       initiative_source
     )
     VALUES (
@@ -86,7 +85,6 @@ BEGIN
       true,
       true,
       true,
-      0,
       'admin_created'
     )
     RETURNING id INTO v_impact_pool_id;
