@@ -28,6 +28,14 @@ export class MockPaymentProvider implements PaymentProvider {
   ): Promise<{ checkoutUrl: string; transactionId: string }> {
     assertMockPaymentsEnabled();
     console.log(`[MockProvider] Initializing payment of ${amount} ${currency}`, metadata);
+    if (import.meta.env.VITE_E2E_MOCK_AUTH === "true" && import.meta.env.VITE_ENABLE_MOCK_PAYMENTS === "true") {
+      const transactionId = `e2e_txn_${Date.now().toString(36)}`;
+      return {
+        checkoutUrl: `/mock-checkout?txn=${transactionId}&amount=${amount}`,
+        transactionId,
+      };
+    }
+
     const { data: transactionId, error } = await supabase.rpc("create_test_payment_intent", {
       p_email: String(metadata.email ?? "").trim().toLowerCase(),
       p_amount_mur: amount,
