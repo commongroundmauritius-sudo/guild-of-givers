@@ -150,7 +150,12 @@ async function build() {
 export default {
   async fetch(request, env, ctx) {
     const response = await __commonGroundWorker.fetch(request, env, ctx);
-    if (response.status !== 404 || !env?.ASSETS) {
+    const pathname = new URL(request.url).pathname;
+    const isStaticAssetRequest = /\\.[a-zA-Z0-9]{1,10}$/.test(pathname);
+
+    // Keep the app's own 404 page for unknown routes. Only retry the asset
+    // binding for missing file-like paths such as /favicon.svg or /assets/app.js.
+    if (response.status !== 404 || !env?.ASSETS || !isStaticAssetRequest) {
       return response;
     }
     return env.ASSETS.fetch(request);
