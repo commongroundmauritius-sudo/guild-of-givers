@@ -51,7 +51,7 @@ BEGIN
     SELECT cached_balance_mur INTO v_prev_bal FROM public.financial_accounts WHERE id=v_pref.account_id FOR UPDATE;
     INSERT INTO public.financial_events(payment_id,billing_cycle_id,user_id,initiative_id,account_id,event_type,amount_mur,previous_balance,resulting_balance) VALUES(p_payment_id,v_billing_cycle_id,p_user_id,v_pref.initiative_id,v_pref.account_id,'allocation',v_to_allocate,v_prev_bal,v_prev_bal+v_to_allocate);
     UPDATE public.financial_accounts SET cached_balance_mur=v_prev_bal+v_to_allocate WHERE id=v_pref.account_id;
-    UPDATE public.initiative_funding_cycles SET received_amount_mur=received_amount_mur+v_to_allocate,remaining_amount_mur=GREATEST(0,target_amount_mur-(received_amount_mur+v_to_allocate)),status=CASE WHEN (received_amount_mur+v_to_allocate)>=target_amount_mur AND target_amount_mur>0 THEN 'completed'::public.funding_cycle_status ELSE 'active'::public.funding_cycle_status END WHERE id=v_funding_cycle_id RETURNING received_amount_mur INTO v_cycle_received;
+    UPDATE public.initiative_funding_cycles SET received_amount_mur=received_amount_mur+v_to_allocate,remaining_amount_mur=GREATEST(0,target_amount_mur-(received_amount_mur+v_to_allocate)),status=CASE WHEN (received_amount_mur+v_to_allocate)>=target_amount_mur AND target_amount_mur>0 THEN 'completed' ELSE 'active' END WHERE id=v_funding_cycle_id RETURNING received_amount_mur INTO v_cycle_received;
     UPDATE public.initiatives SET current_amount_mur=v_cycle_received WHERE id=v_pref.initiative_id;
     v_remaining_pool:=v_remaining_pool-v_to_allocate;
    END IF;
