@@ -173,15 +173,21 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
 
     let active = true;
 
+    const loginUrl = "/login?redirect=" + encodeURIComponent(pathname + search);
+    // Fail closed if the auth client cannot resolve a session (for example, an
+    // unavailable API during startup). Protected pages must never hang forever.
+    const sessionTimeout = window.setTimeout(() => {
+      if (active) window.location.replace(loginUrl);
+    }, 3000);
+
     const checkSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
         if (!active) return;
+        window.clearTimeout(sessionTimeout);
 
         if (error || !data.session) {
-          window.location.replace(
-            "/login?redirect=" + encodeURIComponent(pathname + search),
-          );
+          window.location.replace(loginUrl);
           return;
         }
 
@@ -189,9 +195,8 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
         setAuthChecked(true);
       } catch {
         if (!active) return;
-        window.location.replace(
-          "/login?redirect=" + encodeURIComponent(pathname + search),
-        );
+        window.clearTimeout(sessionTimeout);
+        window.location.replace(loginUrl);
       }
     };
 
@@ -199,6 +204,7 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
 
     return () => {
       active = false;
+      window.clearTimeout(sessionTimeout);
     };
   }, [isProtectedPath, pathname, search]);
 
