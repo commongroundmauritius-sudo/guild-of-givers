@@ -30,7 +30,7 @@ BEGIN
 END $$;
 
 -- 2. Migrate data from organization_contact_applications to partner_applications
-DO $
+DO $$
 DECLARE
     v_has_registration_number boolean;
 BEGIN
@@ -85,7 +85,7 @@ BEGIN
             $migration$;
         END IF;
     END IF;
-END $;
+END $$;
 
 -- 3. Migrate data from organization_application_status_history to partner_application_activity
 DO $$
