@@ -86,12 +86,14 @@ ALTER TABLE public.daily_campaign_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.daily_revenue_stats ENABLE ROW LEVEL SECURITY;
 
 -- Email Queue: Only admins can read/manage
+DROP POLICY IF EXISTS "Admins can manage email_queue" ON public.email_queue;
 CREATE POLICY "Admins can manage email_queue"
 ON public.email_queue FOR ALL
 TO authenticated
 USING (public.has_role('admin'));
 
 -- Aggregation Tables: Organization staff can view their own, admins all
+DROP POLICY IF EXISTS "Staff can view own initiative stats" ON public.daily_initiative_stats;
 CREATE POLICY "Staff can view own initiative stats"
 ON public.daily_initiative_stats FOR SELECT
 TO authenticated
@@ -103,6 +105,7 @@ USING (
     ) OR public.has_role('admin')
 );
 
+DROP POLICY IF EXISTS "Staff can view own campaign stats" ON public.daily_campaign_stats;
 CREATE POLICY "Staff can view own campaign stats"
 ON public.daily_campaign_stats FOR SELECT
 TO authenticated
@@ -115,6 +118,7 @@ USING (
     ) OR public.has_role('admin')
 );
 
+DROP POLICY IF EXISTS "Admins can view revenue stats" ON public.daily_revenue_stats;
 CREATE POLICY "Admins can view revenue stats"
 ON public.daily_revenue_stats FOR SELECT
 TO authenticated
