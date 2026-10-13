@@ -154,6 +154,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error, data } as { error: Error | null };
     },
     signUp: async (email, password, metadata) => {
+      // Test-only adapter for the isolated signup journey. Never enabled in production builds.
+      if (import.meta.env.VITE_E2E_MOCK_AUTH === "true" && import.meta.env.VITE_ENABLE_MOCK_PAYMENTS === "true") {
+        return { error: null, data: { user: null, session: null } } as any;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
