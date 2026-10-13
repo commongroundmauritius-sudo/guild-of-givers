@@ -10,7 +10,7 @@ ON public.initiative_events (user_id, initiative_id)
 WHERE event_type = 'member_acquired';
 
 -- Step 3: Implement robust reconciliation function
-CREATE OR REPLACE FUNCTION public.reconcile_initiative_analytics(p_initiative_id UUID)
+CREATE OR REPLACE FUNCTION public.reconcile_initiative_analytics(p_initiative_id UUID DEFAULT NULL::UUID)
 RETURNS VOID AS $$
 DECLARE
     v_views INTEGER;
