@@ -1,0 +1,5 @@
+Trigger production validation run after server error handling fix
+
+This file was added by the automated helper to trigger CI.
+Timestamp: 2026-10-13T14:20:00Z
+Branch: fix-route-status-preservation
