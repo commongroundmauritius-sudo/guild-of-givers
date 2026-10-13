@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,8 +11,19 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { getSessionUser } from "@/lib/security/auth";
 
 export const Route = createFileRoute("/notifications")({
+  beforeLoad: async ({ location }) => {
+    const user = await getSessionUser();
+    if (!user) {
+      throw redirect({
+        to: "/login",
+        search: { redirect: location.pathname },
+        replace: true,
+      });
+    }
+  },
   component: NotificationsPage,
 });
 
