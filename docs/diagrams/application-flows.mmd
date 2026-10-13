@@ -1,0 +1,15 @@
+flowchart TD
+  Start([Start]) --> Signup[Open signup]
+  Signup --> Validate{Client form valid?}
+  Validate -- No --> FormError[Show validation feedback]
+  FormError --> Signup
+  Validate -- Yes --> Auth[Submit to Auth/backend]
+  Auth --> AuthOK{Auth and required initialization succeeded?}
+  AuthOK -- No --> Recovery[Show actionable error; allow safe retry]
+  Recovery --> Signup
+  AuthOK -- Yes --> Next[Continue to actual next signup step]
+  Next --> PaymentNote[Payment step implementation must be verified]
+  PaymentNote --> Provider{Verified provider event?}
+  Provider -- No --> Pending[Do not mark paid; show pending/failure state]
+  Provider -- Yes --> Record[Idempotently update trusted payment/subscription records]
+  Record --> Done([Show confirmed membership state])

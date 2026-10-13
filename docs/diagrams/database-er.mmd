@@ -1,0 +1,8 @@
+erDiagram
+  AUTH_USERS ||--o| PROFILES : "identity link to verify"
+  AUTH_USERS ||--o{ USER_ROLES : "role assignments documented"
+  PROFILES ||--o{ SUBSCRIPTIONS : "relation to verify"
+  SUBSCRIPTIONS ||--o{ PAYMENTS : "relation to verify"
+  PAYMENTS ||--o{ PAYMENT_EVENTS : "relation to verify"
+  FINANCIAL_ACCOUNTS ||--o{ FINANCIAL_EVENTS : "relation to verify"
+  INITIATIVES }o--|| ORGANIZATIONS : "ownership relation to verify"

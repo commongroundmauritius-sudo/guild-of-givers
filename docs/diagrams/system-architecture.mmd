@@ -1,0 +1,10 @@
+flowchart TD
+  Actor[Public visitor / member / organization / admin] --> UI[React UI and TanStack file routes]
+  UI --> Query[React Query and Supabase client]
+  UI --> Worker[TanStack Start server / Cloudflare worker build]
+  Query --> Auth[Supabase Auth]
+  Query --> DB[(Supabase PostgreSQL)]
+  Worker --> DB
+  DB --> Policy[RLS policies, triggers and database functions]
+  Payment[Payment provider - live integration unverified] -. webhook / payment events .-> Worker
+  Worker --> Ledger[Payment and financial history - schema/flow to verify]
