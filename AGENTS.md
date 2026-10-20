@@ -42,3 +42,5 @@ Follow these rules to maintain the platform's fintech-grade infrastructure and t
 - **No Renames:** Never rename a migration file once it has been pushed to production/staging. This breaks the version history.
 - **No Deletions:** Do not delete migration files. If a migration is no longer needed, create a new migration that reverts its changes.
 - **Sequential Timestamps:** Always verify that new migrations follow the latest established timestamp in the directory.
+
+- Keep vite.config.ts minimal (no ssr.noExternal / rollupOptions overrides): they inline React CJS into the SSR dev runner and crash every page with "module is not defined".
