@@ -158,6 +158,7 @@ export async function getSessionUser() {
         authCookieContent = cookies["supabase-auth-token"];
       }
 
+      if (!authCookieContent) return null;
       return hydrateSupabaseSessionFromCookie(authCookieContent);
     }
   } catch (error) {
