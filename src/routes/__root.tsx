@@ -156,7 +156,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
-  const { pathname, search } = useLocation();
+  const { pathname, searchStr } = useLocation();
   const isProtectedPath =
     /^(\/admin-dashboard|\/member|\/notifications|\/community-hub|\/dashboard|\/organization)(\/|$)/.test(
       pathname,
@@ -173,7 +173,9 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
 
     let active = true;
 
-    const loginUrl = "/login?redirect=" + encodeURIComponent(pathname + search);
+    // `searchStr` is the raw query string (e.g. "?tab=x"); the parsed `search`
+    // object cannot be concatenated with a string and throws when it is.
+    const loginUrl = "/login?redirect=" + encodeURIComponent(pathname + searchStr);
     // Fail closed if the auth client cannot resolve a session (for example, an
     // unavailable API during startup). Protected pages must never hang forever.
     const sessionTimeout = window.setTimeout(() => {
@@ -206,7 +208,7 @@ function ProtectedRouteGuard({ children }: { children: React.ReactNode }) {
       active = false;
       window.clearTimeout(sessionTimeout);
     };
-  }, [isProtectedPath, pathname, search]);
+  }, [isProtectedPath, pathname, searchStr]);
 
   if (!isProtectedPath) return <>{children}</>;
   if (!authChecked || !hasSession) {
