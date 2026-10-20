@@ -44,3 +44,4 @@ Follow these rules to maintain the platform's fintech-grade infrastructure and t
 - **Sequential Timestamps:** Always verify that new migrations follow the latest established timestamp in the directory.
 
 - Keep vite.config.ts minimal (no ssr.noExternal / rollupOptions overrides): they inline React CJS into the SSR dev runner and crash every page with "module is not defined".
+- User-role RLS policies must use the SECURITY DEFINER has_role helper instead of querying user_roles directly; self-queries recurse and break dependent dashboard reads.
