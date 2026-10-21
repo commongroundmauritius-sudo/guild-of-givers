@@ -6,6 +6,7 @@ import { z } from "zod";
 import { uuidSchema, emailSchema, nameSchema } from "./security/validators";
 import { ensureAuthenticated } from "./security/auth";
 import { rateLimit } from "./security/rateLimit";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 export const toggleInitiativePreference = createServerFn({ method: "POST" })
   .inputValidator(z.object({ initiativeId: uuidSchema, selected: z.boolean() }))
@@ -57,25 +58,28 @@ export const createLead = createServerFn({ method: "POST" })
     } = data;
     await rateLimit(email, "create_lead", { windowMs: 3600000, max: 5 });
     const trimmedEmail = email.trim().toLowerCase();
-    let campaignLinkId = null;
+    let campaignLinkId: string | null = null;
     if (attribution?.tracking_code) {
       const { data: linkData } = await supabase
         .from("campaign_links")
         .select("id")
         .eq("tracking_code", attribution.tracking_code)
         .single();
-      campaignLinkId = linkData?.id;
+      campaignLinkId = linkData?.id ?? null;
     }
-    const { error } = await supabase.rpc("create_lead_safe", {
+    // PostgREST's generated Args omit SQL nullability; this function explicitly accepts
+    // null phone/source/campaign values (verified against its live SQL definition).
+    const leadArgs = {
       p_email: trimmedEmail,
       p_full_name: fullName.trim(),
       p_phone: phone?.trim() || null,
       p_amount_mur: amount,
       p_covers_fees: coversFees,
-      p_source_initiative_id: sourceInitiativeId,
+      p_source_initiative_id: sourceInitiativeId ?? null,
       p_campaign_link_id: campaignLinkId,
-      p_utm_parameters: attribution || {},
-    });
+      p_utm_parameters: (attribution || {}) as Json,
+    };
+    const { error } = await supabase.rpc("create_lead_safe", leadArgs as Database["public"]["Functions"]["create_lead_safe"]["Args"]);
 
     if (error) {
       throw new Error(error.message || "Failed to capture details. Please try again.");
