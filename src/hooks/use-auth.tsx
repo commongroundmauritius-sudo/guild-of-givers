@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase, type AppRole } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+type AppRole = Database["public"]["Enums"]["app_role"];
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { isMockPaymentsEnabled } from "@/lib/payments/mock-provider";
 

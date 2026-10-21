@@ -1,8 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-export type SuccessStory = Record<string, any>;
-export type SuccessStoryInsert = Record<string, any>;
-export type SuccessStoryUpdate = Record<string, any>;
+export type SuccessStory = Database["public"]["Tables"]["success_stories"]["Row"];
+export type SuccessStoryInsert = Database["public"]["Tables"]["success_stories"]["Insert"];
+export type SuccessStoryUpdate = Database["public"]["Tables"]["success_stories"]["Update"];
 
 export const successStoryService = {
   async getAll() {

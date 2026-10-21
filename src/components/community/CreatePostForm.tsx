@@ -73,7 +73,7 @@ export function CreatePostForm() {
 
     setUploading(true);
     try {
-      let imageUrl = null;
+      let imageUrl: string | null = null;
       if (image) {
         imageUrl = await compressAndUploadImage(image, "community-posts", user.id);
       }
