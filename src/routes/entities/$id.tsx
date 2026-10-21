@@ -33,6 +33,20 @@ import {
   TeamMember,
 } from "@/components/organization/TeamManager";
 
+function readSocialLink(content: string | null, network: string): string {
+  if (!content) return "";
+  try {
+    const parsed: unknown = JSON.parse(content);
+    if (!parsed || typeof parsed !== "object" || !("social_links" in parsed)) return "";
+    const links = parsed.social_links;
+    if (!links || typeof links !== "object") return "";
+    const link = Object.getOwnPropertyDescriptor(links, network)?.value;
+    return typeof link === "string" ? link : "";
+  } catch {
+    return "";
+  }
+}
+
 interface Organization {
   id: string;
   organization_name: string;
