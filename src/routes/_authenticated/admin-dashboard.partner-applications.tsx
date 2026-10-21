@@ -49,7 +49,7 @@ function AdminPartnerApplicationsPage() {
         .eq("is_deleted", false);
 
       if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
+        query = query.eq("status", statusFilter as PartnerApplicationStatus);
       }
 
       const { data, error } = await query;

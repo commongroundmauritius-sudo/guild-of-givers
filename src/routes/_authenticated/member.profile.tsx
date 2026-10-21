@@ -65,8 +65,8 @@ function MemberProfile() {
     setMessage(null);
     const { error } = await supabase.rpc("manage_member_subscription", {
       p_action: action,
-      p_amount_mur: action === "update" ? amount : null,
-      p_billing_day: action === "update" || action === "resume" ? billingDay : null,
+      p_amount_mur: action === "update" ? amount : undefined,
+      p_billing_day: action === "update" || action === "resume" ? billingDay : undefined,
     });
     if (error) setMessage(error.message);
     else {

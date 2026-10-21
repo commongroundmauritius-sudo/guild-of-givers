@@ -177,9 +177,9 @@ function OrganizationProfilePage() {
             milestones: orgData.milestones || "",
             expected_outcomes: orgData.expected_outcomes || "",
             allocation_summary: orgData.allocation_summary || "",
-            facebook: orgData.transparency_content?.social_links?.facebook || "",
-            instagram: orgData.transparency_content?.social_links?.instagram || "",
-            linkedin: orgData.transparency_content?.social_links?.linkedin || "",
+            facebook: readSocialLink(orgData.transparency_content, "facebook"),
+            instagram: readSocialLink(orgData.transparency_content, "instagram"),
+            linkedin: readSocialLink(orgData.transparency_content, "linkedin"),
           });
         }
 

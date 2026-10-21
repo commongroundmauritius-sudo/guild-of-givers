@@ -337,11 +337,11 @@ function OrganizationDashboard() {
                           {format(new Date(report.created_at), "MMM d, yyyy")}
                         </p>
                       </div>
-                      {getStatusIcon(report.status)}
+                      {getStatusIcon(report.status ?? "pending")}
                     </div>
                     <div className="mt-4 flex items-center justify-between">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase">
-                        {report.status.replace(/_/g, " ")}
+                        {(report.status ?? "pending").replace(/_/g, " ")}
                       </span>
                       <a
                         href={report.file_url}

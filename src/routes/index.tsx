@@ -26,6 +26,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Turn one monthly membership into predictable funding for reviewed, long-term social impact programs in Mauritius." },
       { property: "og:title", content: "CommonGround — One Membership. Long-term Impact." },
       { property: "og:type", content: "website" },
+      { property: "og:description", content: "Turn one monthly membership into predictable funding for reviewed, long-term social impact programs in Mauritius." },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,
@@ -260,7 +262,7 @@ function SuccessStories({ settings }: { settings: any }) {
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {isLoading ? [1,2,3].map(i => <div key={i} className="h-64 bg-muted animate-pulse rounded-[2rem]" />) : stories.map(story => (
             <div key={story.id} className="group relative flex flex-col overflow-hidden rounded-[2.5rem] bg-muted/30 border border-border/40 transition-all hover:shadow-xl">
-              <div className="aspect-[16/10] overflow-hidden"><img src={story.image_url} alt={story.title || "Success story image"} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" /></div>
+              <div className="aspect-[16/10] overflow-hidden"><img src={story.image_url ?? undefined} alt={story.title || "Success story image"} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" /></div>
               <div className="flex-1 p-8"><h3 className="text-xl font-bold text-primary mb-3">{story.title}</h3><p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-6">{story.summary}</p>{story.cta_link && <Link to={story.cta_link} className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">Read Full Story <ArrowRight className="h-4 w-4" /></Link>}</div>
             </div>
           ))}

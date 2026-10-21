@@ -124,8 +124,8 @@ function InitiativeDetailPage() {
   if (!initiative) return <div className="p-20 text-center">Initiative not found.</div>;
 
   const progress =
-    initiative.goal_amount_mur > 0
-      ? (initiative.current_amount_mur / initiative.goal_amount_mur) * 100
+    (initiative.goal_amount_mur ?? 0) > 0
+      ? ((initiative.current_amount_mur ?? 0) / (initiative.goal_amount_mur ?? 1)) * 100
       : 0;
 
   const organization = initiative.organizations;
@@ -169,7 +169,7 @@ function InitiativeDetailPage() {
                   </div>
 
                   {(initiative.short_term_goals ||
-                    initiative.long_term_vision ||
+                    initiative.long_term_goals ||
                     initiative.expected_outcomes) && (
                     <div className="mt-12 grid gap-6 sm:grid-cols-2">
                       {initiative.short_term_goals && (
@@ -182,13 +182,13 @@ function InitiativeDetailPage() {
                           </p>
                         </div>
                       )}
-                      {initiative.long_term_vision && (
+                      {initiative.long_term_goals && (
                         <div className="rounded-3xl bg-muted/30 p-6 border border-border/40">
                           <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
                             Long-term Vision
                           </h5>
                           <p className="text-sm leading-relaxed text-primary/80 whitespace-pre-wrap">
-                            {initiative.long_term_vision}
+                            {initiative.long_term_goals}
                           </p>
                         </div>
                       )}

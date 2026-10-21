@@ -21,7 +21,7 @@ interface Organization {
   mission: string | null;
   logo_url: string | null;
   is_verified: boolean;
-  status: string;
+  status: string | null;
 }
 
 export const Route = createFileRoute("/organizations/")({
