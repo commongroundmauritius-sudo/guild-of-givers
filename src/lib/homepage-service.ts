@@ -60,8 +60,8 @@ export const homepageService = {
         .eq("status", "published")
         .order("published_at", { ascending: false, nullsFirst: false })
         .limit(1)
-        .maybeSingle()
-        .abortSignal(controller.signal);
+        .abortSignal(controller.signal)
+        .maybeSingle();
 
       if (error) throw error;
       return data;

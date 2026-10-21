@@ -90,8 +90,6 @@ export const activityService = {
     }
     if (initiativeId && isUUID(initiativeId)) {
       activityQuery = activityQuery.eq("initiative_id", initiativeId);
-      eventQuery = eventQuery.eq("user_id", userId); // Note: Original code had eq("user_id", userId) twice, probably meant initiative_id?
-      // Fixed: eventQuery = eventQuery.eq("initiative_id", initiativeId);
       eventQuery = eventQuery.eq("initiative_id", initiativeId);
     }
     if (organizationId && isUUID(organizationId)) {
@@ -106,7 +104,7 @@ export const activityService = {
     const merged = [
       ...(activitiesRes.data || []).map((a) => ({ ...a, source_table: "activities" })),
       ...(eventsRes.data || []).map((e) => ({ ...e, source_table: "initiative_events" })),
-    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    ].sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
 
     return merged.slice(0, limit);
   },

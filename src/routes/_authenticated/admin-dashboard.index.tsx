@@ -18,6 +18,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard/")({
+  head: () => ({ meta: [
+    { title: "Admin Dashboard — CommonGround" },
+    { name: "description", content: "CommonGround platform oversight, approvals and audit history." },
+    { property: "og:title", content: "Admin Dashboard — CommonGround" },
+    { property: "og:description", content: "CommonGround platform oversight, approvals and audit history." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AdminDashboard,
 });
 
@@ -127,15 +135,16 @@ function AdminDashboard() {
 
   const approveOrgMutation = useMutation({
     mutationFn: async (orgId: string) => {
+      if (!user) throw new Error("Sign in required");
       const { error } = await supabase
         .from("organizations")
         .update({ status: "active", is_verified: true })
         .eq("id", orgId);
       if (error) throw error;
       await supabase.from("admin_actions").insert({
-        admin_id: user?.id,
+        admin_id: user.id,
         action_type: "approve_organization",
-        target_entity: "organization",
+        target_type: "organization",
         target_id: orgId,
       });
     },
@@ -150,15 +159,16 @@ function AdminDashboard() {
 
   const approveInitiativeMutation = useMutation({
     mutationFn: async (initId: string) => {
+      if (!user) throw new Error("Sign in required");
       const { error } = await supabase
         .from("initiatives")
         .update({ is_approved: true })
         .eq("id", initId);
       if (error) throw error;
       await supabase.from("admin_actions").insert({
-        admin_id: user?.id,
+        admin_id: user.id,
         action_type: "approve_initiative",
-        target_entity: "initiative",
+        target_type: "initiative",
         target_id: initId,
       });
     },
@@ -356,7 +366,7 @@ function AdminDashboard() {
                   >
                     <div>
                       <h4 className="font-semibold text-gray-900">{org.organization_name}</h4>
-                      <p className="text-xs text-gray-500">{org.email}</p>
+                      <p className="text-xs text-gray-500">{org.contact_email}</p>
                     </div>
                     <button
                       onClick={() => approveOrgMutation.mutate(org.id)}
@@ -423,7 +433,7 @@ function AdminDashboard() {
                 >
                   <div>
                     <span className="font-semibold text-gray-900">{action.action_type}</span> on{" "}
-                    {action.target_entity} ({action.target_id})
+                    {action.target_type} ({action.target_id})
                   </div>
                   <span className="text-gray-400">
                     {new Date(action.created_at).toLocaleString()}

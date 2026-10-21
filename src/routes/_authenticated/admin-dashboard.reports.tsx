@@ -43,7 +43,7 @@ function AdminReportsPage() {
     },
   });
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case "approved":
         return "bg-green-50 text-green-700 border-green-100";
@@ -123,7 +123,7 @@ function AdminReportsPage() {
                         <span
                           className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(report.status)}`}
                         >
-                          {report.status.replace(/_/g, " ")}
+                          {(report.status ?? "pending").replace(/_/g, " ")}
                         </span>
 
                         <div className="h-8 w-px bg-border/40 hidden md:block mx-2" />

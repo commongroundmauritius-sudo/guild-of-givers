@@ -8,7 +8,7 @@ export const automationService = {
    */
   async processTrigger(triggerType: string, payload: any) {
     const { data: rules, error } = await supabase
-      .from("automation_rules" as any)
+      .from("automation_rules")
       .select("*")
       .eq("trigger_type", triggerType)
       .eq("is_active", true);
@@ -35,7 +35,7 @@ export const automationService = {
    */
   async executeRule(rule: any, payload: any) {
     const { data: execution, error: execError } = await supabase
-      .from("automation_executions" as any)
+      .from("automation_executions")
       .insert({
         rule_id: rule.id,
         user_id: payload.user_id,
@@ -45,7 +45,7 @@ export const automationService = {
       .select()
       .single();
 
-    if (execError) {
+    if (execError || !execution) {
       console.error("Failed to create automation execution:", execError);
       return;
     }
@@ -55,7 +55,7 @@ export const automationService = {
       const results: Array<{ type?: string; status?: string; [key: string]: any }> = [];
 
       const logFn = async (level: string, message: string) => {
-        await supabase.from("automation_logs" as any).insert({
+        await supabase.from("automation_logs").insert({
           execution_id: execution.id,
           level,
           message,
@@ -68,18 +68,18 @@ export const automationService = {
       }
 
       await supabase
-        .from("automation_executions" as any)
+        .from("automation_executions")
         .update({ status: "completed", result: { actions: results } })
         .eq("id", execution.id);
     } catch (err: any) {
       console.error("Rule execution failed:", err);
-      await supabase.from("automation_logs" as any).insert({
+      await supabase.from("automation_logs").insert({
         execution_id: execution.id,
         level: "error",
         message: err.message,
       });
       await supabase
-        .from("automation_executions" as any)
+        .from("automation_executions")
         .update({ status: "failed" })
         .eq("id", execution.id);
     }

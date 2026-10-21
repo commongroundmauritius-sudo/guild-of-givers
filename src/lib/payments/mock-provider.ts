@@ -40,8 +40,7 @@ export class MockPaymentProvider implements PaymentProvider {
       p_email: String(metadata.email ?? "").trim().toLowerCase(),
       p_amount_mur: amount,
       p_covers_fees: Boolean(metadata.coversFees),
-      p_source_initiative_id: (metadata.sourceInitiativeId as string | null) ?? null,
-      p_provider_subscription_id: null,
+      p_source_initiative_id: typeof metadata.sourceInitiativeId === "string" ? metadata.sourceInitiativeId : undefined,
     });
     if (error || !transactionId) {
       throw new Error(error?.message || "Unable to create test payment intent.");

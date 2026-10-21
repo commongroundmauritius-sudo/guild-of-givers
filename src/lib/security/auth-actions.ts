@@ -34,7 +34,7 @@ export const updateAnnouncement = createServerFn({ method: "POST" })
     } else {
       const { error } = await supabase
         .from("announcements")
-        .insert({ ...allowedData, author_id: user.id });
+        .insert({ ...data.data, author_id: user.id });
       if (error) throw error;
     }
     return { success: true };
@@ -160,8 +160,7 @@ export const updateInitiative = createServerFn({ method: "POST" })
           impact_pool_target: z.number().optional(),
           image_url: urlSchema.optional(),
           is_published: z.boolean().optional(),
-        })
-        .passthrough(),
+        }),
     }),
   )
   .handler(async ({ data }) => {
@@ -220,6 +219,7 @@ export const createInitiative = createServerFn({ method: "POST" })
       .from("initiatives")
       .insert({
         ...allowedData,
+        title: z.string().min(1).parse(data.data.title),
         is_published: data.publish,
         is_approved: true,
         initiative_source: "admin_created",
